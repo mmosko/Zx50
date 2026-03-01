@@ -1,0 +1,22 @@
+# --- Icarus Verilog / Simulation Outputs ---
+*.vvp
+*.vcd
+waves/*.vcd
+
+# --- CPLD Vendor Tools (Microchip/Intel/Xilinx) ---
+# These are often large log, report, or intermediate bitstream files
+*.log
+*.rpt
+*.txt
+*.jed
+*.pof
+*.chn
+*.blif
+*.shm
+*.dsn
+
+# --- OS / IDE Specific ---
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/
