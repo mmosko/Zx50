@@ -1,35 +1,30 @@
+`timescale 1ns/1ps
+
+// Emulates 2x Cypress CY7C1049GN-10VXIT (512K x 8 SRAM)
 module zx50_mem (
-    input wire [11:0] addr_low,
-    inout wire [7:0]  d_bus,
-    input wire rd_n, wr_n, mreq_n,
-    input wire [7:0]  p_addr_hi,
-    input wire active
+    input  wire [18:0] addr,    // 19-bit physical address (A0-A18)
+    inout  wire [7:0]  data,    // Bidirectional data bus
+    input  wire        ce0_n,   // Chip Enable for Lower 512KB (Bank 0x00-0x7F)
+    input  wire        ce1_n,   // Chip Enable for Upper 512KB (Bank 0x80-0xFF)
+    input  wire        oe_n,    // Output Enable (~RD)
+    input  wire        we_n     // Write Enable (~WR)
 );
-    // Assemble the 19-bit address for a 512KB SRAM chip
-    wire [18:0] s_addr = {p_addr_hi[6:0], addr_low};
 
-    // --- The Fail-Safe Chip Enables ---
-    // Using strict equality (===) prevents 'z' or 'x' from propagating.
-    // If active is exactly 1, and bit 7 matches the chip, pull CE low (0). Otherwise, stay high (1).
-    wire ce0_n = (active === 1'b1 && p_addr_hi[7] === 1'b0) ? 1'b0 : 1'b1;
-    wire ce1_n = (active === 1'b1 && p_addr_hi[7] === 1'b1) ? 1'b0 : 1'b1;
-
-    // Simulation models for 2x 512KB SRAMs
+    // Two 512KB physical silicon arrays 
     reg [7:0] ram0 [0:524287]; 
-    reg [7:0] ram1 [0:524287]; 
+    reg [7:0] ram1 [0:524287];
 
     // --- Read Logic ---
-    // Drive the bus ONLY if a specific chip is enabled AND it's a memory read.
-    assign d_bus = (!mreq_n && !rd_n && !ce0_n) ? ram0[s_addr] :
-                   (!mreq_n && !rd_n && !ce1_n) ? ram1[s_addr] : 
-                   8'hzz;
+    // Drive the bus ONLY if a specific chip is enabled, output is enabled, AND we are not writing.
+    assign data = (!ce0_n && !oe_n && we_n) ? ram0[addr] :
+                  (!ce1_n && !oe_n && we_n) ? ram1[addr] : 
+                  8'hzz;
 
     // --- Write Logic ---
-    // Write ONLY to the chip whose CE is pulled low.
-    always @(*) begin
-        if (!mreq_n && !wr_n) begin
-            if (!ce0_n) ram0[s_addr] <= d_bus;
-            if (!ce1_n) ram1[s_addr] <= d_bus;
-        end
+    // Real asynchronous SRAMs latch data at the end of the write pulse (rising edge of WE)
+    always @(posedge we_n) begin
+        if (!ce0_n) ram0[addr] <= data;
+        if (!ce1_n) ram1[addr] <= data;
     end
+
 endmodule

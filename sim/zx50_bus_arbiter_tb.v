@@ -2,26 +2,21 @@
 
 module zx50_bus_arbiter_tb;
 
-    // --- 1. System Clocks & Resets ---
     reg mclk;
     reg reset_n;
 
-    // --- 2. Exhaustive Test Vectors ---
     reg [3:0] test_vector;
     reg [2:0] settle_counter;
 
-    // Map the counter bits directly to the Arbiter inputs
     wire shadow_en_n  = test_vector[0];
     wire z80_card_hit = test_vector[1];
     wire z80_rd_n     = test_vector[2];
     wire shd_rw_n     = test_vector[3];
 
-    // --- 3. Arbiter Outputs ---
     wire z80_wait_n, shd_busy_n;
     wire z80_addr_oe_n, z80_data_oe_n, z80_data_dir;
     wire shd_addr_oe_n, shd_data_oe_n, shd_data_dir;
 
-    // --- 4. Instantiate the Device Under Test (DUT) ---
     zx50_bus_arbiter dut (
         .mclk(mclk),
         .reset_n(reset_n),
@@ -41,16 +36,13 @@ module zx50_bus_arbiter_tb;
         .shd_data_dir(shd_data_dir)
     );
 
-    // --- 5. Clock Generation (36 MHz) ---
     initial mclk = 0;
-    always #13.88 mclk = ~mclk; // 27.7ns period
+    always #13.88 mclk = ~mclk; 
 
-    // --- 6. The Exhaustive Walker ---
     initial begin
         $dumpfile("waves/arbiter_exhaustive.vcd");
-        $dumpvars(0, zx50_arbiter_tb);
+        $dumpvars(0, zx50_bus_arbiter_tb); // Fixed to match module name
         
-        // Start with system in reset, test vector at 0
         reset_n = 0;
         test_vector = 4'b0000;
         settle_counter = 3'b000;
@@ -58,15 +50,11 @@ module zx50_bus_arbiter_tb;
         #100 reset_n = 1;
     end
 
-    // Walk through all 16 states, holding each for 8 clock cycles
     always @(posedge mclk) begin
         if (reset_n) begin
             settle_counter <= settle_counter + 1'b1;
             
-            // Wait for the state machine to transition through any dead zones
             if (settle_counter == 3'b111) begin 
-                
-                // EXIT CONDITION: Have we tested the final combination (1111)?
                 if (test_vector == 4'b1111) begin
                     $display("=====================================================");
                     $display(" SUCCESS: All 16 Input States Tested.");
@@ -80,37 +68,20 @@ module zx50_bus_arbiter_tb;
         end
     end
 
-    // --- 7. INVARIANT ASSERTIONS (The "Proptest" Watchdogs) ---
-    // These blocks execute combinatorially on every single clock cycle.
-    // If an invariant is broken, they instantly halt the simulation.
     always @(posedge mclk) begin
         if (reset_n) begin
-            
-            // INVARIANT 1: Mutual Exclusion (No Magic Smoke)
-            // The Z80 and the Shadow bus must NEVER drive the local address bus simultaneously.
             if (z80_addr_oe_n == 0 && shd_addr_oe_n == 0) begin
                 $display("FATAL [%0t]: Transceiver Short Circuit Detected!", $time);
                 $fatal(1); 
             end
-
-            // INVARIANT 2: Z80 Protection (No Garbage Reads)
-            // If the Z80 is hitting this card, but the buffers are NOT pointing 
-            // the Z80 to the RAM, the Z80 MUST be kept in a WAIT state.
             if (z80_card_hit && (z80_addr_oe_n != 0) && (z80_wait_n != 0)) begin
                 $display("FATAL [%0t]: Z80 accessed unbuffered memory without a WAIT state!", $time);
                 $fatal(1);
             end
-
-            // INVARIANT 3: Shadow Bus Protection (No Dropped Writes)
-            // If the Shadow bus is trying to access this card, but the buffers are 
-            // NOT pointing to the RAM, the Shadow Bus MUST be kept BUSY.
             if (!shadow_en_n && (shd_addr_oe_n != 0) && (shd_busy_n != 0)) begin
                 $display("FATAL [%0t]: Shadow bus accessed unbuffered memory without S_BUSY!", $time);
                 $fatal(1);
             end
-            
-            // INVARIANT 4: Break-Before-Make Output Enable sync
-            // Data and Address buffers for a specific bus must always enable/disable together.
             if (z80_addr_oe_n != z80_data_oe_n) begin
                 $display("FATAL [%0t]: Z80 Address and Data transceivers fell out of sync!", $time);
                 $fatal(1);
@@ -118,4 +89,12 @@ module zx50_bus_arbiter_tb;
         end
     end
 
+    // --- System Watchdog Timer ---
+    // If the simulation runs for more than 10,000ns, assume a state machine 
+    // deadlock and violently kill the simulation with a non-zero exit code.
+    initial begin
+        #10000; 
+        $display("FATAL [%0t]: Watchdog Timer Expired! State machine deadlock detected.", $time);
+        $fatal(1);
+    end
 endmodule
