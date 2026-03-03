@@ -1,0 +1,41 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Mon Mar  2 03:47:43 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_conflict.vcd"
+[dumpfile_mtime] "Mon Mar  2 03:44:55 2026"
+[dumpfile_size] 1951
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/sim/conflict_view.gtkw"
+[timestart] 0
+[size] 2494 1361
+[pos] -27 -24
+*-17.000000 15700 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_conflict_tb.
+[sst_width] 278
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 422
+@28
+zx50_conflict_tb.active_a
+@22
+zx50_conflict_tb.p_hi_a[7:0]
+zx50_conflict_tb.card_a.pal_bits[15:0]
+@200
+-
+@28
+zx50_conflict_tb.active_b
+@22
+zx50_conflict_tb.p_hi_b[7:0]
+zx50_conflict_tb.card_b.pal_bits[15:0]
+@200
+-
+@20000
+-
+@22
+zx50_conflict_tb.addr[15:0]
+zx50_conflict_tb.d_bus[7:0]
+@28
+zx50_conflict_tb.iorq_n
+zx50_conflict_tb.wr_n
+[pattern_trace] 1
+[pattern_trace] 0

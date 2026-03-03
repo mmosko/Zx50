@@ -1,0 +1,25 @@
+[project]
+name = "zx50_bus"
+version = "0.1.0"
+
+[files]
+# Add your design source files here.
+# The path is relative to the project root.
+sources = [
+    "src/zx50_mmu.v"
+]
+
+[sim.main]
+# This defines a simulation target named "main".
+# You can run it with `teros sim main`.
+
+# The top-level module for the simulation is your testbench.
+top = "zx50_mmu_tb"
+
+# Add your testbench files here.
+sources = [
+    "sim/zx50_mmu_tb.v"
+]
+
+# Default simulator to use.
+tool = "icarus"

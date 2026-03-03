@@ -1,0 +1,52 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Mon Mar  2 04:26:28 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_mmu_sim.vcd"
+[dumpfile_mtime] "Mon Mar  2 04:25:15 2026"
+[dumpfile_size] 2238
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/sim/mmu_view_sram.gtkw"
+[timestart] 0
+[size] 2494 1361
+[pos] -27 -24
+*-17.000000 217500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_mmu_tb.
+[sst_width] 278
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 422
+@28
+zx50_mmu_tb.active_a
+@22
+[color] 2
+zx50_mmu_tb.card_a.pal_bits[15:0]
+zx50_mmu_tb.p_hi_a[7:0]
+@200
+-
+@28
+zx50_mmu_tb.active_b
+@22
+[color] 2
+zx50_mmu_tb.card_b.pal_bits[15:0]
+zx50_mmu_tb.p_hi_b[7:0]
+zx50_mmu_tb.card_b.sram_a[3:0]
+zx50_mmu_tb.card_b.sram_d[7:0]
+@28
+zx50_mmu_tb.card_b.sram_oe_n
+zx50_mmu_tb.card_b.sram_we_n
+zx50_mmu_tb.card_b.updating_sram
+@200
+-
+@22
+[color] 3
+zx50_mmu_tb.addr[15:0]
+zx50_mmu_tb.d_bus[7:0]
+@28
+[color] 3
+zx50_mmu_tb.card_b.mreq_n
+zx50_mmu_tb.iorq_n
+zx50_mmu_tb.wr_n
+@20000
+-
+[pattern_trace] 1
+[pattern_trace] 0

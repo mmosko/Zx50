@@ -1,0 +1,56 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Mon Mar  2 06:34:00 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_mmu_sram.vcd"
+[dumpfile_mtime] "Mon Mar  2 06:32:09 2026"
+[dumpfile_size] 8171
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/sim/zx50_mmu_sram.gtkw"
+[timestart] 3700
+[size] 2181 886
+[pos] -1 -1
+*-16.827751 241500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_mmu_sram_tb.
+[sst_width] 278
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 256
+@29
+zx50_mmu_sram_tb.active
+@22
+zx50_mmu_sram_tb.p_hi[7:0]
+@28
+zx50_mmu_sram_tb.dut.mclk
+@200
+-
+@22
+zx50_mmu_sram_tb.sram_a[3:0]
+zx50_mmu_sram_tb.sram_d[7:0]
+@28
+zx50_mmu_sram_tb.sram_oe_n
+@22
+zx50_mmu_sram_tb.sram_read_data[7:0]
+@28
+zx50_mmu_sram_tb.sram_we_n
+zx50_mmu_sram_tb.dut.is_initialized
+zx50_mmu_sram_tb.dut.is_initializing
+@22
+zx50_mmu_sram_tb.dut.init_ptr[3:0]
+@200
+-
+-
+-TEST BENCH
+@28
+zx50_mmu_sram_tb.mclk
+zx50_mmu_sram_tb.z80_clk
+@22
+zx50_mmu_sram_tb.addr[15:0]
+zx50_mmu_sram_tb.d_bus[7:0]
+@28
+zx50_mmu_sram_tb.iorq_n
+zx50_mmu_sram_tb.mreq_n
+[color] 1
+zx50_mmu_sram_tb.reset_n
+zx50_mmu_sram_tb.wr_n
+[pattern_trace] 1
+[pattern_trace] 0
