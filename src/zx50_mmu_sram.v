@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 
 module zx50_mmu_sram (
-    input wire mclk,             // 24MHz/36MHz Master Clock
-    input wire [15:0] z80_addr,  // Z80 Address Bus (For snooping MMU updates)
-    input wire [15:0] l_addr,    // Local Address Bus (Driven by Arbiter/Transceivers)
-    input wire [7:0] z80_data,   // Z80 Data Bus
+    input wire mclk,              // 24MHz/36MHz Master Clock
+    input wire [15:0] z80_addr,   // Z80 Address Bus (For snooping MMU updates)
+    input wire [15:12] l_addr_hi, // Local Address Bus (Driven by Arbiter/Transceivers)
+    input wire [7:0] z80_data,    // Z80 Data Bus
     input wire z80_iorq_n, z80_wr_n, z80_mreq_n, reset_n,
     input wire boot_en_n,
     input wire [3:0] card_id_sw,
@@ -60,7 +60,7 @@ module zx50_mmu_sram (
     
     // ATL Address Multiplexer:
     assign atl_addr = is_initializing ? init_ptr : 
-                      (cpu_updating   ? z80_addr[11:8] : l_addr[15:12]);
+                      (cpu_updating   ? z80_addr[11:8] : l_addr_hi);
 
     // ATL Write Enable: High-speed pulse during init or gated CPU pulse
     assign atl_we_n = is_initializing ? !mclk : !cpu_updating;

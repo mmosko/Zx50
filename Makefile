@@ -13,17 +13,23 @@ GTK_DIR   = ./gtkw
 WAVES_DIR = waves
 
 
-all: run-zx50_mmu_sram run-zx50_conflict run-zx50_bus_arbiter \
-	run-arbiter_exhaustive
+# Dynamically find every testbench
+TESTBENCHES := $(wildcard $(SIM_DIR)/*_tb.v)
+
+# Transform the strings from "sim/module_name_tb.v" into "run-module_name"
+RUN_TARGETS := $(patsubst $(SIM_DIR)/%_tb.v,run-%,$(TESTBENCHES))
+
+all: $(RUN_TARGETS)
 
 # Ensure directories exist
 $(shell mkdir -p $(SIM_DIR) $(WAVES_DIR) $(OUT_DIR))
 
-# 1. Pattern Rule: Compiles any sim/%.vvp from src/%.v and sim/%_tb.v
-# Example: 'make sim/zx50_mmu_sram.vvp' looks for src/zx50_mmu_sram.v and sim/zx50_mmu_sram_tb.v
-$(OUT_DIR)/%.vvp: $(SRC_DIR)/%.v $(SIM_DIR)/%_tb.v
+# Pattern Rule: Compiles any sim/%.vvp using src/ as an auto-discovery library
+
+$(OUT_DIR)/%.vvp: $(SIM_DIR)/%_tb.v $(wildcard $(SRC_DIR)/*.v)
 	@mkdir -p $(OUT_DIR)
-	$(VERILOG_COMPILER) -o $@ $^
+	# $< is the testbench. -y tells it where to find missing modules.
+	$(VERILOG_COMPILER) -y $(SRC_DIR) -o $@ $<
 
 # 2. Pattern Rule: Runs the simulation and generates the VCD
 $(WAVES_DIR)/%.vcd: $(OUT_DIR)/%.vvp
@@ -32,28 +38,13 @@ $(WAVES_DIR)/%.vcd: $(OUT_DIR)/%.vvp
 
 # --- High-Level Commands ---
 
-run-arbiter_exhaustive: $(SIM_DIR)/arbiter_exhaustive_tb.v $(SRC_DIR)/zx50_bus_arbiter.v
-	@echo "\n--- Compiling Arbiter Test ---"
-	$(VERILOG_COMPILER) -o $(OUT_DIR)/arbiter_exhaustive_tb.vvp $^
-	@echo "--- Running Simulation ---"
-	$(SIM_RUNTIME) $(OUT_DIR)/arbiter_exhaustive_tb.vvp
-	@touch $(GTK_DIR)/arbiter_exhaustive_tb.gtkw
-	@echo "--- Finished Test ---\n"
 
-
-run-zx50_conflict: $(SRC_DIR)/zx50_mmu_sram.v $(SIM_DIR)/zx50_conflict_tb.v
-	@echo "\n--- Compiling Conflict Test (SRAM version) ---"
-	$(VERILOG_COMPILER) -o $(OUT_DIR)/zx50_conflict.vvp $^
-	@echo "--- Running Simulation ---"
-	$(SIM_RUNTIME) $(OUT_DIR)/zx50_conflict.vvp
-	@touch $(GTK_DIR)/zx50_conflict.gtkw
-	@echo "--- Finished Test---\n"
-
-run-%: $(SRC_DIR)/*.v $(SIM_DIR)/%_tb.v
+run-%: $(SIM_DIR)/%_tb.v $(wildcard $(SRC_DIR)/*.v)
 	@echo "\n--- Compiling $* ---"
-	$(VERILOG_COMPILER) -o $(OUT_DIR)/$*.vvp $^
+	$(VERILOG_COMPILER) -y $(SRC_DIR) -o $(OUT_DIR)/$*.vvp $<
 	@echo "--- Running Simulation ---"
 	$(SIM_RUNTIME) $(OUT_DIR)/$*.vvp
+	@echo "--- Simulation Complete. Waves saved to $(WAVES_DIR)/$*.vcd ---"
 	@touch $(GTK_DIR)/$*.gtkw
 	@echo "--- Finished Test---\n"
 

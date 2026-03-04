@@ -16,7 +16,7 @@ module zx50_conflict_tb;
 
     // --- Card A (ID 0, Boot Card) ---
     zx50_mmu_sram card_a (
-        .mclk(mclk), .z80_addr(z80_addr), .l_addr(z80_addr), .z80_data(z80_data), 
+        .mclk(mclk), .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), .z80_data(z80_data), 
         .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
         .reset_n(reset_n), .boot_en_n(boot_a_n), .card_id_sw(id_sw_a), 
         .active(active_a)
@@ -25,7 +25,7 @@ module zx50_conflict_tb;
 
     // --- Card B (ID 1, Secondary Card) ---
     zx50_mmu_sram card_b (
-        .mclk(mclk), .z80_addr(z80_addr), .l_addr(z80_addr), .z80_data(z80_data), 
+        .mclk(mclk), .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), .z80_data(z80_data), 
         .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
         .reset_n(reset_n), .boot_en_n(boot_b_n), .card_id_sw(id_sw_b), 
         .active(active_b)

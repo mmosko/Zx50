@@ -34,7 +34,7 @@ module zx50_mmu_atl_tb;
 
     // 2. DUT Instance
     zx50_mmu_sram dut (
-        .mclk(mclk), .z80_addr(addr), .l_addr(addr), .z80_data(d_bus), 
+        .mclk(mclk), .z80_addr(addr), .l_addr_hi(addr[15:12]), .z80_data(d_bus), 
         .z80_iorq_n(iorq_n), .z80_wr_n(wr_n), .z80_mreq_n(mreq_n), .reset_n(reset_n), 
         .boot_en_n(boot_en), .card_id_sw(id_sw), 
         .atl_addr(atl_addr), .atl_data(atl_data), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
