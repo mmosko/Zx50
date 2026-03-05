@@ -3,31 +3,45 @@
 module zx50_conflict_tb;
     reg mclk;
     reg [15:0] z80_addr;
-    reg [7:0] z80_data;
+    reg [7:0] l_data;          // Changed from z80_data to match unified bus
     reg z80_iorq_n, z80_wr_n, z80_mreq_n, reset_n;
     reg boot_a_n, boot_b_n;
     reg [3:0] id_sw_a, id_sw_b;
 
     wire active_a, active_b;
 
-    // --- Clock Generation (24MHz) ---
+    // --- Clock Generation (36MHz) ---
     initial mclk = 0;
-    always #20.83 mclk = ~mclk; 
+    always #13.88 mclk = ~mclk; // 36MHz Target Clock
 
     // --- Card A (ID 0, Boot Card) ---
     zx50_mmu_sram card_a (
-        .mclk(mclk), .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), .z80_data(z80_data), 
-        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
-        .reset_n(reset_n), .boot_en_n(boot_a_n), .card_id_sw(id_sw_a), 
+        .mclk(mclk), 
+        .z80_addr(z80_addr), 
+        .l_addr_hi(z80_addr[15:12]), 
+        .l_data(l_data),        // Updated Port
+        .z80_iorq_n(z80_iorq_n), 
+        .z80_wr_n(z80_wr_n), 
+        .z80_mreq_n(z80_mreq_n), 
+        .reset_n(reset_n), 
+        .boot_en_n(boot_a_n), 
+        .card_id_sw(id_sw_a), 
         .active(active_a)
         // We float the ATL pins here because we only care about the 'active' logic
     );
 
     // --- Card B (ID 1, Secondary Card) ---
     zx50_mmu_sram card_b (
-        .mclk(mclk), .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), .z80_data(z80_data), 
-        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
-        .reset_n(reset_n), .boot_en_n(boot_b_n), .card_id_sw(id_sw_b), 
+        .mclk(mclk), 
+        .z80_addr(z80_addr), 
+        .l_addr_hi(z80_addr[15:12]), 
+        .l_data(l_data),        // Updated Port
+        .z80_iorq_n(z80_iorq_n), 
+        .z80_wr_n(z80_wr_n), 
+        .z80_mreq_n(z80_mreq_n), 
+        .reset_n(reset_n), 
+        .boot_en_n(boot_b_n), 
+        .card_id_sw(id_sw_b), 
         .active(active_b)
     );
 
@@ -44,6 +58,8 @@ module zx50_conflict_tb;
         id_sw_a = 4'h0; id_sw_b = 4'h1;
         boot_a_n = 0; // Card A claims top 32K on boot
         boot_b_n = 1; // Card B claims nothing
+        z80_addr = 16'h0000;
+        l_data = 8'h00;
         
         // 2. Synchronized Power-On Reset (Give the 16-clock hardware wipe time to finish)
         #100 reset_n = 0;
@@ -53,7 +69,8 @@ module zx50_conflict_tb;
         // 3. Test: Verification of initial state (Z80 reads Page 8 / 0x8000)
         $display("[%0t] --- Verifying Boot State (Page 8) ---", $time);
         @(posedge mclk);
-        z80_addr = 16'h8000; z80_mreq_n = 0; 
+        z80_addr = 16'h8000; 
+        z80_mreq_n = 0; 
         
         repeat(3) @(posedge mclk); // Let active signals settle
         
@@ -70,18 +87,25 @@ module zx50_conflict_tb;
         $display("[%0t] --- Moving Page 8 from Card A to Card B ---", $time);
         // Z80 OUT instruction: A15-A8 is the Page (0x08), A7-A0 is the Port (0x31 -> Card B)
         @(posedge mclk);
-        z80_addr = 16'h0831; z80_data = 8'hBB; 
-        z80_iorq_n = 0; z80_wr_n = 0;
+        z80_addr = 16'h0831; 
+        l_data = 8'hBB; 
+        z80_iorq_n = 0; 
+        
+        // Simulate safe write pulse timing
+        #10 z80_wr_n = 0;
         
         repeat(5) @(posedge mclk); // Hold the I/O write
         
-        z80_iorq_n = 1; z80_wr_n = 1;
+        z80_wr_n = 1;
+        #10 z80_iorq_n = 1;
+        
         repeat(5) @(posedge mclk);
         
         // 5. Verification: Card A must have "Stepped Down"
         $display("[%0t] --- Verifying Handover (Page 8) ---", $time);
         @(posedge mclk);
-        z80_addr = 16'h8000; z80_mreq_n = 0; 
+        z80_addr = 16'h8000; 
+        z80_mreq_n = 0; 
         
         repeat(3) @(posedge mclk); // Let active signals settle
         

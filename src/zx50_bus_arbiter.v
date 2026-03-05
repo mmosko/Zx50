@@ -1,30 +1,25 @@
 `timescale 1ns/1ps
 
 module zx50_bus_arbiter (
-    input wire mclk,            // High-speed Master Clock
-    input wire reset_n,         // System Reset
+ input wire mclk,            
+    input wire reset_n,         
 
     // --- Bus Requests & Status ---
-    input wire shadow_en_n,     // 0 = Shadow Bus requests control of this card
-    input wire z80_card_hit,    // 1 = Z80 is currently hitting THIS card
+    input wire shadow_en_n,     
+    input wire z80_card_hit,    
 
     // --- Wait State Generators ---
-    output wire z80_wait_n,     // Drives Z80 backplane ~WAIT pin (Open Collector)
-    output wire shd_busy_n,     // Drives Shadow backplane ~S_BUSY pin
+    output wire z80_wait_n,     
+    output wire shd_busy_n,     
 
     // --- Backplane Command Inputs ---
-    input wire z80_rd_n,        // Z80 Read signal
-    input wire shd_rw_n,        // Shadow Read/Write (0 = Write to Card, 1 = Read from Card)
+    input wire z80_rd_n,        
+    input wire shd_rw_n,        
 
-    // --- Z80 Transceiver Controls (Set A) ---
-    output wire z80_addr_oe_n,  // 74ABT244 ~OE
-    output wire z80_data_oe_n,  // 74ABT245 ~OE
-    output wire z80_data_dir,   // 74ABT245 DIR
-
-    // --- Shadow Transceiver Controls (Set B) ---
-    output wire shd_addr_oe_n,  // 74ABT244 ~OE
-    output wire shd_data_oe_n,  // 74ABT245 ~OE
-    output wire shd_data_dir    // 74ABT245 DIR
+    // --- Transceiver Controls ---
+    output wire z80_data_oe_n,  // Data Buffer Enable
+    output wire shd_data_oe_n,  // Shadow Data Buffer Enable
+    output wire d_dir           // SHARED Direction Line
 );
 
     localparam BUS_Z80     = 2'b00;
@@ -41,18 +36,15 @@ module zx50_bus_arbiter (
         end else begin
             case (bus_state)
                 BUS_Z80: begin
-                    // ONLY transition if the Z80 is NOT in the middle of a local cycle!
+                    // ONLY yield if the Z80 isn't currently using the card
                     if (!shadow_en_n && !z80_card_hit) bus_state <= BUS_DEAD_1;
                 end
-                BUS_DEAD_1: begin
-                    bus_state <= BUS_SHADOW;
-                end
+                BUS_DEAD_1: bus_state <= BUS_SHADOW;
                 BUS_SHADOW: begin
+                    // Yield back to Z80 when Shadow drops its request
                     if (shadow_en_n) bus_state <= BUS_DEAD_2;
                 end
-                BUS_DEAD_2: begin
-                    bus_state <= BUS_Z80;
-                end
+                BUS_DEAD_2: bus_state <= BUS_Z80;
             endcase
         end
     end
@@ -61,15 +53,17 @@ module zx50_bus_arbiter (
     assign z80_wait_n = (z80_card_hit && (bus_state != BUS_Z80)) ? 1'b0 : 1'b1;
     assign shd_busy_n = (!shadow_en_n && (bus_state != BUS_SHADOW)) ? 1'b0 : 1'b1;
 
-    // --- Transceiver Output Enables (Active Low) ---
-    assign z80_addr_oe_n = (bus_state == BUS_Z80)    ? 1'b0 : 1'b1;
-    assign z80_data_oe_n = (bus_state == BUS_Z80)    ? 1'b0 : 1'b1;
+    // --- Transceiver Output Enables (CRITICAL FIX) ---
+    // Only open the Z80 data buffer if the Z80 is actively addressing us
+    assign z80_data_oe_n = ~((bus_state == BUS_Z80) && z80_card_hit);
+    
+    // Only open the Shadow data buffer if Shadow owns the bus AND is active
+    // (Assuming !shadow_en_n means it is active)
+    assign shd_data_oe_n = ~((bus_state == BUS_SHADOW) && !shadow_en_n);
 
-    assign shd_addr_oe_n = (bus_state == BUS_SHADOW) ? 1'b0 : 1'b1;
-    assign shd_data_oe_n = (bus_state == BUS_SHADOW) ? 1'b0 : 1'b1;
-
-    // --- Transceiver Direction Controls ---
-    assign z80_data_dir = (!z80_rd_n) ? 1'b0 : 1'b1; 
-    assign shd_data_dir = (shd_rw_n)  ? 1'b0 : 1'b1;
+    // --- Shared Transceiver Direction Control ---
+    // 0 = Read from Card (B to A), 1 = Write to Card (A to B)
+    // Note: Depends on exactly how your 74ABT245 DIR pin is wired physically.
+    assign d_dir = (bus_state == BUS_Z80) ? !z80_rd_n : !shd_rw_n;
 
 endmodule

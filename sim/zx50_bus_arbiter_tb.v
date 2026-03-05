@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module zx50_bus_arbiter_tb;
+module arbiter_exhaustive_tb;
 
     reg mclk;
     reg reset_n;
@@ -14,9 +14,9 @@ module zx50_bus_arbiter_tb;
     wire shd_rw_n     = test_vector[3];
 
     wire z80_wait_n, shd_busy_n;
-    wire z80_addr_oe_n, z80_data_oe_n, z80_data_dir;
-    wire shd_addr_oe_n, shd_data_oe_n, shd_data_dir;
+    wire z80_data_oe_n, shd_data_oe_n, d_dir;
 
+    // --- 1. Updated DUT Instantiation ---
     zx50_bus_arbiter dut (
         .mclk(mclk),
         .reset_n(reset_n),
@@ -27,21 +27,17 @@ module zx50_bus_arbiter_tb;
         .z80_rd_n(z80_rd_n),
         .shd_rw_n(shd_rw_n),
         
-        .z80_addr_oe_n(z80_addr_oe_n),
         .z80_data_oe_n(z80_data_oe_n),
-        .z80_data_dir(z80_data_dir),
-        
-        .shd_addr_oe_n(shd_addr_oe_n),
         .shd_data_oe_n(shd_data_oe_n),
-        .shd_data_dir(shd_data_dir)
+        .d_dir(d_dir) // Shared direction pin
     );
 
     initial mclk = 0;
-    always #13.88 mclk = ~mclk; 
+    always #13.88 mclk = ~mclk; // 36 MHz test clock
 
     initial begin
         $dumpfile("waves/arbiter_exhaustive.vcd");
-        $dumpvars(0, zx50_bus_arbiter_tb); // Fixed to match module name
+        $dumpvars(0, arbiter_exhaustive_tb);
         
         reset_n = 0;
         test_vector = 4'b0000;
@@ -68,33 +64,36 @@ module zx50_bus_arbiter_tb;
         end
     end
 
+    // --- 2. Updated INVARIANT ASSERTIONS ---
     always @(posedge mclk) begin
         if (reset_n) begin
-            if (z80_addr_oe_n == 0 && shd_addr_oe_n == 0) begin
-                $display("FATAL [%0t]: Transceiver Short Circuit Detected!", $time);
+            
+            // INVARIANT 1: Mutual Exclusion on the Shared Data Bus
+            if (z80_data_oe_n == 0 && shd_data_oe_n == 0) begin
+                $display("FATAL [%0t]: Shared Data Bus Short Circuit Detected!", $time);
                 $fatal(1); 
             end
-            if (z80_card_hit && (z80_addr_oe_n != 0) && (z80_wait_n != 0)) begin
-                $display("FATAL [%0t]: Z80 accessed unbuffered memory without a WAIT state!", $time);
+
+            // INVARIANT 2: Z80 Protection (Wait state must cover the transceiver delay)
+            if (z80_card_hit && (z80_data_oe_n != 0) && (z80_wait_n != 0)) begin
+                $display("FATAL [%0t]: Z80 hit the card but transceivers are closed without a WAIT state!", $time);
                 $fatal(1);
             end
-            if (!shadow_en_n && (shd_addr_oe_n != 0) && (shd_busy_n != 0)) begin
-                $display("FATAL [%0t]: Shadow bus accessed unbuffered memory without S_BUSY!", $time);
+
+            // INVARIANT 3: Shadow Bus Protection
+            if (!shadow_en_n && (shd_data_oe_n != 0) && (shd_busy_n != 0)) begin
+                $display("FATAL [%0t]: Shadow bus hit the card but transceivers are closed without S_BUSY!", $time);
                 $fatal(1);
             end
-            if (z80_addr_oe_n != z80_data_oe_n) begin
-                $display("FATAL [%0t]: Z80 Address and Data transceivers fell out of sync!", $time);
-                $fatal(1);
-            end
+            
+            // Note: Invariant 4 was removed because z80_addr_oe_n is hardwired on the PCB.
         end
     end
 
-    // --- System Watchdog Timer ---
-    // If the simulation runs for more than 10,000ns, assume a state machine 
-    // deadlock and violently kill the simulation with a non-zero exit code.
     initial begin
         #10000; 
         $display("FATAL [%0t]: Watchdog Timer Expired! State machine deadlock detected.", $time);
         $fatal(1);
     end
+
 endmodule
