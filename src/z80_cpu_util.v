@@ -91,4 +91,23 @@ module z80_cpu_util (
             #10 drive_data = 0;
         end
     endtask
+
+    // --- TASK: Interrupt Acknowledge (INTACK) ---
+    task intack(output [7:0] vector);
+        begin
+            @(posedge clk); // T1
+            m1_n = 0;       // M1 goes low to signal instruction fetch / intack
+            
+            @(posedge clk); // T2
+            iorq_n = 0;     // IORQ goes low alongside M1 to signal INTACK
+            
+            @(negedge clk); // TW
+            while (!wait_n) @(negedge clk);
+            
+            @(posedge clk); // T3
+            vector = data;  // Read the vector supplied by the interrupting device
+            iorq_n = 1;
+            m1_n = 1;
+        end
+    endtask
 endmodule

@@ -1,0 +1,42 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Mar  6 03:35:25 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_dma.vcd"
+[dumpfile_mtime] "Fri Mar  6 03:27:32 2026"
+[dumpfile_size] 13676
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_dma.gtkw"
+[timestart] 0
+[size] 1512 870
+[pos] -27 -24
+*-19.776752 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 40
+[signals_width] 182
+[sst_expanded] 0
+[sst_vpaned_height] 251
+@28
+zx50_dma_tb.mclk
+zx50_dma_tb.zclk
+zx50_dma_tb.reset_n
+@200
+-
+@22
+zx50_dma_tb.z80_addr[15:0]
+zx50_dma_tb.z80_data[7:0]
+@28
+zx50_dma_tb.z80_iorq_n
+zx50_dma_tb.z80_mreq_n
+zx50_dma_tb.z80_rd_n
+zx50_dma_tb.z80_wr_n
+zx50_dma_tb.z80_m1_n
+@200
+-
+@22
+zx50_dma_tb.dma_phys_addr[19:0]
+@28
+zx50_dma_tb.dma_local_we_n
+zx50_dma_tb.dma_local_oe_n
+@29
+zx50_dma_tb.dma_dir_to_bus
+[pattern_trace] 1
+[pattern_trace] 0
