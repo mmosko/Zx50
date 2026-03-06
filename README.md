@@ -100,50 +100,62 @@ Memory cards have a second port address for ShadowBus operations, e.g. 0x40 - 0x
 For the memory card, the CPU will specify a 256 Byte word as the start of
 the operation.
 
+Disk controller would have ports in the range 0x50 - 0x5F (this is configurable via
+an 8-position switch, they do not need to be 0x5x).
+
+There will be several writes **to the same port** with a different value in A[8:9] to
+indicate what is being written. We can communicate 14 bits of data with each write
+
+This is for the memory card.  The Disk Card (CH376) would have a more complex command
+structure, TBD.
+
 ```text
 A[0:7]   => Card port address
-A[8]     => 0 -> slave, 1 -> master
-A[8]     => 0 -> read, 1 -> write (always in reference to the card)
-A[10]    => reserved
-A[11:15] => Physical Address P[16:20]
-D[0:7]   => Physical Address P[8:15]
+A[8:14]  => Operand[8:14]
+A[15]    => OpCode
+D[0:7]   => Operand[0:7]
 ```
 
-For an I/O card, the physical address bits might be block addresses or some other address,
-e.g. a 512 byte sector.
+Opcode 0:
+Master/Slave          = Operand[14] (1 = master, 0 = slave)
+Direction             = Operand[13] (0 = to bus, 1 = from bus)
+PhysicalAddress[0:12] = Operand[0:12]
 
-To read a block from disk to memory, the CPU would send:
+Address 1:
+PhysicalAddress[13:19] = Operand[0:6]
+ByteCount[0:7]         = Operand[7:14] (up to 256 bytes)
 
-- To memory card: SLAVE, WRITE, base address
-- To disk card: MASTER, READ, block address
+Process:
 
-After the CPU initializes the receiver, it initializes the sender.  The sender
-will then
+CPU configures SLAVE fist, to read memory to the bus
 
-- assert S_EN
-- put SD[0:7] on the bus
-- Strobe S_STRB when it is valid
-- wait a MCLK cycle
-- assert S_INC to tell receiver to go to next address and loop
-- assert S_DONE when finished instead of S_INC.
-- deassert S_EN
+OUT card0, Opcode 0(Slave, ToBus, PA[0:12])
+OUT card0, Opcode 1(PA[13:19], 8'b0)
 
-The slave may assert S_BUSY to pause the sender.
+CPU Configures MASTER last, to get memory from the bus, for 89 bytes
 
+OUT card1, Opcode 0(Master, FromBus, PA[0:12])
+OUT card1, Opcode 1(PA[13:19], 89)
 
-To write a block to disk, the CPU would send:
+After the 2nd OUT to card 1, card 1 will take over the shadow bus and do the transfer.
 
-- To memory card: SLAVE, READ, base address
-- To disk ccard: MASTER, WRITE, block address
+If card 1 were a disk controller, the OUT would need to specify the actual COMMAND and
+other parameters.
 
-- Need to work out the details
-
-Is this ok...  or should the READer (producer of data) always be the master?  
-
-In the case of writing to disk, the disk knows it wants 512 bytes so it can
-do the SINC correctly.  Need to work this out.
-
-
+Each MCLK cycle:
+- Assert S_EN
+- Assert Strobe
+- Read byte
+- Deassert Strobe, a
+- Assert SINC
+- Deasert SINC, Assert Strobe
+- Read Byte
+- ... 
+- until ByteCount, then assert S_DONE instead of SINC
+- Deassert S_EN
+- Raise Z80_INT
+  - Must wait for valid time to raise INT
+  - Must respond to the INT READ
 
 
 

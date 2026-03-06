@@ -121,4 +121,14 @@ module zx50_mmu_sram (
 
     assign is_busy = is_initializing || cpu_updating;
 
+    // ==========================================
+    // CPLD Power-On-Reset (POR) Emulation
+    // ==========================================
+    initial begin
+        is_initializing = 1'b0;
+        init_ptr        = 4'h0;
+        reset_armed     = 1'b0;
+        pal_bits        = 16'h0000;
+        sync_we         = 1'b0;
+    end
 endmodule

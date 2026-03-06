@@ -20,8 +20,8 @@ module zx50_mem_card (
 );
 
     // --- Internal Local Bus Wires ---
-    wire [10:0] l_addr_low;     // CPLD Firewall Address
-    wire [7:0]  l_data;         // The One True Shared Local Data Bus
+    wire [10:0] l_addr_low;     
+    wire [7:0]  l_data;         
     wire [3:0]  atl_addr;       
     wire [7:0]  atl_data;       
     
@@ -41,27 +41,39 @@ module zx50_mem_card (
     // ==========================================
     
     // Z80 Data Transceiver (74ABT245)
-    // DIR: 0 = Card to Bus (Read), 1 = Bus to Card (Write)
-    assign l_data   = (!z80_data_oe_n && d_dir)  ? z80_data : 8'hzz;
-    assign z80_data = (!z80_data_oe_n && !d_dir) ? l_data   : 8'hzz;
+    // d_dir=1 (A to B / Z80 to L_Data), d_dir=0 (B to A / L_Data to Z80)
+    ic_74abt245 z80_data_xcvr (
+        .a(z80_data), .b(l_data), 
+        .dir(d_dir), .oe_n(z80_data_oe_n)
+    );
 
     // Shadow Data Transceiver (74ABT245)
-    assign l_data   = (!shd_data_oe_n && d_dir)  ? shd_data : 8'hzz;
-    assign shd_data = (!shd_data_oe_n && !d_dir) ? l_data   : 8'hzz;
+    ic_74abt245 shd_data_xcvr (
+        .a(shd_data), .b(l_data), 
+        .dir(d_dir), .oe_n(shd_data_oe_n)
+    );
 
-    // Shadow Control Transceiver ('245)
-    // dma_active causes CPLD to drive OUT (shd_c_dir=0)
+    // Shadow Control Transceiver ('245) - simplified pass-through for now
     assign {shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n} = 
-           (!shd_c_oe_n && !shd_c_dir) ? 5'bz : 5'bz; // Logic handled in Core
+           (!shd_c_oe_n && !shd_c_dir) ? 5'bz : 5'bz; 
 
     // ==========================================
     // 3. EXTERNAL LUT SRAM (ISSI Emulation)
     // ==========================================
-    reg [7:0] issi_ram [0:15];
-    always @(negedge atl_we_n) begin
-        if (!atl_ce_n) #5 issi_ram[atl_addr] <= atl_data;
-    end
-    assign #12 atl_data = (!atl_oe_n && atl_we_n && !atl_ce_n) ? issi_ram[atl_addr] : 8'hzz;
+    
+    // The CPLD traces driving the data bus to the LUT during programming
+    assign atl_data = (!atl_we_n) ? l_data : 8'hzz;
+
+    // The IS61C256AL chip itself (Requires 15-bit address, so we pad it)
+    wire [14:0] issi_addr = {11'b0, atl_addr};
+    
+    is61c256al lut_sram (
+        .addr(issi_addr),
+        .data(atl_data),
+        .ce_n(atl_ce_n),
+        .oe_n(atl_oe_n),
+        .we_n(atl_we_n)
+    );
 
     // ==========================================
     // 4. CPLD CORE INSTANTIATION
@@ -87,16 +99,22 @@ module zx50_mem_card (
     // 5. CYPRESS MAIN SRAM EMULATION
     // ==========================================
     
-    // We combine 11 bits from CPLD and 8 bits from the LUT to get 19 bits.
-    // atl_data[7] is STILL used for CE logic, but here we treat the LUT
-    // as providing the full upper half of the 19-bit physical chip address.
     wire [18:0] physical_addr = {atl_data[7:0], l_addr_low};
     
-zx50_mem main_ram (
+    // Bank 0 (Lower 512KB)
+    cy7c1049 bank0 (
         .addr(physical_addr), 
         .data(l_data),
-        .ce0_n(ce0_n), 
-        .ce1_n(ce1_n),
+        .ce_n(ce0_n), 
+        .oe_n(ram_oe_n), 
+        .we_n(ram_we_n)
+    );
+
+    // Bank 1 (Upper 512KB)
+    cy7c1049 bank1 (
+        .addr(physical_addr), 
+        .data(l_data),
+        .ce_n(ce1_n), 
         .oe_n(ram_oe_n), 
         .we_n(ram_we_n)
     );

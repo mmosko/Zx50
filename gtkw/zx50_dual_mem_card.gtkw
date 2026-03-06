@@ -1,0 +1,35 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Mar  6 02:02:07 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_dual_mem_card.vcd"
+[dumpfile_mtime] "Fri Mar  6 01:54:14 2026"
+[dumpfile_size] 4924061
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_dual_mem_card.gtkw"
+[timestart] 638384700
+[size] 1512 870
+[pos] -27 -24
+*-16.407461 638669000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_dual_mem_card_tb.
+[sst_width] 40
+[signals_width] 142
+[sst_expanded] 0
+[sst_vpaned_height] 157
+@28
+zx50_dual_mem_card_tb.mclk
+@29
+zx50_dual_mem_card_tb.zclk
+@28
+zx50_dual_mem_card_tb.reset_n
+@22
+zx50_dual_mem_card_tb.z80_addr[15:0]
+zx50_dual_mem_card_tb.z80_data[7:0]
+@28
+zx50_dual_mem_card_tb.z80_iorq_n
+zx50_dual_mem_card_tb.z80_mreq_n
+zx50_dual_mem_card_tb.z80_rd_n
+zx50_dual_mem_card_tb.z80_wr_n
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0

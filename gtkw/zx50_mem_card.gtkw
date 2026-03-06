@@ -1,0 +1,85 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Thu Mar  5 21:16:53 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_mem_card.vcd"
+[dumpfile_mtime] "Thu Mar  5 19:15:18 2026"
+[dumpfile_size] 9825
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_mem_card.gtkw"
+[timestart] 647500
+[size] 1512 870
+[pos] -27 -24
+*-16.928799 826500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_mem_card_tb.
+[treeopen] zx50_mem_card_tb.dut.
+[treeopen] zx50_mem_card_tb.dut.core.
+[sst_width] 278
+[signals_width] 166
+[sst_expanded] 1
+[sst_vpaned_height] 251
+@28
+zx50_mem_card_tb.mclk
+zx50_mem_card_tb.reset_n
+@200
+-
+-Z80 BUS
+@22
+zx50_mem_card_tb.z80_addr[15:0]
+zx50_mem_card_tb.z80_data[7:0]
+zx50_mem_card_tb.z80_data_out[7:0]
+@200
+-
+@28
+zx50_mem_card_tb.z80_iorq_n
+zx50_mem_card_tb.z80_mreq_n
+zx50_mem_card_tb.z80_m1_n
+zx50_mem_card_tb.z80_rd_n
+zx50_mem_card_tb.z80_wr_n
+@200
+-
+@28
+zx50_mem_card_tb.dut.d_dir
+zx50_mem_card_tb.dut.ram_oe_n
+@22
+zx50_mem_card_tb.dut.l_data[7:0]
+@200
+-
+-LUT
+@22
+zx50_mem_card_tb.dut.atl_addr[3:0]
+@c00022
+zx50_mem_card_tb.dut.atl_data[7:0]
+@28
+(0)zx50_mem_card_tb.dut.atl_data[7:0]
+(1)zx50_mem_card_tb.dut.atl_data[7:0]
+(2)zx50_mem_card_tb.dut.atl_data[7:0]
+(3)zx50_mem_card_tb.dut.atl_data[7:0]
+(4)zx50_mem_card_tb.dut.atl_data[7:0]
+(5)zx50_mem_card_tb.dut.atl_data[7:0]
+(6)zx50_mem_card_tb.dut.atl_data[7:0]
+(7)zx50_mem_card_tb.dut.atl_data[7:0]
+@1401200
+-group_end
+@28
+zx50_mem_card_tb.dut.atl_ce_n
+zx50_mem_card_tb.dut.atl_oe_n
+zx50_mem_card_tb.dut.atl_we_n
+@200
+-
+-MEM
+@23
+zx50_mem_card_tb.dut.main_ram.addr[18:0]
+@22
+zx50_mem_card_tb.dut.main_ram.data[7:0]
+@28
+zx50_mem_card_tb.dut.main_ram.ce0_n
+zx50_mem_card_tb.dut.main_ram.ce1_n
+zx50_mem_card_tb.dut.main_ram.oe_n
+zx50_mem_card_tb.dut.main_ram.we_n
+@200
+-
+-CORE
+@28
+zx50_mem_card_tb.dut.core.total_card_hit
+[pattern_trace] 1
+[pattern_trace] 0

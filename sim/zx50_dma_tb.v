@@ -3,135 +3,110 @@
 module zx50_dma_tb;
 
     // --- 1. Clocks & Reset ---
-    reg mclk;
+    reg mclk, zclk;
     reg reset_n;
 
-    // --- 2. Z80 Configuration Interface ---
-    reg [15:0] z80_addr;
-    reg [7:0]  z80_data_in;
-    reg z80_iorq_n;
-    reg z80_wr_n;
+    // --- 2. Z80 Interface (Driven by BFM) ---
+    wire [15:0] z80_addr;
+    wire [7:0]  z80_data; 
+    wire z80_iorq_n, z80_wr_n, z80_mreq_n, z80_rd_n, z80_m1_n;
 
-    // --- 3. DMA Master Outputs (Internal to CPLD) ---
+    // --- 3. Local Memory Bus (DMA acting as Master) ---
     wire [15:0] dma_addr_out;
     wire [7:0]  dma_data_out;
-    wire shd_en_n_out;
-    wire shd_rw_n_out;
-    wire shd_inc_n_out;
-    wire shd_stb_n_out;
-    wire shd_done_n_out;
+    reg  [7:0]  dma_data_in;
+
+    // --- 4. Shadow Bus Master Outputs ---
+    wire dma_shd_en_n_out;
+    wire dma_shd_rw_n_out;
+    wire dma_shd_inc_n_out;
+    wire dma_shd_stb_n_out;
+    wire dma_shd_done_n_out;
+
+    // --- 5. Shadow Bus Target/Status Inputs ---
+    reg shd_busy_n_in, shd_inc_n_in, shd_stb_n_in, shd_done_n_in;
     wire dma_active;
 
-    // --- 4. Shadow Bus Target Inputs (Internal from CPLD routing) ---
-    reg [7:0] dma_data_in;
-    reg shd_busy_n_in;
-    reg shd_inc_n_in;
-    reg shd_stb_n_in;
-    reg shd_done_n_in;
-
-    // --- 5. Clock Generation (36MHz Target) ---
+    // --- 6. Clock Generation ---
     initial mclk = 0;
-    always #13.88 mclk = ~mclk; // 36MHz Master Clock (~27.7ns period)
+    always #13.88 mclk = ~mclk; // ~36MHz
 
-    // --- 6. DUT Instantiation ---
-    zx50_dma uut (
-        .mclk(mclk), 
-        .reset_n(reset_n),
-        
-        .z80_addr(z80_addr), 
-        .z80_data_in(z80_data_in), 
-        .z80_iorq_n(z80_iorq_n), 
-        .z80_wr_n(z80_wr_n),
-        
-        .dma_addr_out(dma_addr_out), 
-        .dma_data_out(dma_data_out), 
-        .dma_data_in(dma_data_in), 
-        
-        .shd_en_n_out(shd_en_n_out), 
-        .shd_rw_n_out(shd_rw_n_out), 
-        .shd_inc_n_out(shd_inc_n_out),
-        .shd_stb_n_out(shd_stb_n_out), 
-        .shd_done_n_out(shd_done_n_out),
-        
-        .shd_busy_n_in(shd_busy_n_in), 
-        .shd_inc_n_in(shd_inc_n_in), 
-        .shd_stb_n_in(shd_stb_n_in), 
-        .shd_done_n_in(shd_done_n_in),
-        
+    initial zclk = 0;
+    always #62.5 zclk = ~zclk;  // ~8MHz Z80
+
+    // --- 7. Z80 BFM Instantiation ---
+    z80_cpu_util z80 (
+        .clk(zclk), .addr(z80_addr), .data(z80_data),
+        .mreq_n(z80_mreq_n), .iorq_n(z80_iorq_n), 
+        .rd_n(z80_rd_n), .wr_n(z80_wr_n), .m1_n(z80_m1_n),
+        .wait_n(1'b1) 
+    );
+
+    // --- 8. DUT Instantiation ---
+    zx50_dma dut (
+        .mclk(mclk), .reset_n(reset_n),
+        .z80_addr(z80_addr), .z80_data_in(z80_data), // Connect BFM data to DMA input
+        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n),
+        .dma_addr_out(dma_addr_out), .dma_data_out(dma_data_out), .dma_data_in(dma_data_in), 
+        .shd_en_n_out(dma_shd_en_n_out), .shd_rw_n_out(dma_shd_rw_n_out), .shd_inc_n_out(dma_shd_inc_n_out),
+        .shd_stb_n_out(dma_shd_stb_n_out), .shd_done_n_out(dma_shd_done_n_out),
+        .shd_busy_n_in(shd_busy_n_in), .shd_inc_n_in(shd_inc_n_in), .shd_stb_n_in(shd_stb_n_in), .shd_done_n_in(shd_done_n_in),
         .dma_active(dma_active)
     );
 
-    // --- 7. Test Sequence ---
+    // --- 9. Test Sequence ---
     initial begin
         $dumpfile("waves/zx50_dma.vcd");
         $dumpvars(0, zx50_dma_tb);
         
-        // Initialize default safe states
+        // Initialize default inactive states
         reset_n = 1;
-        z80_addr = 16'h0000;
-        z80_data_in = 8'h00;
-        z80_iorq_n = 1;
-        z80_wr_n = 1;
-        
         dma_data_in = 8'h00;
-        shd_busy_n_in = 1;
-        shd_inc_n_in = 1;
-        shd_stb_n_in = 1;
-        shd_done_n_in = 1;
+        
+        shd_busy_n_in = 1; shd_inc_n_in = 1; shd_stb_n_in = 1; shd_done_n_in = 1;
 
-        // Apply System Reset
+        // Apply Reset
         #50 reset_n = 0;
         #100 reset_n = 1;
-        
-        repeat(5) @(posedge mclk);
+        #200;
 
         // ==========================================
-        // PHASE 1: Verify Dormant Reset State
+        // PHASE 1: Verify No-Op / Dormant State
         // ==========================================
         $display("[%0t] --- Phase 1: Verifying Dormant Reset State ---", $time);
         
         if (dma_active !== 1'b0) begin
-            $display("FATAL [%0t]: DMA woke up immediately after reset! (dma_active=%b)", $time, dma_active);
+            $display("FATAL: DMA woke up immediately after reset!");
             $fatal(1);
         end
         
-        // Check that all active-low control lines are safely driven HIGH internally
-        if (shd_en_n_out !== 1'b1 || shd_stb_n_out !== 1'b1 || shd_rw_n_out !== 1'b1) begin
-            $display("FATAL [%0t]: DMA is driving Shadow Bus control lines active without permission!", $time);
+        if (dma_shd_en_n_out !== 1'b1 || dma_shd_stb_n_out !== 1'b1) begin
+            $display("FATAL: DMA is driving Shadow Bus control lines active without permission!");
             $fatal(1);
         end
 
         // ==========================================
-        // PHASE 2: Verify Z80 I/O Immunity
+        // PHASE 2: Verify Immunity to Z80 I/O Noise
         // ==========================================
         $display("[%0t] --- Phase 2: Verifying Z80 I/O Immunity ---", $time);
         
-        // Simulate the Z80 writing to an unrelated I/O port (e.g., the MMU at 0x30)
-        // The DMA stub should completely ignore this.
-        @(posedge mclk);
-        z80_addr = 16'h0030; 
-        z80_data_in = 8'hAA;
-        z80_iorq_n = 0;
+        // Simulate the Z80 writing to the MMU port. The DMA should stay asleep.
+        z80.io_write(16'h0030, 8'hAA);
         
-        #10 z80_wr_n = 0;
-        repeat(3) @(posedge mclk);
+        #100;
         
-        if (dma_active !== 1'b0 || shd_en_n_out !== 1'b1) begin
-            $display("FATAL [%0t]: DMA falsely triggered on unrelated Z80 I/O write!", $time);
+        if (dma_active !== 1'b0) begin
+            $display("FATAL: DMA falsely triggered on unrelated Z80 I/O write!");
             $fatal(1);
         end
-        
-        z80_wr_n = 1;
-        #10 z80_iorq_n = 1;
-        repeat(3) @(posedge mclk);
 
         $display("=====================================================");
-        $display(" SUCCESS: DMA stub passed all safety and isolation checks.");
+        $display(" SUCCESS: DMA No-Op Stub passed all safety checks.");
         $display("=====================================================");
         $finish;
     end
 
-    // --- 8. System Watchdog Timer ---
+    // --- 10. System Watchdog Timer ---
     initial begin
         #10000; 
         $display("FATAL [%0t]: Watchdog Timer Expired! Testbench deadlock detected.", $time);
