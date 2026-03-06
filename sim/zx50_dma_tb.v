@@ -76,12 +76,13 @@ module zx50_dma_tb;
     // --- 8. DUT Instantiation ---
     zx50_dma dut (
         .mclk(mclk), .reset_n(reset_n),
-        .card_id(4'h0), // Card ID 0 for testing
+        .card_id(4'h0), 
         .z80_addr(z80_addr), .z80_data_in(z80_data), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n),
         .dma_phys_addr(dma_phys_addr), .dma_data_out(dma_data_out), .dma_data_in(dma_data_in), 
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
         .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n),
+        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), 
+        .shd_busy_n(1'b1), // <-- ADD THIS (Tie high for the standalone testbench)
         .dma_active(dma_active), .shd_c_dir(shd_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
         .dma_is_master(dma_is_master), .int_pending(int_pending), .intack_clear(intack_clear)
     );

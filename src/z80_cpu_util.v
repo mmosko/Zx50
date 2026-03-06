@@ -110,4 +110,35 @@ module z80_cpu_util (
             m1_n = 1;
         end
     endtask
+
+    // --- I/O Read Cycle (IOREQ + RD) ---
+    task io_read;
+        input  [15:0] read_addr;
+        output [7:0]  read_data_out;
+        begin
+            @(posedge clk); // T1
+            addr = read_addr;
+            mreq_n = 1;
+            iorq_n = 1;
+            rd_n = 1;
+            wr_n = 1;
+            m1_n = 1;
+            
+            @(posedge clk); // T2
+            iorq_n = 0;
+            rd_n = 0;
+            
+            @(posedge clk); // TW (Standard Z80 automatic I/O wait state)
+            while (!wait_n) @(posedge clk); // Handle any external CPLD WAITs
+            
+            @(negedge clk); // Z80 samples data on the falling edge of T3
+            read_data_out = data;
+
+            @(posedge clk); // T3 finishes, T4 begins
+            iorq_n = 1;
+            rd_n = 1;
+            
+            @(posedge clk); // Cleanup cycle
+        end
+    endtask
 endmodule

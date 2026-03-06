@@ -158,11 +158,13 @@ module zx50_shadow_bus_tb;
         $display("=====================================================");
         if (errors == 0) begin
             $display(" SUCCESS: Universal Shadow Bus perfectly transferred data!");
+            $display("=====================================================");
+            $finish;
         end else begin
             $display(" FAILURE: Detected %0d errors during verification.", errors);
+            $display("=====================================================");
+            $fatal(1); // Force a non-zero exit code so Make aborts!
         end
-        $display("=====================================================");
-        $finish;
     end
 
     // --- System Watchdog Timer ---

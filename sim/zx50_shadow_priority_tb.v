@@ -210,12 +210,13 @@ module zx50_shadow_priority_tb;
         $display("\n=====================================================");
         if (errors == 0) begin
             $display(" SUCCESS: Arbitration perfectly deferred DMA bursts!");
+            $display("=====================================================");
+            $finish;
         end else begin
             $display(" FAILURE: Detected %0d errors during arbitration.", errors);
-            $fatal(1);
+            $display("=====================================================");
+            $fatal(1); // Force a non-zero exit code so Make aborts!
         end
-        $display("=====================================================");
-        $finish;
     end
 
     // --- System Watchdog Timer ---

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Fri Mar  6 17:02:59 2026
+[*] Fri Mar  6 18:13:57 2026
 [*]
 [dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_shadow_bus.vcd"
-[dumpfile_mtime] "Fri Mar  6 09:07:46 2026"
-[dumpfile_size] 117759
+[dumpfile_mtime] "Fri Mar  6 17:55:21 2026"
+[dumpfile_size] 120078
 [savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_shadow_bus.gtkw"
-[timestart] 9845000
+[timestart] 9799000
 [size] 1512 870
 [pos] -27 -24
-*-19.401623 11457000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-17.441015 10380900 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] zx50_shadow_bus_tb.
 [treeopen] zx50_shadow_bus_tb.card0.
 [treeopen] zx50_shadow_bus_tb.card1.
