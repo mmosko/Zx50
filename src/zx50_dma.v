@@ -32,16 +32,16 @@ module zx50_dma (
     output wire dma_local_oe_n,       
 
     // --- Shadow Bus Controls ---
-    inout  wire shd_en_n,
-    inout  wire shd_rw_n,
-    inout  wire shd_inc_n,
-    inout  wire shd_stb_n,
-    inout  wire shd_done_n,
-    input  wire shd_busy_n,
+    inout  wire sh_en_n,
+    inout  wire sh_rw_n,
+    inout  wire sh_inc_n,
+    inout  wire sh_stb_n,
+    inout  wire sh_done_n,
+    input  wire sh_busy_n,
 
     // --- Internal Status & Interrupts ---
     output wire dma_active, 
-    output wire shd_c_dir,
+    output wire sh_c_dir,
     output wire dma_dir_to_bus,
     output wire dma_is_master, 
     
@@ -120,15 +120,15 @@ module zx50_dma (
     // needs to check z80_iorq_n. It is completely immune to mid-burst Z80 I/O noise!
     wire dma_go = transfer_armed;
     
-    // If the Z80 targets any card on the backplane, the CPLD pulls shd_busy_n low.
-    wire yield_req = (shd_busy_n == 1'b0);
+    // If the Z80 targets any card on the backplane, the CPLD pulls sh_busy_n low.
+    wire yield_req = (sh_busy_n == 1'b0);
     
     // ORCHESTRATED HANDOFF: To prevent desynchronization, the Master acts as the 
     // sole orchestrator. The Master decides when it is safe to pause (M_WAIT). 
-    // When it pauses, it drops dma_active, which floats the shd_en_n backplane line.
+    // When it pauses, it drops dma_active, which floats the sh_en_n backplane line.
     // The Slave ONLY yields when it explicitly sees the Master release the bus!
     wire safe_to_yield = is_master ? (m_state == M_IDLE || m_state == M_WAIT || m_state == M_DONE) 
-                                   : (shd_en_n !== 1'b0);
+                                   : (sh_en_n !== 1'b0);
 
     reg yielding;
     always @(posedge mclk or negedge reset_n) begin
@@ -144,7 +144,7 @@ module zx50_dma (
     // ==========================================
     // 4. MASTER STATE MACHINE
     // ==========================================
-    // If programmed as Master, this node generates the clocking strokes (shd_stb_n)
+    // If programmed as Master, this node generates the clocking strokes (sh_stb_n)
     // and controls the shadow bus direction lines.
     localparam M_IDLE   = 3'd0;
     localparam M_START  = 3'd1;
@@ -171,7 +171,7 @@ module zx50_dma (
                     M_STROBE: m_state <= (byte_count == 8'h00) ? M_DONE : M_INC;
                     M_INC:    m_state <= M_WAIT; // M_INC is now exactly 1 clock cycle long
                     
-                    // LOOKAHEAD SHIELD: Prevent tearing if shd_busy_n drops asynchronously
+                    // LOOKAHEAD SHIELD: Prevent tearing if sh_busy_n drops asynchronously
                     M_WAIT:   if (!yielding && !yield_req) m_state <= M_STROBE; 
                     
                     M_DONE:   begin
@@ -191,8 +191,8 @@ module zx50_dma (
     // we do not need a multi-stage synchronizer that introduces lag. By evaluating 
     // the active-low signals directly, the Slave increments its address on the 
     // exact same clock edge as the Master!
-    wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !shd_inc_n);
-    wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !shd_done_n);
+    wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
+    wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
 
     // ==========================================
     // 6. PHYSICAL TRANSCEIVER AND BUS ROUTING
@@ -201,20 +201,20 @@ module zx50_dma (
     // A-Side is connected to the Backplane. B-Side is connected to the CPLD.
     // DIR = 0 : Data flows from B to A (Drive out to Backplane)
     // DIR = 1 : Data flows from A to B (Listen to Backplane)
-    assign shd_c_dir  = !is_master; 
+    assign sh_c_dir  = !is_master; 
 
     // Master dynamically pulses the strobe. Slave just passes the incoming strobe down.
-    wire int_shd_stb_n = is_master ? !(m_state == M_STROBE) : shd_stb_n;
+    wire int_sh_stb_n = is_master ? !(m_state == M_STROBE) : sh_stb_n;
 
     // By qualifying the shadow controls with dma_active, the Master cleanly floats 
     // the backplane the exact nanosecond it enters a yield, signaling the Slave.
-    assign shd_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz;
-    assign shd_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_to_bus : 1'bz;
-    assign shd_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? int_shd_stb_n : 1'bz;
+    assign sh_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz;
+    assign sh_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_to_bus : 1'bz;
+    assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? int_sh_stb_n : 1'bz;
     
     // Only pulse INC low during the 1-cycle M_INC state. Keep it high during M_WAIT.
-    assign shd_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
-    assign shd_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
+    assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
+    assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
 
     // Local Memory logic:
     assign dma_phys_addr = phys_addr;
@@ -222,6 +222,6 @@ module zx50_dma (
     
     // Read local RAM if dir_to_bus == 0. Write local RAM if dir_to_bus == 1.
     assign dma_local_oe_n = (dma_active && dir_to_bus == 1'b0) ? 1'b0 : 1'b1;
-    assign dma_local_we_n = (dma_active && dir_to_bus == 1'b1) ? int_shd_stb_n : 1'b1;
+    assign dma_local_we_n = (dma_active && dir_to_bus == 1'b1) ? int_sh_stb_n : 1'b1;
 
 endmodule

@@ -20,7 +20,7 @@ module zx50_mmu_sram_tb;
     wire z80_mreq_n, z80_iorq_n, z80_rd_n, z80_wr_n, z80_m1_n;
     
     // --- 4. MMU / ATL Wires ---
-    wire [3:0] atl_addr;
+    wire [4:0] atl_addr;  // Now 5 bits wide
     wire [7:0] atl_data;
     wire atl_we_n, atl_oe_n, atl_ce_n;
     wire [7:0] p_hi;
@@ -50,7 +50,7 @@ module zx50_mmu_sram_tb;
     assign atl_ce_n = !(z80_card_hit || is_busy);
     
     is61c256al lut_sram (
-        .addr({11'b0, atl_addr}), // Pad the 4-bit MMU address to fit the 15-bit chip
+        .addr({10'b0, atl_addr}), // Pad the 5-bit ATL address to fit the 15-bit chip
         .data(atl_data),
         .ce_n(atl_ce_n), .oe_n(atl_oe_n), .we_n(atl_we_n)
     );
@@ -62,8 +62,8 @@ module zx50_mmu_sram_tb;
         $dumpfile("waves/zx50_mmu_sram.vcd");
         $dumpvars(0, zx50_mmu_sram_tb);
         
-        // Setup
-        id_sw = 4'h0; boot_en_n = 0; // Boot override active
+        // Setup: Card ID is 0. Boot override is ACTIVE (Low).
+        id_sw = 4'h0; boot_en_n = 0; 
         
         // Boot Sequence
         reset_n = 1;      
@@ -72,14 +72,21 @@ module zx50_mmu_sram_tb;
         clk_gen.wait_mclk(50); 
         reset_n = 1; 
 
-        // Wait for the 16-cycle Hardware Wipe to finish
+        // Wait for the 16-cycle Hardware Wipe to finish.
+        // During this time, the CPLD steps through all 16 pages and writes a 1:1 mapping 
+        // into the ATL SRAM (e.g., Logical Page 0 -> Physical Page 0).
         clk_gen.wait_mclk(20); 
 
         // ==========================================
         // PHASE 1: Auto-Init 1:1 Mapping Check
         // ==========================================
+        // GOAL: Verify the hardware wipe completed successfully and the boot override works.
+        // Because boot_en_n = 0, this specific card should automatically claim ownership 
+        // of the upper 32KB of memory (Pages 8 through 15).
+        // ACTION: We simulate the Z80 reading from address 0x8000 (Logical Page 8).
+        // EXPECTED: The 'active' flag goes high, 'z80_card_hit' goes high, and the 
+        // ATL SRAM outputs Physical Page 0x08.
         $display("[%0t] --- Testing Phase 1: Auto-Init 1:1 Mapping ---", $time);
-        // Because boot_en_n = 0, page 8 (0x8000) should be claimed by this card
         
         fork
             // Thread A: Start the Z80 Read
@@ -104,8 +111,15 @@ module zx50_mmu_sram_tb;
         // ==========================================
         // PHASE 2: Dynamic MMU Reprogramming Check
         // ==========================================
+        // GOAL: Verify the MMU correctly snoops the bus and updates the ATL SRAM.
+        // The MMU registers live at I/O port Base (0x30) + Card ID (0x0) = 0x30.
+        // During an I/O write, Z80 A[11:8] determines the logical page to update.
+        // ACTION: We write data 0xAA to I/O address 0x0030. 
+        // This targets Logical Page 0 (A[11:8] is 0x0) on Card 0, mapping it to Physical Page 0xAA.
+        // EXPECTED: The MMU state machine detects this, claims Logical Page 0 in its 
+        // pal_bits register, and pulses the WE line to write 0xAA into the ATL SRAM.
         $display("[%0t] --- Testing Phase 2: Z80 MMU I/O Write ---", $time);
-        // OUT (0x30), 0xAA -> Writing physical page 0xAA to Bank 0x0
+        
         z80.io_write(16'h0030, 8'hAA); 
 
         z80.wait_cycles(5); 
@@ -113,8 +127,11 @@ module zx50_mmu_sram_tb;
         // ==========================================
         // PHASE 3: Translation Verification
         // ==========================================
+        // GOAL: Prove the reprogramming in Phase 2 actually worked.
+        // ACTION: We simulate the Z80 reading from address 0x0000 (Logical Page 0).
+        // EXPECTED: Because we remapped Logical Page 0 to Physical Page 0xAA, the 
+        // ATL SRAM should output p_hi = 0xAA (instead of its default 0x00).
         $display("[%0t] --- Testing Phase 3: Translation Verification ---", $time);
-        // Verify SRAM actually latched it by reading Bank 0x0
         
         fork
             z80.mem_read(16'h0000, dummy_data);

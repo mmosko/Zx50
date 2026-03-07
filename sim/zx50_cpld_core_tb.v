@@ -22,20 +22,20 @@ module zx50_cpld_core_tb;
     wire z80_wait_n, z80_ieo, z80_int_n;
 
     // --- 4. Shadow DMA Bus (Inactive for this test) ---
-    wire shadow_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n, shd_busy_n;
-    wire shd_c_dir, shd_c_oe_n;
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n;
+    wire sh_c_dir;
     
     // Default Shadow Bus Pull-ups
-    assign shadow_en_n = 1'b1; 
-    assign shd_rw_n = 1'b1;
+    assign sh_en_n = 1'b1; 
+    assign sh_rw_n = 1'b1;
 
     // --- 5. CPLD Output Pins to Monitor ---
     wire [10:0] l_addr;
-    wire [3:0]  atl_addr;
+    wire [4:0]  atl_addr;
     wire [7:0]  atl_data;
     wire atl_we_n, atl_oe_n, atl_ce_n;
-    wire ce0_n, ce1_n, ram_oe_n, ram_we_n;
-    wire z80_data_oe_n, shd_data_oe_n, d_dir;
+    wire ram_ce0_n, ram_ce1_n, ram_oe_n, ram_we_n;
+    wire z80_data_oe_n, l_dir;
 
     // --- 6. The Duplex Handoff Logic ---
     wire [3:0] duplex_bus = (reset_n) ? {z80_iorq_n, z80_mreq_n, z80_wr_n, z80_rd_n} : card_id_sw;
@@ -59,23 +59,23 @@ module zx50_cpld_core_tb;
         
         .z80_addr(z80_addr), .l_data(z80_data), 
         
-        .shadow_en_n(shadow_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n),
-        .shd_c_dir(shd_c_dir), .shd_c_oe_n(shd_c_oe_n),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n),
+        .sh_c_dir(sh_c_dir),
         
         .l_addr(l_addr), .atl_addr(atl_addr), .atl_data(atl_data),
         .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n), .atl_ce_n(atl_ce_n),
-        .ce0_n(ce0_n), .ce1_n(ce1_n), .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
-        .z80_data_oe_n(z80_data_oe_n), .shd_data_oe_n(shd_data_oe_n), .d_dir(d_dir)
+        .ram_ce0_n(ram_ce0_n), .ram_ce1_n(ram_ce1_n), .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
+        .z80_data_oe_n(z80_data_oe_n), .l_dir(l_dir)
     );
 
     // We MUST include the LUT here. If atl_data is floating, the CPLD 
-    // won't know how to resolve atl_data[7], turning ce0_n/ce1_n into 'x'.
-    // During an MMU write, route the Z80 data to the LUT model.
+    // won't know how to resolve atl_data[7], turning ram_ce0_n/ram_ce1_n into 'x'.
+    // During an MMU write, route the local data to the LUT model.
     assign atl_data = (!atl_we_n) ? z80_data : 8'hzz;
     
     is61c256al lut_sram (
-        .addr({11'b0, atl_addr}), .data(atl_data),
+        .addr({10'b0, atl_addr}), .data(atl_data),
         .ce_n(atl_ce_n), .oe_n(atl_oe_n), .we_n(atl_we_n)
     );
 
@@ -95,17 +95,15 @@ module zx50_cpld_core_tb;
         #50 reset_n = 0;  // RC circuit holds reset low
         #700 reset_n = 1; // RC circuit charges, releasing reset
 
-        // Wait for the 16-cycle Hardware Wipe to finish (Using the new timebase!)
+        // Wait for the 16-cycle Hardware Wipe to finish
         clk_gen.wait_mclk(20); 
 
         // ==========================================
         // PHASE 1: Program MMU
         // ==========================================
         $display("[%0t] Phase 1: Programming MMU Page 0 to 0x45...", $time);
-        // Base 0x30 | ID 0xC = Port 0x3C
         z80.io_write(16'h003C, 8'h45); 
 
-        // Wait a few Z80 T-States before the next action
         z80.wait_cycles(5); 
 
         // ==========================================
@@ -114,23 +112,21 @@ module zx50_cpld_core_tb;
         $display("[%0t] Phase 2: Memory Write Validation...", $time);
         
         fork
-            // Thread A: Fire the Z80 Write sequence
             z80.mem_write(16'h0123, 8'hAA);
             
-            // Thread B: Wait for the exact moment WR drops
             begin
                 wait(z80_wr_n == 1'b0); 
-                #10; // Give the CPLD 10ns to propagate the signal
+                #10; 
                 
                 // Verify transceivers are open and pointing inward
-                if (z80_data_oe_n !== 1'b0 || d_dir !== 1'b1) begin
-                    $display("FATAL: Transceiver write logic failed! oe_n=%b, dir=%b", z80_data_oe_n, d_dir);
+                if (z80_data_oe_n !== 1'b0 || l_dir !== 1'b1) begin
+                    $display("FATAL: Transceiver write logic failed! oe_n=%b, l_dir=%b", z80_data_oe_n, l_dir);
                     $fatal(1);
                 end
                 
-                // Verify the correct Chip Enable fired (0x45 -> bit 7 is 0, so ce0_n)
-                if (ce0_n !== 1'b0 || ce1_n !== 1'b1 || ram_we_n !== 1'b0) begin
-                    $display("FATAL: Main SRAM gating failed! ce0=%b, ce1=%b, we=%b", ce0_n, ce1_n, ram_we_n);
+                // Verify the correct Chip Enable fired
+                if (ram_ce0_n !== 1'b0 || ram_ce1_n !== 1'b1 || ram_we_n !== 1'b0) begin
+                    $display("FATAL: Main SRAM gating failed! ce0=%b, ce1=%b, we=%b", ram_ce0_n, ram_ce1_n, ram_we_n);
                     $fatal(1);
                 end
                 
@@ -146,23 +142,21 @@ module zx50_cpld_core_tb;
         $display("[%0t] Phase 3: Memory Read Validation...", $time);
         
         fork
-            // Thread A: Fire the Z80 Read sequence
             z80.mem_read(16'h0123, dummy_data);
             
-            // Thread B: Wait for the exact moment RD drops
             begin
                 wait(z80_rd_n == 1'b0); 
-                #10; // Give the CPLD 10ns to propagate the signal
+                #10; 
                 
                 // Verify transceivers are open and pointing outward
-                if (z80_data_oe_n !== 1'b0 || d_dir !== 1'b0) begin
-                    $display("FATAL: Transceiver read logic failed! oe_n=%b, dir=%b", z80_data_oe_n, d_dir);
+                if (z80_data_oe_n !== 1'b0 || l_dir !== 1'b0) begin
+                    $display("FATAL: Transceiver read logic failed! oe_n=%b, l_dir=%b", z80_data_oe_n, l_dir);
                     $fatal(1);
                 end
                 
                 // Verify Output Enable fired
-                if (ce0_n !== 1'b0 || ram_oe_n !== 1'b0) begin
-                    $display("FATAL: Main SRAM read gating failed! ce0=%b, oe=%b", ce0_n, ram_oe_n);
+                if (ram_ce0_n !== 1'b0 || ram_oe_n !== 1'b0) begin
+                    $display("FATAL: Main SRAM read gating failed! ce0=%b, oe=%b", ram_ce0_n, ram_oe_n);
                     $fatal(1);
                 end
                 

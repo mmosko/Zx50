@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Fri Mar  6 19:18:01 2026
+[*] Sat Mar  7 18:31:48 2026
 [*]
 [dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_shadow_concurrent.vcd"
-[dumpfile_mtime] "Fri Mar  6 18:57:36 2026"
-[dumpfile_size] 796848
+[dumpfile_mtime] "Fri Mar  6 19:18:07 2026"
+[dumpfile_size] 766682
 [savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_shadow_concurrent.gtkw"
 [timestart] 0
 [size] 1512 870
 [pos] -27 -24
-*-24.183073 54370000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-24.183073 48950000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] zx50_shadow_concurrent_tb.
 [treeopen] zx50_shadow_concurrent_tb.card0.
 [treeopen] zx50_shadow_concurrent_tb.card1.
@@ -108,7 +108,6 @@ zx50_shadow_concurrent_tb.z80_int_n
 zx50_shadow_concurrent_tb.shared_wait_n
 @200
 -
-@201
 -CARD 2
 @28
 zx50_shadow_concurrent_tb.card2.ce0_n

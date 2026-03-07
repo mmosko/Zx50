@@ -4,16 +4,11 @@
  * MODULE: zx50_shadow_priority_tb
  * DESCRIPTION:
  * Validates the bus arbitration and priority logic of the Universal Shadow Bus.
- * The Z80 is the supreme bus master. If a background DMA transfer is actively 
- * blasting data across the shadow bus, and the Z80 suddenly initiates an MREQ 
- * or IORQ cycle targeting one of the active DMA nodes, the targeted node must 
- * safely pause the DMA burst, service the Z80, and then seamlessly resume.
- *
- * TESTS PERFORMED:
- * 1. Z80 MREQ to SLAVE (Destination Card) during active DMA.
- * 2. Z80 MREQ to MASTER (Source Card) during active DMA.
- * 3. Z80 IORQ to SLAVE during active DMA.
- * 4. Z80 IORQ to MASTER during active DMA.
+ * * TIMING VALIDATION ADDED:
+ * This test now dynamically measures the elapsed time of the Z80 transactions 
+ * during a DMA collision. If the CPLD's state machine inserts unnecessary WAIT 
+ * states or stalls the handoff, the test will flag a TIMING VIOLATION and fail, 
+ * even if the payload data is ultimately correct.
  ***************************************************************************************/
 
 module zx50_shadow_priority_tb;
@@ -36,9 +31,9 @@ module zx50_shadow_priority_tb;
     wire z80_int_n; 
 
     // --- 3. Shadow Bus Backplane ---
-    wire [15:0] shd_addr; 
-    wire [7:0]  shd_data;
-    wire shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n, shd_busy_n;
+    wire [15:0] sh_addr; 
+    wire [7:0]  sh_data;
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n;
 
     zx50_backplane passive_backplane (
         .z80_addr(z80_addr), .z80_data(z80_data),
@@ -46,9 +41,9 @@ module zx50_shadow_priority_tb;
         .z80_rd_n(z80_rd_n), .z80_wr_n(z80_wr_n), .z80_m1_n(z80_m1_n), 
         .z80_wait_n(shared_wait_n), .z80_int_n(z80_int_n),
         
-        .shd_addr(shd_addr), .shd_data(shd_data),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n)
+        .sh_addr(sh_addr), .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
     // --- 4. System Instantiations ---
@@ -59,36 +54,36 @@ module zx50_shadow_priority_tb;
         .wait_n(shared_wait_n)
     );
 
-    // Card 0 (ID 0x0) - MASTER (Source)
-    zx50_mem_card card0 (
+    zx50_mem_card card0 ( // MASTER
         .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h0),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(1'b1), .z80_ieo(c0_ieo),
         .z80_wait_n(c0_wait_n), .z80_int_n(z80_int_n),
-        .shd_addr(shd_addr), .shd_data(shd_data),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n)
+        .sh_addr(sh_addr), .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
-    // Card 1 (ID 0x1) - SLAVE (Destination)
-    zx50_mem_card card1 (
+    zx50_mem_card card1 ( // SLAVE
         .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h1),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(c0_ieo), .z80_ieo(c1_ieo), 
         .z80_wait_n(c1_wait_n), .z80_int_n(z80_int_n),
-        .shd_addr(shd_addr), .shd_data(shd_data),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n)
+        .sh_addr(sh_addr), .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
     // --- 5. Test Utilities ---
     integer i;
     reg [7:0] read_val, vector;
     integer errors = 0;
+    
+    // Variables for cycle-time tracking
+    time start_time, elapsed_time;
 
-    // A helper task to verify a full 16-byte payload after a DMA burst
     task verify_payload;
         input [7:0] base_val;
         begin
@@ -115,27 +110,33 @@ module zx50_shadow_priority_tb;
         reset_n = 1; 
         clk_gen.wait_mclk(20); 
 
-        // Map Z80 Bank 0 (0x0000) to Card 0, Phys Page 0
         z80.io_write(16'h0030, 8'h00);
-        // Map Z80 Bank 1 (0x1000) to Card 1, Phys Page 0
         z80.io_write(16'h0131, 8'h00);
 
         // =========================================================
         // TEST 1: Z80 MREQ TO SLAVE
+        // Maximum Expected Duration: ~550ns
         // =========================================================
         $display("\n[%0t] === TEST 1: Z80 MREQ to SLAVE during DMA ===", $time);
-        // Seed Card 0 with 0xA0
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hA0);
 
-        z80.io_write(16'h2041, 8'h00); // Slave Listen
-        z80.io_write(16'h8841, 8'h00); // Slave Count=16, Arm
-        z80.io_write(16'h4040, 8'h00); // Master Drive
-        z80.io_write(16'h8840, 8'h00); // Master Count=16, Arm (DMA FIRES!)
+        z80.io_write(16'h2041, 8'h00); 
+        z80.io_write(16'h8841, 8'h00); 
+        z80.io_write(16'h4040, 8'h00); 
+        z80.io_write(16'h8840, 8'h00); 
 
-        // BOOM: Immediate collision! Z80 tries to read Card 1 memory right as it's being written.
         $display("[%0t] Z80 forcefully reading Slave memory (0x1008)...", $time);
+        start_time = $time;
         z80.mem_read(16'h1008, read_val);
-        $display("[%0t] Z80 Slave read completed. Value: %x", $time, read_val);
+        elapsed_time = $time - start_time;
+        
+        $display("[%0t] Z80 Slave read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
+        
+        // Assert timing limits
+        if (elapsed_time > 550000) begin
+            $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 550000 ps) !!!", elapsed_time);
+            errors = errors + 1;
+        end
 
         wait(z80_int_n == 1'b0);
         z80.wait_cycles(2); z80.intack(vector); z80.wait_cycles(2);
@@ -145,19 +146,28 @@ module zx50_shadow_priority_tb;
 
         // =========================================================
         // TEST 2: Z80 MREQ TO MASTER
+        // Maximum Expected Duration: ~450ns
         // =========================================================
         $display("\n[%0t] === TEST 2: Z80 MREQ to MASTER during DMA ===", $time);
-        // Re-seed Card 0 with 0xB0 to guarantee fresh transfer
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hB0);
 
         z80.io_write(16'h2041, 8'h00); 
         z80.io_write(16'h8841, 8'h00); 
         z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); // DMA FIRES!
+        z80.io_write(16'h8840, 8'h00); 
 
         $display("[%0t] Z80 forcefully reading Master memory (0x0008)...", $time);
+        start_time = $time;
         z80.mem_read(16'h0008, read_val);
-        $display("[%0t] Z80 Master read completed. Value: %x", $time, read_val);
+        elapsed_time = $time - start_time;
+        
+        $display("[%0t] Z80 Master read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
+
+        // Assert timing limits
+        if (elapsed_time > 450000) begin
+            $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 450000 ps) !!!", elapsed_time);
+            errors = errors + 1;
+        end
 
         wait(z80_int_n == 1'b0);
         z80.wait_cycles(2); z80.intack(vector); z80.wait_cycles(2);
@@ -167,6 +177,7 @@ module zx50_shadow_priority_tb;
 
         // =========================================================
         // TEST 3: Z80 IORQ TO SLAVE
+        // Maximum Expected Duration: ~700ns
         // =========================================================
         $display("\n[%0t] === TEST 3: Z80 IORQ to SLAVE during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hC0);
@@ -174,11 +185,20 @@ module zx50_shadow_priority_tb;
         z80.io_write(16'h2041, 8'h00); 
         z80.io_write(16'h8841, 8'h00); 
         z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); // DMA FIRES!
+        z80.io_write(16'h8840, 8'h00); 
 
         $display("[%0t] Z80 forcefully reading Slave MMU IO Port (0x0131)...", $time);
+        start_time = $time;
         z80.io_read(16'h0131, read_val);
-        $display("[%0t] Z80 Slave IO read completed. Value: %x", $time, read_val);
+        elapsed_time = $time - start_time;
+        
+        $display("[%0t] Z80 Slave IO read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
+
+        // Assert timing limits
+        if (elapsed_time > 700000) begin
+            $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 700000 ps) !!!", elapsed_time);
+            errors = errors + 1;
+        end
 
         wait(z80_int_n == 1'b0);
         z80.wait_cycles(2); z80.intack(vector); z80.wait_cycles(2);
@@ -188,6 +208,7 @@ module zx50_shadow_priority_tb;
 
         // =========================================================
         // TEST 4: Z80 IORQ TO MASTER
+        // Maximum Expected Duration: ~700ns
         // =========================================================
         $display("\n[%0t] === TEST 4: Z80 IORQ to MASTER during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hD0);
@@ -195,11 +216,20 @@ module zx50_shadow_priority_tb;
         z80.io_write(16'h2041, 8'h00); 
         z80.io_write(16'h8841, 8'h00); 
         z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); // DMA FIRES!
+        z80.io_write(16'h8840, 8'h00); 
 
         $display("[%0t] Z80 forcefully reading Master MMU IO Port (0x0030)...", $time);
+        start_time = $time;
         z80.io_read(16'h0030, read_val);
-        $display("[%0t] Z80 Master IO read completed. Value: %x", $time, read_val);
+        elapsed_time = $time - start_time;
+        
+        $display("[%0t] Z80 Master IO read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
+
+        // Assert timing limits
+        if (elapsed_time > 700000) begin
+            $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 700000 ps) !!!", elapsed_time);
+            errors = errors + 1;
+        end
 
         wait(z80_int_n == 1'b0);
         z80.wait_cycles(2); z80.intack(vector); z80.wait_cycles(2);
@@ -209,19 +239,19 @@ module zx50_shadow_priority_tb;
 
         $display("\n=====================================================");
         if (errors == 0) begin
-            $display(" SUCCESS: Arbitration perfectly deferred DMA bursts!");
+            $display(" SUCCESS: Arbitration & Timing perfectly verified!");
             $display("=====================================================");
             $finish;
         end else begin
             $display(" FAILURE: Detected %0d errors during arbitration.", errors);
             $display("=====================================================");
-            $fatal(1); // Force a non-zero exit code so Make aborts!
+            $fatal(1); 
         end
     end
 
     // --- System Watchdog Timer ---
     initial begin
-        #5000000; // Expanded to 5ms to allow all 4 tests to complete
+        #5000000; 
         $display("FATAL [%0t]: Watchdog Timer Expired!", $time);
         $fatal(1);
     end

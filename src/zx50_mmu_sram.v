@@ -1,5 +1,15 @@
 `timescale 1ns/1ps
 
+/***************************************************************************************
+ * MODULE: zx50_mmu_sram
+ * DESCRIPTION:
+ * The Memory Management Unit. Snoops the Z80 bus for I/O writes to its specific 
+ * Hardware ID to update the Address Translation Lookaside (ATL) SRAM. 
+ * Translates the top 4 bits of the active master's address into an 8-bit physical page.
+ * NOTE: atl_addr is 5 bits wide. The MSB is held to 0 by the MMU to target the LUT, 
+ * leaving the upper half of the ATL SRAM available for scratchpad usage.
+ ***************************************************************************************/
+
 module zx50_mmu_sram (
     input wire mclk,              // 36MHz Master Clock
     input wire reset_n,           // System Reset
@@ -9,7 +19,7 @@ module zx50_mmu_sram (
     // --- Backplane & Local Bus Inputs ---
     input wire [15:0] z80_addr,   // Private Z80 Address Bus (For snooping & hit detection)
     input wire [15:12] l_addr_hi, // Active Master's Top 4 Bits (Routed from Top-Level)
-    input wire [7:0] l_data,      // Local Shared Data Bus (Formerly z80_data)
+    input wire [7:0] l_data,      // Local Shared Data Bus 
     
     // --- Z80 Control Signals ---
     input wire z80_iorq_n, 
@@ -17,7 +27,7 @@ module zx50_mmu_sram (
     input wire z80_mreq_n, 
 
     // --- Address Translation Table (ATL / ISSI SRAM) ---
-    output wire [3:0] atl_addr, 
+    output wire [4:0] atl_addr,   // 5-bit address (Lower 16 = LUT, Upper 16 = Scratchpad)
     inout  wire [7:0] atl_data,
     output wire atl_we_n,
     output wire atl_oe_n,
@@ -25,9 +35,8 @@ module zx50_mmu_sram (
     // --- Status & Arbiter Outputs ---
     output wire [7:0] p_addr_hi,  // To physical SRAM A[18:11]
     output wire active,           // 1 = Z80 is actively reading/writing a mapped page
-    output wire z80_card_hit,      // 1 = Card is targeted by Z80 (Mem Page OR I/O Update)
-
-    output wire is_busy
+    output wire z80_card_hit,     // 1 = Card is targeted by Z80 (Mem Page OR I/O Update)
+    output wire is_busy           // 1 = MMU is currently writing to the ATL SRAM
 );
 
     // ==========================================
@@ -86,17 +95,17 @@ module zx50_mmu_sram (
     wire cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
                         (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)));
     
-    // ATL Address Multiplexer:
+    // ATL Address Multiplexer (MSB is forced to 0 to target the LUT half of the SRAM)
     // Init -> Use Counter | Z80 I/O -> Use Z80 A[11:8] | Run -> Use Active Master Top 4
-    assign atl_addr = is_initializing ? init_ptr : 
-                      (cpu_updating   ? z80_addr[11:8] : l_addr_hi);
+    assign atl_addr = is_initializing ? {1'b0, init_ptr} : 
+                      (cpu_updating   ? {1'b0, z80_addr[11:8]} : {1'b0, l_addr_hi});
 
     // ATL Write Enable: High-speed clock pulse during init, or synchronized CPU pulse
     assign atl_we_n = is_initializing ? !mclk : !sync_we;
 
     // ATL Output Enable: 
     // Disable (High) when the CPLD is driving the bus to write.
-    // Enable (Low) during normal run so the SRAM can drive p_addr_hi to the Cypress chip.
+    // Enable (Low) during normal run so the SRAM can drive p_addr_hi.
     assign atl_oe_n = (is_initializing || cpu_updating) ? 1'b1 : 1'b0;
 
     // ATL Data: Drive the bus ONLY when we are writing

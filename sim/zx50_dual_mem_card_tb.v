@@ -55,12 +55,12 @@ module zx50_dual_mem_card_tb;
     wire z80_int_n; // Shared open-drain interrupt line
 
     // --- 4. Shadow Bus (Inactive for this test) ---
-    wire [15:0] shd_addr;
-    wire [7:0]  shd_data;
-    wire shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n, shd_busy_n;
+    wire [15:0] sh_addr;
+    wire [7:0]  sh_data;
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n;
 
-    assign shd_en_n = 1'b1;
-    assign shd_rw_n = 1'b1;
+    assign sh_en_n = 1'b1;
+    assign sh_rw_n = 1'b1;
 
     // --- 5. BFM Instantiations ---
 
@@ -79,9 +79,9 @@ module zx50_dual_mem_card_tb;
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(1'b1), // Top of the chain
         .z80_wait_n(c0_wait_n), .z80_ieo(c0_ieo), .z80_int_n(z80_int_n),
-        .shd_addr(shd_addr), .shd_data(shd_data),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n)
+        .sh_addr(sh_addr), .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
     // Card 1 (ID: 0x1)
@@ -91,9 +91,9 @@ module zx50_dual_mem_card_tb;
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(c0_ieo), // Chained from Card 0
         .z80_wait_n(c1_wait_n), .z80_ieo(c1_ieo), .z80_int_n(z80_int_n),
-        .shd_addr(shd_addr), .shd_data(shd_data),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n)
+        .sh_addr(sh_addr), .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
     // --- 6. Test Sequence Variables ---

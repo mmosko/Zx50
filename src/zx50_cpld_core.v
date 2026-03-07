@@ -7,6 +7,8 @@
  * It is responsible for extremely strict multiplexing of the physical IC pins, 
  * ensuring that the Z80, the SRAM chips, and the Backplane transceivers never 
  * contend with each other. 
+ * * NOTE: The Shadow Bus and Z80 backplane share a single data transceiver direction pin, 
+ * controlled by l_dir.
  ***************************************************************************************/
 
 module zx50_cpld_core (
@@ -24,31 +26,31 @@ module zx50_cpld_core (
     input  wire [15:0] z80_addr, 
     
     // --- Local Shared Bus ---
-    inout  wire [7:0]  l_data, 
+    inout  wire [7:0] l_data, 
     
     // --- Shadow Bus Controls (Bidirectional) ---
-    inout  wire shadow_en_n, 
-    inout  wire shd_rw_n, 
-    inout  wire shd_inc_n, 
-    inout  wire shd_stb_n, 
-    inout  wire shd_done_n, 
-    inout  wire shd_busy_n, 
+    inout  wire sh_en_n, 
+    inout  wire sh_rw_n, 
+    inout  wire sh_inc_n, 
+    inout  wire sh_stb_n, 
+    inout  wire sh_done_n, 
+    inout  wire sh_busy_n, 
     
     // --- Transceiver Controls ---
-    output wire shd_c_dir,      
-    output wire shd_c_oe_n,     
+    output wire sh_c_dir,         
     output wire z80_data_oe_n, 
-    output wire shd_data_oe_n, 
-    output wire d_dir,
+    output wire sh_data_oe_n,    // <-- ADDED BACK!
+    output wire l_dir,
     
     // --- Local Memory & LUT Routing ---
     output wire [10:0] l_addr,  
-    output wire [3:0]  atl_addr, 
+    output wire [4:0]  atl_addr, 
     inout  wire [7:0]  atl_data, 
     output wire atl_we_n, 
     output wire atl_oe_n, 
     output wire atl_ce_n,
-    output wire ce0_n, ce1_n,
+    output wire ram_ce0_n, 
+    output wire ram_ce1_n,
     output wire ram_oe_n,
     output wire ram_we_n           
 );
@@ -71,19 +73,16 @@ module zx50_cpld_core (
     // ==========================================
     wire internal_active, mmu_busy;
     
-    // PHANTOM HIT SHIELD: The MMU purely decodes the Z80 address bus combinatorially. 
-    // We strictly qualify the MMU hit with an active MREQ or IORQ cycle to prevent 
-    // the Arbiter from throwing fake yield requests when the Z80 is floating the bus.
     wire active_bus_cycle = !z80_mreq_n || !z80_iorq_n;
     wire mmu_card_hit;
     wire qualified_mmu_hit = mmu_card_hit && active_bus_cycle;
     wire dma_card_hit = (!z80_iorq_n && (z80_addr[7:0] == (8'h40 | latched_id)));
     wire internal_z80_card_hit = qualified_mmu_hit | dma_card_hit;
 
-    wire arbiter_shd_busy_n;
-    wire arbiter_d_dir; 
-    wire arbiter_shd_data_oe_n; 
+    wire arbiter_sh_busy_n;
+    wire arbiter_l_dir; 
     wire arbiter_z80_data_oe_n;
+    wire arbiter_sh_data_oe_n;   // <-- ADDED WIRE
     wire arbiter_wait_n;
     
     wire z80_grant = !z80_data_oe_n;
@@ -118,20 +117,18 @@ module zx50_cpld_core (
     wire arbiter_hit  = internal_z80_card_hit || responding_to_intack;
     wire arbiter_rd_n = responding_to_intack ? 1'b0 : z80_rd_n;
 
-    // SPATIAL INDEPENDENCE SHIELD: If this card is NOT participating in a DMA burst, 
-    // it does not care if the backplane is busy! Feed the Arbiter a constant 1 (Idle) 
-    // so it doesn't unnecessarily assert WAIT when the Z80 requests local access.
-    wire safe_shadow_en_n = dma_is_active ? shadow_en_n : 1'b1;
+    wire safe_sh_en_n = dma_is_active ? sh_en_n : 1'b1;
 
+    // <-- FIXED ARBITER INSTANTIATION -->
     zx50_bus_arbiter arbiter_unit (
         .mclk(mclk), .reset_n(reset_n),
-        .shadow_en_n(safe_shadow_en_n), // SHIELDED!
+        .sh_en_n(safe_sh_en_n), 
         .z80_card_hit(arbiter_hit), 
-        .z80_wait_n(arbiter_wait_n), .shd_busy_n(arbiter_shd_busy_n), 
-        .z80_rd_n(arbiter_rd_n), .shd_rw_n(shd_rw_n),
+        .z80_wait_n(arbiter_wait_n), .sh_busy_n(arbiter_sh_busy_n), 
+        .z80_rd_n(arbiter_rd_n), .sh_rw_n(sh_rw_n),
         .z80_data_oe_n(arbiter_z80_data_oe_n), 
-        .shd_data_oe_n(arbiter_shd_data_oe_n), 
-        .d_dir(arbiter_d_dir)                  
+        .sh_data_oe_n(arbiter_sh_data_oe_n), 
+        .l_dir(arbiter_l_dir)                  
     );
 
     wire safe_z80_iorq_n = dma_is_active ? 1'b1 : z80_iorq_n;
@@ -151,10 +148,10 @@ module zx50_cpld_core (
         .z80_addr(z80_addr), .z80_data_in(l_data), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n),
         .dma_phys_addr(dma_phys_addr), .dma_data_out(), .dma_data_in(l_data), 
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
-        .shd_en_n(shadow_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n),
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), 
-        .shd_busy_n(shd_busy_n), 
-        .dma_active(dma_is_active), .shd_c_dir(shd_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), 
+        .sh_busy_n(sh_busy_n), 
+        .dma_active(dma_is_active), .sh_c_dir(sh_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
         .dma_is_master(dma_is_master), .int_pending(dma_int_pending), .intack_clear(intack_clear)
     );
 
@@ -163,13 +160,13 @@ module zx50_cpld_core (
     // ==========================================
     assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'bz);
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
-    assign atl_data = dma_is_active ? dma_phys_addr[18:11] : (!atl_we_n ? l_data : 8'hzz);
+    assign atl_data = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : (!atl_we_n ? l_data : 8'hzz);
 
     wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
     wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && atl_we_n && memory_cycle);
     
-    assign ce0_n = (safe_to_access_ram && bank_select == 1'b0) ? 1'b0 : 1'b1;
-    assign ce1_n = (safe_to_access_ram && bank_select == 1'b1) ? 1'b0 : 1'b1;
+    assign ram_ce0_n = (safe_to_access_ram && bank_select == 1'b0) ? 1'b0 : 1'b1;
+    assign ram_ce1_n = (safe_to_access_ram && bank_select == 1'b1) ? 1'b0 : 1'b1;
 
     assign ram_oe_n = dma_is_active ? dma_local_oe_n : ((z80_grant && memory_cycle) ? z80_rd_n : 1'b1);
     assign ram_we_n = dma_is_active ? dma_local_we_n : ((z80_grant && memory_cycle) ? z80_wr_n : 1'b1);
@@ -180,16 +177,13 @@ module zx50_cpld_core (
     // ==========================================
     // 6. CYCLE STEALING: INTERCEPT & OVERRIDE LOGIC
     // ==========================================
-    assign shd_c_oe_n = 1'b0; 
-
     assign z80_wait_n = ((arbiter_hit && dma_is_active) || arbiter_wait_n == 1'b0) ? 1'b0 : 1'bz;
+    
+    // Transceiver Multiplexing
+    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n; 
     assign z80_data_oe_n = dma_is_active ? 1'b1 : arbiter_z80_data_oe_n;
     
-    // We ONLY pull shd_busy_n low to command a yield IF we are actively participating 
-    // in a DMA burst. Independent cards let the shadow bus keep flying!
-    assign shd_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;
-
-    assign shd_data_oe_n = dma_is_active ? 1'b0 : arbiter_shd_data_oe_n;
-    assign d_dir         = dma_is_active ? dma_dir_to_bus : arbiter_d_dir;
+    assign sh_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;
+    assign l_dir = dma_is_active ? dma_dir_to_bus : arbiter_l_dir;
 
 endmodule

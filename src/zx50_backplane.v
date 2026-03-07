@@ -26,14 +26,14 @@ module zx50_backplane (
     inout wire z80_int_n,
 
     // --- Shadow Bus Backplane ---
-    inout wire [15:0] shd_addr,
-    inout wire [7:0]  shd_data,
-    inout wire shd_en_n,
-    inout wire shd_rw_n,
-    inout wire shd_inc_n,
-    inout wire shd_stb_n,
-    inout wire shd_done_n,
-    inout wire shd_busy_n
+    inout wire [15:0] sh_addr,
+    inout wire [7:0]  sh_data,
+    inout wire sh_en_n,
+    inout wire sh_rw_n,
+    inout wire sh_inc_n,
+    inout wire sh_stb_n,
+    inout wire sh_done_n,
+    inout wire sh_busy_n
 );
 
     // --- Z80 Control Line Pull-ups ---
@@ -46,14 +46,14 @@ module zx50_backplane (
     pullup(z80_int_n);
 
     // --- Shadow Bus Control Line Pull-ups ---
-    pullup(shd_en_n);
-    pullup(shd_rw_n);
-    pullup(shd_inc_n);
-    pullup(shd_stb_n);
-    pullup(shd_done_n);
-    pullup(shd_busy_n);
+    pullup(sh_en_n);
+    pullup(sh_rw_n);
+    pullup(sh_inc_n);
+    pullup(sh_stb_n);
+    pullup(sh_done_n);
+    pullup(sh_busy_n);
 
-    // --- Address and Data Bus Pull-ups (Using generate blocks for arrays) ---
+    // --- Address and Data Bus Pull-ups ---
     genvar i;
     generate
         for (i = 0; i < 16; i = i + 1) begin : pu_z80_addr
@@ -62,11 +62,11 @@ module zx50_backplane (
         for (i = 0; i < 8; i = i + 1) begin : pu_z80_data
             pullup(z80_data[i]);
         end
-        for (i = 0; i < 16; i = i + 1) begin : pu_shd_addr
-            pullup(shd_addr[i]);
+        for (i = 0; i < 16; i = i + 1) begin : pu_sh_addr
+            pullup(sh_addr[i]);
         end
-        for (i = 0; i < 8; i = i + 1) begin : pu_shd_data
-            pullup(shd_data[i]);
+        for (i = 0; i < 8; i = i + 1) begin : pu_sh_data
+            pullup(sh_data[i]);
         end
     endgenerate
 

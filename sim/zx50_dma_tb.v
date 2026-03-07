@@ -14,9 +14,9 @@
  * flag upon completion. It then simulates a Z80 INTACK cycle to ensure the flag clears.
  * - Phase 2 (Slave Mode): The DMA is programmed to listen to the Shadow Bus and write 
  * to local memory. The testbench takes manual control of the shadow control lines 
- * (`shd_stb_n`, `shd_inc_n`, `shd_done_n`) to simulate an external master, verifying 
+ * (`sh_stb_n`, `sh_inc_n`, `sh_done_n`) to simulate an external master, verifying 
  * that the Slave state machine accurately tracks the falling edges and safely 
- * disarms itself when `shd_done_n` is received.
+ * disarms itself when `sh_done_n` is received.
  *
  * EXPECTED OUTCOME:
  * The module successfully routes all addresses and control lines without locking up, 
@@ -47,22 +47,22 @@ module zx50_dma_tb;
     wire dma_local_we_n, dma_local_oe_n;
 
     // --- 5. Shadow Bus Controls (inout) ---
-    wire shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n;
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n;
 
     // Pull-ups for the open-drain/tristate shadow bus
-    assign shd_en_n   = 1'b1;
-    assign shd_rw_n   = 1'b1;
+    assign sh_en_n   = 1'b1;
+    assign sh_rw_n   = 1'b1;
     
     // Testbench Override Registers (To simulate a remote Master driving the bus)
-    reg tb_shd_drive;
-    reg tb_shd_inc_n, tb_shd_stb_n, tb_shd_done_n;
+    reg tb_sh_drive;
+    reg tb_sh_inc_n, tb_sh_stb_n, tb_sh_done_n;
     
-    assign shd_inc_n  = tb_shd_drive ? tb_shd_inc_n  : 1'bz;
-    assign shd_stb_n  = tb_shd_drive ? tb_shd_stb_n  : 1'bz;
-    assign shd_done_n = tb_shd_drive ? tb_shd_done_n : 1'bz;
+    assign sh_inc_n  = tb_sh_drive ? tb_sh_inc_n  : 1'bz;
+    assign sh_stb_n  = tb_sh_drive ? tb_sh_stb_n  : 1'bz;
+    assign sh_done_n = tb_sh_drive ? tb_sh_done_n : 1'bz;
 
     // --- 6. Internal Status & Interrupts ---
-    wire dma_active, shd_c_dir, dma_dir_to_bus, int_pending;
+    wire dma_active, sh_c_dir, dma_dir_to_bus, int_pending;
     reg intack_clear;
 
     // --- 7. BFM Instantiation ---
@@ -80,10 +80,10 @@ module zx50_dma_tb;
         .z80_addr(z80_addr), .z80_data_in(z80_data), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n),
         .dma_phys_addr(dma_phys_addr), .dma_data_out(dma_data_out), .dma_data_in(dma_data_in), 
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
-        .shd_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n), 
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), 
-        .shd_busy_n(1'b1), // <-- ADD THIS (Tie high for the standalone testbench)
-        .dma_active(dma_active), .shd_c_dir(shd_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), 
+        .sh_busy_n(1'b1), // Tied high for the standalone testbench so it never yields
+        .dma_active(dma_active), .sh_c_dir(sh_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
         .dma_is_master(dma_is_master), .int_pending(int_pending), .intack_clear(intack_clear)
     );
 
@@ -131,8 +131,8 @@ module zx50_dma_tb;
         // Setup defaults
         intack_clear = 0;
         dma_data_in  = 8'hAA; 
-        tb_shd_drive  = 0;
-        tb_shd_inc_n  = 1; tb_shd_stb_n = 1; tb_shd_done_n = 1;
+        tb_sh_drive  = 0;
+        tb_sh_inc_n  = 1; tb_sh_stb_n = 1; tb_sh_done_n = 1;
 
         // Reset
         reset_n = 1;      
@@ -183,25 +183,25 @@ module zx50_dma_tb;
         program_dma_node(1'b0, 1'b1, 20'hABCDE, 8'h02);
         
         // Assert testbench control over the shadow bus lines
-        tb_shd_drive = 1;
+        tb_sh_drive = 1;
 
         // Byte 1: Strobe and Increment
         clk_gen.wait_mclk(5);
-        tb_shd_stb_n = 0; clk_gen.wait_mclk(2); tb_shd_stb_n = 1; // Pulse Strobe
+        tb_sh_stb_n = 0; clk_gen.wait_mclk(2); tb_sh_stb_n = 1; // Pulse Strobe
         clk_gen.wait_mclk(2);
-        tb_shd_inc_n = 0; clk_gen.wait_mclk(2); tb_shd_inc_n = 1; // Pulse Inc
+        tb_sh_inc_n = 0; clk_gen.wait_mclk(2); tb_sh_inc_n = 1; // Pulse Inc
         
         // Byte 2: Strobe and Done
         clk_gen.wait_mclk(5);
-        tb_shd_stb_n = 0; clk_gen.wait_mclk(2); tb_shd_stb_n = 1; // Pulse Strobe
+        tb_sh_stb_n = 0; clk_gen.wait_mclk(2); tb_sh_stb_n = 1; // Pulse Strobe
         clk_gen.wait_mclk(2);
-        tb_shd_done_n = 0; clk_gen.wait_mclk(2); tb_shd_done_n = 1; // Pulse Done
+        tb_sh_done_n = 0; clk_gen.wait_mclk(2); tb_sh_done_n = 1; // Pulse Done
         
         clk_gen.wait_mclk(5);
-        tb_shd_drive = 0; // Release testbench control
+        tb_sh_drive = 0; // Release testbench control
 
         if (dma_active !== 1'b0) begin
-            $display("FATAL: Slave failed to disarm after receiving shd_done_n!");
+            $display("FATAL: Slave failed to disarm after receiving sh_done_n!");
             $fatal(1);
         end
 

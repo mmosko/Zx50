@@ -7,29 +7,29 @@ module zx50_bus_arbiter_tb;
     
     zx50_clock clk_gen (
         .mclk(mclk),
-        .zclk() // Z80 clock not needed for isolated arbiter test
+        .zclk() // Z80 clock not needed for isolated combinatorial/state testing
     );
 
     // --- 2. System Signals & State ---
     reg reset_n;
-    reg [3:0] test_vector;
-    reg [2:0] settle_counter;
+    reg [3:0] test_vector;     // 4-bit vector generating all 16 input combinations
+    reg [2:0] settle_counter;  // Allows state machine to step through dead states
 
-    wire shadow_en_n  = test_vector[0];
+    wire sh_en_n      = test_vector[0];
     wire z80_card_hit = test_vector[1];
     wire z80_rd_n     = test_vector[2];
-    wire shd_rw_n     = test_vector[3];
+    wire sh_rw_n      = test_vector[3];
 
-    wire z80_wait_n, shd_busy_n;
-    wire z80_data_oe_n, shd_data_oe_n, d_dir;
+    wire z80_wait_n, sh_busy_n;
+    wire z80_data_oe_n, sh_data_oe_n, l_dir;
 
     // --- 3. DUT Instantiation ---
     zx50_bus_arbiter dut (
         .mclk(mclk), .reset_n(reset_n),
-        .shadow_en_n(shadow_en_n), .z80_card_hit(z80_card_hit),
-        .z80_wait_n(z80_wait_n), .shd_busy_n(shd_busy_n),
-        .z80_rd_n(z80_rd_n), .shd_rw_n(shd_rw_n),
-        .z80_data_oe_n(z80_data_oe_n), .shd_data_oe_n(shd_data_oe_n), .d_dir(d_dir) 
+        .sh_en_n(sh_en_n), .z80_card_hit(z80_card_hit),
+        .z80_wait_n(z80_wait_n), .sh_busy_n(sh_busy_n),
+        .z80_rd_n(z80_rd_n), .sh_rw_n(sh_rw_n),
+        .z80_data_oe_n(z80_data_oe_n), .sh_data_oe_n(sh_data_oe_n), .l_dir(l_dir) 
     );
 
     // --- 4. Setup & Reset ---
@@ -45,12 +45,14 @@ module zx50_bus_arbiter_tb;
         reset_n = 1;
     end
 
-    // --- 5. State Generation ---
+    // --- 5. Exhaustive State Generation ---
+    // GOAL: Sweep through all 16 possible combinations of bus requests and read/write states.
     always @(posedge mclk) begin
         if (reset_n) begin
             settle_counter <= settle_counter + 1'b1;
             
-            // Allow 8 clock cycles for the state machine to transition and settle
+            // Allow 8 clock cycles for the Arbiter to transition through any DEAD states
+            // and settle into its final stable ownership state before changing inputs.
             if (settle_counter == 3'b111) begin 
                 if (test_vector == 4'b1111) begin
                     $display("=====================================================");
@@ -65,24 +67,31 @@ module zx50_bus_arbiter_tb;
         end
     end
 
-    // --- 6. INVARIANT ASSERTIONS (Checked every clock cycle) ---
+    // --- 6. INVARIANT ASSERTIONS (Checked on every single clock cycle) ---
+    // GOAL: These are the unbreakable physical safety rules of the PCB. 
+    // If any of these fail for even one nanosecond, the board could physically fry.
     always @(posedge mclk) begin
         if (reset_n) begin
             
-            // INVARIANT 1: Mutual Exclusion on Data Bus
-            if (z80_data_oe_n == 0 && shd_data_oe_n == 0) begin
-                $display("FATAL [%0t]: Shared Data Bus Short Circuit Detected!", $time);
+            // INVARIANT 1: Mutual Exclusion on Shared Data Bus
+            // Both the Z80 '245 and the Shadow '245 cannot be driving the L_DATA bus inward simultaneously.
+            if (z80_data_oe_n == 0 && sh_data_oe_n == 0) begin
+                $display("FATAL [%0t]: Shared Data Bus Short Circuit Detected! Both OEs active.", $time);
                 $fatal(1); 
             end
 
-            // INVARIANT 2: Z80 Protection (Wait state if closed)
+            // INVARIANT 2: Z80 Safety Interlock
+            // If the Z80 targets this card, but the arbiter has not opened the Z80 transceiver,
+            // the Z80 MUST be stalled using the WAIT line so it doesn't drop the data.
             if (z80_card_hit && (z80_data_oe_n != 0) && (z80_wait_n != 0)) begin
                 $display("FATAL [%0t]: Z80 hit the card but transceivers are closed without a WAIT state!", $time);
                 $fatal(1);
             end
 
-            // INVARIANT 3: Shadow Bus Protection (Busy state if closed)
-            if (!shadow_en_n && (shd_data_oe_n != 0) && (shd_busy_n != 0)) begin
+            // INVARIANT 3: Shadow Bus Safety Interlock
+            // If the Shadow DMA targets this card, but the arbiter has not opened the Shadow transceiver,
+            // the Shadow bus MUST be stalled using the S_BUSY line.
+            if (!sh_en_n && (sh_data_oe_n != 0) && (sh_busy_n != 0)) begin
                 $display("FATAL [%0t]: Shadow bus hit the card but transceivers are closed without S_BUSY!", $time);
                 $fatal(1);
             end
@@ -92,7 +101,7 @@ module zx50_bus_arbiter_tb;
     // --- System Watchdog Timer ---
     initial begin
         #150000; 
-        $display("FATAL [%0t]: Watchdog Timer Expired!", $time);
+        $display("FATAL [%0t]: Watchdog Timer Expired! State machine stalled.", $time);
         $fatal(1);
     end
 

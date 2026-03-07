@@ -1,5 +1,14 @@
 `timescale 1ns/1ps
 
+/***************************************************************************************
+ * MODULE: zx50_mem_card
+ * DESCRIPTION:
+ * The absolute top-level integration module. This is a 1-to-1 "Digital Twin" of the 
+ * physical PCB schematic. It instantiates the CPLD logic core, the SRAM chips, 
+ * and the physical bus transceivers, wiring them all together to simulate the 
+ * complete hardware card before manufacturing the board.
+ ***************************************************************************************/
+
 module zx50_mem_card (
     input wire mclk,            
     input wire reset_n,         
@@ -14,25 +23,28 @@ module zx50_mem_card (
     output wire z80_wait_n, z80_ieo, z80_int_n,
 
     // --- Shadow DMA Backplane Interface ---
-    inout  wire [15:0] shd_addr,
-    inout  wire [7:0]  shd_data,
-    inout  wire shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n, shd_busy_n
+    inout  wire [15:0] sh_addr,
+    inout  wire [7:0]  sh_data,
+    inout  wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n
 );
 
-    // --- Internal Local Bus Wires ---
+    // --- Internal Local Bus Wires (The copper traces on the PCB) ---
     wire [10:0] l_addr_low;     
     wire [7:0]  l_data;         
-    wire [3:0]  atl_addr;       
+    wire [4:0]  atl_addr;       // Widen to 5 bits for LUT + Scratchpad    
     wire [7:0]  atl_data;       
     
-    // --- Transceiver Control Wires ---
-    wire z80_data_oe_n, shd_data_oe_n, d_dir;
-    wire atl_we_n, atl_oe_n, atl_ce_n, ce0_n, ce1_n, ram_oe_n, ram_we_n;
-    wire shd_c_dir, shd_c_oe_n;
+    // --- Transceiver & Memory Control Wires ---
+    wire z80_data_oe_n, sh_data_oe_n, l_dir;
+    wire atl_we_n, atl_oe_n, atl_ce_n;
+    wire ram_ce0_n, ram_ce1_n, ram_oe_n, ram_we_n;
+    wire sh_c_dir;
 
     // ==========================================
     // 1. DUPLEXED CONFIG/RUN-TIME BUS HANDOFF
     // ==========================================
+    // Simulates the physical hardware multiplexing of the config switches 
+    // and the Z80 control lines sharing the same CPLD input pins.
     wire [3:0] duplex_bus;
     assign duplex_bus = (reset_n) ? {z80_iorq_n, z80_mreq_n, z80_wr_n, z80_rd_n} : card_id_sw;
 
@@ -41,21 +53,23 @@ module zx50_mem_card (
     // ==========================================
     
     // Z80 Data Transceiver (74ABT245)
-    // d_dir=1 (A to B / Z80 to L_Data), d_dir=0 (B to A / L_Data to Z80)
+    // l_dir=1 (A to B / Z80 to L_Data), l_dir=0 (B to A / L_Data to Z80)
     ic_74abt245 z80_data_xcvr (
         .a(z80_data), .b(l_data), 
-        .dir(d_dir), .oe_n(z80_data_oe_n)
+        .dir(l_dir), .oe_n(z80_data_oe_n)
     );
 
     // Shadow Data Transceiver (74ABT245)
-    ic_74abt245 shd_data_xcvr (
-        .a(shd_data), .b(l_data), 
-        .dir(d_dir), .oe_n(shd_data_oe_n)
+    // Shares the l_dir pin with the Z80 transceiver to save a CPLD pin!
+    ic_74abt245 sh_data_xcvr (
+        .a(sh_data), .b(l_data), 
+        .dir(l_dir), .oe_n(sh_data_oe_n)
     );
 
-    // Shadow Control Transceiver ('245) - simplified pass-through for now
-    assign {shd_en_n, shd_rw_n, shd_inc_n, shd_stb_n, shd_done_n} = 
-           (!shd_c_oe_n && !shd_c_dir) ? 5'bz : 5'bz; 
+    // Shadow Control Transceiver ('245 / '541) 
+    // Emulate the high-Z state when the direction is pointed inward (listening)
+    assign {sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n} = 
+           (!sh_c_dir) ? 5'bz : 5'bz; 
 
     // ==========================================
     // 3. EXTERNAL LUT SRAM (ISSI Emulation)
@@ -64,8 +78,8 @@ module zx50_mem_card (
     // The CPLD traces driving the data bus to the LUT during programming
     assign atl_data = (!atl_we_n) ? l_data : 8'hzz;
 
-    // The IS61C256AL chip itself (Requires 15-bit address, so we pad it)
-    wire [14:0] issi_addr = {11'b0, atl_addr};
+    // The IS61C256AL chip itself (Requires 15-bit address, so we pad the 5-bit bus)
+    wire [14:0] issi_addr = {10'b0, atl_addr};
     
     is61c256al lut_sram (
         .addr(issi_addr),
@@ -84,15 +98,15 @@ module zx50_mem_card (
         .z80_int_n(z80_int_n), .z80_wait_n(z80_wait_n),
         .z80_addr(z80_addr), .l_data(l_data),
         
-        .shadow_en_n(shd_en_n), .shd_rw_n(shd_rw_n), .shd_inc_n(shd_inc_n),
-        .shd_stb_n(shd_stb_n), .shd_done_n(shd_done_n), .shd_busy_n(shd_busy_n),
-        .shd_c_dir(shd_c_dir), .shd_c_oe_n(shd_c_oe_n),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n),
+        .sh_c_dir(sh_c_dir), 
 
         .l_addr(l_addr_low), .atl_addr(atl_addr), .atl_data(atl_data),
         .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n), .atl_ce_n(atl_ce_n),
-        .ce0_n(ce0_n), .ce1_n(ce1_n), .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
+        .ram_ce0_n(ram_ce0_n), .ram_ce1_n(ram_ce1_n), .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
 
-        .z80_data_oe_n(z80_data_oe_n), .shd_data_oe_n(shd_data_oe_n), .d_dir(d_dir)
+        .z80_data_oe_n(z80_data_oe_n), .sh_data_oe_n(sh_data_oe_n), .l_dir(l_dir)
     );
 
     // ==========================================
@@ -105,7 +119,7 @@ module zx50_mem_card (
     cy7c1049 bank0 (
         .addr(physical_addr), 
         .data(l_data),
-        .ce_n(ce0_n), 
+        .ce_n(ram_ce0_n), 
         .oe_n(ram_oe_n), 
         .we_n(ram_we_n)
     );
@@ -114,7 +128,7 @@ module zx50_mem_card (
     cy7c1049 bank1 (
         .addr(physical_addr), 
         .data(l_data),
-        .ce_n(ce1_n), 
+        .ce_n(ram_ce1_n), 
         .oe_n(ram_oe_n), 
         .we_n(ram_we_n)
     );
