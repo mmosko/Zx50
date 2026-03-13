@@ -1,6 +1,8 @@
 
 # Zx50 Bus Memory architecture
 
+NOTE: TH	IS IS OLD, SEE THE MAIN README.MD
+
 The goal is to map any 4KB region of the physical 64KB to a 4KB page on a memory card.  Any
 4KB page can map to any 4KB physical memory region.
 
