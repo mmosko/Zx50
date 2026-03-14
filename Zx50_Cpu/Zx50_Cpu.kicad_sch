@@ -14202,7 +14202,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P5.08mm_Vertical"
 			(at 222.25 96.52 0)
 			(effects
 				(font
@@ -14211,7 +14211,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" ""
 			(at 222.25 96.52 0)
 			(effects
 				(font
@@ -14220,7 +14220,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor, small symbol"
+		(property "Description" ""
 			(at 222.25 96.52 0)
 			(effects
 				(font
@@ -14792,7 +14792,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x40_P2.54mm_Vertical_Oval"
+		(property "Footprint" "zx50_footprints:PinHeader_2x40_P2.54mm_Horizontal_Edge"
 			(at 128.524 170.18 0)
 			(effects
 				(font
@@ -14801,7 +14801,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" ""
 			(at 73.66 180.34 0)
 			(effects
 				(font
@@ -14810,7 +14810,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Generic connector, double row, 02x40, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"
+		(property "Description" ""
 			(at 131.572 173.736 0)
 			(effects
 				(font
