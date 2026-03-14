@@ -1,0 +1,28 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Mar 13 01:31:45 2026
+[*]
+[dumpfile] "/media/psf/Electronics/z80/Zx50Bus/waves/zx50_clock.vcd"
+[dumpfile_mtime] "Fri Mar 13 01:29:57 2026"
+[dumpfile_size] 1521
+[savefile] "/media/psf/Electronics/z80/Zx50Bus/gtkw/zx50_clock.gtkw"
+[timestart] 0
+[size] 1512 870
+[pos] -27 -24
+*-16.198856 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_clock_tb.
+[sst_width] 278
+[signals_width] 102
+[sst_expanded] 1
+[sst_vpaned_height] 251
+@28
+[color] 3
+zx50_clock_tb.mclk
+@29
+[color] 3
+zx50_clock_tb.zclk
+@28
+zx50_clock_tb.run_in
+zx50_clock_tb.step_n_in
+[pattern_trace] 1
+[pattern_trace] 0

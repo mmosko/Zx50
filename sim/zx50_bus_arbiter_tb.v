@@ -6,6 +6,8 @@ module zx50_bus_arbiter_tb;
     wire mclk;
     
     zx50_clock clk_gen (
+        .run_in(1'b1),
+        .step_n_in(1'b1),
         .mclk(mclk),
         .zclk() // Z80 clock not needed for isolated combinatorial/state testing
     );

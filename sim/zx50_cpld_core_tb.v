@@ -6,6 +6,8 @@ module zx50_cpld_core_tb;
     wire mclk, zclk;
     
     zx50_clock clk_gen (
+        .run_in(1'b1),
+        .step_n_in(1'b1),
         .mclk(mclk),
         .zclk(zclk)
     );
