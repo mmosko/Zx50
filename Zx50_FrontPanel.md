@@ -60,10 +60,10 @@ Front Panel Connector (exact pinout TBD, 2x5 IDC)
 2. +5V
 3. TX (from Pico level shifter)
 4. RX (to Pico level shifter)
-5. TBD
-6. Power switch
+5. Power switch
+6. Run switch
 7. Reset switch
-8. Step switch
+8. Step_N switch
 9. GND
 10. GND
 
@@ -77,10 +77,20 @@ LCD Display Connector (2x5 IDC)
 - GND
 - RST (~MCLR)
 
+
+Wiring
+- If only the CPU card is installed, the front panel Connetor is wired directly to
+the CPU card.
+- If the Front Panel Card is installed, the front panel connector goes to the Front panel
+card, and then a daisy chain short ribbon cables goes from the front pane card to the cpu card,
+to wire the RUN and STEP switches to the clock mezzanine. The CPU card does not use the AUX pin.
+- There will be some 2 position jumpers on the CPU card to connect pin 79 to RUN and pin 80
+to STEP_N, in case I want to do that.  Otherwise, it will leave the 16-bit GPIO pins free.
+
 ## Interface to Zx50 Bus Probe
 
 It is desirable for the Zx50 Bus Probe to see the Step switch.  The Reset switch is
-already on the bus.  The Step switch will use Pin 80 (labelled AUX).  Both the
-Zx80 CPU card and the Front Panel card will tie the Front Panel connector 
-Step switch (after debouncing) to pin 80.  The Zx50 bus already has a pull up on AUX, so
-the switches only need to pull low.
+already on the bus.  The Step switch will use Pin 80 (labelled AUX). 
+
+It is assumed that if one is using the bus probe to control the system, there is a control
+PC somewhere with the main interface and the STEP switch is just a convencience.
