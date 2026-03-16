@@ -20,3 +20,73 @@ waves/*.vcd
 Thumbs.db
 .vscode/
 node_modules/
+
+# ==============================================================================
+# OS/Environment Files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==============================================================================
+# Simulation / Waveforms (Icarus Verilog & GTKWave)
+# ==============================================================================
+# Ignore compiled simulation binaries
+build/*
+!build/.gitkeep
+
+# Ignore massive waveform dump files
+waves/*
+!waves/.gitkeep
+*.vcd
+*.fst
+*.lxt
+*.lxt2
+*.vzt
+
+# General Icarus Verilog output defaults
+*.vvp
+a.out
+
+# ==============================================================================
+# Synthesis / Quartus II 13.0sp1
+# ==============================================================================
+# Ignore Quartus database directories (These get HUGE)
+syn/quartus/db/
+syn/quartus/incremental_db/
+syn/quartus/greybox_tmp/
+syn/quartus/hc_output/
+syn/quartus/simulation/
+syn/quartus/timing/
+
+# Ignore Quartus workspace and user-specific GUI settings
+*.qws
+
+# Ignore compilation logs, reports, and summaries
+*.rpt
+*.summary
+*.smsg
+*.jdi
+*.pin
+*.done
+*.qdf
+*.txt
+*.cmp
+*.bsf
+*.dpf
+*.eqn
+
+# Ignore Generated Programming Files (Binaries)
+# Note: If you want to track your final release binaries, comment out the .jed line
+syn/quartus/output_files/*
+!syn/quartus/output_files/.gitkeep
+*.sof
+*.pof
+*.jed
+*.jam
+*.jbc
+

@@ -161,7 +161,25 @@ Each MCLK cycle:
 
 
 
+# Project Organizaiton
 
+```text
+Zx50Bus/
+├── build/          # (Existing) Simulation compiled binaries
+├── docs/           # (Existing) Datasheets and notes
+├── gtkw/           # (Existing) GTKWave save files
+├── scripts/        # Helper scripts (e.g., a quick .bat file to run POF2JED)
+├── sim/            # (Existing) Testbenches (e.g., tb_cpld_core.v)
+├── src/            # (Existing) Pure Verilog RTL (zx50_cpld_core.v, etc.)
+├── syn/            # Synthesis root directory
+│   └── quartus/    # Quartus-specific working directory
+│       ├── zx50_memory_card.qpf  # The Quartus Project File
+│       ├── zx50_memory_card.qsf  # The Quartus Settings File (Pin mappings!)
+│       └── output_files/         # Quartus automatically creates this folder
+│           ├── zx50_memory_card.pof  # The raw Altera binary Quartus generates
+│           └── zx50_memory_card.jed  # The final Atmel binary you create with POF2JED
+└── waves/          # (Existing) VCD/FST waveform dumps
+```
 
 
 
