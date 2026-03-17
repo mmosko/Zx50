@@ -23,9 +23,10 @@ module zx50_cpld_core (
     (* LOC="P41" *) input  wire z80_m1_n,       
     (* LOC="P42" *) input  wire z80_iei,        
     (* LOC="P36" *) output wire z80_ieo,        
-    (* LOC="P96" *) inout  wire z80_int_n,      
-    (* LOC="P97" *) inout  wire z80_wait_n,     
     
+    (* LOC="P96" *) output wire z80_int_n,    // Technicaly tristate, we want open drain
+    (* LOC="P97" *) output wire z80_wait_n,   //Technicaly tristate, we want open drain
+
     // Z80 Address Bus (A15 down to A0)
     (* LOC="P21,P20,P19,P17,P16,P14,P13,P12,P10,P9,P8,P7,P6,P5,P2,P1" *) 
     input  wire [15:0] z80_addr, 
@@ -181,14 +182,16 @@ module zx50_cpld_core (
     // ==========================================
     // 5. LOCAL MEMORY & LUT TAKEOVER MULTIPLEXING
     // ==========================================
-        // Do not float the address lines, zero them if not being used
-    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
 
+    // Do not float the address lines, zero them if not being used
+    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
-    assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} :
-                      mmu_cpu_updating    ? l_data :
-                      dma_is_active       ? {3'b000, dma_phys_addr[19:15]} :
-                      8'hzz;
+    
+    // Split the tri-state logic so Yosys can map it to a physical Atmel bibuf
+    wire [7:0] atl_data_out = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : l_data;
+    wire atl_data_oe = dma_is_active || !atl_we_n;
+    
+    assign atl_data = atl_data_oe ? atl_data_out : 8'hzz;
 
     wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
     wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && atl_we_n && memory_cycle);
