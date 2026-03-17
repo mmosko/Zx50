@@ -54,3 +54,52 @@ view-%: $(WAVES_DIR)/%.vcd $(GTK_DIR)/%.gtkw
 
 clean:
 	rm -rf $(OUT_DIR)/*.vvp $(WAVES_DIR)/*.vcd 
+
+# ==============================================================================
+# Yosys Dry-Run (MacBook / Local Troubleshooting)
+# ==============================================================================
+# This target runs pure Yosys synthesis without invoking the Atmel fitter.
+# It is perfect for checking Verilog syntax, linting, and logic mapping on ARM/Mac.
+
+yosys-check: $(CPLD_SRC)
+	@echo "\n--- Running Yosys Syntax & Synthesis Check ---"
+	@mkdir -p $(OUT_DIR)
+	# read_verilog: Loads the files
+	# prep: Sets up the hierarchy, checks for missing modules, and runs basic optimizations
+	# write_json: Dumps a generic netlist (useful for viewing in tools like netlistsvg)
+	yosys -p "read_verilog $(CPLD_SRC); hierarchy -check -top $(TOP_MODULE); prep -top $(TOP_MODULE); write_json $(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
+	@echo "--- Yosys Synthesis Check Complete! No errors found. ---\n"
+
+# ==============================================================================
+# Synthesis & Flashing (ATF1508AS via Yosys & OpenOCD)
+# ==============================================================================
+# Define your pure CPLD source files here (Exclude simulation BFMs!)
+CPLD_SRC = $(SRC_DIR)/zx50_cpld_core.v \
+           $(SRC_DIR)/zx50_bus_arbiter.v \
+           $(SRC_DIR)/zx50_dma.v \
+           $(SRC_DIR)/zx50_mmu_sram.v
+
+TOP_MODULE = zx50_cpld_core
+DEVICE     = ATF1508AS-100-TQFP
+
+# Paths to your cloned tools (Update these to match where you cloned them)
+ATF_FITTER = ~/git/atf15xx_yosys/yosys-atf15xx
+JED2SVF    = python3 ~/git/prjbureau/util/fuseconf.py
+
+syn: $(CPLD_SRC)
+	@echo "\n--- 1. Yosys Synthesis & Atmel Fitter ---"
+	@mkdir -p $(OUT_DIR)
+	# This script runs Yosys, generates the EDIF, and calls Wine/fit1508.exe
+	$(ATF_FITTER) -d $(DEVICE) -t $(TOP_MODULE) $(CPLD_SRC) -o $(OUT_DIR)/$(TOP_MODULE).jed
+
+	@echo "--- 2. Converting JED to SVF ---"
+	$(JED2SVF) $(OUT_DIR)/$(TOP_MODULE).jed $(OUT_DIR)/$(TOP_MODULE).svf
+	@echo "--- Synthesis Complete! SVF ready for flashing. ---\n"
+
+flash: $(OUT_DIR)/$(TOP_MODULE).svf
+	@echo "\n--- Flashing CPLD via Waveshare CH347 & OpenOCD ---"
+	# Connects via CH347, defines the JTAG TAP for the ATF1508, and pushes the SVF
+	openocd -f interface/ch347.cfg \
+	        -c "adapter speed 1000" \
+	        -c "jtag newtap atf1508 tap -irlen 3 -expected-id 0x0150803f" \
+	        -c "init; svf $(OUT_DIR)/$(TOP_MODULE).svf; exit"

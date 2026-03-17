@@ -204,14 +204,16 @@ module zx50_dma (
     assign sh_c_dir  = !is_master; 
 
     // Master dynamically pulses the strobe. Slave just passes the incoming strobe down.
-    wire int_sh_stb_n = is_master ? !(m_state == M_STROBE) : sh_stb_n;
+    // Decouple the generation from the bus reading to satisfy Yosys static analysis
+    wire generated_stb_n = !(m_state == M_STROBE);
+    wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
 
     // By qualifying the shadow controls with dma_active, the Master cleanly floats 
     // the backplane the exact nanosecond it enters a yield, signaling the Slave.
-    assign sh_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz;
+    assign sh_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz; 
     assign sh_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_to_bus : 1'bz;
-    assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? int_sh_stb_n : 1'bz;
-    
+    assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? generated_stb_n : 1'bz;
+
     // Only pulse INC low during the 1-cycle M_INC state. Keep it high during M_WAIT.
     assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
     assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
@@ -223,5 +225,13 @@ module zx50_dma (
     // Read local RAM if dir_to_bus == 0. Write local RAM if dir_to_bus == 1.
     assign dma_local_oe_n = (dma_active && dir_to_bus == 1'b0) ? 1'b0 : 1'b1;
     assign dma_local_we_n = (dma_active && dir_to_bus == 1'b1) ? int_sh_stb_n : 1'b1;
+
+
+    // ==========================================
+    // 6. PHYSICAL TRANSCEIVER AND BUS ROUTING
+    // ==========================================
+
+    // By qualifying the shadow controls with dma_active, the Master cleanly floats 
+    // the backplane the exact nanosecond it enters a yield, signaling the Slave.
 
 endmodule
