@@ -27,7 +27,7 @@ module zx50_shadow_bus_tb;
     wire mclk, zclk;
     zx50_clock clk_gen (.mclk(mclk), .zclk(zclk));
 
-    reg reset_n, boot_en_n;
+    reg reset_n;
 
     // --- 2. Z80 Backplane Buses ---
     wire [15:0] z80_addr;
@@ -67,7 +67,7 @@ module zx50_shadow_bus_tb;
 
     // Card 0 (ID 0x0) - Will be the MASTER (Source)
     zx50_mem_card card0 (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h0),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h0),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(1'b1), .z80_ieo(c0_ieo),
@@ -79,7 +79,7 @@ module zx50_shadow_bus_tb;
 
     // Card 1 (ID 0x1) - Will be the SLAVE (Destination)
     zx50_mem_card card1 (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h1),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h1),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(c0_ieo), .z80_ieo(c1_ieo), // Daisy-chained
@@ -97,8 +97,6 @@ module zx50_shadow_bus_tb;
     initial begin
         $dumpfile("waves/zx50_shadow_bus.vcd");
         $dumpvars(0, zx50_shadow_bus_tb);
-        
-        boot_en_n = 1; 
 
         $display("[%0t] System Power On. Resetting dual cards...", $time);
         reset_n = 1; clk_gen.wait_mclk(5); 

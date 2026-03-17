@@ -13,7 +13,7 @@ module zx50_cpld_core_tb;
     );
 
     // --- 2. System Signals ---
-    reg reset_n, boot_en_n;
+    reg reset_n;
     reg z80_iei;
     reg [3:0] card_id_sw;
 
@@ -33,7 +33,7 @@ module zx50_cpld_core_tb;
 
     // --- 5. CPLD Output Pins to Monitor ---
     wire [10:0] l_addr;
-    wire [4:0]  atl_addr;
+    wire [3:0]  atl_addr;
     wire [7:0]  atl_data;
     wire atl_we_n, atl_oe_n, atl_ce_n;
     wire ram_ce0_n, ram_ce1_n, ram_oe_n, ram_we_n;
@@ -54,7 +54,7 @@ module zx50_cpld_core_tb;
 
     // The Device Under Test
     zx50_cpld_core dut (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), 
+        .mclk(mclk), .reset_n(reset_n), 
         .duplex_in(duplex_bus), 
         .z80_m1_n(z80_m1_n), .z80_iei(z80_iei), .z80_ieo(z80_ieo),
         .z80_int_n(z80_int_n), .z80_wait_n(z80_wait_n),
@@ -77,7 +77,7 @@ module zx50_cpld_core_tb;
     assign atl_data = (!atl_we_n) ? z80_data : 8'hzz;
     
     is61c256al lut_sram (
-        .addr({10'b0, atl_addr}), .data(atl_data),
+        .addr({11'b0, atl_addr}), .data(atl_data),
         .ce_n(atl_ce_n), .oe_n(atl_oe_n), .we_n(atl_we_n)
     );
 
@@ -89,7 +89,7 @@ module zx50_cpld_core_tb;
         $dumpvars(0, zx50_cpld_core_tb);
         
         // Setup
-        boot_en_n = 1; z80_iei = 1;
+        z80_iei = 1;
         card_id_sw = 4'hC; // Let's use Card ID 0xC (12)
         
         // Boot Sequence: Mimic an RC reset circuit

@@ -17,7 +17,7 @@ module zx50_shadow_priority_tb;
     wire mclk, zclk;
     zx50_clock clk_gen (.mclk(mclk), .zclk(zclk));
 
-    reg reset_n, boot_en_n;
+    reg reset_n;
 
     // --- 2. Z80 Backplane Buses ---
     wire [15:0] z80_addr;
@@ -55,7 +55,7 @@ module zx50_shadow_priority_tb;
     );
 
     zx50_mem_card card0 ( // MASTER
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h0),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h0),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(1'b1), .z80_ieo(c0_ieo),
@@ -66,7 +66,7 @@ module zx50_shadow_priority_tb;
     );
 
     zx50_mem_card card1 ( // SLAVE
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h1),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h1),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(c0_ieo), .z80_ieo(c1_ieo), 
@@ -102,8 +102,6 @@ module zx50_shadow_priority_tb;
         $dumpfile("waves/zx50_shadow_priority.vcd");
         $dumpvars(0, zx50_shadow_priority_tb);
         
-        boot_en_n = 1; 
-
         $display("\n[%0t] === SYSTEM POWER ON ===", $time);
         reset_n = 1; clk_gen.wait_mclk(5); 
         reset_n = 0; clk_gen.wait_mclk(50); 
