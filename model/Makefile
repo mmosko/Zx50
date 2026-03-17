@@ -126,7 +126,7 @@ PACKAGE    = TQFP100
 ATF_DIR    = ../../atf15xx_yosys
 ATF_YOSYS  = ~/git/atf15xx_yosys/run_yosys.sh
 ATF_FITTER = ~/git/atf15xx_yosys/run_fitter.sh
-JED2SVF    = python3 ~/git/prjbureau/util/fuseconf.py
+JED2SVF    = PYTHONPATH=~/git/prjbureau python3 -m util.fuseconv --device $(DEVICE)
 
 # --- DMA Config ---
 DMA_TOP    = zx50_cpld_core
