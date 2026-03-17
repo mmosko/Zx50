@@ -165,9 +165,11 @@ module zx50_cpld_nodma (
     // z80_iei is an input, we pass it down the chain.
     assign z80_ieo = z80_iei; 
 
-    // Drive unused lines with real external signals, but keep OE disabled
-    assign z80_int_n  = impossible_enable ? mclk : 1'bz;
-    assign z80_wait_n = impossible_enable ? reset_n : 1'bz;
+
+    // Drive unused lines with real external signals (that aren't global clocks), 
+    // but keep OE disabled via the impossible condition.
+    assign z80_int_n  = impossible_enable ? z80_addr[0] : 1'bz;
+    assign z80_wait_n = impossible_enable ? z80_addr[1] : 1'bz;
     
     // Drive l_data with z80_addr to prevent EDIF 'x' crash
     assign l_data = impossible_enable ? z80_addr[7:0] : 8'hzz;
@@ -202,11 +204,6 @@ module zx50_cpld_nodma (
     // [REVISION: Without an arbiter, Z80 has permanent grant]
     wire z80_grant = 1'b1;
     wire memory_cycle = !z80_mreq_n;
-
-    // [REVISION: Interrupt & INTACK logic removed. Tie off unused Interrupt/Wait lines]
-    assign z80_int_n = 1'bz; 
-    assign z80_ieo   = z80_iei; // Pass the daisy chain directly
-    assign z80_wait_n = 1'bz;
 
     // ==========================================
     // 3. CORE SUB-MODULE INSTANTIATIONS
