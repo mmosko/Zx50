@@ -153,7 +153,7 @@ syn_dma: $(DMA_FILES)
 	done
 	
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(DMA_SRC)
-	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP) $(DMA_SRC)
+	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP)
 
 	@echo "\n--- 2. Converting JED to SVF ---"
 	$(JED2SVF) $(SYN_DIR)/$(DMA_TOP).jed $(SYN_DIR)/$(DMA_TOP).svf
@@ -167,7 +167,7 @@ syn_nodma: $(NODMA_FILES)
 	done
 	
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(NODMA_TOP) $(NODMA_SRC)
-	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(NODMA_TOP) $(NODMA_SRC)
+	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(NODMA_TOP)
 
 	@echo "\n--- 2. Converting JED to SVF ---"
 	$(JED2SVF) $(SYN_DIR)/$(NODMA_TOP).jed $(SYN_DIR)/$(NODMA_TOP).svf

@@ -25,8 +25,8 @@ module zx50_cpld_nodma (
     (* LOC="P36" *) output wire z80_ieo,        
     
     // [REVISION: Kept to maintain PCB pinout, but driven inactive]
-    (* LOC="P96" *) output wire z80_int_n,    
-    (* LOC="P97" *) output wire z80_wait_n,   
+    (* LOC="P96" *) inout wire z80_int_n,    
+    (* LOC="P97" *) inout wire z80_wait_n,   
 
     // Z80 Address Bus (A15 down to A0)
     (* LOC="P21,P20,P19,P17,P16,P14,P13,P12,P10,P9,P8,P7,P6,P5,P2,P1" *) 
@@ -147,7 +147,37 @@ module zx50_cpld_nodma (
     wire z80_wr_n   = duplex_in[1]; 
     wire z80_mreq_n = duplex_in[2]; 
     wire z80_iorq_n = duplex_in[3];
+
+
+    // === tie off unused pins
+    // ==========================================
+    // DEFEATING YOSYS OPTIMIZATION FOR ATMEL EDIF
+    // ==========================================
+    // The Atmel Fitter crashes if any bidirectional buffer has a 'z' or 'x'
+    // on its internal data input port.
+    // We must drive the data ports with real external signals to keep them alive.
+    // To ensure the physical pins remain High-Z inputs, we drive the Enable (OE) 
+    // port with a mathematically impossible condition that Yosys cannot optimize away.
+    // Condition: (z80_rd_n == 0) AND (z80_wr_n == 0). The Z80 can never read and write simultaneously.
+
+    wire impossible_enable = !z80_rd_n && !z80_wr_n;
+
+    // z80_iei is an input, we pass it down the chain.
+    assign z80_ieo = z80_iei; 
+
+    // Drive unused lines with real external signals, but keep OE disabled
+    assign z80_int_n  = impossible_enable ? mclk : 1'bz;
+    assign z80_wait_n = impossible_enable ? reset_n : 1'bz;
     
+    // Drive l_data with z80_addr to prevent EDIF 'x' crash
+    assign l_data = impossible_enable ? z80_addr[7:0] : 8'hzz;
+    
+    // atl_data is written ONLY when atl_we_n is low.
+    // When reading, we provide a dummy external signal instead of 'z'
+    //assign atl_data = (!atl_we_n) ? l_data : (impossible_enable ? z80_addr[15:8] : 8'hzz);
+
+    // =====
+ 
     // Synchronously latch the Card ID while the system is in reset.
     // Once reset_n goes high (normal operation), latched_id locks and holds its value. [cite: 676, 677]
     always @(posedge mclk) begin

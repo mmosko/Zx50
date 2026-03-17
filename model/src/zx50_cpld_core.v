@@ -112,8 +112,8 @@ module zx50_cpld_core (
     (* LOC="P42" *) input  wire z80_iei,        
     (* LOC="P36" *) output wire z80_ieo,        
     
-    (* LOC="P96" *) output wire z80_int_n,    // Technicaly tristate, we want open drain
-    (* LOC="P97" *) output wire z80_wait_n,   //Technicaly tristate, we want open drain
+    (* LOC="P96" *) inout wire z80_int_n,    // Technicaly tristate, we want open drain
+    (* LOC="P97" *) inout wire z80_wait_n,   //Technicaly tristate, we want open drain
 
     // Z80 Address Bus (A15 down to A0)
     (* LOC="P21,P20,P19,P17,P16,P14,P13,P12,P10,P9,P8,P7,P6,P5,P2,P1" *) 
