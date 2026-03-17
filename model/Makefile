@@ -1,4 +1,4 @@
-.PHONY: run-% view-%
+.PHONY: run-% view-% syn
 
 # Variables
 VERILOG_COMPILER = iverilog
