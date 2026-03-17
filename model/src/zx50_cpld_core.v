@@ -11,6 +11,95 @@
  * controlled by l_dir.
  ***************************************************************************************/
 
+// ==========================================
+// ATMEL FITTER PIN CONSTRAINTS
+// The run_fitter.sh script greps these lines to build the .pin file.
+// ==========================================
+//PIN: 87 = mclk;
+//PIN: 89 = reset_n;
+
+//PIN: 40 = duplex_in[3];
+//PIN: 37 = duplex_in[2];
+//PIN: 35 = duplex_in[1];
+//PIN: 33 = duplex_in[0];
+
+//PIN: 41 = z80_m1_n;
+//PIN: 42 = z80_iei;
+//PIN: 96 = z80_int_n;
+//PIN: 97 = z80_wait_n;
+
+//PIN: 21 = z80_addr[15];
+//PIN: 20 = z80_addr[14];
+//PIN: 19 = z80_addr[13];
+//PIN: 17 = z80_addr[12];
+//PIN: 16 = z80_addr[11];
+//PIN: 14 = z80_addr[10];
+//PIN: 13 = z80_addr[9];
+//PIN: 12 = z80_addr[8];
+//PIN: 10 = z80_addr[7];
+//PIN: 9  = z80_addr[6];
+//PIN: 8  = z80_addr[5];
+//PIN: 7  = z80_addr[4];
+//PIN: 6  = z80_addr[3];
+//PIN: 5  = z80_addr[2];
+//PIN: 2  = z80_addr[1];
+//PIN: 1  = z80_addr[0];
+
+//PIN: 32 = l_data[7];
+//PIN: 31 = l_data[6];
+//PIN: 30 = l_data[5];
+//PIN: 29 = l_data[4];
+//PIN: 28 = l_data[3];
+//PIN: 27 = l_data[2];
+//PIN: 25 = l_data[1];
+//PIN: 24 = l_data[0];
+
+//PIN: 47 = sh_en_n;
+//PIN: 48 = sh_rw_n;
+//PIN: 46 = sh_inc_n;
+//PIN: 45 = sh_stb_n;
+//PIN: 49 = sh_done_n;
+//PIN: 50 = sh_busy_n;
+
+//PIN: 44 = sh_c_dir;
+//PIN: 23 = z80_data_oe_n;
+//PIN: 52 = sh_data_oe_n;
+//PIN: 22 = l_dir;
+
+//PIN: 85 = l_addr[10];
+//PIN: 84 = l_addr[9];
+//PIN: 83 = l_addr[8];
+//PIN: 81 = l_addr[7];
+//PIN: 80 = l_addr[6];
+//PIN: 79 = l_addr[5];
+//PIN: 78 = l_addr[4];
+//PIN: 77 = l_addr[3];
+//PIN: 76 = l_addr[2];
+//PIN: 75 = l_addr[1];
+//PIN: 72 = l_addr[0];
+
+//PIN: 56 = atl_addr[3];
+//PIN: 55 = atl_addr[2];
+//PIN: 54 = atl_addr[1];
+//PIN: 53 = atl_addr[0];
+
+//PIN: 68 = atl_data[7];
+//PIN: 67 = atl_data[6];
+//PIN: 65 = atl_data[5];
+//PIN: 64 = atl_data[4];
+//PIN: 63 = atl_data[3];
+//PIN: 61 = atl_data[2];
+//PIN: 60 = atl_data[1];
+//PIN: 58 = atl_data[0];
+
+//PIN: 69 = atl_we_n;
+//PIN: 70 = atl_oe_n;
+//PIN: 71 = atl_ce_n;
+//PIN: 90 = ram_ce0_n;
+//PIN: 92 = ram_ce1_n;
+//PIN: 93 = ram_oe_n;
+//PIN: 94 = ram_we_n;
+
 module zx50_cpld_core (
     (* LOC="P87" *) input  wire mclk,
     (* LOC="P89" *) input  wire reset_n,
