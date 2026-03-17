@@ -125,6 +125,9 @@ module zx50_cpld_core (
     wire iorq_rising = (iorq_sync == 2'b01);
     wire intack_clear = iorq_rising && z80_iei && dma_int_pending;
 
+    // Do not float the address lines, zero them if not being used
+    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
+
     assign z80_int_n = dma_int_pending ? 1'b0 : 1'bz; 
     assign z80_ieo = z80_iei && !dma_int_pending; 
 
