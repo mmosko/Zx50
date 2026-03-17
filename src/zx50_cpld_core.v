@@ -87,6 +87,8 @@ module zx50_cpld_core (
     // 2. INTERNAL SUBSYSTEM WIRES & HIT LOGIC
     // ==========================================
     wire internal_active, mmu_busy;
+    wire mmu_cpu_updating, mmu_is_initializing;
+    wire [3:0] mmu_init_ptr;
     
     wire active_bus_cycle = !z80_mreq_n || !z80_iorq_n;
     wire mmu_card_hit;
@@ -152,8 +154,11 @@ module zx50_cpld_core (
         .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(latched_id), 
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), 
         .l_data(l_data), .z80_iorq_n(safe_z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
-        .atl_addr(atl_addr), .atl_data(atl_data), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
-        .p_addr_hi(), .active(internal_active), 
+        .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
+        .active(internal_active),
+        .cpu_updating(mmu_cpu_updating),
+        .is_initializing(mmu_is_initializing),
+        .init_ptr(mmu_init_ptr), 
         .z80_card_hit(mmu_card_hit), 
         .is_busy(mmu_busy) 
     );
@@ -175,7 +180,10 @@ module zx50_cpld_core (
     // ==========================================
     assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'bz);
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
-    assign atl_data = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : (!atl_we_n ? l_data : 8'hzz);
+    assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} :
+                      mmu_cpu_updating    ? l_data :
+                      dma_is_active       ? {3'b000, dma_phys_addr[19:15]} :
+                      8'hzz;
 
     wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
     wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && atl_we_n && memory_cycle);
