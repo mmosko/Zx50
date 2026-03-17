@@ -19,7 +19,7 @@ module zx50_mem_card_tb;
     );
 
     // --- 2. System Signals ---
-    reg reset_n, boot_en_n;
+    reg reset_n;
     reg [3:0] card_id;
     reg z80_iei;
     
@@ -55,7 +55,7 @@ module zx50_mem_card_tb;
 
     // The Device Under Test (Full Digital Twin of the Card)
     zx50_mem_card dut (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(card_id),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(card_id),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(z80_iei),
@@ -73,7 +73,7 @@ module zx50_mem_card_tb;
         $dumpvars(0, zx50_mem_card_tb);
         
         // Initial setup
-        boot_en_n = 1; card_id = 4'h0; z80_iei = 1;
+        card_id = 4'h0; z80_iei = 1;
         
         // Boot Sequence
         reset_n = 1;      

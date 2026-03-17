@@ -14,7 +14,6 @@
 module zx50_cpld_core (
     (* LOC="P87" *) input  wire mclk,
     (* LOC="P89" *) input  wire reset_n,
-    (* LOC="P88" *) input  wire boot_en_n,
     
     // --- Duplex/Control Bus (MSB to LSB: IORQ, MREQ, WR, RD) ---
     (* LOC="P40,P37,P35,P33" *) input  wire [3:0] duplex_in, 
@@ -55,8 +54,9 @@ module zx50_cpld_core (
     output wire [10:0] l_addr,  
     
     // ATL Address Bus (A4 down to A0)
-    (* LOC="P57,P56,P55,P54,P53" *) 
-    output wire [4:0]  atl_addr, 
+    // Reduced to 4 bits to save space and free P57
+    (* LOC="P56,P55,P54,P53" *) 
+    output wire [3:0]  atl_addr, 
     
     // ATL Data Bus (D7 down to D0)
     (* LOC="P68,P67,P65,P64,P63,P61,P60,P58" *) 
@@ -155,7 +155,10 @@ module zx50_cpld_core (
     wire safe_z80_iorq_n = dma_is_active ? 1'b1 : z80_iorq_n;
 
     zx50_mmu_sram mmu_unit (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(latched_id), 
+        .mclk(mclk), .reset_n(reset_n), 
+        // card 0 is considered the boot card with eeprom enabled
+        .boot_en_n(latched_id != 4'h0), 
+        .card_id_sw(latched_id), 
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), 
         .l_data(l_data), .z80_iorq_n(safe_z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
         .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),

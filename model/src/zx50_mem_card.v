@@ -11,8 +11,7 @@
 
 module zx50_mem_card (
     input wire mclk,            
-    input wire reset_n,         
-    input wire boot_en_n,       
+    input wire reset_n,               
     input wire [3:0] card_id_sw,
 
     // --- Z80 Backplane Interface ---
@@ -31,7 +30,7 @@ module zx50_mem_card (
     // --- Internal Local Bus Wires (The copper traces on the PCB) ---
     wire [10:0] l_addr_low;     
     wire [7:0]  l_data;         
-    wire [4:0]  atl_addr;       // Widen to 5 bits for LUT + Scratchpad    
+    wire [3:0]  atl_addr;       // 4 bits for 16 pages   
     wire [7:0]  atl_data;       
     
     // --- Transceiver & Memory Control Wires ---
@@ -79,7 +78,7 @@ module zx50_mem_card (
     assign atl_data = (!atl_we_n) ? l_data : 8'hzz;
 
     // The IS61C256AL chip itself (Requires 15-bit address, so we pad the 5-bit bus)
-    wire [14:0] issi_addr = {10'b0, atl_addr};
+    wire [14:0] issi_addr = {11'b0, atl_addr};
     
     is61c256al lut_sram (
         .addr(issi_addr),
@@ -93,7 +92,7 @@ module zx50_mem_card (
     // 4. CPLD CORE INSTANTIATION
     // ==========================================
     zx50_cpld_core core (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .duplex_in(duplex_bus),
+        .mclk(mclk), .reset_n(reset_n), .duplex_in(duplex_bus),
         .z80_m1_n(z80_m1_n), .z80_iei(z80_iei), .z80_ieo(z80_ieo),
         .z80_int_n(z80_int_n), .z80_wait_n(z80_wait_n),
         .z80_addr(z80_addr), .l_data(l_data),

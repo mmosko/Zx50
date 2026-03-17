@@ -27,7 +27,7 @@ module zx50_mmu_sram (
     input wire z80_mreq_n, 
 
     // --- Address Translation Table (ATL / ISSI SRAM) ---
-    output wire [4:0] atl_addr,   // 5-bit address (Lower 16 = LUT, Upper 16 = Scratchpad)
+    output wire [3:0] atl_addr,   // 4-bit address (Lower 16 = LUT, 5th bit removed to save space)
     output wire atl_we_n,
     output wire atl_oe_n,
     
@@ -99,7 +99,7 @@ module zx50_mmu_sram (
     // ATL Address Multiplexer (MSB is forced to 0 to target the LUT half of the SRAM)
     // Init -> Use Counter | Z80 I/O -> Use Z80 A[11:8] | Run -> Use Active Master Top 4
     assign atl_addr = is_initializing ? {1'b0, init_ptr} : 
-                      (cpu_updating   ? {1'b0, z80_addr[11:8]} : {1'b0, l_addr_hi});
+                      (cpu_updating   ? z80_addr[11:8] : l_addr_hi);
 
     // ATL Write Enable: High-speed clock pulse during init, or synchronized CPU pulse
     assign atl_we_n = is_initializing ? !mclk : !sync_we;

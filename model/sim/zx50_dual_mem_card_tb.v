@@ -39,7 +39,7 @@ module zx50_dual_mem_card_tb;
     );
 
     // --- 2. System Signals ---
-    reg reset_n, boot_en_n;
+    reg reset_n;
     
     // --- 3. Z80 Backplane Buses ---
     wire [15:0] z80_addr;
@@ -74,7 +74,7 @@ module zx50_dual_mem_card_tb;
 
     // Card 0 (ID: 0x0)
     zx50_mem_card card0 (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h0),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h0),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(1'b1), // Top of the chain
@@ -86,7 +86,7 @@ module zx50_dual_mem_card_tb;
 
     // Card 1 (ID: 0x1)
     zx50_mem_card card1 (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(4'h1),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h1),
         .z80_addr(z80_addr), .z80_data(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
         .z80_m1_n(z80_m1_n), .z80_iei(c0_ieo), // Chained from Card 0
@@ -105,8 +105,6 @@ module zx50_dual_mem_card_tb;
     initial begin
         $dumpfile("waves/zx50_dual_mem_card.vcd");
         $dumpvars(0, zx50_dual_mem_card_tb);
-        
-        boot_en_n = 1; // Standard run mode (no boot override)
         
         // --- Boot Sequence ---
         $display("[%0t] System Power On. Resetting dual cards...", $time);
