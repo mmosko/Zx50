@@ -53,26 +53,38 @@ view-%: $(WAVES_DIR)/%.vcd $(GTK_DIR)/%.gtkw
 	$(VIEWER) $^
 
 clean:
-	rm -rf $(OUT_DIR)/*.vvp $(WAVES_DIR)/*.vcd 
+	rm -rf $(OUT_DIR)/*.vvp $(WAVES_DIR)/*.vcd $(SYN_DIR)/*
+
+# ==============================================================================
+# Global CPLD Variables
+# ==============================================================================
+SYN_DIR    = ./syn
+TOP_MODULE = zx50_cpld_core
+DEVICE     = ATF1508AS
+PACKAGE    = TQFP100
+
+# Define pure CPLD source files (Exclude simulation BFMs!)
+CPLD_SRC = zx50_cpld_core.v zx50_bus_arbiter.v zx50_dma.v zx50_mmu_sram.v
+
+# Centralized array with full paths to avoid scattered addprefix commands
+CPLD_FILES = $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
+
+# Tool Paths
+ATF_DIR    = ../../atf15xx_yosys
+ATF_YOSYS  = ~/git/atf15xx_yosys/run_yosys.sh
+ATF_FITTER = ~/git/atf15xx_yosys/run_fitter.sh
+JED2SVF    = python3 ~/git/prjbureau/util/fuseconf.py
 
 # ==============================================================================
 # Yosys Dry-Run (MacBook / Local Troubleshooting)
 # ==============================================================================
-# This target runs the exact Atmel synthesis flow without invoking the legacy fitter.
-# It is perfect for checking Verilog syntax, linting, and logic mapping on ARM/Mac.
-#
-# Expects atf1508 library in project parent
-# git clone  https://github.com/hoglet67/atf15xx_yosys.git
-# Path to the Atmel Yosys libraries
-ATF_DIR = ../../atf15xx_yosys
-
-yosys-check: $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
+# Runs the exact Atmel synthesis flow without invoking the legacy Wine fitter.
+yosys-check: $(CPLD_FILES)
 	@echo "\n--- Running Yosys Atmel Synthesis Check ---"
-	@mkdir -p $(OUT_DIR)
-	# Runs the identical sequence to run_yosys.sh but outputs a JSON netlist for local viewing
-	yosys -q -l $(OUT_DIR)/yosys_check.log -p " \
+	@mkdir -p $(SYN_DIR)
+	yosys -q -l $(SYN_DIR)/yosys_check.log -p " \
 		read_liberty -lib $(ATF_DIR)/cells.lib; \
-		read_verilog $(addprefix $(SRC_DIR)/, $(CPLD_SRC)); \
+		read_verilog $(CPLD_FILES); \
 		tribuf; \
 		synth -flatten -noabc -top $(TOP_MODULE); \
 		techmap -map $(ATF_DIR)/techmap.v -D skip_DFFE_XX_; \
@@ -85,41 +97,41 @@ yosys-check: $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
 		splitnets -format _; \
 		rename -wire -suffix _reg t:*DFF*; \
 		rename -wire -suffix _comb; \
-		write_json $(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
-	@echo "--- Yosys Synthesis Check Complete! No errors found. ---\n"
+		stat; \
+		write_json $(SYN_DIR)/$(TOP_MODULE)_dryrun.json"
+	
+	@echo "--- Yosys Synthesis Check Complete! No errors found. ---"
+	@echo "Log saved to: $(SYN_DIR)/yosys_check.log"
+	@grep -A 25 "=== $(TOP_MODULE) ===" $(SYN_DIR)/yosys_check.log || true
+	@echo "\n"
 
 # ==============================================================================
 # Synthesis & Flashing (ATF1508AS via Yosys & OpenOCD)
 # ==============================================================================
-# Define your pure CPLD source files here (Exclude simulation BFMs!)
-CPLD_SRC = zx50_cpld_core.v zx50_bus_arbiter.v zx50_dma.v zx50_mmu_sram.v
-TOP_MODULE = zx50_cpld_core
-#DEVICE     = ATF1508AS-100-TQFP
-DEVICE     = ATF1508AS
-PACKAGE    = TQFP100
-
-# Paths to your cloned tools (Update these to match where you cloned them)
-#ATF_FITTER = ~/git/atf15xx_yosys/yosys-atf15xx
-ATF_YOSYS  =  ~/git/atf15xx_yosys/run_yosys.sh
-ATF_FITTER =  ~/git/atf15xx_yosys/run_fitter.sh
-JED2SVF    = python3 ~/git/prjbureau/util/fuseconf.py
-
-syn: $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
+syn: $(CPLD_FILES)
 	@echo "\n--- 1. Yosys Synthesis & Atmel Fitter ---"
-	@mkdir -p $(OUT_DIR)
-	cd $(SRC_DIR) && $(ATF_YOSYS) zx50_cpld_core $(CPLD_SRC) 
-	# This script runs Yosys, generates the EDIF, and calls Wine/fit1508.exe
-	#cd $(SRC_DIR) && $(ATF_FITTER) -d $(DEVICE) -p TQFP -t $(TOP_MODULE) $(CPLD_SRC) -o ../$(OUT_DIR)/$(TOP_MODULE).jed
-	cd $(SRC_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(TOP_MODULE)
+	@mkdir -p $(SYN_DIR)
+	
+	# Symlink all source files into syn/ so legacy tools can find them locally
+	@for file in $(CPLD_SRC); do \
+		ln -sf ../$(SRC_DIR)/$$file $(SYN_DIR)/$$file; \
+	done
+	
+	# Execute Yosys from within syn/ to capture the EDIF and logs cleanly
+	# We use abspath to ensure the shell script finds the files regardless of the cd
+	cd $(SYN_DIR) && $(ATF_YOSYS) $(TOP_MODULE) $(abspath $(CPLD_FILES))
+	
+	# Execute the Atmel Fitter from within syn/ to capture the JED, FIT, and TT2 files
+	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(TOP_MODULE)
 
-	@echo "--- 2. Converting JED to SVF ---"
-	$(JED2SVF) $(OUT_DIR)/$(TOP_MODULE).jed $(OUT_DIR)/$(TOP_MODULE).svf
+	@echo "\n--- 2. Converting JED to SVF ---"
+	$(JED2SVF) $(SYN_DIR)/$(TOP_MODULE).jed $(SYN_DIR)/$(TOP_MODULE).svf
 	@echo "--- Synthesis Complete! SVF ready for flashing. ---\n"
 
-flash: $(OUT_DIR)/$(TOP_MODULE).svf
+flash: $(SYN_DIR)/$(TOP_MODULE).svf
 	@echo "\n--- Flashing CPLD via Waveshare CH347 & OpenOCD ---"
-	# Connects via CH347, defines the JTAG TAP for the ATF1508, and pushes the SVF
 	openocd -f interface/ch347.cfg \
 	        -c "adapter speed 1000" \
 	        -c "jtag newtap atf1508 tap -irlen 3 -expected-id 0x0150803f" \
-	        -c "init; svf $(OUT_DIR)/$(TOP_MODULE).svf; exit"
+	        -c "init; svf $(SYN_DIR)/$(TOP_MODULE).svf; exit"
+	@echo "--- Flashing Complete! ---\n"

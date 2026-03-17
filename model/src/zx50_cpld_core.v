@@ -79,8 +79,12 @@ module zx50_cpld_core (
     wire z80_mreq_n = duplex_in[2]; 
     wire z80_iorq_n = duplex_in[3]; 
 
-    always @(posedge mclk or negedge reset_n) begin
-        if (!reset_n) latched_id <= duplex_in; 
+    // Synchronously latch the Card ID while the system is in reset.
+    // Once reset_n goes high (normal operation), latched_id locks and holds its value.
+    always @(posedge mclk) begin
+        if (!reset_n) begin
+            latched_id <= duplex_in; 
+        end
     end
 
     // ==========================================
@@ -124,9 +128,6 @@ module zx50_cpld_core (
     
     wire iorq_rising = (iorq_sync == 2'b01);
     wire intack_clear = iorq_rising && z80_iei && dma_int_pending;
-
-    // Do not float the address lines, zero them if not being used
-    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
 
     assign z80_int_n = dma_int_pending ? 1'b0 : 1'bz; 
     assign z80_ieo = z80_iei && !dma_int_pending; 
@@ -180,7 +181,9 @@ module zx50_cpld_core (
     // ==========================================
     // 5. LOCAL MEMORY & LUT TAKEOVER MULTIPLEXING
     // ==========================================
-    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'bz);
+        // Do not float the address lines, zero them if not being used
+    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
+
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
     assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} :
                       mmu_cpu_updating    ? l_data :
