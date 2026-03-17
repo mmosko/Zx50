@@ -28,15 +28,16 @@ module zx50_mmu_sram (
 
     // --- Address Translation Table (ATL / ISSI SRAM) ---
     output wire [4:0] atl_addr,   // 5-bit address (Lower 16 = LUT, Upper 16 = Scratchpad)
-    inout  wire [7:0] atl_data,
     output wire atl_we_n,
     output wire atl_oe_n,
     
     // --- Status & Arbiter Outputs ---
-    output wire [7:0] p_addr_hi,  // To physical SRAM A[18:11]
     output wire active,           // 1 = Z80 is actively reading/writing a mapped page
     output wire z80_card_hit,     // 1 = Card is targeted by Z80 (Mem Page OR I/O Update)
-    output wire is_busy           // 1 = MMU is currently writing to the ATL SRAM
+    output wire is_busy,          // 1 = MMU is currently writing to the ATL SRAM
+    output wire cpu_updating,
+    output reg is_initializing,
+    output reg [3:0] init_ptr
 );
 
     // ==========================================
@@ -46,8 +47,8 @@ module zx50_mmu_sram (
     localparam MMU_MASK      = 8'hF0;  // Mask to identify MMU family range
 
     reg [15:0] pal_bits;           // 16 pages, 1 bit per page (1 = owned)
-    reg [3:0]  init_ptr;           // Counter for hardware wipe
-    reg        is_initializing;
+
+
     reg        reset_armed;
     reg        sync_we;            // Synchronized Write Enable for SRAM safety
 
@@ -92,7 +93,7 @@ module zx50_mmu_sram (
     // ATL (ISSI SRAM) Interface Logic
     // ==========================================
     // Combinatorial flag for routing/muxing (does not rely on the clock edge)
-    wire cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
+    assign cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
                         (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)));
     
     // ATL Address Multiplexer (MSB is forced to 0 to target the LUT half of the SRAM)
@@ -110,11 +111,7 @@ module zx50_mmu_sram (
 
     // ATL Data: Drive the bus ONLY when we are writing
     // Init -> 1:1 mapping (0 to 0, 1 to 1) | Z80 I/O -> Pass Z80 Data | Run -> High-Z
-    assign atl_data = is_initializing ? {4'h0, init_ptr} : 
-                      (cpu_updating   ? l_data : 8'hzz);
-
     // The physical address upper bits are whatever is currently on the ATL data bus
-    assign p_addr_hi = atl_data;
 
     // ==========================================
     // Active & Hit Signal Logic (To Arbiter)

@@ -1,0 +1,8 @@
+Parts Type,JLCPCB Part #,MFR Part #,Description,Unit Price,Qty,Total Price
+stock,C14663,CC0603KRX7R9BB104,100nF 50V X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,0.0026,24,0.07
+stock,C2062861,IS61C256AL-12JLI-TR,-40℃~+85℃ 12ns 256Kbit 4.5V~5.5V 40mA 450uA Parallel Port (Parallel) SOJ-28 SRAM ROHS,1.7867,1,1.79
+stock,C3018881,CY7C1049DV33-10ZSXIT,-40℃~+85℃ 10mA 10ns 3V~3.6V 4Mbit 90mA TSOPII-44-10.2mm SRAM ROHS,9.0217,2,18.05
+stock,C131956,SN74ABT541BPWR,"-40℃~+85℃ 1 250uA 2ns@5V,50pF 32mA 4.5V~5.5V 64mA 74ABT 8 Tri-State TSSOP-20 Buffers, Drivers, Receivers, Transceivers ROHS",1.0957,2,2.2
+stock,C1548132,SN74ABT245BDW,"-40℃~+85℃ 250uA 2ns@5V,50pF 32mA 4.5V~5.5V 64mA 74ABT Bidirectional Tri-State SOIC-20-300mil Buffers, Drivers, Receivers, Transceivers ROHS",0.8491,3,2.55
+stock,C2676105,SN74ABT16244ADGGR,"-40℃~+85℃ 32mA 3mA 4 4 4.5V~5.5V 64mA 74ABT Tri-State TSSOP-48-6.1mm Buffers, Drivers, Receivers, Transceivers ROHS",1.3661,1,1.37
+stock,C31179,ATF1508AS-10AU100,TQFP-100(14x14) Programmable Logic Device (CPLDs/FPGAs) ROHS,20.8308,1,20.84
