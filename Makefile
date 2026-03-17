@@ -61,36 +61,38 @@ clean:
 # This target runs pure Yosys synthesis without invoking the Atmel fitter.
 # It is perfect for checking Verilog syntax, linting, and logic mapping on ARM/Mac.
 
-yosys-check: $(CPLD_SRC)
+yosys-check: $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
 	@echo "\n--- Running Yosys Syntax & Synthesis Check ---"
 	@mkdir -p $(OUT_DIR)
 	# read_verilog: Loads the files
 	# prep: Sets up the hierarchy, checks for missing modules, and runs basic optimizations
 	# write_json: Dumps a generic netlist (useful for viewing in tools like netlistsvg)
-	yosys -p "read_verilog $(CPLD_SRC); hierarchy -check -top $(TOP_MODULE); prep -top $(TOP_MODULE); write_json $(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
+	cd $(SRC_DIR) && yosys -p "read_verilog $(CPLD_SRC); hierarchy -check -top $(TOP_MODULE); prep -top $(TOP_MODULE); write_json ../$(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
 	@echo "--- Yosys Synthesis Check Complete! No errors found. ---\n"
 
 # ==============================================================================
 # Synthesis & Flashing (ATF1508AS via Yosys & OpenOCD)
 # ==============================================================================
 # Define your pure CPLD source files here (Exclude simulation BFMs!)
-CPLD_SRC = $(SRC_DIR)/zx50_cpld_core.v \
-           $(SRC_DIR)/zx50_bus_arbiter.v \
-           $(SRC_DIR)/zx50_dma.v \
-           $(SRC_DIR)/zx50_mmu_sram.v
-
+CPLD_SRC = zx50_cpld_core.v zx50_bus_arbiter.v zx50_dma.v zx50_mmu_sram.v
 TOP_MODULE = zx50_cpld_core
-DEVICE     = ATF1508AS-100-TQFP
+#DEVICE     = ATF1508AS-100-TQFP
+DEVICE     = ATF1508AS
+PACKAGE    = TQFP100
 
 # Paths to your cloned tools (Update these to match where you cloned them)
-ATF_FITTER = ~/git/atf15xx_yosys/yosys-atf15xx
+#ATF_FITTER = ~/git/atf15xx_yosys/yosys-atf15xx
+ATF_YOSYS  =  ~/git/atf15xx_yosys/run_yosys.sh
+ATF_FITTER =  ~/git/atf15xx_yosys/run_fitter.sh
 JED2SVF    = python3 ~/git/prjbureau/util/fuseconf.py
 
-syn: $(CPLD_SRC)
+syn: $(addprefix $(SRC_DIR)/, $(CPLD_SRC))
 	@echo "\n--- 1. Yosys Synthesis & Atmel Fitter ---"
 	@mkdir -p $(OUT_DIR)
+	cd $(SRC_DIR) && $(ATF_YOSYS) zx50_cpld_core $(CPLD_SRC) 
 	# This script runs Yosys, generates the EDIF, and calls Wine/fit1508.exe
-	$(ATF_FITTER) -d $(DEVICE) -t $(TOP_MODULE) $(CPLD_SRC) -o $(OUT_DIR)/$(TOP_MODULE).jed
+	#cd $(SRC_DIR) && $(ATF_FITTER) -d $(DEVICE) -p TQFP -t $(TOP_MODULE) $(CPLD_SRC) -o ../$(OUT_DIR)/$(TOP_MODULE).jed
+	cd $(SRC_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(TOP_MODULE)
 
 	@echo "--- 2. Converting JED to SVF ---"
 	$(JED2SVF) $(OUT_DIR)/$(TOP_MODULE).jed $(OUT_DIR)/$(TOP_MODULE).svf
