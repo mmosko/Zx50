@@ -1,8 +1,1 @@
-Zx50_*-backups/
-~*.lck
-fp-info-cache
 .DS_Store
-\#auto_saved_files\#
-*/production/backups/
-*/*-backups/
-*.bak
