@@ -58,16 +58,34 @@ clean:
 # ==============================================================================
 # Yosys Dry-Run (MacBook / Local Troubleshooting)
 # ==============================================================================
-# This target runs pure Yosys synthesis without invoking the Atmel fitter.
+# This target runs the exact Atmel synthesis flow without invoking the legacy fitter.
 # It is perfect for checking Verilog syntax, linting, and logic mapping on ARM/Mac.
+#
+# Expects atf1508 library in project parent
+# git clone  https://github.com/hoglet67/atf15xx_yosys.git
+# Path to the Atmel Yosys libraries
+ATF_DIR = ../../atf15xx_yosys
 
 yosys-check: $(CPLD_SRC)
-	@echo "\n--- Running Yosys Syntax & Synthesis Check ---"
+	@echo "\n--- Running Yosys Atmel Synthesis Check ---"
 	@mkdir -p $(OUT_DIR)
-	# read_verilog: Loads the files
-	# prep: Sets up the hierarchy, checks for missing modules, and runs basic optimizations
-	# write_json: Dumps a generic netlist (useful for viewing in tools like netlistsvg)
-	yosys -p "read_verilog $(CPLD_SRC); hierarchy -check -top $(TOP_MODULE); prep -top $(TOP_MODULE); write_json $(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
+	# Runs the identical sequence to run_yosys.sh but outputs a JSON netlist for local viewing
+	yosys -p " \
+		read_liberty -lib $(ATF_DIR)/cells.lib; \
+		read_verilog $(CPLD_SRC); \
+		tribuf; \
+		synth -flatten -noabc -top $(TOP_MODULE); \
+		techmap -map $(ATF_DIR)/techmap.v -D skip_DFFE_XX_; \
+		simplemap; \
+		dfflibmap -liberty $(ATF_DIR)/cells.lib; \
+		abc -liberty $(ATF_DIR)/cells.lib; \
+		iopadmap -bits -inpad INBUF Q:A -outpad BUF A:Q -toutpad TRI ENA:A:Q -tinoutpad bibuf EN:Q:A:PAD; \
+		clean; \
+		hierarchy -check -top $(TOP_MODULE); \
+		splitnets -format _; \
+		rename -wire -suffix _reg t:*DFF*; \
+		rename -wire -suffix _comb; \
+		write_json $(OUT_DIR)/$(TOP_MODULE)_dryrun.json"
 	@echo "--- Yosys Synthesis Check Complete! No errors found. ---\n"
 
 # ==============================================================================

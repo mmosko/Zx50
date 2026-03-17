@@ -51,14 +51,15 @@ module zx50_conflict_tb;
         
         // Explicitly float unused outputs to prevent compiler warnings
         .atl_addr(), 
-        .atl_data(), 
         .atl_we_n(), 
         .atl_oe_n(), 
-        .p_addr_hi(), 
         
         .active(active_a),
         .z80_card_hit(),
-        .is_busy()
+        .is_busy(),
+        .cpu_updating(),
+        .is_initializing(),
+        .init_ptr()
     );
 
     // ==========================================
@@ -80,14 +81,15 @@ module zx50_conflict_tb;
         
         // Explicitly float unused outputs
         .atl_addr(), 
-        .atl_data(), 
         .atl_we_n(), 
         .atl_oe_n(), 
-        .p_addr_hi(), 
         
         .active(active_b),
         .z80_card_hit(),
-        .is_busy()
+        .is_busy(),
+        .cpu_updating(),
+        .is_initializing(),
+        .init_ptr()
     );
 
     reg failed;

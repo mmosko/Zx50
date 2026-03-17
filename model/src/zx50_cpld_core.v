@@ -136,7 +136,6 @@ module zx50_cpld_core (
 
     wire safe_sh_en_n = dma_is_active ? sh_en_n : 1'b1;
 
-    // <-- FIXED ARBITER INSTANTIATION -->
     zx50_bus_arbiter arbiter_unit (
         .mclk(mclk), .reset_n(reset_n),
         .sh_en_n(safe_sh_en_n), 
