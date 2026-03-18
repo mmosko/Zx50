@@ -1,3 +1,4 @@
+
 # Architecture Transition: Moving to Lattice MachXO2
 
 For a "V2" board revision, transitioning from a legacy 5V CPLD (like the Atmel ATF1508AS) to a modern 3.3V FPGA architecture provides massive benefits in logic capacity, routing resources, and toolchain reliability. The recommended upgrade path is the **Lattice MachXO2** family.
