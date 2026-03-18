@@ -275,24 +275,31 @@ module zx50_cpld_core (
     // 5. LOCAL MEMORY & LUT TAKEOVER MULTIPLEXING
     // ==========================================
 
-    // Do not float the address lines, zero them if not being used
-    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
-    assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
+    // OPTIMIZATION 1: Do not force l_addr to 0. Mux directly between the two masters.
+    // This instantly frees 11 macrocells and drops massive routing overhead!
+    assign l_addr = dma_is_active ? dma_phys_addr[10:0] : z80_addr[10:0];
+    
+    assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy);
+
+    // OPTIMIZATION 2: Break the 'atl_we_n' routing feedback loop.
+    // Use internal flags to determine when the CPLD must drive the LUT data bus.
+    wire atl_data_oe = dma_is_active || mmu_is_initializing || mmu_cpu_updating;
     
     // Split the tri-state logic so Yosys can map it to a physical Atmel bibuf
     wire [7:0] atl_data_out = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : l_data;
-    wire atl_data_oe = dma_is_active || !atl_we_n;
-    
     assign atl_data = atl_data_oe ? atl_data_out : 8'hzz;
 
     wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
-    wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && atl_we_n && memory_cycle);
     
+    // OPTIMIZATION 3: Break the second routing loop to the RAM Chip Enables
+    wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && !mmu_cpu_updating && memory_cycle);
+
     assign ram_ce0_n = (safe_to_access_ram && bank_select == 1'b0) ? 1'b0 : 1'b1;
     assign ram_ce1_n = (safe_to_access_ram && bank_select == 1'b1) ? 1'b0 : 1'b1;
 
-    assign ram_oe_n = dma_is_active ? dma_local_oe_n : ((z80_grant && memory_cycle) ? z80_rd_n : 1'b1);
-    assign ram_we_n = dma_is_active ? dma_local_we_n : ((z80_grant && memory_cycle) ? z80_wr_n : 1'b1);
+    // OPTIMIZATION 4: Simplify the OE/WE muxing
+    assign ram_oe_n = dma_is_active ? dma_local_oe_n : (z80_grant ? z80_rd_n : 1'b1);
+    assign ram_we_n = dma_is_active ? dma_local_we_n : (z80_grant ? z80_wr_n : 1'b1);
 
     wire [7:0] interrupt_vector = 8'h40 | latched_id;
     assign l_data = responding_to_intack ? interrupt_vector : 8'hzz;
@@ -303,7 +310,7 @@ module zx50_cpld_core (
     assign z80_wait_n = ((arbiter_hit && dma_is_active) || arbiter_wait_n == 1'b0) ? 1'b0 : 1'bz;
     
     // Transceiver Multiplexing
-    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n; 
+    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n;
     assign z80_data_oe_n = dma_is_active ? 1'b1 : arbiter_z80_data_oe_n;
     
     assign sh_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;
