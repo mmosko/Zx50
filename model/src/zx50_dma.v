@@ -65,7 +65,10 @@ module zx50_dma (
     wire opcode       = z80_addr[15];
     wire [14:0] operand = {z80_addr[14:8], z80_data_in[7:0]};
 
-    reg [19:0] phys_addr;
+    //reg [19:0] phys_addr;
+    reg [10:0] phys_addr_low;
+    reg [19:15] phys_addr_high;
+
     reg [7:0]  byte_count;
     reg is_master;
     reg dir_to_bus;     
@@ -87,17 +90,28 @@ module zx50_dma (
             transfer_armed <= 1'b0;
             arm_req        <= 1'b0;
         end else if (z80_io_write) begin
-            if (opcode == 1'b0) begin
-                // OPCODE 0: Define Role and Lower Address
-                is_master        <= operand[14];
-                dir_to_bus       <= operand[13];
-                phys_addr[12:0]  <= operand[12:0];
-            end else begin
-                // OPCODE 1: Define Upper Address, Count, and queue the Arm Request
-                byte_count       <= operand[14:7];
-                phys_addr[19:13] <= operand[6:0]; 
-                arm_req          <= 1'b1;         
-            end
+//            if (opcode == 1'b0) begin
+//                // OPCODE 0: Define Role and Lower Address
+//                is_master        <= operand[14];
+//                dir_to_bus       <= operand[13];
+//                phys_addr[12:0]  <= operand[12:0];
+//            end else begin
+//                // OPCODE 1: Define Upper Address, Count, and queue the Arm Request
+//                byte_count       <= operand[14:7];
+//                phys_addr[19:13] <= operand[6:0]; 
+//                arm_req          <= 1'b1;         
+//            end
+	if (opcode == 1'b0) begin
+	    is_master           <= operand[14];
+	    dir_to_bus          <= operand[13];
+	    phys_addr_low[10:0] <= operand[10:0]; // Only store the used lower bits
+	end else begin
+	    byte_count          <= operand[14:7];
+	    phys_addr_high      <= operand[4:0];  // Only store the top 5 page bits
+	    arm_req             <= 1'b1;
+	end
+
+
         end else if (arm_req && z80_iorq_n) begin
             // THE SHIELD: Safely commit the armed flag ONLY after the Z80 has 
             // completely finished the OUT instruction (IORQ goes high).
@@ -105,8 +119,14 @@ module zx50_dma (
             arm_req        <= 1'b0;
         end else if (local_inc) begin
             // Hardware auto-increment while the DMA burst is running
-            phys_addr  <= phys_addr + 1'b1;
-            byte_count <= byte_count - 1'b1;
+            // phys_addr  <= phys_addr + 1'b1;
+            // byte_count <= byte_count - 1'b1;
+            // Hardware auto-increment while the DMA burst is running
+            //phys_addr[7:0] <= phys_addr[7:0] + 1'b1;
+            //byte_count     <= byte_count - 1'b1;
+	    phys_addr_low[7:0] <= phys_addr_low[7:0] + 1'b1;
+            byte_count         <= byte_count - 1'b1;
+
         end else if (local_done) begin
             // Clear the armed flag when the transfer fully completes
             transfer_armed <= 1'b0;
@@ -219,7 +239,9 @@ module zx50_dma (
     assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
 
     // Local Memory logic:
-    assign dma_phys_addr = phys_addr;
+    //assign dma_phys_addr = phys_addr;
+    assign dma_phys_addr = {phys_addr_high, 4'b0000, phys_addr_low};
+
     assign dma_data_out  = dma_data_in; 
     
     // Read local RAM if dir_to_bus == 0. Write local RAM if dir_to_bus == 1.

@@ -101,63 +101,63 @@
 //PIN: 94 = ram_we_n;
 
 module zx50_cpld_core (
-    (* LOC="P87" *) input  wire mclk,
-    (* LOC="P89" *) input  wire reset_n,
+    input  wire mclk,
+    input  wire reset_n,
     
     // --- Duplex/Control Bus (MSB to LSB: IORQ, MREQ, WR, RD) ---
-    (* LOC="P40,P37,P35,P33" *) input  wire [3:0] duplex_in, 
+    input  wire [3:0] duplex_in, 
     
     // --- Z80 Backplane ---
-    (* LOC="P41" *) input  wire z80_m1_n,       
-    (* LOC="P42" *) input  wire z80_iei,        
-    (* LOC="P36" *) output wire z80_ieo,        
+    input  wire z80_m1_n,       
+    input  wire z80_iei,        
+    output wire z80_ieo,        
     
-    (* LOC="P96" *) inout wire z80_int_n,    // Technicaly tristate, we want open drain
-    (* LOC="P97" *) inout wire z80_wait_n,   //Technicaly tristate, we want open drain
+    inout wire z80_int_n,    // Technicaly tristate, we want open drain
+    inout wire z80_wait_n,   //Technicaly tristate, we want open drain
 
     // Z80 Address Bus (A15 down to A0)
-    (* LOC="P21,P20,P19,P17,P16,P14,P13,P12,P10,P9,P8,P7,P6,P5,P2,P1" *) 
+    
     input  wire [15:0] z80_addr, 
     
     // --- Local Shared Bus (D7 down to D0) ---
-    (* LOC="P32,P31,P30,P29,P28,P27,P25,P24" *) 
+    
     inout  wire [7:0] l_data, 
     
     // --- Shadow Bus Controls (Bidirectional) ---
-    (* LOC="P47" *) inout  wire sh_en_n, 
-    (* LOC="P48" *) inout  wire sh_rw_n, 
-    (* LOC="P46" *) inout  wire sh_inc_n, 
-    (* LOC="P45" *) inout  wire sh_stb_n, 
-    (* LOC="P49" *) inout  wire sh_done_n, 
-    (* LOC="P50" *) inout  wire sh_busy_n, 
+    inout  wire sh_en_n, 
+    inout  wire sh_rw_n, 
+    inout  wire sh_inc_n, 
+    inout  wire sh_stb_n, 
+    inout  wire sh_done_n, 
+    inout  wire sh_busy_n, 
     
     // --- Transceiver Controls ---
-    (* LOC="P44" *) output wire sh_c_dir,         
-    (* LOC="P23" *) output wire z80_data_oe_n, 
-    (* LOC="P52" *) output wire sh_data_oe_n,
-    (* LOC="P22" *) output wire l_dir,
+    output wire sh_c_dir,         
+    output wire z80_data_oe_n, 
+    output wire sh_data_oe_n,
+    output wire l_dir,
     
     // --- Local Memory & LUT Routing ---
     // Local Address Bus (A10 down to A0)
-    (* LOC="P85,P84,P83,P81,P80,P79,P78,P77,P76,P75,P72" *) 
+    
     output wire [10:0] l_addr,  
     
     // ATL Address Bus (A4 down to A0)
     // Reduced to 4 bits to save space and free P57
-    (* LOC="P56,P55,P54,P53" *) 
+    
     output wire [3:0]  atl_addr, 
     
     // ATL Data Bus (D7 down to D0)
-    (* LOC="P68,P67,P65,P64,P63,P61,P60,P58" *) 
+    
     inout  wire [7:0]  atl_data, 
     
-    (* LOC="P69" *) output wire atl_we_n, 
-    (* LOC="P70" *) output wire atl_oe_n, 
-    (* LOC="P71" *) output wire atl_ce_n,
-    (* LOC="P90" *) output wire ram_ce0_n, 
-    (* LOC="P92" *) output wire ram_ce1_n,
-    (* LOC="P93" *) output wire ram_oe_n,
-    (* LOC="P94" *) output wire ram_we_n           
+    output wire atl_we_n, 
+    output wire atl_oe_n, 
+    output wire atl_ce_n,
+    output wire ram_ce0_n, 
+    output wire ram_ce1_n,
+    output wire ram_oe_n,
+    output wire ram_we_n           
 );
 
     // ==========================================
