@@ -55,8 +55,8 @@ module zx50_mmu_sram (
     reg [15:0] page_ownership;
 
     reg        reset_armed;
-    reg        sync_we;            // Synchronized Write Enable for SRAM safety
-
+    reg        sync_we;      
+  
     // ==========================================
     // Synchronous State Machine (Hardware Wipe & Snoop)
     // ==========================================
@@ -108,13 +108,15 @@ module zx50_mmu_sram (
     // ATL (ISSI SRAM) Interface Logic
     // ==========================================
     // Combinatorial flag for routing/muxing (does not rely on the clock edge)
-    assign cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
+    wire l_cpu_updating;
+    assign l_cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
                         (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)));
+    assign cpu_updating = l_cpu_updating;
 
     // ATL Address Multiplexer (MSB is forced to 0 to target the LUT half of the SRAM)
     // Init -> Use Counter | Z80 I/O -> Use Z80 A[11:8] | Run -> Use Active Master Top 4
     assign atl_addr = is_initializing ? {1'b0, init_ptr} : 
-                      (cpu_updating   ? z80_addr[11:8] : l_addr_hi);
+                      (l_cpu_updating   ? z80_addr[11:8] : l_addr_hi);
 
     // ATL Write Enable: High-speed clock pulse during init, or synchronized CPU pulse
     assign atl_we_n = is_initializing ? !mclk : !sync_we;
@@ -122,7 +124,7 @@ module zx50_mmu_sram (
     // ATL Output Enable: 
     // Disable (High) when the CPLD is driving the bus to write.
     // Enable (Low) during normal run so the SRAM can drive p_addr_hi.
-    assign atl_oe_n = (is_initializing || cpu_updating) ? 1'b1 : 1'b0;
+    assign atl_oe_n = (is_initializing || l_cpu_updating) ? 1'b1 : 1'b0;
 
     // ==========================================
     // Active & Hit Signal Logic (To Arbiter)
@@ -136,9 +138,9 @@ module zx50_mmu_sram (
     assign active = (reset_n && !is_initializing && !z80_mreq_n && current_page_owned);
 
     // 'z80_card_hit' alerts the Arbiter if the Z80 is doing a Memory cycle OR an I/O update
-    assign z80_card_hit = active || cpu_updating;
+    assign z80_card_hit = active || l_cpu_updating;
 
-    assign is_busy = is_initializing || cpu_updating;
+    assign is_busy = is_initializing || l_cpu_updating;
 
     // ==========================================
     // CPLD Power-On-Reset (POR) Emulation

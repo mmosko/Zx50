@@ -151,7 +151,7 @@ module zx50_mmu_sram_tb;
         // ATL SRAM should output p_hi = 0xAA (instead of its default 0x00). 
         $display("[%0t] --- Testing Phase 3: Translation Verification ---", $time); 
         
-// Threading is not needed here since we only care about the final translation result
+        // Threading is not needed here since we only care about the final translation result
         z80.mem_read(16'h0000, dummy_data);
         
         if (dummy_data === 8'hAA) begin
