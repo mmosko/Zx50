@@ -13,7 +13,6 @@
 module zx50_mmu_sram (
     input wire mclk,              // 36-40MHz Master Clock
     input wire reset_n,           // System Reset
-    input wire boot_en_n,         // Boot ROM override
     input wire [3:0] card_id_sw,  // Hardware DIP Switches
 
     // --- Backplane & Local Bus Inputs ---
@@ -66,9 +65,10 @@ module zx50_mmu_sram (
                 is_initializing <= 1'b1;
                 init_ptr        <= 4'h0;
                 reset_armed     <= 1'b1;
-                
-                // Boot override: If boot_en_n is low, claim top 8 pages automatically
-                page_ownership  <= (!boot_en_n) ? 16'hFF00 : 16'h0000;
+            
+                // OPTIMIZATION: Always zero the map on reset. 
+                // Firmware must configure the MMU via I/O before use.
+                page_ownership  <= 16'h0000;    
             end
             
             if (is_initializing) begin
