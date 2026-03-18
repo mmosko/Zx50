@@ -83,7 +83,9 @@ module zx50_dma (
     // ==========================================
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            phys_addr      <= 20'h00000;
+//            phys_addr      <= 20'h00000;
+            phys_addr_low  <= 11'h000;
+            phys_addr_high <= 5'h00;
             byte_count     <= 8'h00;
             is_master      <= 1'b0;
             dir_to_bus     <= 1'b0;
