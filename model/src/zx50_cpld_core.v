@@ -246,6 +246,7 @@ module zx50_cpld_core (
     zx50_mmu_sram mmu_unit (
         .mclk(mclk), .reset_n(reset_n), 
         // card 0 is considered the boot card with eeprom enabled
+        .boot_en_n(latched_id != 4'h0), 
         .card_id_sw(latched_id), 
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), 
         .l_data(l_data), .z80_iorq_n(safe_z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
