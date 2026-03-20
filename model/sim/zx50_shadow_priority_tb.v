@@ -4,8 +4,8 @@
  * MODULE: zx50_shadow_priority_tb
  * DESCRIPTION:
  * Validates the bus arbitration and priority logic of the Universal Shadow Bus.
- * * TIMING VALIDATION ADDED:
- * This test now dynamically measures the elapsed time of the Z80 transactions 
+ * * TIMING VALIDATION:
+ * This test dynamically measures the elapsed time of Z80 transactions 
  * during a DMA collision. If the CPLD's state machine inserts unnecessary WAIT 
  * states or stalls the handoff, the test will flag a TIMING VIOLATION and fail, 
  * even if the payload data is ultimately correct.
@@ -16,7 +16,6 @@ module zx50_shadow_priority_tb;
     // --- 1. System Clocks & Signals ---
     wire mclk, zclk;
     zx50_clock clk_gen (.mclk(mclk), .zclk(zclk));
-
     reg reset_n;
 
     // --- 2. Z80 Backplane Buses ---
@@ -28,7 +27,7 @@ module zx50_shadow_priority_tb;
     wire shared_wait_n = c0_wait_n & c1_wait_n; 
     
     wire c0_ieo, c1_ieo;
-    wire z80_int_n; 
+    wire z80_int_n;
 
     // --- 3. Shadow Bus Backplane ---
     wire [15:0] sh_addr; 
@@ -88,7 +87,7 @@ module zx50_shadow_priority_tb;
         input [7:0] base_val;
         begin
             for (i = 0; i < 16; i = i + 1) begin
-                z80.mem_read(16'h1000 + i, read_val); 
+                z80.mem_read(16'h1000 + i, read_val);
                 if (read_val !== (i + base_val)) begin
                     $display("!!! DATA CORRUPTION at Offset %0d. Expected %0x, got %0x", i, (i + base_val), read_val);
                     errors = errors + 1;
@@ -105,11 +104,12 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === SYSTEM POWER ON ===", $time);
         reset_n = 1; clk_gen.wait_mclk(5); 
         reset_n = 0; clk_gen.wait_mclk(50); 
-        reset_n = 1; 
+        reset_n = 1;
         clk_gen.wait_mclk(20); 
 
-        z80.io_write(16'h0030, 8'h00);
-        z80.io_write(16'h0131, 8'h00);
+        // Map Base Memory Pages
+        z80.io_write(16'h0030, 8'h00); // Card 0 -> Bank 0
+        z80.io_write(16'h0131, 8'h00); // Card 1 -> Bank 1
 
         // =========================================================
         // TEST 1: Z80 MREQ TO SLAVE
@@ -118,10 +118,11 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 1: Z80 MREQ to SLAVE during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hA0);
 
-        z80.io_write(16'h2041, 8'h00); 
-        z80.io_write(16'h8841, 8'h00); 
-        z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); 
+        // Arm DMA Transfer
+        z80.io_write(16'h2041, 8'h00); // Setup Slave Listen
+        z80.io_write(16'h8841, 8'h00); // Arm Slave (Count=16)
+        z80.io_write(16'h4040, 8'h00); // Setup Master Drive
+        z80.io_write(16'h8840, 8'h00); // Arm Master (Fires!)
 
         $display("[%0t] Z80 forcefully reading Slave memory (0x1008)...", $time);
         start_time = $time;
@@ -130,7 +131,7 @@ module zx50_shadow_priority_tb;
         
         $display("[%0t] Z80 Slave read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
         
-        // Assert timing limits
+        // Assert timing limits: Transaction must not be illegally stalled
         if (elapsed_time > 550000) begin
             $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 550000 ps) !!!", elapsed_time);
             errors = errors + 1;
@@ -149,10 +150,11 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 2: Z80 MREQ to MASTER during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hB0);
 
-        z80.io_write(16'h2041, 8'h00); 
-        z80.io_write(16'h8841, 8'h00); 
-        z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); 
+        // Arm DMA Transfer
+        z80.io_write(16'h2041, 8'h00); // Setup Slave Listen
+        z80.io_write(16'h8841, 8'h00); // Arm Slave (Count=16)
+        z80.io_write(16'h4040, 8'h00); // Setup Master Drive
+        z80.io_write(16'h8840, 8'h00); // Arm Master (Fires!)
 
         $display("[%0t] Z80 forcefully reading Master memory (0x0008)...", $time);
         start_time = $time;
@@ -160,8 +162,8 @@ module zx50_shadow_priority_tb;
         elapsed_time = $time - start_time;
         
         $display("[%0t] Z80 Master read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
-
-        // Assert timing limits
+        
+        // Assert timing limits: Transaction must not be illegally stalled
         if (elapsed_time > 450000) begin
             $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 450000 ps) !!!", elapsed_time);
             errors = errors + 1;
@@ -180,10 +182,11 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 3: Z80 IORQ to SLAVE during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hC0);
 
-        z80.io_write(16'h2041, 8'h00); 
-        z80.io_write(16'h8841, 8'h00); 
-        z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); 
+        // Arm DMA Transfer
+        z80.io_write(16'h2041, 8'h00); // Setup Slave Listen
+        z80.io_write(16'h8841, 8'h00); // Arm Slave (Count=16)
+        z80.io_write(16'h4040, 8'h00); // Setup Master Drive
+        z80.io_write(16'h8840, 8'h00); // Arm Master (Fires!)
 
         $display("[%0t] Z80 forcefully reading Slave MMU IO Port (0x0131)...", $time);
         start_time = $time;
@@ -191,8 +194,8 @@ module zx50_shadow_priority_tb;
         elapsed_time = $time - start_time;
         
         $display("[%0t] Z80 Slave IO read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
-
-        // Assert timing limits
+        
+        // Assert timing limits: Transaction must not be illegally stalled
         if (elapsed_time > 700000) begin
             $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 700000 ps) !!!", elapsed_time);
             errors = errors + 1;
@@ -211,10 +214,11 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 4: Z80 IORQ to MASTER during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hD0);
 
-        z80.io_write(16'h2041, 8'h00); 
-        z80.io_write(16'h8841, 8'h00); 
-        z80.io_write(16'h4040, 8'h00); 
-        z80.io_write(16'h8840, 8'h00); 
+        // Arm DMA Transfer
+        z80.io_write(16'h2041, 8'h00); // Setup Slave Listen
+        z80.io_write(16'h8841, 8'h00); // Arm Slave (Count=16)
+        z80.io_write(16'h4040, 8'h00); // Setup Master Drive
+        z80.io_write(16'h8840, 8'h00); // Arm Master (Fires!)
 
         $display("[%0t] Z80 forcefully reading Master MMU IO Port (0x0030)...", $time);
         start_time = $time;
@@ -222,8 +226,8 @@ module zx50_shadow_priority_tb;
         elapsed_time = $time - start_time;
         
         $display("[%0t] Z80 Master IO read completed in %0d ps. Value: %x", $time, elapsed_time, read_val);
-
-        // Assert timing limits
+        
+        // Assert timing limits: Transaction must not be illegally stalled
         if (elapsed_time > 700000) begin
             $display("!!! TIMING VIOLATION: Transaction took %0d ps (Expected < 700000 ps) !!!", elapsed_time);
             errors = errors + 1;
@@ -249,7 +253,7 @@ module zx50_shadow_priority_tb;
 
     // --- System Watchdog Timer ---
     initial begin
-        #5000000; 
+        #5000000;
         $display("FATAL [%0t]: Watchdog Timer Expired!", $time);
         $fatal(1);
     end

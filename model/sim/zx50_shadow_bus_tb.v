@@ -38,7 +38,7 @@ module zx50_shadow_bus_tb;
     wire shared_wait_n = c0_wait_n & c1_wait_n; 
     
     wire c0_ieo, c1_ieo;
-    wire z80_int_n; 
+    wire z80_int_n;
 
     // --- 3. Standardized Shadow Bus Backplane ---
     wire [15:0] sh_addr; 
@@ -102,7 +102,7 @@ module zx50_shadow_bus_tb;
         reset_n = 1; clk_gen.wait_mclk(5); 
         reset_n = 0; clk_gen.wait_mclk(50); 
         reset_n = 1; 
-        clk_gen.wait_mclk(20); 
+        clk_gen.wait_mclk(20);
 
         // ---------------------------------------------------------
         // PREP: Map Memory and Load Payload
@@ -114,7 +114,7 @@ module zx50_shadow_bus_tb;
         $display("[%0t] Seeding Card 0 with 16-byte payload...", $time);
         for (i = 0; i < 16; i = i + 1) begin
             // Write payload to Bank 0 (which hits Card 0, Phys Page 0)
-            z80.mem_write(16'h0000 + i, i + 8'hA0); 
+            z80.mem_write(16'h0000 + i, i + 8'hA0);
         end
 
         // ---------------------------------------------------------
@@ -126,7 +126,7 @@ module zx50_shadow_bus_tb;
         // A[15]=0 (Setup), A[14]=0 (Slave), A[13]=1 (Listen to Bus/Write to RAM), A[12:8]=0x00
         // Data = 0x00. Address is 0x00000. Port = 0x41 (Card 1 DMA)
         z80.io_write(16'h2041, 8'h00);
-        
+
         // ARM COMMAND (Opcode 1): 0x8841
         // A[15]=1 (Arm), A[14:8]=0x08 (Count=16 bytes)
         // Data[7]=0, Data[6:0]=0x00 (Upper Address = 0x00). Port = 0x41
@@ -137,7 +137,7 @@ module zx50_shadow_bus_tb;
         // A[15]=0 (Setup), A[14]=1 (Master), A[13]=0 (Drive Bus/Read from RAM), A[12:8]=0x00
         // Data = 0x00. Address is 0x00000. Port = 0x40 (Card 0 DMA)
         z80.io_write(16'h4040, 8'h00);
-        
+
         // ARM COMMAND (Opcode 1): 0x8840
         // A[15]=1 (Arm), A[14:8]=0x08 (Count=16 bytes)
         // Data[7]=0, Data[6:0]=0x00 (Upper Address = 0x00). Port = 0x40
@@ -147,7 +147,6 @@ module zx50_shadow_bus_tb;
         // PHASE 2: Wait for Transfer and Interrupt
         // ---------------------------------------------------------
         $display("[%0t] Z80 yields bus. Waiting for Shadow Bus transfer...", $time);
-        
         // The Z80 BFM just waits here while the CPLDs take over the backplane
         wait(z80_int_n == 1'b0);
         $display("[%0t] Transfer Complete! Z80_INT_N asserted.", $time);
@@ -182,8 +181,7 @@ module zx50_shadow_bus_tb;
         // We mapped Bank 1 (0x1000 - 0x1FFF) to Physical Page 0 on Card 1 during Prep.
         $display("[%0t] Z80 reading Card 1 memory to verify DMA payload...", $time);
         for (i = 0; i < 16; i = i + 1) begin
-            z80.mem_read(16'h1000 + i, read_val); 
-            
+            z80.mem_read(16'h1000 + i, read_val);
             if (read_val !== (i + 8'hA0)) begin
                 $display("!!! DATA CORRUPTION at Offset %0d. Expected %0x, got %0x", i, (i + 8'hA0), read_val);
                 errors = errors + 1;
@@ -204,7 +202,7 @@ module zx50_shadow_bus_tb;
 
     // --- System Watchdog Timer ---
     initial begin
-        #500000; 
+        #500000;
         $display("FATAL [%0t]: Watchdog Timer Expired!", $time);
         $fatal(1);
     end

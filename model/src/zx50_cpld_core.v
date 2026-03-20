@@ -101,63 +101,63 @@
 //PIN: 94 = ram_we_n;
 
 module zx50_cpld_core (
-    (* LOC="P87" *) input  wire mclk,
-    (* LOC="P89" *) input  wire reset_n,
+    input  wire mclk,
+    input  wire reset_n,
     
     // --- Duplex/Control Bus (MSB to LSB: IORQ, MREQ, WR, RD) ---
-    (* LOC="P40,P37,P35,P33" *) input  wire [3:0] duplex_in, 
+    input  wire [3:0] duplex_in, 
     
     // --- Z80 Backplane ---
-    (* LOC="P41" *) input  wire z80_m1_n,       
-    (* LOC="P42" *) input  wire z80_iei,        
-    (* LOC="P36" *) output wire z80_ieo,        
+    input  wire z80_m1_n,       
+    input  wire z80_iei,        
+    output wire z80_ieo,        
     
-    (* LOC="P96" *) inout wire z80_int_n,    // Technicaly tristate, we want open drain
-    (* LOC="P97" *) inout wire z80_wait_n,   //Technicaly tristate, we want open drain
+    inout wire z80_int_n,    // Technicaly tristate, we want open drain
+    inout wire z80_wait_n,   //Technicaly tristate, we want open drain
 
     // Z80 Address Bus (A15 down to A0)
-    (* LOC="P21,P20,P19,P17,P16,P14,P13,P12,P10,P9,P8,P7,P6,P5,P2,P1" *) 
+    
     input  wire [15:0] z80_addr, 
     
     // --- Local Shared Bus (D7 down to D0) ---
-    (* LOC="P32,P31,P30,P29,P28,P27,P25,P24" *) 
+    
     inout  wire [7:0] l_data, 
     
     // --- Shadow Bus Controls (Bidirectional) ---
-    (* LOC="P47" *) inout  wire sh_en_n, 
-    (* LOC="P48" *) inout  wire sh_rw_n, 
-    (* LOC="P46" *) inout  wire sh_inc_n, 
-    (* LOC="P45" *) inout  wire sh_stb_n, 
-    (* LOC="P49" *) inout  wire sh_done_n, 
-    (* LOC="P50" *) inout  wire sh_busy_n, 
+    inout  wire sh_en_n, 
+    inout  wire sh_rw_n, 
+    inout  wire sh_inc_n, 
+    inout  wire sh_stb_n, 
+    inout  wire sh_done_n, 
+    inout  wire sh_busy_n, 
     
     // --- Transceiver Controls ---
-    (* LOC="P44" *) output wire sh_c_dir,         
-    (* LOC="P23" *) output wire z80_data_oe_n, 
-    (* LOC="P52" *) output wire sh_data_oe_n,
-    (* LOC="P22" *) output wire l_dir,
+    output wire sh_c_dir,         
+    output wire z80_data_oe_n, 
+    output wire sh_data_oe_n,
+    output wire l_dir,
     
     // --- Local Memory & LUT Routing ---
     // Local Address Bus (A10 down to A0)
-    (* LOC="P85,P84,P83,P81,P80,P79,P78,P77,P76,P75,P72" *) 
+    
     output wire [10:0] l_addr,  
     
     // ATL Address Bus (A4 down to A0)
     // Reduced to 4 bits to save space and free P57
-    (* LOC="P56,P55,P54,P53" *) 
+    
     output wire [3:0]  atl_addr, 
     
     // ATL Data Bus (D7 down to D0)
-    (* LOC="P68,P67,P65,P64,P63,P61,P60,P58" *) 
+    
     inout  wire [7:0]  atl_data, 
     
-    (* LOC="P69" *) output wire atl_we_n, 
-    (* LOC="P70" *) output wire atl_oe_n, 
-    (* LOC="P71" *) output wire atl_ce_n,
-    (* LOC="P90" *) output wire ram_ce0_n, 
-    (* LOC="P92" *) output wire ram_ce1_n,
-    (* LOC="P93" *) output wire ram_oe_n,
-    (* LOC="P94" *) output wire ram_we_n           
+    output wire atl_we_n, 
+    output wire atl_oe_n, 
+    output wire atl_ce_n,
+    output wire ram_ce0_n, 
+    output wire ram_ce1_n,
+    output wire ram_oe_n,
+    output wire ram_we_n           
 );
 
     // ==========================================
@@ -246,7 +246,7 @@ module zx50_cpld_core (
     zx50_mmu_sram mmu_unit (
         .mclk(mclk), .reset_n(reset_n), 
         // card 0 is considered the boot card with eeprom enabled
-        .boot_en_n(latched_id != 4'h0), 
+        // .boot_en_n(latched_id != 4'h0), 
         .card_id_sw(latched_id), 
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), 
         .l_data(l_data), .z80_iorq_n(safe_z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
@@ -275,24 +275,34 @@ module zx50_cpld_core (
     // 5. LOCAL MEMORY & LUT TAKEOVER MULTIPLEXING
     // ==========================================
 
-    // Do not float the address lines, zero them if not being used
-    assign l_addr = z80_grant ? z80_addr[10:0] : (dma_is_active ? dma_phys_addr[10:0] : 11'b0);
-    assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy); 
+    // OPTIMIZATION 1: Do not force l_addr to 0. Mux directly between the two masters.
+    // This instantly frees 11 macrocells and drops massive routing overhead!
+    assign l_addr = dma_is_active ? dma_phys_addr[10:0] : z80_addr[10:0];
+    
+    assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy);
+
+    // OPTIMIZATION 2: Break the 'atl_we_n' routing feedback loop.
+    // Use internal flags to determine when the CPLD must drive the LUT data bus.
+    wire atl_data_oe = dma_is_active || mmu_is_initializing || mmu_cpu_updating;
     
     // Split the tri-state logic so Yosys can map it to a physical Atmel bibuf
     wire [7:0] atl_data_out = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : l_data;
-    wire atl_data_oe = dma_is_active || !atl_we_n;
-    
     assign atl_data = atl_data_oe ? atl_data_out : 8'hzz;
 
-    wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
-    wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && atl_we_n && memory_cycle);
+    // Due to hardware mis-wire, we use z80_addr[11] as the chip select, not atl_data[7]
+    // STRIPED RAM FIX: Use A11 to interleave CE0 and CE1 in 2KB blocks.
+    // This frees atl_data[7] to act as the 8th bit of the physical page address!
+    wire bank_select = dma_is_active ? dma_phys_addr[19] : z80_addr[11];
     
+    // OPTIMIZATION 3: Break the second routing loop to the RAM Chip Enables
+    wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && !mmu_cpu_updating && memory_cycle);
+
     assign ram_ce0_n = (safe_to_access_ram && bank_select == 1'b0) ? 1'b0 : 1'b1;
     assign ram_ce1_n = (safe_to_access_ram && bank_select == 1'b1) ? 1'b0 : 1'b1;
 
-    assign ram_oe_n = dma_is_active ? dma_local_oe_n : ((z80_grant && memory_cycle) ? z80_rd_n : 1'b1);
-    assign ram_we_n = dma_is_active ? dma_local_we_n : ((z80_grant && memory_cycle) ? z80_wr_n : 1'b1);
+    // OPTIMIZATION 4: Simplify the OE/WE muxing
+    assign ram_oe_n = dma_is_active ? dma_local_oe_n : (z80_grant ? z80_rd_n : 1'b1);
+    assign ram_we_n = dma_is_active ? dma_local_we_n : (z80_grant ? z80_wr_n : 1'b1);
 
     wire [7:0] interrupt_vector = 8'h40 | latched_id;
     assign l_data = responding_to_intack ? interrupt_vector : 8'hzz;
@@ -303,7 +313,7 @@ module zx50_cpld_core (
     assign z80_wait_n = ((arbiter_hit && dma_is_active) || arbiter_wait_n == 1'b0) ? 1'b0 : 1'bz;
     
     // Transceiver Multiplexing
-    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n; 
+    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n;
     assign z80_data_oe_n = dma_is_active ? 1'b1 : arbiter_z80_data_oe_n;
     
     assign sh_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;

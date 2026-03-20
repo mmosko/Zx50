@@ -6,31 +6,53 @@
  * Description:
  * This testbench specifically verifies the "Snoop Logic" and mutual exclusion of the 
  * distributed MMU system. It ensures that two physical memory cards correctly hand 
- * over ownership of a shared Z80 logical memory page without causing a bus conflict.
+ * over ownership of a shared Z80 logical memory page without causing a bus conflict[cite: 599, 600].
  *
  * Test Sequence:
- * 1. Boot: Card A boots with the Boot ROM override enabled, claiming the top 32KB 
- * (Pages 8-15). Card B boots empty.
- * 2. Verification: The Z80 reads Page 8 (0x8000). Card A asserts 'active'.
+ * 1. Boot: Both Card A and Card B boot. The Z80 BFM initializes their default 1:1 maps.
+ * 2. Verification: The Z80 reads Logical Page 8. Card A asserts 'active' (by default, Card A owns everything).
  * 3. Handoff: The Z80 issues an I/O write specifically targeting Card B (Port 0x31) 
- * to map Physical Page 0xBB into Logical Page 8.
+ * to map a physical page into Logical Page 8.
  * 4. Conflict Check: Card A must snoop this write, realize it is no longer the owner 
- * of Logical Page 8, and drop its ownership bit. Card B must claim it simultaneously.
+ * of Logical Page 8, and drop its ownership bit[cite: 603, 604]. Card B must claim it simultaneously.
  ***************************************************************************************/
 
 module zx50_conflict_tb;
-    reg mclk;
-    reg [15:0] z80_addr;
-    reg [7:0] l_data;          // Unified local data bus
-    reg z80_iorq_n, z80_wr_n, z80_mreq_n, reset_n;
-    reg boot_a_n, boot_b_n;
+    wire mclk;
+    wire zclk;
+    reg reset_n;
     reg [3:0] id_sw_a, id_sw_b;
 
-    wire active_a, active_b;
+    // --- Z80 Backplane Buses (Driven by BFM) ---
+    wire [15:0] z80_addr;
+    wire [7:0]  z80_data;
+    wire z80_mreq_n, z80_iorq_n, z80_wr_n, z80_rd_n, z80_m1_n;
 
-    // --- Clock Generation (36MHz) ---
-    initial mclk = 0;
-    always #13.88 mclk = ~mclk; // ~36MHz Target Clock
+    wire active_a, active_b;
+    reg failed;
+
+    // --- Clock Generation (Digital Twin) ---
+    zx50_clock clk_gen (
+        .run_in(1'b1),    // Free run enabled
+        .step_n_in(1'b1), // Not stepping
+        .mclk(mclk),
+        .zclk(zclk)
+    );
+
+    // ==========================================
+    // The Z80 Bus Master (BFM)
+    // ==========================================
+    z80_cpu_util z80 (
+        .clk(zclk), 
+        .addr(z80_addr), 
+        .data(z80_data),
+        .mreq_n(z80_mreq_n), 
+        .iorq_n(z80_iorq_n), 
+        .rd_n(z80_rd_n), 
+        .wr_n(z80_wr_n), 
+        .m1_n(z80_m1_n),
+        .wait_n(1'b1) // No wait states needed for isolated MMU testing
+    );
 
     // ==========================================
     // Card A (ID 0, Boot Card)
@@ -38,18 +60,15 @@ module zx50_conflict_tb;
     zx50_mmu_sram card_a (
         .mclk(mclk), 
         .reset_n(reset_n), 
-        .boot_en_n(boot_a_n), 
         .card_id_sw(id_sw_a), 
-        
         .z80_addr(z80_addr), 
         .l_addr_hi(z80_addr[15:12]), 
-        .l_data(l_data),        
-        
+        .l_data(z80_data),        
         .z80_iorq_n(z80_iorq_n), 
         .z80_wr_n(z80_wr_n), 
         .z80_mreq_n(z80_mreq_n), 
         
-        // Explicitly float unused outputs to prevent compiler warnings
+        // Explicitly float unused outputs
         .atl_addr(), 
         .atl_we_n(), 
         .atl_oe_n(), 
@@ -68,13 +87,10 @@ module zx50_conflict_tb;
     zx50_mmu_sram card_b (
         .mclk(mclk), 
         .reset_n(reset_n), 
-        .boot_en_n(boot_b_n), 
         .card_id_sw(id_sw_b), 
-        
         .z80_addr(z80_addr), 
         .l_addr_hi(z80_addr[15:12]), 
-        .l_data(l_data),        
-        
+        .l_data(z80_data),        
         .z80_iorq_n(z80_iorq_n), 
         .z80_wr_n(z80_wr_n), 
         .z80_mreq_n(z80_mreq_n), 
@@ -92,7 +108,7 @@ module zx50_conflict_tb;
         .init_ptr()
     );
 
-    reg failed;
+    reg [7:0] dummy_data;
 
     initial begin
         $dumpfile("waves/zx50_conflict.vcd");
@@ -101,71 +117,65 @@ module zx50_conflict_tb;
         failed = 0;
         
         // 1. Initial State Setup
-        reset_n = 1; z80_iorq_n = 1; z80_wr_n = 1; z80_mreq_n = 1;
-        id_sw_a = 4'h0; id_sw_b = 4'h1;
-        boot_a_n = 0; // Card A claims top 32K on boot
-        boot_b_n = 1; // Card B claims nothing
-        z80_addr = 16'h0000;
-        l_data = 8'h00;
-        
+        reset_n = 1; 
+        id_sw_a = 4'h0; 
+        id_sw_b = 4'h1;
+
         // 2. Synchronized Power-On Reset 
-        // (Give the 16-clock hardware wipe time to finish mapping the LUT)
         #100 reset_n = 0;
         #100 reset_n = 1;
-        repeat(20) @(posedge mclk); 
+
+        $display("[%0t] --- Booting CPLDs and Initializing Page Tables ---", $time);
+
+        // Use the Z80 BFM to initialize the default 1:1 map on Card A
+        // Because Card A is initialized, it will claim ownership of all pages.
+        z80.init_mmu(id_sw_a); 
 
         // 3. Test: Verification of initial state (Z80 reads Page 8 / 0x8000)
-        $display("[%0t] --- Verifying Boot State (Page 8) ---", $time);
-        @(posedge mclk);
-        z80_addr = 16'h8000; 
-        z80_mreq_n = 0; 
+        $display("[%0t] --- Verifying Boot State (Card A should own Page 8) ---", $time);
         
-        repeat(3) @(posedge mclk); // Let active signals settle
+        // Use a fork/join to read memory while actively checking the 'active' flags mid-cycle
+        fork
+            z80.mem_read(16'h8000, dummy_data);
+            begin
+                wait(z80_mreq_n == 1'b0); // Wait for the Z80 to start the read
+                #15; // Give CPLD time to decode
+                if (active_a !== 1'b1 || active_b !== 1'b0) begin
+                    $display("FAIL: Initial boot state conflict or missing ownership.");
+                    $display("Card A Active: %b, Card B Active: %b", active_a, active_b);
+                    failed = 1;
+                end
+            end
+        join
         
-        if (active_a !== 1'b1 || active_b !== 1'b0) begin
-            $display("FAIL: Initial boot state conflict or missing ownership.");
-            $display("Card A: %b, Card B: %b", active_a, active_b);
-            failed = 1;
-        end
-        z80_mreq_n = 1; 
-        repeat(3) @(posedge mclk);
+        z80.wait_cycles(5);
 
         // 4. Test: Handover Conflict Resolution (The Snoop Logic)
         $display("[%0t] --- Moving Page 8 from Card A to Card B ---", $time);
-        // Z80 OUT instruction: A15-A8 is the Page (0x08), A7-A0 is the Port (0x31 -> Card B)
-        @(posedge mclk);
-        z80_addr = 16'h0831; 
-        l_data = 8'hBB; 
-        z80_iorq_n = 0; 
         
-        // Simulate safe write pulse timing
-        #10 z80_wr_n = 0;
+        // Use the Z80 BFM to dynamically map Physical Page 0xBB into Logical Page 8 on Card B
+        z80.mmu_map_page(id_sw_b, 4'h8, 8'hBB);
         
-        repeat(5) @(posedge mclk); // Hold the I/O write
+        z80.wait_cycles(5);
         
-        z80_wr_n = 1;
-        #10 z80_iorq_n = 1;
+        // 5. Verification: Card A must have "Stepped Down" and Card B must claim it
+        $display("[%0t] --- Verifying Handover (Card B should now own Page 8) ---", $time);
         
-        repeat(5) @(posedge mclk);
-        
-        // 5. Verification: Card A must have "Stepped Down"
-        $display("[%0t] --- Verifying Handover (Page 8) ---", $time);
-        @(posedge mclk);
-        z80_addr = 16'h8000; 
-        z80_mreq_n = 0; 
-        
-        repeat(3) @(posedge mclk); // Let active signals settle
-        
-        if (active_a === 1'b1) begin
-            $display("FAIL: BUS CONFLICT! Card A failed to release Page 8.");
-            failed = 1;
-        end
-        if (active_b !== 1'b1) begin
-            $display("FAIL: Card B failed to claim Page 8.");
-            failed = 1;
-        end
-
-        z80_mreq_n = 1;
+        fork
+            z80.mem_read(16'h8000, dummy_data);
+            begin
+                wait(z80_mreq_n == 1'b0);
+                #15;
+                if (active_a === 1'b1) begin
+                    $display("FAIL: BUS CONFLICT! Card A failed to release Page 8.");
+                    failed = 1;
+                end
+                if (active_b !== 1'b1) begin
+                    $display("FAIL: Card B failed to claim Page 8.");
+                    failed = 1;
+                end
+            end
+        join
 
         if (!failed) begin
             $display("=====================================================");
@@ -180,7 +190,7 @@ module zx50_conflict_tb;
 
     // --- System Watchdog Timer ---
     initial begin
-        #10000; 
+        #100000;
         $display("FATAL [%0t]: Watchdog Timer Expired! State machine deadlock detected.", $time);
         $fatal(1);
     end

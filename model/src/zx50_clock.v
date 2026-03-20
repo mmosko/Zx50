@@ -27,15 +27,15 @@ module zx50_clock (
     // MCLK = ~36 MHz -> Period = 27.77ns -> Half = 13.88ns [cite: 246]
     parameter MCLK_HALF_PERIOD = 13.88; 
 
-    initial begin
-        // Explicitly initialize the clock to 0 at simulation start [cite: 247]
-        raw_mclk = 0;
-    end
-
     // --- 1. The Raw Oscillator ---
     // Represents the physical 36MHz canned crystal oscillator on the PCB.
     reg raw_mclk;
     always #MCLK_HALF_PERIOD raw_mclk = ~raw_mclk; // [cite: 248]
+
+    initial begin
+        // Explicitly initialize the clock to 0 at simulation start [cite: 247]
+        raw_mclk = 0;
+    end
 
     // --- 2. Flip-Flop A: The STEP Synchronizer ---
     // Maps to 1/2 of a physical 74HC74 Dual D-Flip-Flop.
