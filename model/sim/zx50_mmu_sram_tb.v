@@ -10,7 +10,7 @@ module zx50_mmu_sram_tb;
     );
 
     // --- 2. System Signals ---
-    reg reset_n, boot_en_n;
+    reg reset_n;
     reg [3:0] id_sw;
 
     // --- 3. Z80 Backplane Buses (Driven by BFM) ---
@@ -19,8 +19,7 @@ module zx50_mmu_sram_tb;
     wire z80_mreq_n, z80_iorq_n, z80_rd_n, z80_wr_n, z80_m1_n;
     
     // --- 4. MMU / ATL Wires ---
-    wire [4:0] atl_addr;
-    // Now 5 bits wide
+    wire [3:0] atl_addr;
     wire [7:0] atl_data; 
     wire atl_we_n, atl_oe_n, atl_ce_n;
     wire active, z80_card_hit, is_busy;
@@ -38,7 +37,7 @@ module zx50_mmu_sram_tb;
     // This allows z80.mem_read to "see" the physical page output from the LUT 
     assign z80_data = (active && !z80_rd_n) ? atl_data : 8'hzz;
 
-    // The Z80 Bus Master
+    // The Z80 Bus Master (Corrected to z80_cpu_util)
     z80_cpu_util z80 (
         .clk(zclk), .addr(z80_addr), .data(z80_data),
         .mreq_n(z80_mreq_n), .iorq_n(z80_iorq_n), 
@@ -48,7 +47,7 @@ module zx50_mmu_sram_tb;
 
     // The Device Under Test
     zx50_mmu_sram dut (
-        .mclk(mclk), .reset_n(reset_n), .boot_en_n(boot_en_n), .card_id_sw(id_sw),
+        .mclk(mclk), .reset_n(reset_n), .card_id_sw(id_sw),
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), .l_data(z80_data),
         .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n),
         .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
@@ -62,10 +61,10 @@ module zx50_mmu_sram_tb;
     // Note: Since this is just the isolated MMU, we mock the top-level CE logic here
     assign atl_ce_n = !(z80_card_hit || is_busy);
     assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} : 
-                    (mmu_cpu_updating   ? z80_data : 8'hzz);
+                      (mmu_cpu_updating   ? z80_data : 8'hzz);
 
     is61c256al lut_sram (
-        .addr({10'b0, atl_addr}), // Pad the 5-bit ATL address to fit the 15-bit chip
+        .addr({11'b0, atl_addr}), // Pad the 4-bit ATL address to fit the 15-bit chip
         .data(atl_data),
         .ce_n(atl_ce_n), .oe_n(atl_oe_n), .we_n(atl_we_n)
     );
@@ -78,8 +77,8 @@ module zx50_mmu_sram_tb;
         $dumpfile("waves/zx50_mmu_sram.vcd");
         $dumpvars(0, zx50_mmu_sram_tb);
 
-        // Setup: Card ID is 0. Boot override is ACTIVE (Low). 
-        id_sw = 4'h0; boot_en_n = 0;
+        // Setup: Card ID is 0.
+        id_sw = 4'h0;
 
         // Boot Sequence 
         reset_n = 1;      
@@ -88,72 +87,45 @@ module zx50_mmu_sram_tb;
         clk_gen.wait_mclk(50);
         reset_n = 1; 
 
-        // Wait for the 16-cycle Hardware Wipe to finish. 
-        // During this time, the CPLD steps through all 16 pages and writes a 1:1 mapping 
-        // into the ATL SRAM (e.g., Logical Page 0 -> Physical Page 0).
-        clk_gen.wait_mclk(20); 
+        // The simulated Z80 Boot ROM initializes the MMU maps
+        z80.init_mmu(4'h0); // Init Card A
 
-        // ==========================================
-        // PHASE 1: Auto-Init 1:1 Mapping Check
-        // ==========================================
-        // GOAL: Verify the hardware wipe completed successfully and the boot override works. 
-        // Because boot_en_n = 0, this specific card should automatically claim ownership 
-        // of the upper 32KB of memory (Pages 8 through 15).
-        // ACTION: We simulate the Z80 reading from address 0x8000 (Logical Page 8). 
-        // EXPECTED: The 'active' flag goes high, 'z80_card_hit' goes high, and the 
-        // ATL SRAM outputs Physical Page 0x08. 
-        $display("[%0t] --- Testing Phase 1: Auto-Init 1:1 Mapping ---", $time); 
+        // Concurrently read memory and check if the MMU flags 'active'
         fork
-            // Thread A: Start the Z80 Read 
-            z80.mem_read(16'h8000, dummy_data);
-
-            // Thread B: Wait for T1 (MREQ drop) and capture the active state mid-cycle
+            z80.mem_read(16'h0000, dummy_data);
             begin
-                wait(z80_mreq_n == 1'b0);
-                #15; // Give 15ns for CPLD decode 
-                phase1_active_ok = (active === 1'b1 && z80_card_hit === 1'b1);
+                @(negedge z80_rd_n);
+                phase1_active_ok = active;
             end
         join
 
         // The 'join' ensures the Z80 read cycle is fully complete.
         // Now we can safely check the data returned by the BFM.
-        if (phase1_active_ok && dummy_data === 8'h08) begin
-            $display("****** PHASE 1 PASSED: Memory claimed, translated to Page 8 ******");
+        
+        if (phase1_active_ok && dummy_data === 8'h00) begin 
+            $display("****** PHASE 1 PASSED: Memory claimed, translated to Page 0 ******");
         end else begin
             $display("!!!!!! PHASE 1 FAILED: active_ok=%b, dummy_data=%h !!!!!!", phase1_active_ok, dummy_data);
             $fatal(1);
         end
 
-        z80.wait_cycles(5); 
+        z80.wait_cycles(5);
 
         // ==========================================
         // PHASE 2: Dynamic MMU Reprogramming Check
         // ==========================================
-        // GOAL: Verify the MMU correctly snoops the bus and updates the ATL SRAM. 
-        // The MMU registers live at I/O port Base (0x30) + Card ID (0x0) = 0x30. 
-        // During an I/O write, Z80 A[11:8] determines the logical page to update. 
-        // ACTION: We write data 0xAA to I/O address 0x0030. 
-        // This targets Logical Page 0 (A[11:8] is 0x0) on Card 0, mapping it to Physical Page 0xAA. 
-        // EXPECTED: The MMU state machine detects this, claims Logical Page 0 in its 
-        // pal_bits register, and pulses the WE line to write 0xAA into the ATL SRAM. 
         $display("[%0t] --- Testing Phase 2: Z80 MMU I/O Write ---", $time); 
         
         z80.io_write(16'h0030, 8'hAA); 
-
-        z80.wait_cycles(5); 
+        z80.wait_cycles(5);
 
         // ==========================================
         // PHASE 3: Translation Verification
         // ==========================================
-        // GOAL: Prove the reprogramming in Phase 2 actually worked. 
-        // ACTION: We simulate the Z80 reading from address 0x0000 (Logical Page 0). 
-        // EXPECTED: Because we remapped Logical Page 0 to Physical Page 0xAA, the 
-        // ATL SRAM should output p_hi = 0xAA (instead of its default 0x00). 
         $display("[%0t] --- Testing Phase 3: Translation Verification ---", $time); 
         
-        // Threading is not needed here since we only care about the final translation result
         z80.mem_read(16'h0000, dummy_data);
-        
+
         if (dummy_data === 8'hAA) begin
             $display("****** PHASE 3 PASSED: SRAM successfully updated to 0xAA ******");
         end else begin
