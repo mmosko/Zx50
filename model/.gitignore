@@ -1,1 +1,4 @@
-syn/*.v
+syn/*
+!syn/*.svf
+!syn/*.fit
+!syn/.git*

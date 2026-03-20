@@ -60,14 +60,17 @@ clean:
 	@echo "--- Cleaning simulation and intermediate synthesis artifacts ---"
 	rm -rf $(OUT_DIR)/*.vvp $(WAVES_DIR)/*.vcd
 	@if [ -d $(SYN_DIR) ]; then \
-		echo "Cleaning $(SYN_DIR) (preserving .svf and .fit)..."; \
-		find $(SYN_DIR) -type f ! -name '*.svf' ! -name '*.fit' -delete; \
+		echo "Cleaning $(SYN_DIR) (preserving .svf, .fit, and .gitkeep)..."; \
+		find $(SYN_DIR) -type f ! -name '*.svf' ! -name '*.fit' ! -name '.gitkeep' -delete; \
 		find $(SYN_DIR) -type l -delete; \
 	fi
 
 realclean: clean
 	@echo "--- Deep clean: Removing ALL synthesis outputs including .svf and .fit ---"
-	rm -rf $(SYN_DIR)/*
+	@if [ -d $(SYN_DIR) ]; then \
+		find $(SYN_DIR) -type f ! -name '.gitkeep' -delete; \
+		find $(SYN_DIR) -type l -delete; \
+	fi
 	rm -rf $(OUT_DIR)/*
 	rm -rf $(WAVES_DIR)/*
 
