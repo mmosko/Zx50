@@ -246,7 +246,7 @@ module zx50_cpld_core (
     zx50_mmu_sram mmu_unit (
         .mclk(mclk), .reset_n(reset_n), 
         // card 0 is considered the boot card with eeprom enabled
-        .boot_en_n(latched_id != 4'h0), 
+        // .boot_en_n(latched_id != 4'h0), 
         .card_id_sw(latched_id), 
         .z80_addr(z80_addr), .l_addr_hi(z80_addr[15:12]), 
         .l_data(l_data), .z80_iorq_n(safe_z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
@@ -289,7 +289,10 @@ module zx50_cpld_core (
     wire [7:0] atl_data_out = dma_is_active ? {3'b000, dma_phys_addr[19:15]} : l_data;
     assign atl_data = atl_data_oe ? atl_data_out : 8'hzz;
 
-    wire bank_select = dma_is_active ? dma_phys_addr[19] : atl_data[7];
+    // Due to hardware mis-wire, we use z80_addr[11] as the chip select, not atl_data[7]
+    // STRIPED RAM FIX: Use A11 to interleave CE0 and CE1 in 2KB blocks.
+    // This frees atl_data[7] to act as the 8th bit of the physical page address!
+    wire bank_select = dma_is_active ? dma_phys_addr[19] : z80_addr[11];
     
     // OPTIMIZATION 3: Break the second routing loop to the RAM Chip Enables
     wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && !mmu_cpu_updating && memory_cycle);

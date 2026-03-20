@@ -38,7 +38,7 @@ module zx50_conflict_tb;
     zx50_mmu_sram card_a (
         .mclk(mclk), 
         .reset_n(reset_n), 
-        .boot_en_n(boot_a_n), 
+        // .boot_en_n(boot_a_n), 
         .card_id_sw(id_sw_a), 
         
         .z80_addr(z80_addr), 
@@ -68,7 +68,7 @@ module zx50_conflict_tb;
     zx50_mmu_sram card_b (
         .mclk(mclk), 
         .reset_n(reset_n), 
-        .boot_en_n(boot_b_n), 
+        // .boot_en_n(boot_b_n), 
         .card_id_sw(id_sw_b), 
         
         .z80_addr(z80_addr), 
