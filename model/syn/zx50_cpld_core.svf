@@ -1,0 +1,4241 @@
+// JEDEC file for: ATF1508AS
+// Created on: Wed Mar 18 01:03:28 2026
+TRST ABSENT;
+ENDIR IDLE;
+ENDDR IDLE;
+HDR 0;
+HIR 0;
+TDR 0;
+TIR 0;
+STATE RESET;
+// Check IDCODE
+SIR 10 TDI (059);
+SDR 32 TDI (ffffffff)
+	TDO (0150803f)
+	MASK (ffffffff);
+// ISC enable
+SIR 10 TDI (280);
+SDR 10 TDI (1b9);
+STATE IDLE;
+// ISC erase
+SIR 10 TDI (2b3);
+SIR 10 TDI (29e);
+RUNTEST IDLE 210E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00c);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7dbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00d);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7d9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00e);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe6f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3ddff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00f);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7d9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7dbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (010);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9f67fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff6fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (011);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9be7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbf63fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (012);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdf67f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe37dff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (013);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9be7fbff9e7f9ff03e7f1fc7e3efbfbfc0f0fd7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (014);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe6fbff9e7f9ef03e7f1fc7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (015);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9f67f9fe7fbff9e7f9ff03e771fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (016);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe6f9fe7f9fe7fbff9e7f9ff03e7f1fc5e3dfbf9fc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (017);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdbe7f9fe7f9fe7f9ff9e7f9ff0367f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (018);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff1e3f8ff03e7f1fc7e3ffbdbf80e07f7fbfe3fdff8c5c17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (019);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffcfc3e8fc3f0fc3f3ff9a7f9ff01e7f1fc7e0ccbf8fc0f0fc7f8fe3d9ff8c5e17c03e3f07c3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01a);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffcfc3e8fc3f0fc3f07f9e7796f032330d81e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01b);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e13c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01c);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdee5b97e539ea5abff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01d);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd5a771ca7e95e77bff9e7f9f703e3f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01e);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff807f1fe03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0ec3c3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01f);
+SIR 10 TDI (290);
+SDR 326 TDI (1effbd324f1324c9324cbff9e7f9fd03e7f1fc7e37ba335c030fb2d372274bf0c1e07c03e380f41e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (020);
+SIR 10 TDI (290);
+SDR 326 TDI (3fdffdfe7f9fe7d1fe7fbff9e7f9ff02e7f1fc7e3ffbfbfc0f0ff4fbfe3fdff8c5e16c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (021);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (022);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffbfdf47f9fe7f9fe7fbfb9e779cf03e7f1fc7c3ffbfbf80e0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (023);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f97f03e7f1fc7e3ffbfbfc0f07f7fbfe3fdbf8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (024);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffefdfe7f8be7f9fe7fb7b9e7497b03a7f0bc3c3ffbfbfc0f0ff7fbfe17dff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (025);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1dc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03c3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (026);
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbdf9e7f9ff03e7f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (027);
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (028);
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc6e3ffbfbfc0f0ff7fbfe3cdff8c5e17c03e3f0d83e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (029);
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7f1fc7e2ffbfaec0f0ff7fbfe3f9ff8c5e17c03e3f0f43e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02a);
+SIR 10 TDI (290);
+SDR 326 TDI (27c3f1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbf3fc0f0fb3b3de3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02b);
+SIR 10 TDI (290);
+SDR 326 TDI (393ccdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a3ffbfbfc0f0ef77bfa2fdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02c);
+SIR 10 TDI (290);
+SDR 326 TDI (3feffdfe7f9fe7f9fe7d3ff967f9ff03e7f1fc7e3ffbfbfc0f0ff7735a3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02d);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ef3bbfe2fdff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02e);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfa7f94e7397a7fbff9e7f9ff03e7f1fc7e3fbbfbfc0f0ef333da2fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02f);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4e531fa5e9ce52bff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (030);
+SIR 10 TDI (290);
+SDR 326 TDI (21f0fdfe7f9fe7f9fe7fbff9e7f9ff03e6f1fc7e3ffbfbfc0f0ff7fbfe3fddb040e17c0362e0fc2e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (031);
+SIR 10 TDI (290);
+SDR 326 TDI (3f0fc1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf80e0ff7fbfe3fcfc8c5417c03e3f0fc163f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (032);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f1fe5e9ce72bfd9e7f1ff03e7f1fc7e3ffbfbfc0f0ef333da2f5ff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (033);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4a5394a7397a5fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (034);
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7f17c7e3ffbb3dc070ff2d3f227dff8c5617c03e3f0fc1e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (035);
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5fe8c5e17c03e3f01c3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (036);
+SIR 10 TDI (290);
+SDR 326 TDI (210ffdfe7f9fe7f9fe7fbff8e7f9bf03e7f1fc7e3ffbfbfc0f0ff7fbfe3fcbf8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (037);
+SIR 10 TDI (290);
+SDR 326 TDI (3ff0c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffafbfc0b0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (038);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffdfdfe7f9fe7f8be7fb7b9e7597b03a7f1fc543ffbfbfc0e0ff7fbfe3fdff8c5e17403e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (039);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc3e3ffbfbf80f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03a);
+SIR 10 TDI (290);
+SDR 326 TDI (2ba6e9fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfb7c0f0ff7fbfe3fdaf8c5a17403e1f0dc2e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03b);
+SIR 10 TDI (290);
+SDR 326 TDI (3559d5fe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fcf30c0613c0362807c163f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03c);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff9fe7f9fe7f9fe2fbff9e7f9ff03e571fc7e3ffbfbfc0f0ff7fbf43fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03d);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e3f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03e);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e5f1f47e3b7bfbbc0f0f77fbbe3edff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03f);
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e2f1e87e279bfa7c0f0fa7fa7e3f17f8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (040);
+SIR 10 TDI (290);
+SDR 326 TDI (3ff7fdfe7f9fe7f9f47fb7b9e7797b0347f1fc7c3ffbfbfc0d0ff7fbfe3fdfd8c5e17c03e3f0bc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (041);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7faff9e7f9ff03a7f1fc7e3ffbfbf40f0ff7fbfe3fdff8c5617c01e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (042);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e12401e1f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (043);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (044);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff5fe7f9f47f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7f9fe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (045);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e2fdbfaec0f0de7faee3f9ff8c5e17c03e1f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (046);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffdcbe7f9fe7f9fe7fbff9e7f9fe03e7f1fc7e19fbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (047);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a2ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (048);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7cbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (049);
+SIR 10 TDI (290);
+SDR 326 TDI (210081fe7f9fe7f9fe7fbff927f9ff01e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04a);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04b);
+SIR 10 TDI (290);
+SDR 326 TDI (1effbd324f1324c9324cbcd966f9bf02e6e16c6a37ba335c030fb2d372275ff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04c);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ff3fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04d);
+SIR 10 TDI (290);
+SDR 326 TDI (2100c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04e);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfa739ea7a9fa52bff9c6f9ff03e7f1ec7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c02e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04f);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4e5f15e5794e7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (050);
+SIR 10 TDI (290);
+SDR 326 TDI (37fffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7f9be3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (051);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbf39e7b9ff03e7f1fc7e2fdbfaec0f0de7faee3f9f7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (052);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e5b9fd03e7f1fc7e37fadbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (053);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e779ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (054);
+SIR 10 TDI (290);
+SDR 326 TDI (3dfffdfe7f9fe7f9fe7fb7b9e7497b03a7d1dc3c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0e83e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (055);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7b0fc7e3ffbfbfc0f0ff7fbfe3bd7f8c5e17803e3f0f43c3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (056);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3e6bfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (057);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0ff7fbee3f9f7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (058);
+SIR 10 TDI (290);
+SDR 326 TDI (3bfffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1f47e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (059);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1f87e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0e03c3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05a);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbf69e779ff03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05b);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba335c030fb2d372275ff8c5e17c03a3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05c);
+SIR 10 TDI (290);
+SDR 326 TDI (3fbffdfe7f9fe2f9fe7fbff9e7f9ff03e7f1fc7e3febfbfc0f0f57fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05d);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0fe7fbee3f9ff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05e);
+SIR 10 TDI (290);
+SDR 326 TDI (3f7ffdfe7c9fe7f9fe7f8bb9e7797b03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05f);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fb7f9e7f9ff03e7f1fc7e37ba337c030fb3f37a2f5ff8c5e17c03e370fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (060);
+SIR 10 TDI (290);
+SDR 326 TDI (2000c1324d1324c9324cbff9e7f9ff03e7f1fc7e3ffbfbdc070ff2d3f227dff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (061);
+SIR 10 TDI (290);
+SDR 326 TDI (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3bdf7885e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (062);
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7e1fc7e3ffbb3d8060ff2d3f227dcc0c5617c0363d0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (063);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf40d0bf7fbfe3fcf3840c17c03e2f0fc163f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (064);
+SIR 10 TDI (290);
+SDR 326 TDI (2ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e07803e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (065);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0f43a3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (066);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (067);
+SIR 10 TDI (290);
+SDR 326 TDI (1fffbd7a5f17a5e97a5ebcd966f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (068);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e17c0283f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (069);
+SIR 10 TDI (290);
+SDR 326 TDI (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffb93fc0707f7fbfe3fdff8c5e17c03e3f0fc3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (06a);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffedfe2f9fe7f9fe7fbbe9e5f9df03c7d1bc761ffbf9bc0f0ff7fbfe3fcf38c1817c03e2b0fc363f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (06b);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fb599e6793f02a7a15c2e2ffbfafc0f0ff7fbfe3fddc0c4617c0363f07c3e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (080);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (081);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (082);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (083);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (084);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (085);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (086);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (087);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (088);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (089);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08a);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08b);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08c);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8390e6789e4311e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08d);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3d8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6709e4790c3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08e);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe06c8e0781e1fc7e4791e67880621185fe7f8781e0781e0791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08f);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe0748e0781e1fc7e4790e67080621185ae6d8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (090);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018001ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe3f8591e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (091);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003f73e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (092);
+SIR 10 TDI (290);
+SDR 326 TDI (600c2300061084018003ff1c3f0fc03c8c0701c1fc264791e67880621185be778791e6689e479123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (093);
+SIR 10 TDI (290);
+SDR 326 TDI (60122280061084018003ff2a3e8fa05c8a0681a1fc5e4791e67880621185f67b859166789e4491e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (094);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fa07c8e0781e1fc7e4791667880621185fe7f8791e6789c4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (095);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (096);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018002ff1e3f8fe07c8e0781e1fc7e4791e67880621105fe7f8791e6789e4591e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (097);
+SIR 10 TDI (290);
+SDR 326 TDI (601e23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (098);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2180061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7d8791e6789e4691e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (099);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc264791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09a);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e63880621185fe7f8791e6688e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09b);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc764791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09c);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8c0781e0dc7e4391666880621185f673859166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09d);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621184de3f0791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09e);
+SIR 10 TDI (290);
+SDR 326 TDI (601a23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09f);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018002ff3e3f8fe07c8e0781e1fc5e4791e67880621184d633059166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a0);
+SIR 10 TDI (290);
+SDR 326 TDI (601c2380061084018003ff3e3f8fe07c8e0781c1fc7e4791e67080621184de3f0791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a1);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185f673859166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a2);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc7a4791e67880621185fe7f079166789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a3);
+SIR 10 TDI (290);
+SDR 326 TDI (201e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a4);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084010003ff3e3f8fe07c0e0781e1fc7e4711e67880621185fe7f8791e6789e4391e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a5);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084008003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a6);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061080018003ff3e3f8fe07c8e0701e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a7);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a8);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061004018003ff3e0f87607c8e0780e1f47e4791e67880621185fe7f8711e6789e4791a3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a9);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003df3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0aa);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe6f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ab);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe05c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ac);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3e8fe07c8e0781e1fc7e4791e65880621185fe7f8791e6589e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ad);
+SIR 10 TDI (290);
+SDR 326 TDI (601e0380060084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ae);
+SIR 10 TDI (290);
+SDR 326 TDI (60162380061084018003bf3e3f0fe07c8e0781e1fc7e4790e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0af);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4711e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b0);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380041084018003ff3e3f8fe07c8e0781e1fc7e4791e66880621185fe7f8791e6389e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b1);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061080018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b2);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8a0781e1fc7c4791e67880621185fc7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b3);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b4);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff2e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b5);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b6);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef36378460788e0381e1fc7e4791e67880621184de3f0791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b7);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8be07c8e0781e0dc7e4391666880621185f673859166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b8);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e2f87e0648e0381e1f47e4791e678806211857e7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b9);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe0788e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ba);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2300061084018003ff3e3f8fe07c8e0781a1fc7e4791a67880621184ce3f0711c6388c4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bb);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8691a658924791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bc);
+SIR 10 TDI (290);
+SDR 326 TDI (401e2380061084018003f73c3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bd);
+SIR 10 TDI (290);
+SDR 326 TDI (201e2380061084018001ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0be);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef36378be0788e0381e1bc7e4791c67880601185fc7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bf);
+SIR 10 TDI (290);
+SDR 326 TDI (401e2380061084018003ff3e3f8ee07c8e0781e0dc3e0181606800220080d633059166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c0);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2280061084018003ff3e3b8de07c8e078161ec7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c1);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003df3e378be0788e0781e1fc7e4791e67880621185fe7f8791e6789e4781e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c2);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4691e67880621185fe7f8391e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c3);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003bf3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c4);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c5);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc364791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c6);
+SIR 10 TDI (290);
+SDR 326 TDI (600e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c7);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c8);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e670964791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c9);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ca);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef3e0987e0788e0381e1e47e4791e67880621184fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cb);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e378fe07c8e0781e1f87e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cc);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084008003ff3e3f8fe07c8e0581e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cd);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084010003ff3e3f8fe07c8e0781e17c7e4791e67880621185fa7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ce);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fd3e3f8fc07c8e0781e1f47e4791e67880621185fe7e8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cf);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fb3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d0);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc3e0781e07800220081fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d1);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d2);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0681e1fc3e0781e07800220081fe7f8791e6789a4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d3);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d4);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380021084018003ff3e358ae0688e0381e1f87e4791e67880621185fe7f8791a6789e4790e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d5);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e1f8f607c8e0780e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d6);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791c6789e479163f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d7);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc3e0781e07800220081fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d8);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3a3f8fe07c8e0781e1fc7a4691a65880621185fe7f8691e6789e4791c3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d9);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1f87c4711c63880421185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0da);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fb3e3f8fe07c8e0781e1bc7e4591e67880621185fe5f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0db);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fd3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0dc);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211857e5e8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0dd);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211848e2d0791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0de);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1f47e4791e67880621185fe7f8790e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0df);
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (000);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc0000000002666667ffff000d33c024476667fffc0009500024ee2463ffff018f33c3266f666ff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (001);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffe666665f000000003fffc0002666000000003fffe2666264000000003fffc0000024400000003f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (002);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc0000019800000003fffd0009118000000003fffc0009110000000003fffd0189118800000003f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (003);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffc03fe666667fffcfff0cc3e5aa9666ffffffff0ccfe4aa96667fffcfc30cc315aa97e6ff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (004);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffe7eef666ffffffffffffe4eff7ef7ffffffffffff7eef7e6ff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (005);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffccc30cc3081108113fffccc3ffff0999f8113fffcccfffff09ddf9113fffccfffffff999f9913f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (006);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff23ef37ce26466447fffff7cf338024477767fffff7e6660276666667fffe67ef7402666666e7f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (007);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffd0000000000000003fffc0000007400000003fffc0080000400000003fffc0000026400000003f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (008);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffd898991988010011bfffd9189119800000003fffd9180008800000003fffc0189119800000003f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (009);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc30300c01dab95b7ffffc0c30cc03daa95abbfffc0c3fff3352205abbfffffc30cc01daa95a27f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00a);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffbbffbfdfffffff7ffffffffffffffffffffffffffffffffffaa97ffffffffffffffffeef7ea7f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00b);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc03ff3fcf7fe99e23fffffffffff0bddf9ddffffffffffff0b9999b9bffffffffffffbd9999dbf);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e0);
+SIR 10 TDI (290);
+SDR 326 TDI (3dfffffffffffffffffbfffffffffffffdfdfefbffffffffffdffefffbfffffffffffffdfafffb3fff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e1);
+SIR 10 TDI (290);
+SDR 326 TDI (3fdfffffffdfffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e2);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffdffdddffffffffffffffffffffffffcffff7fffffffffffffffefffffffffffffffffffeffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e3);
+SIR 10 TDI (290);
+SDR 326 TDI (3bfffffffffffffffbfffffffff7fffbfffffffffbfffff7ffffffdfffffffffffffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e4);
+SIR 10 TDI (290);
+SDR 326 TDI (3fbffffffbfbfffffffdbfffbfffffffffffff7ffffffeffefffffffbf7ffffefebffbffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e5);
+SIR 10 TDI (290);
+SDR 326 TDI (3ff9fddffffd7fffffffffff7cffef9dffff3fffdffb7fdffefff7fffffddff37ffffeffffffffff7f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e6);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffbffdfffff7ffd7ffffffbfffebffffffffff5ffe3fffffffffffd7fffffebfffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e7);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffaffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffff7fffffffbfffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e8);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffefffffff7ffffffffeffffffffffffbffffffefffffffffffbfeeffbfffbfffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e9);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffff7ff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ea);
+SIR 10 TDI (290);
+SDR 326 TDI (2fffffffffffffff7fbfebffffdff7ffffffffffeff7ffffffffffffffbffbfffff7fdeffffdffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0eb);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffff7fffffffffffffff6fffffbfffbfffffffffffffefbeffffffffffffffdfffffffffffdffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ec);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffefffffdff5ffffffffffefffffffffffffdfffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ed);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffdffffdfff7ffffd7ffffffffffffffffffffffdffffdfefffffffffefffffffeffbff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ee);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffdffffbffffffffffffffffffffffffffffffffffbfffffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ef);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffff7ffffeffffffffffffffffffff7ff7fffffebfffffffffff7fffffefffffffffffffdfffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f0);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffbfbffeffaffffffffffffffffffffffffffffffbbebfffffffffffffefdefffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f1);
+SIR 10 TDI (290);
+SDR 326 TDI (1ffff7ffffffffffffffffffffffffffffffffffffffdffffffffffffffff7ffffffffffffffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f2);
+SIR 10 TDI (290);
+SDR 326 TDI (3ff7fffef7ffdfffffffffbfffffffe7ffbffffffffffd7ffff7fffff7ffffdffffffff7fffffffcff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f3);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffbfbffffffffffffefffffffffffffffffffffeffbfb7fffbffffffffffffeff7ffffefffdfff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f4);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffffffbefbffffffff7fffffffffffdfbfffbfffffffffffbffbbfffbffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f5);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffdfdeffeffffffffffffff7fffffffffffffffffff7ffffffffffff7ffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f6);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffffffffffffffffefffffffffffdffffffffffffffffffffffffffffffffbf);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f7);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffff7fdffbff7fffffffffffefffffefffffffddff7ffffdeffffcbfffedff7fffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f8);
+SIR 10 TDI (290);
+SDR 326 TDI (3ffefffffffffffffffffffffffffffeffffffbfffdfffffffffffffffffffffffffffdfdffffeffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f9);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffdffffffffffffffc7fffffdfffbffdffffffbfffefffffffffffffffffffffffefff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0fa);
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffff7ffffffffdffffffffbfdffff7fffffffffffffffffffffffdf6ffffffffdffff7ffffffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (100);
+SIR 10 TDI (291);
+SDR 32 TDI (7fcd01ff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (200);
+SIR 10 TDI (292);
+SDR 4 TDI (f);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC program word
+SIR 10 TDI (2a1);
+SDR 11 TDI (300);
+SIR 10 TDI (293);
+SDR 16 TDI (ffff);
+SIR 10 TDI (29e);
+RUNTEST IDLE 30E-3 SEC;
+// ISC unknown
+SIR 10 TDI (2bf);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7dbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7dbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7d9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7d9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe6f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3ddff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe6f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3ddff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7d9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7dbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7d9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7dbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (010);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9f67fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff6fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9f67fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff6fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (011);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9be7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbf63fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9be7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbf63fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (012);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdf67f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe37dff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdf67f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe37dff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (013);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9be7fbff9e7f9ff03e7f1fc7e3efbfbfc0f0fd7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9be7fbff9e7f9ff03e7f1fc7e3efbfbfc0f0fd7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (014);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe6fbff9e7f9ef03e7f1fc7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe6fbff9e7f9ef03e7f1fc7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (015);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9f67f9fe7fbff9e7f9ff03e771fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9f67f9fe7fbff9e7f9ff03e771fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (016);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe6f9fe7f9fe7fbff9e7f9ff03e7f1fc5e3dfbf9fc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe6f9fe7f9fe7fbff9e7f9ff03e7f1fc5e3dfbf9fc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (017);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdbe7f9fe7f9fe7f9ff9e7f9ff0367f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdbe7f9fe7f9fe7f9ff9e7f9ff0367f1fc7e3ffbfbfc0f0ff5ebfc1fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (018);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff1e3f8ff03e7f1fc7e3ffbdbf80e07f7fbfe3fdff8c5c17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff1e3f8ff03e7f1fc7e3ffbdbf80e07f7fbfe3fdff8c5c17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (019);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffcfc3e8fc3f0fc3f3ff9a7f9ff01e7f1fc7e0ccbf8fc0f0fc7f8fe3d9ff8c5e17c03e3f07c3e3f)
+	TDO (3ffffcfc3e8fc3f0fc3f3ff9a7f9ff01e7f1fc7e0ccbf8fc0f0fc7f8fe3d9ff8c5e17c03e3f07c3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffcfc3e8fc3f0fc3f07f9e7796f032330d81e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffcfc3e8fc3f0fc3f07f9e7796f032330d81e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e13c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e13c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdee5b97e539ea5abff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f)
+	TDO (3ffffdee5b97e539ea5abff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd5a771ca7e95e77bff9e7f9f703e3f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffd5a771ca7e95e77bff9e7f9f703e3f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff807f1fe03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0ec3c3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff807f1fe03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0ec3c3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (01f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1effbd324f1324c9324cbff9e7f9fd03e7f1fc7e37ba335c030fb2d372274bf0c1e07c03e380f41e3f)
+	TDO (1effbd324f1324c9324cbff9e7f9fd03e7f1fc7e37ba335c030fb2d372274bf0c1e07c03e380f41e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (020);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fdffdfe7f9fe7d1fe7fbff9e7f9ff02e7f1fc7e3ffbfbfc0f0ff4fbfe3fdff8c5e16c03e3f0fc3e3f)
+	TDO (3fdffdfe7f9fe7d1fe7fbff9e7f9ff02e7f1fc7e3ffbfbfc0f0ff4fbfe3fdff8c5e16c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (021);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (022);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffbfdf47f9fe7f9fe7fbfb9e779cf03e7f1fc7c3ffbfbf80e0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffbfdf47f9fe7f9fe7fbfb9e779cf03e7f1fc7c3ffbfbf80e0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (023);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f97f03e7f1fc7e3ffbfbfc0f07f7fbfe3fdbf8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f97f03e7f1fc7e3ffbfbfc0f07f7fbfe3fdbf8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (024);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffefdfe7f8be7f9fe7fb7b9e7497b03a7f0bc3c3ffbfbfc0f0ff7fbfe17dff8c5e17c03e3f0fc3e3f)
+	TDO (3ffefdfe7f8be7f9fe7fb7b9e7497b03a7f0bc3c3ffbfbfc0f0ff7fbfe17dff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (025);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1dc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03c3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1dc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03c3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (026);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbdf9e7f9ff03e7f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	TDO (3effbd324f1324c9324cbdf9e7f9ff03e7f1fc7e3ffbb3dc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (027);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f)
+	TDO (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5ff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (028);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc6e3ffbfbfc0f0ff7fbfe3cdff8c5e17c03e3f0d83e3f)
+	TDO (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc6e3ffbfbfc0f0ff7fbfe3cdff8c5e17c03e3f0d83e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (029);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7f1fc7e2ffbfaec0f0ff7fbfe3f9ff8c5e17c03e3f0f43e3f)
+	TDO (3effbd324f1324c9324cbff9e7f9ff03e7f1fc7e2ffbfaec0f0ff7fbfe3f9ff8c5e17c03e3f0f43e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (27c3f1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbf3fc0f0fb3b3de3fdff8c5e17c03e3f0fc3e3f)
+	TDO (27c3f1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbf3fc0f0fb3b3de3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (393ccdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a3ffbfbfc0f0ef77bfa2fdf7885e17c03e3f0fc3e3f)
+	TDO (393ccdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a3ffbfbfc0f0ef77bfa2fdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3feffdfe7f9fe7f9fe7d3ff967f9ff03e7f1fc7e3ffbfbfc0f0ff7735a3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3feffdfe7f9fe7f9fe7d3ff967f9ff03e7f1fc7e3ffbfbfc0f0ff7735a3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ef3bbfe2fdff8c5e17c03e370fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ef3bbfe2fdff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfa7f94e7397a7fbff9e7f9ff03e7f1fc7e3fbbfbfc0f0ef333da2fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfa7f94e7397a7fbff9e7f9ff03e7f1fc7e3fbbfbfc0f0ef333da2fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (02f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4e531fa5e9ce52bff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffd4e531fa5e9ce52bff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (030);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (21f0fdfe7f9fe7f9fe7fbff9e7f9ff03e6f1fc7e3ffbfbfc0f0ff7fbfe3fddb040e17c0362e0fc2e3f)
+	TDO (21f0fdfe7f9fe7f9fe7fbff9e7f9ff03e6f1fc7e3ffbfbfc0f0ff7fbfe3fddb040e17c0362e0fc2e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (031);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3f0fc1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf80e0ff7fbfe3fcfc8c5417c03e3f0fc163f)
+	TDO (3f0fc1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf80e0ff7fbfe3fcfc8c5417c03e3f0fc163f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (032);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f1fe5e9ce72bfd9e7f1ff03e7f1fc7e3ffbfbfc0f0ef333da2f5ff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f1fe5e9ce72bfd9e7f1ff03e7f1fc7e3ffbfbfc0f0ef333da2f5ff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (033);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4a5394a7397a5fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e370fc3e3f)
+	TDO (3ffffd4a5394a7397a5fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (034);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7f17c7e3ffbb3dc070ff2d3f227dff8c5617c03e3f0fc1e3f)
+	TDO (3effbd324f1324c9324cbff9e7f9ff03e7f17c7e3ffbb3dc070ff2d3f227dff8c5617c03e3f0fc1e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (035);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5fe8c5e17c03e3f01c3e3f)
+	TDO (1ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba7b7c0b0fb7fb7e3f5fe8c5e17c03e3f01c3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (036);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (210ffdfe7f9fe7f9fe7fbff8e7f9bf03e7f1fc7e3ffbfbfc0f0ff7fbfe3fcbf8c5e17c03e3f0fc3e3f)
+	TDO (210ffdfe7f9fe7f9fe7fbff8e7f9bf03e7f1fc7e3ffbfbfc0f0ff7fbfe3fcbf8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (037);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ff0c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffafbfc0b0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ff0c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffafbfc0b0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (038);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffdfdfe7f9fe7f8be7fb7b9e7597b03a7f1fc543ffbfbfc0e0ff7fbfe3fdff8c5e17403e3f0fc3e3f)
+	TDO (3ffdfdfe7f9fe7f8be7fb7b9e7597b03a7f1fc543ffbfbfc0e0ff7fbfe3fdff8c5e17403e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (039);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc3e3ffbfbf80f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc3e3ffbfbf80f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (2ba6e9fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfb7c0f0ff7fbfe3fdaf8c5a17403e1f0dc2e3f)
+	TDO (2ba6e9fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfb7c0f0ff7fbfe3fdaf8c5a17403e1f0dc2e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3559d5fe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fcf30c0613c0362807c163f)
+	TDO (3559d5fe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fcf30c0613c0362807c163f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff9fe7f9fe7f9fe2fbff9e7f9ff03e571fc7e3ffbfbfc0f0ff7fbf43fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffff9fe7f9fe7f9fe2fbff9e7f9ff03e571fc7e3ffbfbfc0f0ff7fbf43fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e3f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e3f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e5f1f47e3b7bfbbc0f0f77fbbe3edff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e5f1f47e3b7bfbbc0f0f77fbbe3edff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (03f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e2f1e87e279bfa7c0f0fa7fa7e3f17f8c5e17c03e370fc3e3f)
+	TDO (3effbd324f1324c9324cbff9e7f9ff03e2f1e87e279bfa7c0f0fa7fa7e3f17f8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (040);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ff7fdfe7f9fe7f9f47fb7b9e7797b0347f1fc7c3ffbfbfc0d0ff7fbfe3fdfd8c5e17c03e3f0bc3e3f)
+	TDO (3ff7fdfe7f9fe7f9f47fb7b9e7797b0347f1fc7c3ffbfbfc0d0ff7fbfe3fdfd8c5e17c03e3f0bc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (041);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7faff9e7f9ff03a7f1fc7e3ffbfbf40f0ff7fbfe3fdff8c5617c01e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7faff9e7f9ff03a7f1fc7e3ffbfbf40f0ff7fbfe3fdff8c5617c01e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (042);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e12401e1f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e12401e1f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (043);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (044);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff5fe7f9f47f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7f9fe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffff5fe7f9f47f9fe7fbcd9e6f9bf02e6e16c6a3ffbfbfc0f0ff7f9fe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (045);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e2fdbfaec0f0de7faee3f9ff8c5e17c03e1f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff967f9ff03e7f1fc7e2fdbfaec0f0de7faee3f9ff8c5e17c03e1f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (046);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffdcbe7f9fe7f9fe7fbff9e7f9fe03e7f1fc7e19fbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3fffdcbe7f9fe7f9fe7fbff9e7f9fe03e7f1fc7e19fbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (047);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a2ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbcd966f9bf02e6e16c6a2ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (048);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7cbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7cbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (049);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (210081fe7f9fe7f9fe7fbff927f9ff01e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	TDO (210081fe7f9fe7f9fe7fbff927f9ff01e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1effbd324f1324c9324cbcd966f9bf02e6e16c6a37ba335c030fb2d372275ff8c5e17c03e370fc3e3f)
+	TDO (1effbd324f1324c9324cbcd966f9bf02e6e16c6a37ba335c030fb2d372275ff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ff3fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ff3fbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (2100c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	TDO (2100c1fe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfa739ea7a9fa52bff9c6f9ff03e7f1ec7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c02e3f0fc3e3f)
+	TDO (3ffffdfa739ea7a9fa52bff9c6f9ff03e7f1ec7e3ff9fbfc0f0ff7fbfe3fdff8c5e17c02e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (04f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffd4e5f15e5794e7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffd4e5f15e5794e7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (050);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (37fffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7f9be3fdff8c5e17c03e3f0fc3e3f)
+	TDO (37fffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7f9be3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (051);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbf39e7b9ff03e7f1fc7e2fdbfaec0f0de7faee3f9f7885e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbf39e7b9ff03e7f1fc7e2fdbfaec0f0de7faee3f9f7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (052);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e5b9fd03e7f1fc7e37fadbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e5b9fd03e7f1fc7e37fadbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (053);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e779ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e779ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (054);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3dfffdfe7f9fe7f9fe7fb7b9e7497b03a7d1dc3c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0e83e3f)
+	TDO (3dfffdfe7f9fe7f9fe7fb7b9e7497b03a7d1dc3c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0e83e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (055);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7b0fc7e3ffbfbfc0f0ff7fbfe3bd7f8c5e17803e3f0f43c3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7b0fc7e3ffbfbfc0f0ff7fbfe3bd7f8c5e17803e3f0f43c3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (056);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3e6bfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3e6bfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (057);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0ff7fbee3f9f7885e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0ff7fbee3f9f7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (058);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3bfffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1f47e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3bfffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1f47e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (059);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1f87e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0e03c3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1f87e3ffbfbfc0f0ff7fbfe3fd7f8c5e17803e3f0e03c3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbf69e779ff03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbf69e779ff03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba335c030fb2d372275ff8c5e17c03a3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e37ba335c030fb2d372275ff8c5e17c03a3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fbffdfe7f9fe2f9fe7fbff9e7f9ff03e7f1fc7e3febfbfc0f0f57fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3fbffdfe7f9fe2f9fe7fbff9e7f9ff03e7f1fc7e3febfbfc0f0f57fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0fe7fbee3f9ff8c5e17c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e2fdbfaec0f0fe7fbee3f9ff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3f7ffdfe7c9fe7f9fe7f8bb9e7797b03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3f7ffdfe7c9fe7f9fe7f8bb9e7797b03e7f1fc7c3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (05f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fb7f9e7f9ff03e7f1fc7e37ba337c030fb3f37a2f5ff8c5e17c03e370fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fb7f9e7f9ff03e7f1fc7e37ba337c030fb3f37a2f5ff8c5e17c03e370fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (060);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (2000c1324d1324c9324cbff9e7f9ff03e7f1fc7e3ffbfbdc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	TDO (2000c1324d1324c9324cbff9e7f9ff03e7f1fc7e3ffbfbdc070ff2d3f227dff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (061);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3bdf7885e17c03e3f0fc3e3f)
+	TDO (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3bdf7885e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (062);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3effbd324f1324c9324cbff9e7f9ff03e7e1fc7e3ffbb3d8060ff2d3f227dcc0c5617c0363d0fc3e3f)
+	TDO (3effbd324f1324c9324cbff9e7f9ff03e7e1fc7e3ffbb3d8060ff2d3f227dcc0c5617c0363d0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (063);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf40d0bf7fbfe3fcf3840c17c03e2f0fc163f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbf40d0bf7fbfe3fcf3840c17c03e2f0fc163f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (064);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (2ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e07803e3f0fc3e3f)
+	TDO (2ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fd7f8c5e07803e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (065);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0f43a3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9f703e3f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0f43a3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (066);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbfbfc0f0ff7fbfe3fdff8c5e15c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (067);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1fffbd7a5f17a5e97a5ebcd966f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (1fffbd7a5f17a5e97a5ebcd966f9bf02e6e16c6a3ffbfbfc0f0ff7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (068);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e17c0283f0fc3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffbebfc0f0ff7fbfe3fdff8c5e17c0283f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (069);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffb93fc0707f7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	TDO (3fff7dfe7f9fe7f9fe7fbff9e7f9ff03e7f1fc7e3ffb93fc0707f7fbfe3fdff8c5e17c03e3f0fc3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (06a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffedfe2f9fe7f9fe7fbbe9e5f9df03c7d1bc761ffbf9bc0f0ff7fbfe3fcf38c1817c03e2b0fc363f)
+	TDO (3fffedfe2f9fe7f9fe7fbbe9e5f9df03c7d1bc761ffbf9bc0f0ff7fbfe3fcf38c1817c03e2b0fc363f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (06b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffdfe7f9fe7f9fe7fb599e6793f02a7a15c2e2ffbfafc0f0ff7fbfe3fddc0c4617c0363f07c3e3f)
+	TDO (3ffffdfe7f9fe7f9fe7fb599e6793f02a7a15c2e2ffbfafc0f0ff7fbfe3fddc0c4617c0363f07c3e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (080);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (081);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (082);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (083);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (084);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (085);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (086);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (087);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (088);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (089);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8390e6789e4311e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8390e6789e4311e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3d8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6709e4790c3f)
+	TDO (601e2380061084018003ff3e3d8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6709e4790c3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe06c8e0781e1fc7e4791e67880621185fe7f8781e0781e0791e3f)
+	TDO (601e2380061084018003ff3e3f8fe06c8e0781e1fc7e4791e67880621185fe7f8781e0781e0791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (08f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe0748e0781e1fc7e4790e67080621185ae6d8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe0748e0781e1fc7e4790e67080621185ae6d8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (090);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018001ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe3f8591e6789e4791e3f)
+	TDO (601e2380061084018001ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe3f8591e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (091);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003f73e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003f73e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (092);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (600c2300061084018003ff1c3f0fc03c8c0701c1fc264791e67880621185be778791e6689e479123f)
+	TDO (600c2300061084018003ff1c3f0fc03c8c0701c1fc264791e67880621185be778791e6689e479123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (093);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (60122280061084018003ff2a3e8fa05c8a0681a1fc5e4791e67880621185f67b859166789e4491e3f)
+	TDO (60122280061084018003ff2a3e8fa05c8a0681a1fc5e4791e67880621185f67b859166789e4491e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (094);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fa07c8e0781e1fc7e4791667880621185fe7f8791e6789c4791e3f)
+	TDO (601e2380061084018003ff3e3f8fa07c8e0781e1fc7e4791667880621185fe7f8791e6789c4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (095);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (096);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018002ff1e3f8fe07c8e0781e1fc7e4791e67880621105fe7f8791e6789e4591e3f)
+	TDO (601e2380061084018002ff1e3f8fe07c8e0781e1fc7e4791e67880621105fe7f8791e6789e4591e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (097);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (098);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2180061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7d8791e6789e4691e3f)
+	TDO (601e2180061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7d8791e6789e4691e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (099);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc264791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c860781e1fc264791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e63880621185fe7f8791e6688e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e63880621185fe7f8791e6688e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc764791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe03c8e0781e1fc764791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09c);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8c0781e0dc7e4391666880621185f673859166689e449123f)
+	TDO (601e2380061084018003ff3e3f8fe07c8c0781e0dc7e4391666880621185f673859166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09d);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621184de3f0791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621184de3f0791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09e);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601a23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601a23800610840180037f3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (09f);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018002ff3e3f8fe07c8e0781e1fc5e4791e67880621184d633059166689e449123f)
+	TDO (601e2380061084018002ff3e3f8fe07c8e0781e1fc5e4791e67880621184d633059166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601c2380061084018003ff3e3f8fe07c8e0781c1fc7e4791e67080621184de3f0791e6789e4791e3f)
+	TDO (601c2380061084018003ff3e3f8fe07c8e0781c1fc7e4791e67080621184de3f0791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185f673859166689e449123f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185f673859166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc7a4791e67880621185fe7f079166789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c860781e1fc7a4791e67880621185fe7f079166789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (201e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (201e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084010003ff3e3f8fe07c0e0781e1fc7e4711e67880621185fe7f8791e6789e4391e3f)
+	TDO (601e2380061084010003ff3e3f8fe07c0e0781e1fc7e4711e67880621185fe7f8791e6789e4391e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084008003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084008003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061080018003ff3e3f8fe07c8e0701e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061080018003ff3e3f8fe07c8e0701e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061004018003ff3e0f87607c8e0780e1f47e4791e67880621185fe7f8711e6789e4791a3f)
+	TDO (601e2380061004018003ff3e0f87607c8e0780e1f47e4791e67880621185fe7f8711e6789e4791a3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0a9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003df3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003df3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0aa);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe6f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe6f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ab);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe05c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe05c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ac);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3e8fe07c8e0781e1fc7e4791e65880621185fe7f8791e6589e4791e3f)
+	TDO (601e2380061084018003ff3e3e8fe07c8e0781e1fc7e4791e65880621185fe7f8791e6589e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ad);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e0380060084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e0380060084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ae);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (60162380061084018003bf3e3f0fe07c8e0781e1fc7e4790e67880621185fe7f8791e6789e4791e3f)
+	TDO (60162380061084018003bf3e3f0fe07c8e0781e1fc7e4790e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0af);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4711e3f)
+	TDO (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4711e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380041084018003ff3e3f8fe07c8e0781e1fc7e4791e66880621185fe7f8791e6389e4791e3f)
+	TDO (601e2380041084018003ff3e3f8fe07c8e0781e1fc7e4791e66880621185fe7f8791e6389e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061080018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061080018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8a0781e1fc7c4791e67880621185fc7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8a0781e1fc7c4791e67880621185fc7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff2e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff2e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef36378460788e0381e1fc7e4791e67880621184de3f0791e6789e4791e3f)
+	TDO (601e2380061084018003ef36378460788e0381e1fc7e4791e67880621184de3f0791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8be07c8e0781e0dc7e4391666880621185f673859166689e449123f)
+	TDO (601e2380061084018003ff3e3f8be07c8e0781e0dc7e4391666880621185f673859166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e2f87e0648e0381e1f47e4791e678806211857e7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e2f87e0648e0381e1f47e4791e678806211857e7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0b9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe0788e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe0788e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ba);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2300061084018003ff3e3f8fe07c8e0781a1fc7e4791a67880621184ce3f0711c6388c4791e3f)
+	TDO (601e2300061084018003ff3e3f8fe07c8e0781a1fc7e4791a67880621184ce3f0711c6388c4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bb);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8691a658924791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8691a658924791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bc);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (401e2380061084018003f73c3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (401e2380061084018003f73c3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bd);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (201e2380061084018001ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f)
+	TDO (201e2380061084018001ff3e3f8fe07c8e0781e0dc7e4391666880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0be);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef36378be0788e0381e1bc7e4791c67880601185fc7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ef36378be0788e0381e1bc7e4791c67880601185fc7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0bf);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (401e2380061084018003ff3e3f8ee07c8e0781e0dc3e0181606800220080d633059166689e449123f)
+	TDO (401e2380061084018003ff3e3f8ee07c8e0781e0dc3e0181606800220080d633059166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2280061084018003ff3e3b8de07c8e078161ec7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2280061084018003ff3e3b8de07c8e078161ec7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003df3e378be0788e0781e1fc7e4791e67880621185fe7f8791e6789e4781e3f)
+	TDO (601e2380061084018003df3e378be0788e0781e1fc7e4791e67880621185fe7f8791e6789e4781e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4691e67880621185fe7f8391e6789e4791e3f)
+	TDO (601e2380061084018003fe3e3f8fe07c8e0781e1fc7e4691e67880621185fe7f8391e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003bf3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003bf3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc6e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc364791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc364791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (600e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (600e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e0dc7e4391666880621184d633059166689e449123f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e670964791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e670964791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0c9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe03c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ca);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ef3e0987e0788e0381e1e47e4791e67880621184fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ef3e0987e0788e0381e1e47e4791e67880621184fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cb);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e378fe07c8e0781e1f87e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e378fe07c8e0781e1f87e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cc);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084008003ff3e3f8fe07c8e0581e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084008003ff3e3f8fe07c8e0581e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cd);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084010003ff3e3f8fe07c8e0781e17c7e4791e67880621185fa7f8791e6789e4791e3f)
+	TDO (601e2380061084010003ff3e3f8fe07c8e0781e17c7e4791e67880621185fa7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ce);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fd3e3f8fc07c8e0781e1f47e4791e67880621185fe7e8791e6789e4791e3f)
+	TDO (601e2380061084018003fd3e3f8fc07c8e0781e1f47e4791e67880621185fe7e8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0cf);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fb3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003fb3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe03c8e0781e1fc3e0781e07800220081fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe03c8e0781e1fc3e0781e07800220081fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0681e1fc3e0781e07800220081fe7f8791e6789a4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0681e1fc3e0781e07800220081fe7f8791e6789a4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380021084018003ff3e358ae0688e0381e1f87e4791e67880621185fe7f8791a6789e4790e3f)
+	TDO (601e2380021084018003ff3e358ae0688e0381e1f87e4791e67880621185fe7f8791a6789e4790e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e1f8f607c8e0780e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e1f8f607c8e0780e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791c6789e479163f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791c6789e479163f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c860781e1fc3e0781e07800220081fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c860781e1fc3e0781e07800220081fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3a3f8fe07c8e0781e1fc7a4691a65880621185fe7f8691e6789e4791c3f)
+	TDO (601e2380061084018003ff3a3f8fe07c8e0781e1fc7a4691a65880621185fe7f8691e6789e4791c3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0d9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1f87c4711c63880421185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1f87c4711c63880421185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0da);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fb3e3f8fe07c8e0781e1bc7e4591e67880621185fe5f8791e6789e4791e3f)
+	TDO (601e2380061084018003fb3e3f8fe07c8e0781e1bc7e4591e67880621185fe5f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0db);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003fd3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003fd3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0dc);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211857e5e8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211857e5e8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0dd);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211848e2d0791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e678806211848e2d0791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0de);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1f47e4791e67880621185fe7f8790e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1f47e4791e67880621185fe7f8790e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0df);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	TDO (601e2380061084018003ff3e3f8fe07c8e0781e1fc7e4791e67880621185fe7f8791e6789e4791e3f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (000);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc0000000002666667ffff000d33c024476667fffc0009500024ee2463ffff018f33c3266f666ff)
+	TDO (3fffc0000000002666667ffff000d33c024476667fffc0009500024ee2463ffff018f33c3266f666ff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (001);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffe666665f000000003fffc0002666000000003fffe2666264000000003fffc0000024400000003f)
+	TDO (3fffe666665f000000003fffc0002666000000003fffe2666264000000003fffc0000024400000003f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (002);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc0000019800000003fffd0009118000000003fffc0009110000000003fffd0189118800000003f)
+	TDO (3fffc0000019800000003fffd0009118000000003fffc0009110000000003fffd0189118800000003f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (003);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffc03fe666667fffcfff0cc3e5aa9666ffffffff0ccfe4aa96667fffcfc30cc315aa97e6ff)
+	TDO (3fffffffffc03fe666667fffcfff0cc3e5aa9666ffffffff0ccfe4aa96667fffcfc30cc315aa97e6ff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (004);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffe7eef666ffffffffffffe4eff7ef7ffffffffffff7eef7e6ff)
+	TDO (3fffffffffffffffffffffffffffffffe7eef666ffffffffffffe4eff7ef7ffffffffffff7eef7e6ff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (005);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffccc30cc3081108113fffccc3ffff0999f8113fffcccfffff09ddf9113fffccfffffff999f9913f)
+	TDO (3fffccc30cc3081108113fffccc3ffff0999f8113fffcccfffff09ddf9113fffccfffffff999f9913f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (006);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffff23ef37ce26466447fffff7cf338024477767fffff7e6660276666667fffe67ef7402666666e7f)
+	TDO (3ffff23ef37ce26466447fffff7cf338024477767fffff7e6660276666667fffe67ef7402666666e7f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (007);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffd0000000000000003fffc0000007400000003fffc0080000400000003fffc0000026400000003f)
+	TDO (3fffd0000000000000003fffc0000007400000003fffc0080000400000003fffc0000026400000003f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (008);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffd898991988010011bfffd9189119800000003fffd9180008800000003fffc0189119800000003f)
+	TDO (3fffd898991988010011bfffd9189119800000003fffd9180008800000003fffc0189119800000003f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (009);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc30300c01dab95b7ffffc0c30cc03daa95abbfffc0c3fff3352205abbfffffc30cc01daa95a27f)
+	TDO (3fffc30300c01dab95b7ffffc0c30cc03daa95abbfffc0c3fff3352205abbfffffc30cc01daa95a27f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00a);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffbbffbfdfffffff7ffffffffffffffffffffffffffffffffffaa97ffffffffffffffffeef7ea7f)
+	TDO (3ffffbbffbfdfffffff7ffffffffffffffffffffffffffffffffffaa97ffffffffffffffffeef7ea7f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (00b);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffc03ff3fcf7fe99e23fffffffffff0bddf9ddffffffffffff0b9999b9bffffffffffffbd9999dbf)
+	TDO (3fffc03ff3fcf7fe99e23fffffffffff0bddf9ddffffffffffff0b9999b9bffffffffffffbd9999dbf)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3dfffffffffffffffffbfffffffffffffdfdfefbffffffffffdffefffbfffffffffffffdfafffb3fff)
+	TDO (3dfffffffffffffffffbfffffffffffffdfdfefbffffffffffdffefffbfffffffffffffdfafffb3fff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fdfffffffdfffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+	TDO (3fdfffffffdfffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffdffdddffffffffffffffffffffffffcffff7fffffffffffffffefffffffffffffffffffeffffff)
+	TDO (3fffdffdddffffffffffffffffffffffffcffff7fffffffffffffffefffffffffffffffffffeffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3bfffffffffffffffbfffffffff7fffbfffffffffbfffff7ffffffdfffffffffffffffffffffffffff)
+	TDO (3bfffffffffffffffbfffffffff7fffbfffffffffbfffff7ffffffdfffffffffffffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fbffffffbfbfffffffdbfffbfffffffffffff7ffffffeffefffffffbf7ffffefebffbffffffffffff)
+	TDO (3fbffffffbfbfffffffdbfffbfffffffffffff7ffffffeffefffffffbf7ffffefebffbffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ff9fddffffd7fffffffffff7cffef9dffff3fffdffb7fdffefff7fffffddff37ffffeffffffffff7f)
+	TDO (3ff9fddffffd7fffffffffff7cffef9dffff3fffdffb7fdffefff7fffffddff37ffffeffffffffff7f)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffbffdfffff7ffd7ffffffbfffebffffffffff5ffe3fffffffffffd7fffffebfffffffff)
+	TDO (3fffffffffffbffdfffff7ffd7ffffffbfffebffffffffff5ffe3fffffffffffd7fffffebfffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffaffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffff7fffffffbfffff)
+	TDO (3fffaffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffff7fffffffbfffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffefffffff7ffffffffeffffffffffffbffffffefffffffffffbfeeffbfffbfffffffffffffffff)
+	TDO (3ffffefffffff7ffffffffeffffffffffffbffffffefffffffffffbfeeffbfffbfffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0e9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffff7ff)
+	TDO (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffff7ff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ea);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (2fffffffffffffff7fbfebffffdff7ffffffffffeff7ffffffffffffffbffbfffff7fdeffffdffffff)
+	TDO (2fffffffffffffff7fbfebffffdff7ffffffffffeff7ffffffffffffffbffbfffff7fdeffffdffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0eb);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffff7fffffffffffffff6fffffbfffbfffffffffffffefbeffffffffffffffdfffffffffffdffff)
+	TDO (3ffffff7fffffffffffffff6fffffbfffbfffffffffffffefbeffffffffffffffdfffffffffffdffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ec);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffffffffffffefffffdff5ffffffffffefffffffffffffdfffffffffffffff)
+	TDO (3fffffffffffffffffffffffffffffffefffffdff5ffffffffffefffffffffffffdfffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ed);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffdffffdfff7ffffd7ffffffffffffffffffffffdffffdfefffffffffefffffffeffbff)
+	TDO (3ffffffffffffdffffdfff7ffffd7ffffffffffffffffffffffdffffdfefffffffffefffffffeffbff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ee);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffffffffdffffbffffffffffffffffffffffffffffffffffbfffffffffffffffffff)
+	TDO (3fffffffffffffffffffffdffffbffffffffffffffffffffffffffffffffffbfffffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0ef);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffff7ffffeffffffffffffffffffff7ff7fffffebfffffffffff7fffffefffffffffffffdfffffff)
+	TDO (3fffff7ffffeffffffffffffffffffff7ff7fffffebfffffffffff7fffffefffffffffffffdfffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f0);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffbfbffeffaffffffffffffffffffffffffffffffbbebfffffffffffffefdefffffffffffffffff)
+	TDO (3ffffbfbffeffaffffffffffffffffffffffffffffffbbebfffffffffffffefdefffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f1);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (1ffff7ffffffffffffffffffffffffffffffffffffffdffffffffffffffff7ffffffffffffffffffff)
+	TDO (1ffff7ffffffffffffffffffffffffffffffffffffffdffffffffffffffff7ffffffffffffffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f2);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ff7fffef7ffdfffffffffbfffffffe7ffbffffffffffd7ffff7fffff7ffffdffffffff7fffffffcff)
+	TDO (3ff7fffef7ffdfffffffffbfffffffe7ffbffffffffffd7ffff7fffff7ffffdffffffff7fffffffcff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f3);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffbfbffffffffffffefffffffffffffffffffffeffbfb7fffbffffffffffffeff7ffffefffdfff)
+	TDO (3fffffbfbffffffffffffefffffffffffffffffffffeffbfb7fffbffffffffffffeff7ffffefffdfff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f4);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffffffbefbffffffff7fffffffffffdfbfffbfffffffffffbffbbfffbffffff)
+	TDO (3ffffffffffffffffffffffffbefbffffffff7fffffffffffdfbfffbfffffffffffbffbbfffbffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f5);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffdfdeffeffffffffffffff7fffffffffffffffffff7ffffffffffff7ffffff)
+	TDO (3ffffffffffffffffffffdfdeffeffffffffffffff7fffffffffffffffffff7ffffffffffff7ffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f6);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffffffffffffffffffffffffffffffffffefffffffffffdffffffffffffffffffffffffffffffffbf)
+	TDO (3ffffffffffffffffffffffffffffffffffefffffffffffdffffffffffffffffffffffffffffffffbf)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f7);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffffff7fdffbff7fffffffffffefffffefffffffddff7ffffdeffffcbfffedff7fffff)
+	TDO (3fffffffffffffffff7fdffbff7fffffffffffefffffefffffffddff7ffffdeffffcbfffedff7fffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f8);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3ffefffffffffffffffffffffffffffeffffffbfffdfffffffffffffffffffffffffffdfdffffeffff)
+	TDO (3ffefffffffffffffffffffffffffffeffffffbfffdfffffffffffffffffffffffffffdfdffffeffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0f9);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffffffffffdffffffffffffffc7fffffdfffbffdffffffbfffefffffffffffffffffffffffefff)
+	TDO (3fffffffffffffdffffffffffffffc7fffffdfffbffdffffffbfffefffffffffffffffffffffffefff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (0fa);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (290);
+SDR 326 TDI (3fffffff7ffffffffdffffffffbfdffff7fffffffffffffffffffffffdf6ffffffffdffff7ffffffff)
+	TDO (3fffffff7ffffffffdffffffffbfdffff7fffffffffffffffffffffffdf6ffffffffdffff7ffffffff)
+	MASK (3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (100);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (291);
+SDR 32 TDI (7fcd01ff)
+	TDO (7fcd01ff)
+	MASK (ffffffff);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (200);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (292);
+SDR 4 TDI (f)
+	TDO (f)
+	MASK (f);
+// ISC verify word
+SIR 10 TDI (2a1);
+SDR 11 TDI (300);
+SIR 10 TDI (28c);
+RUNTEST IDLE 20E-3 SEC;
+SIR 10 TDI (293);
+SDR 16 TDI (ffff)
+	TDO (ffff)
+	MASK (ffff);
+// ISC disable
+SIR 10 TDI (280);
+SDR 10 TDI (000);
+STATE IDLE;
