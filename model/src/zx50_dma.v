@@ -5,12 +5,8 @@
  * DESCRIPTION: Universal Shadow Bus Node
  * This module acts as a highly specialized Block DMA controller that negotiates 
  * transfers across a shared physical backplane without Z80 CPU intervention.
- * It decodes a bit-packed 24-bit instruction set mapped to a dynamic I/O port,
- * bypassing the local MMU to generate a full 20-bit physical address.
- *
- * CYCLE STEALING (NEW): If the Z80 requests the bus during an active burst, 
- * this module will gracefully finish its current byte, enter a safe `M_WAIT` 
- * state, drop its `dma_active` flag to yield to the Z80, and seamlessly resume.
+ * * It decodes a bit-packed 24-bit instruction set mapped to a dynamic I/O port,
+ * assembling a full 20-bit contiguous physical address.
  ***************************************************************************************/
 
 module zx50_dma (
@@ -48,32 +44,30 @@ module zx50_dma (
     output reg  int_pending,
     input  wire intack_clear
 );
-
     // ==========================================
     // 1. DYNAMIC PORT DECODING & BIT-UNPACKING
     // ==========================================
     wire [7:0] dma_port = 8'h40 | {4'h0, card_id};
     wire z80_io_write = (!z80_iorq_n && !z80_wr_n && (z80_addr[7:0] == dma_port));
     
-    wire opcode       = z80_addr[15];
+    wire opcode         = z80_addr[15];
     wire [14:0] operand = {z80_addr[14:8], z80_data_in[7:0]};
 
-    reg [10:0] phys_addr_low;
-    reg [19:15] phys_addr_high;
+    // A contiguous 20-bit physical address register
+    reg [19:0] phys_addr;
     reg [7:0]  byte_count;
     reg is_master;
-    reg dir_to_bus;     
+    reg dir_from_bus; // 0 = To Bus (Read RAM), 1 = From Bus (Write RAM)    
     reg transfer_armed;
     reg arm_req;
 
-    assign dma_dir_to_bus = dir_to_bus;
+    assign dma_dir_to_bus = !dir_from_bus;
     assign dma_is_master  = is_master;
 
     // ==========================================
-    // 2. STATE MACHINE DECLARATIONS (Moved up!)
+    // 2. STATE MACHINE DECLARATIONS
     // ==========================================
     wire dma_go = transfer_armed;
-
     localparam M_IDLE   = 3'd0;
     localparam M_START  = 3'd1;
     localparam M_STROBE = 3'd2;
@@ -84,35 +78,37 @@ module zx50_dma (
 
     wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
     wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
-
+    
     // ==========================================
     // 3. CONFIGURATION REGISTER LATCHING
     // ==========================================
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            phys_addr_low  <= 11'h000;
-            phys_addr_high <= 5'h00;
+            phys_addr      <= 20'h00000;
             byte_count     <= 8'h00;
             is_master      <= 1'b0;
-            dir_to_bus     <= 1'b0;
+            dir_from_bus   <= 1'b0;
             transfer_armed <= 1'b0;
             arm_req        <= 1'b0;
         end else if (z80_io_write) begin
             if (opcode == 1'b0) begin
-                is_master           <= operand[14];
-                dir_to_bus          <= operand[13];
-                phys_addr_low[10:0] <= operand[10:0];
+                // OPCODE 0: Setup
+                is_master       <= operand[14];
+                dir_from_bus    <= operand[13];
+                phys_addr[12:0] <= operand[12:0];
             end else begin
-                byte_count          <= operand[14:7];
-                phys_addr_high      <= operand[4:0];  
-                arm_req             <= 1'b1;
+                // OPCODE 1: Arm & High Address
+                byte_count      <= operand[14:7];
+                phys_addr[19:13]<= operand[6:0];  
+                arm_req         <= 1'b1;
             end
         end else if (arm_req && z80_iorq_n) begin
             transfer_armed <= 1'b1;
             arm_req        <= 1'b0;
         end else if (local_inc) begin
-            phys_addr_low[7:0] <= phys_addr_low[7:0] + 1'b1;
-            byte_count         <= byte_count - 1'b1;
+            // Smoothly rolls over all 2K/4K page boundaries automatically
+            phys_addr  <= phys_addr + 1'b1;
+            byte_count <= byte_count - 1'b1;
         end else if (local_done) begin
             transfer_armed <= 1'b0;
         end
@@ -122,12 +118,11 @@ module zx50_dma (
     // 4. CYCLE STEALING: HIERARCHICAL YIELD LOGIC
     // ==========================================
     wire yield_req = (sh_busy_n == 1'b0);
-    
     wire safe_to_yield = is_master ?
         (m_state == M_IDLE || m_state == M_WAIT || m_state == M_DONE) 
         : (sh_en_n !== 1'b0);
-
     reg yielding;
+    
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) yielding <= 1'b0;
         else if (yield_req && safe_to_yield) yielding <= 1'b1;
@@ -135,7 +130,7 @@ module zx50_dma (
     end
 
     assign dma_active = dma_go && !yielding;
-
+    
     // ==========================================
     // 5. MASTER STATE MACHINE
     // ==========================================
@@ -145,10 +140,9 @@ module zx50_dma (
             int_pending <= 1'b0;
         end else begin
             if (intack_clear) int_pending <= 1'b0;
-            
             if (is_master) begin
                 case (m_state)
-                    M_IDLE:   if (dma_go && !yielding && !yield_req) m_state <= M_START; 
+                    M_IDLE:   if (dma_go && !yielding && !yield_req) m_state <= M_START;
                     M_START:  m_state <= M_STROBE;
                     M_STROBE: m_state <= (byte_count == 8'h00) ? M_DONE : M_INC;
                     M_INC:    m_state <= M_WAIT;
@@ -166,21 +160,21 @@ module zx50_dma (
     // ==========================================
     // 6. PHYSICAL TRANSCEIVER AND BUS ROUTING
     // ==========================================
-    assign sh_c_dir  = !is_master;
+    assign sh_c_dir  = !dir_from_bus;
     
     wire generated_stb_n = !(m_state == M_STROBE);
     wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
-
+    
     assign sh_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz;
-    assign sh_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_to_bus : 1'bz;
+    assign sh_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_from_bus : 1'bz;
     assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? generated_stb_n : 1'bz;
     assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
     assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
 
-    assign dma_phys_addr = {phys_addr_high, 4'b0000, phys_addr_low};
+    assign dma_phys_addr = phys_addr; 
     assign dma_data_out  = dma_data_in; 
     
-    assign dma_local_oe_n = (dma_active && dir_to_bus == 1'b0) ? 1'b0 : 1'b1;
-    assign dma_local_we_n = (dma_active && dir_to_bus == 1'b1) ? int_sh_stb_n : 1'b1;
+    assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? 1'b0 : 1'b1;
+    assign dma_local_we_n = (dma_active && dir_from_bus == 1'b1) ? int_sh_stb_n : 1'b1;
 
 endmodule

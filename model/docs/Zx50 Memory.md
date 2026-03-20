@@ -39,7 +39,7 @@ D[7:0]  (Data)  => The Physical 4KB Page to map into the slot (0x00 to 0xFF)
 
 Whenever a card is explicitly assigned a page, all other cards on the bus snoop the transaction and automatically invalidate their own mappings for that logical page to resolve conflicts automatically.
 
-## 3. Shadow Bus & DMA Protocol (Future / V2)
+## 3. Shadow Bus & DMA Protocol
 
 The Zx50 specification includes a "Shadow Bus" protocol designed for high-speed, cycle-stealing Direct Memory Access (DMA) between memory cards and peripherals without routing data through the Z80.
 
@@ -54,5 +54,78 @@ D[0:7]   => Operand[0:7]
 ```
 The CPU configures the SLAVE device (receiver) first, followed by the MASTER device (sender). Once the Master is configured, it takes over the Shadow Bus, asserting `S_EN`, strobing data bytes, and using `S_INC` / `S_DONE` to manage the block transfer entirely in the background.
 
-**Current Implementation Note (NoDMA Fallback):**
-Due to routing constraints on the Atmel ATF1508AS CPLD, the active physical firmware variant is `zx50_cpld_nodma`. The DMA, Arbiter, and Shadow Bus logic have been structurally bypassed to ensure a successful fit. Full Shadow Bus functionality requires a larger CPLD (ATF1514AS) or a modern FPGA upgrade.
+# Shadow Bus Protocol
+
+The use cases:
+
+- read memory to disk
+- write memory from disk
+- transfer memory to memory.  
+- read memory to a video card
+- file transfer to/from serial card (might be kind of hard)
+
+The CPU performs two port writes.  It first configures the bus slave
+(usually a memory card), and then configures the bus master (usually a
+peripheral).  But, memory to memory transfers are allowed, so a memory card
+could be a bus master.
+
+Memory cards have a second port address for ShadowBus operations, e.g. 0x40 - 0x4F.
+For the memory card, the CPU will specify a 256 Byte word as the start of
+the operation.
+
+Disk controller would have ports in the range 0x50 - 0x5F (this is configurable via
+an 8-position switch, they do not need to be 0x5x).
+
+There will be several writes **to the same port** with a different value in A[8:9] to
+indicate what is being written. We can communicate 14 bits of data with each write
+
+This is for the memory card.  The Disk Card (CH376) would have a more complex command
+structure, TBD.
+
+```text
+A[0:7]   => Card port address
+A[8:14]  => Operand[8:14]
+A[15]    => OpCode
+D[0:7]   => Operand[0:7]
+```
+
+Opcode 0:
+Master/Slave          = Operand[14] (1 = master, 0 = slave)
+Direction             = Operand[13] (0 = to bus, 1 = from bus)
+PhysicalAddress[0:12] = Operand[0:12]
+
+Address 1:
+PhysicalAddress[13:19] = Operand[0:6]
+ByteCount[0:7]         = Operand[7:14] (up to 256 bytes)
+
+Process:
+
+CPU configures SLAVE fist, to read memory to the bus
+
+OUT card0, Opcode 0(Slave, ToBus, PA[0:12])
+OUT card0, Opcode 1(PA[13:19], 8'b0)
+
+CPU Configures MASTER last, to get memory from the bus, for 89 bytes
+
+OUT card1, Opcode 0(Master, FromBus, PA[0:12])
+OUT card1, Opcode 1(PA[13:19], 89)
+
+After the 2nd OUT to card 1, card 1 will take over the shadow bus and do the transfer.
+
+If card 1 were a disk controller, the OUT would need to specify the actual COMMAND and
+other parameters.
+
+Each MCLK cycle:
+- Assert S_EN
+- Assert Strobe
+- Read byte
+- Deassert Strobe, a
+- Assert SINC
+- Deasert SINC, Assert Strobe
+- Read Byte
+- ... 
+- until ByteCount, then assert S_DONE instead of SINC
+- Deassert S_EN
+- Raise Z80_INT
+  - Must wait for valid time to raise INT
+  - Must respond to the INT READ

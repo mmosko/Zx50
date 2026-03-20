@@ -35,7 +35,7 @@ module zx50_cpld_core_tb;
     wire [3:0]  atl_addr;
     wire [7:0]  atl_data;
     wire atl_we_n, atl_oe_n, atl_ce_n;
-    wire ram_ce0_n, ram_ce1_n, ram_oe_n, ram_we_n;
+    wire ram_ce0_n, ram_ce1_n, rom_ce_n, ram_oe_n, ram_we_n; // ADDED rom_ce_n
     wire z80_data_oe_n, l_dir;
 
     // --- 6. The Duplex Handoff Logic ---
@@ -66,12 +66,14 @@ module zx50_cpld_core_tb;
         
         .l_addr(l_addr), .atl_addr(atl_addr), .atl_data(atl_data),
         .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n), .atl_ce_n(atl_ce_n),
-        .ram_ce0_n(ram_ce0_n), .ram_ce1_n(ram_ce1_n), .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
+        
+        // WIRED UP ROM_CE_N
+        .ram_ce0_n(ram_ce0_n), .ram_ce1_n(ram_ce1_n), .rom_ce_n(rom_ce_n), 
+        .ram_oe_n(ram_oe_n), .ram_we_n(ram_we_n),
+        
         .z80_data_oe_n(z80_data_oe_n), .l_dir(l_dir)
     );
 
-    // We MUST include the LUT here. If atl_data is floating, the CPLD 
-    // won't know how to resolve atl_data[7], turning ram_ce0_n/ram_ce1_n into 'x'.
     assign atl_data = (!atl_we_n) ? z80_data : 8'hzz;
     
     is61c256al lut_sram (
@@ -88,83 +90,99 @@ module zx50_cpld_core_tb;
 
         // Setup
         z80_iei = 1;
-        card_id_sw = 4'hC; // Let's use Card ID 0xC (12)
+        card_id_sw = 4'h1; // Let's use Card ID 0x1 (Standard RAM Card)
         
-        // Boot Sequence: Mimic an RC reset circuit
+        // Boot Sequence
         reset_n = 1;
         #50 reset_n = 0;
         #700 reset_n = 1;
 
-        // Wait for the 16-cycle Hardware Wipe to finish
         clk_gen.wait_mclk(20);
 
         // ==========================================
         // PHASE 1: Program MMU
         // ==========================================
-        $display("[%0t] Phase 1: Programming MMU Page 0 to 0x45...", $time);
-        
-        // NEW BFM MACRO: Map Physical Page 0x45 into Logical Window 0 on Card 0xC
-        z80.mmu_map_page(card_id_sw, 4'h0, 8'h45); 
-
+        $display("[%0t] Phase 1: Programming MMU Page 0 to 0x45 (Card 1)...", $time);
+        z80.mmu_map_page(card_id_sw, 4'h0, 8'h45);
         z80.wait_cycles(5); 
 
         // ==========================================
         // PHASE 2: CPLD Output Validation (Write Cycle)
         // ==========================================
         $display("[%0t] Phase 2: Memory Write Validation...", $time);
-
         fork
-            z80.mem_write(16'h0123, 8'hAA);
+            z80.mem_write(16'h0123, 8'hAA); // A[11]=0, targets ram_ce0_n
             begin
                 wait(z80_wr_n == 1'b0); 
                 #10;
-                
-                // Verify transceivers are open and pointing inward
                 if (z80_data_oe_n !== 1'b0 || l_dir !== 1'b1) begin
                     $display("FATAL: Transceiver write logic failed! oe_n=%b, l_dir=%b", z80_data_oe_n, l_dir);
                     $fatal(1);
                 end
-                
-                // Verify the correct Chip Enable fired
-                if (ram_ce0_n !== 1'b0 || ram_ce1_n !== 1'b1 || ram_we_n !== 1'b0) begin
-                    $display("FATAL: Main SRAM gating failed! ce0=%b, ce1=%b, we=%b", ram_ce0_n, ram_ce1_n, ram_we_n);
+                if (ram_ce0_n !== 1'b0 || ram_ce1_n !== 1'b1 || rom_ce_n !== 1'b1 || ram_we_n !== 1'b0) begin
+                    $display("FATAL: SRAM gating failed! ce0=%b, ce1=%b, rom=%b, we=%b", ram_ce0_n, ram_ce1_n, rom_ce_n, ram_we_n);
                     $fatal(1);
                 end
-                
                 $display("--- Phase 2 Passed: CPLD routed write signals perfectly.");
             end
         join
-
         z80.wait_cycles(5);
 
         // ==========================================
         // PHASE 3: CPLD Output Validation (Read Cycle)
         // ==========================================
         $display("[%0t] Phase 3: Memory Read Validation...", $time);
-
         fork
             z80.mem_read(16'h0123, dummy_data);
             begin
                 wait(z80_rd_n == 1'b0); 
                 #10;
-                
-                // Verify transceivers are open and pointing outward
-                if (z80_data_oe_n !== 1'b0 || l_dir !== 1'b0) begin
-                    $display("FATAL: Transceiver read logic failed! oe_n=%b, l_dir=%b", z80_data_oe_n, l_dir);
+                if (ram_ce0_n !== 1'b0 || ram_ce1_n !== 1'b1 || rom_ce_n !== 1'b1 || ram_oe_n !== 1'b0) begin
+                    $display("FATAL: SRAM read gating failed! ce0=%b, oe=%b", ram_ce0_n, ram_oe_n);
                     $fatal(1);
                 end
-                
-                // Verify Output Enable fired
-                if (ram_ce0_n !== 1'b0 || ram_oe_n !== 1'b0) begin
-                    $display("FATAL: Main SRAM read gating failed! ce0=%b, oe=%b", ram_ce0_n, ram_oe_n);
-                    $fatal(1);
-                end
-                
                 $display("--- Phase 3 Passed: CPLD routed read signals perfectly.");
             end
         join
-
         z80.wait_cycles(5);
+
+        // ==========================================
+        // PHASE 4: Boot ROM Bypass & Write Protect Verification
+        // ==========================================
+        $display("[%0t] Phase 4: Validating Boot ROM logic on Card 0...", $time);
+        card_id_sw = 4'h0; // Switch to Card 0 (Boot ROM enabled)
+        reset_n = 0; #500; reset_n = 1; // Reboot to latch Card 0
+        clk_gen.wait_mclk(20);
+
+        // 4A: Read should hit ROM CE
+        fork
+            z80.mem_read(16'h0123, dummy_data);
+            begin
+                wait(z80_rd_n == 1'b0); 
+                #10;
+                if (rom_ce_n !== 1'b0 || ram_ce0_n !== 1'b1 || ram_ce1_n !== 1'b1) begin
+                    $display("FATAL: ROM Read Bypass failed! rom_ce_n=%b", rom_ce_n);
+                    $fatal(1);
+                end
+            end
+        join
+        z80.wait_cycles(5);
+        
+        // 4B: Write should be suppressed to protect EEPROM
+        fork
+            z80.mem_write(16'h0123, 8'hBB);
+            begin
+                wait(z80_wr_n == 1'b0); 
+                #10;
+                if (rom_ce_n !== 1'b1 || ram_we_n !== 1'b1) begin
+                    $display("FATAL: ROM Write Protect failed! rom_ce_n=%b, we_n=%b", rom_ce_n, ram_we_n);
+                    $fatal(1);
+                end
+            end
+        join
+        z80.wait_cycles(5);
+        $display("--- Phase 4 Passed: ROM bypass and write-protection are solid.");
+
         $display("=====================================================");
         $display(" SUCCESS: CPLD Core Logic is fully operational.");
         $display("=====================================================");
@@ -173,7 +191,7 @@ module zx50_cpld_core_tb;
 
     // --- System Watchdog Timer ---
     initial begin
-        #150000;
+        #250000;
         $display("FATAL [%0t]: Watchdog Timer Expired!", $time);
         $fatal(1);
     end

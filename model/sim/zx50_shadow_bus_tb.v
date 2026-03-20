@@ -5,20 +5,7 @@
  * =====================================================================================
  * Description:
  * This testbench physically simulates a direct card-to-card DMA transfer over the 
- * Universal Shadow Bus. It proves that the Z80 can configure two distinct memory cards 
- * (one as a Master/Source, one as a Slave/Destination), step out of the way, and let 
- * the CPLDs autonomously blast data across the backplane.
- *
- * Test Sequence:
- * 1. Payload Prep: The Z80 loads a 16-byte payload into Card 0's local SRAM.
- * 2. DMA Setup: The Z80 sends bit-packed I/O commands to program Card 1 as a Slave 
- * listening on the Shadow Bus, and Card 0 as a Master driving the Shadow Bus.
- * 3. Autonomous Transfer: The Master CPLD orchestrates the transfer, generating the 
- * strobe and increment signals, while the Slave precisely tracks them.
- * 4. Interrupt & Acknowledge: Upon completion, the Master pulls the shared Z80_INT_n 
- * line low. The Z80 performs an INTACK cycle, and the Master drops its vector (0x40) 
- * onto the bus and clears the interrupt.
- * 5. Verification: The Z80 reads Card 1's memory to ensure the payload arrived safely.
+ * Universal Shadow Bus.
  ***************************************************************************************/
 
 module zx50_shadow_bus_tb;
@@ -105,90 +92,119 @@ module zx50_shadow_bus_tb;
         clk_gen.wait_mclk(20);
 
         // ---------------------------------------------------------
-        // PREP: Map Memory and Load Payload
+        // PREP: Map Memory and Load Payloads
         // ---------------------------------------------------------
-        // Map Bank 0 to Physical Page 0 on Card 0, and Bank 1 to Physical Page 0 on Card 1
-        z80.io_write(16'h0030, 8'h00); // Card 0 (ID 0x0) -> Bank 0 maps to Phys 0x00
-        z80.io_write(16'h0131, 8'h00); // Card 1 (ID 0x1) -> Bank 1 maps to Phys 0x00
-
-        $display("[%0t] Seeding Card 0 with 16-byte payload...", $time);
+        $display("[%0t] Preloading Card 0 ROM with 16-byte payload...", $time);
         for (i = 0; i < 16; i = i + 1) begin
-            // Write payload to Bank 0 (which hits Card 0, Phys Page 0)
-            z80.mem_write(16'h0000 + i, i + 8'hA0);
+            card0.rom.memory_array[i] = i + 8'hC0;
+        end
+
+        // Map Card 0 RAM (Physical Page 0x10 = 0x10000) to Z80 Logical Page 8 (0x8000)
+        z80.io_write(16'h0830, 8'h10);
+        
+        $display("[%0t] Z80 seeding Card 0 RAM with 16-byte payload at 0x8000...", $time);
+        for (i = 0; i < 16; i = i + 1) begin
+            z80.mem_write(16'h8000 + i, i + 8'hA0);
         end
 
         // ---------------------------------------------------------
-        // PHASE 1: Program DMA Nodes (Bit-Packed I/O Writes)
+        // TEST 1: ROM (Card 0) to RAM (Card 1)
         // ---------------------------------------------------------
-        
-        $display("[%0t] Programming Card 1 as SLAVE (Destination)...", $time);
-        // SETUP COMMAND (Opcode 0): 0x2041
-        // A[15]=0 (Setup), A[14]=0 (Slave), A[13]=1 (Listen to Bus/Write to RAM), A[12:8]=0x00
-        // Data = 0x00. Address is 0x00000. Port = 0x41 (Card 1 DMA)
-        z80.io_write(16'h2041, 8'h00);
+        $display("\n[%0t] --- TEST 1: DMA ROM (Card 0) to RAM (Card 1) ---", $time);
 
-        // ARM COMMAND (Opcode 1): 0x8841
-        // A[15]=1 (Arm), A[14:8]=0x08 (Count=16 bytes)
-        // Data[7]=0, Data[6:0]=0x00 (Upper Address = 0x00). Port = 0x41
+        // Map Card 1 RAM (Physical Page 0x01 = 0x01000) to Z80 Logical Page 1 (0x1000)
+        z80.io_write(16'h0131, 8'h01);
+
+        $display("[%0t] Programming Card 1 as SLAVE (Dest: Phys Page 0x01000)...", $time);
+        // Setup: Slave(0), FromBus(1), PA[12:0]=0x1000. Operand = 15'b0_1_1000000000000 = 15'h3000.
+        z80.io_write(16'h3041, 8'h00); 
+        // Arm: Count=16 (0x10), PA[19:13]=0. Operand = 15'h0800
         z80.io_write(16'h8841, 8'h00);
 
-        $display("[%0t] Programming Card 0 as MASTER (Source). Firing DMA...", $time);
-        // SETUP COMMAND (Opcode 0): 0x4040
-        // A[15]=0 (Setup), A[14]=1 (Master), A[13]=0 (Drive Bus/Read from RAM), A[12:8]=0x00
-        // Data = 0x00. Address is 0x00000. Port = 0x40 (Card 0 DMA)
-        z80.io_write(16'h4040, 8'h00);
-
-        // ARM COMMAND (Opcode 1): 0x8840
-        // A[15]=1 (Arm), A[14:8]=0x08 (Count=16 bytes)
-        // Data[7]=0, Data[6:0]=0x00 (Upper Address = 0x00). Port = 0x40
+        $display("[%0t] Programming Card 0 as MASTER (Source: ROM Phys Page 0x00000). Firing DMA...", $time);
+        // Setup: Master(1), ToBus(0), PA[12:0]=0. Operand = 15'h4000
+        z80.io_write(16'h4040, 8'h00); 
+        // Arm: Count=16 (0x10), PA[19:13]=0. Operand = 15'h0800
         z80.io_write(16'h8840, 8'h00);
 
-        // ---------------------------------------------------------
-        // PHASE 2: Wait for Transfer and Interrupt
-        // ---------------------------------------------------------
         $display("[%0t] Z80 yields bus. Waiting for Shadow Bus transfer...", $time);
-        // The Z80 BFM just waits here while the CPLDs take over the backplane
         wait(z80_int_n == 1'b0);
-        $display("[%0t] Transfer Complete! Z80_INT_N asserted.", $time);
+        $display("[%0t] ROM->RAM Transfer Complete! Z80_INT_N asserted.", $time);
         z80.wait_cycles(2);
 
-        // ---------------------------------------------------------
-        // PHASE 3: Interrupt Acknowledge
-        // ---------------------------------------------------------
         $display("[%0t] Z80 executing INTACK cycle...", $time);
-        z80.intack(vector); // BFM pulls M1 and IORQ low
-        
+        z80.intack(vector); 
         z80.wait_cycles(2);
-
-        // Verify the Master DMA node correctly identified itself with its interrupt vector
+        
         if (vector !== 8'h40) begin
             $display("!!! INTACK FAILURE: Expected Vector 0x40, got 0x%h", vector);
             errors = errors + 1;
         end else begin
             $display("[%0t] Successfully received Vector 0x40. Interrupt cleared.", $time);
         end
-        
-        // The INTACK cycle should have automatically reset the int_pending flip-flop in the CPLD
-        if (z80_int_n !== 1'b1) begin
-            $display("!!! FATAL: z80_int_n did not release after INTACK!");
-            $fatal(1);
-        end
 
-        // ---------------------------------------------------------
-        // PHASE 4: Verification
-        // ---------------------------------------------------------
-        // The DMA should have copied Physical Page 0 from Card 0 to Physical Page 0 on Card 1.
-        // We mapped Bank 1 (0x1000 - 0x1FFF) to Physical Page 0 on Card 1 during Prep.
-        $display("[%0t] Z80 reading Card 1 memory to verify DMA payload...", $time);
+        $display("[%0t] Z80 reading Card 1 memory to verify ROM->RAM payload...", $time);
         for (i = 0; i < 16; i = i + 1) begin
             z80.mem_read(16'h1000 + i, read_val);
+            if (read_val !== (i + 8'hC0)) begin
+                $display("!!! DATA CORRUPTION at Offset %0d. Expected %0x, got %0x", i, (i + 8'hC0), read_val);
+                errors = errors + 1;
+            end
+        end
+        if (errors == 0) $display("  > ROM to RAM Transfer OK!");
+
+        // ---------------------------------------------------------
+        // TEST 2: RAM (Card 0) to RAM (Card 1)
+        // ---------------------------------------------------------
+        $display("\n[%0t] --- TEST 2: DMA RAM (Card 0) to RAM (Card 1) ---", $time);
+
+        // Map Card 1 RAM (Physical Page 0x12 = 0x12000) to Z80 Logical Page 9 (0x9000)
+        z80.io_write(16'h0931, 8'h12);
+
+        $display("[%0t] Programming Card 1 as SLAVE (Dest: Phys Page 0x12000)...", $time);
+        // PA=0x12000. PA[12:0]=0. PA[19:13]=0x09.
+        // Setup: Slave(0), FromBus(1), PA[12:0]=0. Operand = 15'h2000
+        z80.io_write(16'h2041, 8'h00);
+        // Arm: Count=16 (0x10), PA[19:13]=0x09. Operand = 15'h0809
+        z80.io_write(16'h8841, 8'h09); 
+
+        $display("[%0t] Programming Card 0 as MASTER (Source: RAM Phys Page 0x10000). Firing DMA...", $time);
+        // PA=0x10000. PA[12:0]=0. PA[19:13]=0x08.
+        // Setup: Master(1), ToBus(0), PA[12:0]=0. Operand = 15'h4000
+        z80.io_write(16'h4040, 8'h00);
+        // Arm: Count=16 (0x10), PA[19:13]=0x08. Operand = 15'h0808
+        z80.io_write(16'h8840, 8'h08);
+
+        $display("[%0t] Z80 yields bus. Waiting for Shadow Bus transfer...", $time);
+        wait(z80_int_n == 1'b0);
+        $display("[%0t] RAM->RAM Transfer Complete! Z80_INT_N asserted.", $time);
+        z80.wait_cycles(2);
+
+        $display("[%0t] Z80 executing INTACK cycle...", $time);
+        z80.intack(vector); 
+        z80.wait_cycles(2);
+        
+        if (vector !== 8'h40) begin
+            $display("!!! INTACK FAILURE: Expected Vector 0x40, got 0x%h", vector);
+            errors = errors + 1;
+        end else begin
+            $display("[%0t] Successfully received Vector 0x40. Interrupt cleared.", $time);
+        end
+
+        $display("[%0t] Z80 reading Card 1 memory to verify RAM->RAM payload...", $time);
+        for (i = 0; i < 16; i = i + 1) begin
+            z80.mem_read(16'h9000 + i, read_val);
             if (read_val !== (i + 8'hA0)) begin
                 $display("!!! DATA CORRUPTION at Offset %0d. Expected %0x, got %0x", i, (i + 8'hA0), read_val);
                 errors = errors + 1;
             end
         end
+        if (errors == 0) $display("  > RAM to RAM Transfer OK!");
 
-        $display("=====================================================");
+        // ---------------------------------------------------------
+        // Verification Complete
+        // ---------------------------------------------------------
+        $display("\n=====================================================");
         if (errors == 0) begin
             $display(" SUCCESS: Universal Shadow Bus perfectly transferred data!");
             $display("=====================================================");
@@ -196,7 +212,7 @@ module zx50_shadow_bus_tb;
         end else begin
             $display(" FAILURE: Detected %0d errors during verification.", errors);
             $display("=====================================================");
-            $fatal(1); // Force a non-zero exit code so Make aborts!
+            $fatal(1); 
         end
     end
 

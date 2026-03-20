@@ -28,3 +28,35 @@ When resuming work, execute these steps in order:
 2. **Flash the CPLD:** Use JTAG (via `urjtag` or `openocd`) to flash `syn/zx50_cpld_core.svf` to the physical ATF1508AS chip.
 3. **Firmware for Bus Probe:** Write a C/C++ or MicroPython script for the Raspberry Pi Pico on the *Zx50 Bus Probe*. Have the Pico bit-bang the Z80 bus to safely test the MMU programming and DMA state machine at slow speeds (e.g., 10 Hz) before plugging in a real 8MHz Z80.
 4. **Write Z80 Boot ROM:** The actual Z80 boot code must now include an MMU initialization routine to claim memory pages immediately after reset.
+
+
+As of Mar 20, 2026
+
+# ZX50 Project Checkpoint & State Save
+
+## 🏆 Current Achievements & State
+1. **CPLD Hardware (ATF1508AS)**:
+   * **Fitted Successfully!** The top-level `zx50_cpld_core` fits into the 128-macrocell CPLD with 96% utilization (124/128).
+   * **ROM Bypass Architecture**: Solved the 2K interleaved ROM issue by having the CPLD directly drive `ATL_D[7:0]` with `{4'b0, A[14:11]}` for the lower 32K when Card 0 is booting. This provides a perfect, linear 32K ROM map, bypassing the Address Translation Lookaside (ATL) SRAM completely.
+   * **Hardware Write Protection**: The CPLD aggressively protects the ROM chip (preventing accidental EEPROM Software Data Protection triggers) by suppressing `rom_ce_n` and the global `ram_we_n` during writes to the ROM space.
+   * **Reset Race Condition Fixed**: `current_id` combinatorial bypass added so sub-modules see DIP switches instantly during reset.
+   * **Testbenches**: `zx50_cpld_core_tb` perfectly validates MMU translation, transceivers, ROM bypass, and ROM write protection. `zx50_mem_card_tb` passes basic SRAM integration.
+
+2. **Z80pack Emulator**:
+   * **Makefile Cleanup**: Re-written to cleanly output all compiler artifacts (`.o`, `.d`) into a dedicated `../build/` directory.
+   * **Memory Encapsulation**: Refactored `simmem.c` and `simmem.h` to de-inline memory arrays, funneling all CPU access through `getmem()` and `putmem()`.
+   * **ZX50 Emulation Module**: Drafted `zx50_mem_card.c` to emulate the MMU's `page_ownership` mask, 1MB flat RAM, 32K ROM bypass, and the `0x30` I/O programming interface.
+
+---
+
+## 🚀 Next Steps (To-Do List)
+
+### 1. Verilog Hardware Updates
+* **Create `sst39sf040.v`**: Write a simulation model for the SST39SF040 512KB Flash ROM (similar to the `cy7c1049.v` and `is61c256al.v` SRAM models). It only needs to support basic asynchronous reads for now.
+* **Update `zx50_mem_card.v`**: Update the top-level card structural wrapper to instantiate the new SST39SF040 ROM chip, wire up the new `rom_ce_n` output from the CPLD core, and connect it to the physical buses.
+* **Update `zx50_mem_card_tb.v`**: Expand the integration testbench to validate reading from the new ROM model using the Card 0 boot bypass.
+
+### 2. Z80pack Emulator Updates
+* **Wire up I/O**: Inject `zx50_io_out()` into `z80pack`'s central `simio.c` so the CPU's `OUT` instructions can program the MMU struct.
+* **Bootloader Stub**: Write a tiny (< 2KB) Z80 assembly boot stub at `0x0000` that runs out of the ROM bypass. It must program the MMU I/O ports to map upper memory to RAM, copy payloads if necessary, perform a dummy write to `0x0000` to trip the MMU's ROM kill-switch, and jump to the main BASIC cold start.
+* **Add DMA Registers**: Implement the Shadow Bus DMA register parser (`0x40 - 0x4F`) inside `zx50_io_out()` in C.
