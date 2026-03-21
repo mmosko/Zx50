@@ -71,8 +71,6 @@ module zx50_conflict_tb;
     wire hit_a, hit_b;
     wire is_busy_a, is_busy_b;
     wire cpu_updating_a, cpu_updating_b;
-    wire is_init_a, is_init_b;
-    wire [3:0] init_ptr_a, init_ptr_b;
 
     // --- BRIDGE LOGIC: Centralized Decode Simulation ---
     // Simulating the top-level core's routing optimization for both cards
@@ -95,7 +93,6 @@ module zx50_conflict_tb;
         .atl_addr(atl_addr_a), .atl_we_n(atl_we_n_a), .atl_oe_n(atl_oe_n_a), 
         .active(active_a), .z80_card_hit(hit_a), .is_busy(is_busy_a),
         .cpu_updating(cpu_updating_a), 
-        .is_initializing(is_init_a), .init_ptr(init_ptr_a),
         .is_rom_enabled()
     );
 
@@ -114,7 +111,6 @@ module zx50_conflict_tb;
         .atl_addr(atl_addr_b), .atl_we_n(atl_we_n_b), .atl_oe_n(atl_oe_n_b), 
         .active(active_b), .z80_card_hit(hit_b), .is_busy(is_busy_b),
         .cpu_updating(cpu_updating_b), 
-        .is_initializing(is_init_b), .init_ptr(init_ptr_b),
         .is_rom_enabled()
     );
 
@@ -122,11 +118,13 @@ module zx50_conflict_tb;
     // MOCK MEMORY LAYER (LUTs and Fake RAM arrays)
     // ==========================================
     assign atl_ce_n_a = !(hit_a || is_busy_a);
-    assign atl_data_a = is_init_a ? {4'h0, init_ptr_a} : (cpu_updating_a ? z80_data : 8'hzz);
+    assign atl_data_a = cpu_updating_a ? z80_data : 8'hzz;
+    
     is61c256al lut_a (.addr({11'b0, atl_addr_a}), .data(atl_data_a), .ce_n(atl_ce_n_a), .oe_n(atl_oe_n_a), .we_n(atl_we_n_a));
 
     assign atl_ce_n_b = !(hit_b || is_busy_b);
-    assign atl_data_b = is_init_b ? {4'h0, init_ptr_b} : (cpu_updating_b ? z80_data : 8'hzz);
+    assign atl_data_b = cpu_updating_b ? z80_data : 8'hzz;
+    
     is61c256al lut_b (.addr({11'b0, atl_addr_b}), .data(atl_data_b), .ce_n(atl_ce_n_b), .oe_n(atl_oe_n_b), .we_n(atl_we_n_b));
 
     // Behavioral memory arrays to represent the physical pages
@@ -175,7 +173,7 @@ module zx50_conflict_tb;
             z80.mem_read(16'h8000, dummy_data);
             begin
                 wait(z80_mreq_n == 1'b0); // Wait for the Z80 to start the read
-                #15;                      // Give CPLD time to decode the address bus
+                #15; // Give CPLD time to decode the address bus
                 
                 if (active_a !== 1'b1 || active_b !== 1'b0) begin
                     $display("FAIL: Initial boot state conflict or missing ownership.");
@@ -200,15 +198,18 @@ module zx50_conflict_tb;
         // Use the Z80 BFM to dynamically map Physical Page 0xBB into Logical Page 8 on Card B.
         // Card A MUST snoop this write and drop ownership of Page 8.
         z80.mmu_map_page(id_sw_b, 4'h8, 8'hBB);
+        
         z80.wait_cycles(5);
         
         // 5. Verification: Card A must have "Stepped Down" and Card B must claim it
         $display("[%0t] --- Verifying Handover (Card B should now own Page 8) ---", $time);
+        
         fork
             z80.mem_read(16'h8000, dummy_data);
             begin
                 wait(z80_mreq_n == 1'b0);
                 #15;
+                
                 if (active_a === 1'b1) begin
                     $display("FAIL: BUS CONFLICT! Card A failed to release Page 8.");
                     failed = 1;

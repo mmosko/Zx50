@@ -11,13 +11,12 @@
  * 16 logical 4KB pages currently belong to this specific physical card.
  * 2. Orchestrates an external Address Translation Lookaside (ATL) SRAM to store 
  * the 8-bit physical page targets.
- * It also runs an automatic 16-cycle hardware wipe on reset to initialize the ATL, 
- * and maintains an `is_rom_enabled` kill-switch for Card 0 boot sequences.
+ * It also maintains an `is_rom_enabled` kill-switch for Card 0 boot sequences.
  *
  * HOW WE TEST IT:
- * - Phase 1 (Boot & Wipe): We assert reset and wait for the internal 16-cycle state 
- * machine to clear the ATL SRAM. We then use the Z80 BFM to read from Page 0 to 
- * verify the MMU asserts the `active` line and outputs the default 0x00 translation.
+ * - Phase 1 (Boot): We assert reset. We then use the Z80 BFM to initialize the LUT
+ * via I/O writes, and read from Page 0 to verify the MMU asserts the `active` line 
+ * and outputs the default 0x00 translation.
  * - Phase 2 (Dynamic Reprogramming): The Z80 BFM executes an I/O `OUT` instruction 
  * to map logical page 0 to a new physical page (0xAA).
  * - Phase 3 (Verification): The Z80 reads logical page 0 again to guarantee the 
@@ -26,7 +25,6 @@
  * WHY THIS IS FULL COVERAGE:
  * This isolated unit test completely encapsulates the MMU and an attached SRAM model, 
  * proving every internal pathway:
- * - Initialization: Proves the `is_initializing` state machine successfully clears the LUT.
  * - I/O Snooping: Proves the MMU correctly decodes its `card_id`, intercepts the 
  * Z80 `OUT` command, and generates the precise `atl_we_n` strobe.
  * - Page Ownership: Proves the internal flip-flop mask accurately tracks claimed 
@@ -58,10 +56,8 @@ module zx50_mmu_sram_tb;
     wire [7:0] atl_data; 
     wire atl_we_n, atl_oe_n, atl_ce_n;
     wire active, z80_card_hit, is_busy;
-    wire mmu_is_initializing;
     wire mmu_cpu_updating;
-    wire [3:0] mmu_init_ptr;
-    wire is_rom_enabled; // NEW: Catches the kill-switch output
+    wire is_rom_enabled; 
 
     // --- 5. BFM Instantiations ---
 
@@ -97,17 +93,14 @@ module zx50_mmu_sram_tb;
         .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
         .active(active), .z80_card_hit(z80_card_hit), .is_busy(is_busy),
         .cpu_updating(mmu_cpu_updating),
-        .is_initializing(mmu_is_initializing), 
-        .init_ptr(mmu_init_ptr),
         .is_rom_enabled(is_rom_enabled) 
     );
 
     // The Structural LUT SRAM 
     // Note: Since this is just the isolated MMU, we mock the top-level CE logic here
     assign atl_ce_n = !(z80_card_hit || is_busy);
-    
-    assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} : 
-                      (mmu_cpu_updating   ? z80_data : 8'hzz);
+    // Removed is_initializing logic loopback
+    assign atl_data = mmu_cpu_updating ? z80_data : 8'hzz;
 
     is61c256al lut_sram (
         .addr({11'b0, atl_addr}), // Pad the 4-bit ATL address to fit the 15-bit chip
