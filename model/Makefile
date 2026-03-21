@@ -163,7 +163,8 @@ NODMA_FILES = $(addprefix $(SRC_DIR)/, $(NODMA_SRC))
 # ==============================================================================
 
 # Master target: Build both!
-syn: syn_dma syn_nodma
+#syn: syn_dma syn_nodma
+syn: syn_dma 
 
 syn_dma: $(DMA_FILES)
 	@echo "\n--- 1. Yosys Synthesis & Atmel Fitter (WITH DMA) ---"

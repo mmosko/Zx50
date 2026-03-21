@@ -6,6 +6,8 @@
 
 // ==========================================
 // ATMEL FITTER PIN CONSTRAINTS
+// The run_fitter.sh script greps these lines to build the .pin file.
+// N.B. These are for the RevA hardware with the A11 bug
 // ==========================================
 //PIN: 87 = mclk;
 //PIN: 89 = reset_n;
@@ -46,11 +48,51 @@
 //PIN: 25 = l_data[1];
 //PIN: 24 = l_data[0];
 
+//PIN: 47 = sh_en_n;
+//PIN: 48 = sh_rw_n;
+//PIN: 46 = sh_inc_n;
+//PIN: 45 = sh_stb_n;
+//PIN: 49 = sh_done_n;
+//PIN: 50 = sh_busy_n;
+
+//PIN: 44 = sh_c_dir;
 //PIN: 23 = z80_data_oe_n;
+//PIN: 52 = sh_data_oe_n;
 //PIN: 22 = l_dir;
 
+//PIN: 85 = l_addr[10];
+//PIN: 84 = l_addr[9];
+//PIN: 83 = l_addr[8];
+//PIN: 81 = l_addr[7];
+//PIN: 80 = l_addr[6];
+//PIN: 79 = l_addr[5];
+//PIN: 78 = l_addr[4];
+//PIN: 77 = l_addr[3];
+//PIN: 76 = l_addr[2];
+//PIN: 75 = l_addr[1];
+//PIN: 72 = l_addr[0];
 
+//PIN: 56 = atl_addr[3];
+//PIN: 55 = atl_addr[2];
+//PIN: 54 = atl_addr[1];
+//PIN: 53 = atl_addr[0];
 
+//PIN: 68 = atl_data[7];
+//PIN: 67 = atl_data[6];
+//PIN: 65 = atl_data[5];
+//PIN: 64 = atl_data[4];
+//PIN: 63 = atl_data[3];
+//PIN: 61 = atl_data[2];
+//PIN: 60 = atl_data[1];
+//PIN: 58 = atl_data[0];
+
+//PIN: 69 = atl_we_n;
+//PIN: 70 = atl_oe_n;
+//PIN: 71 = atl_ce_n;
+//PIN: 90 = ram_ce0_n;
+//PIN: 92 = ram_ce1_n;
+//PIN: 93 = ram_oe_n;
+//PIN: 94 = ram_we_n;
 
 module zx50_cpld_core (
     input  wire mclk,

@@ -1,0 +1,1616 @@
+TimeQuest Timing Analyzer report for zx50_cpld_core
+Sat Mar 21 02:36:19 2026
+Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. TimeQuest Timing Analyzer Summary
+  3. Parallel Compilation
+  4. SDC File List
+  5. Clocks
+  6. Fmax Summary
+  7. Setup Summary
+  8. Hold Summary
+  9. Recovery Summary
+ 10. Removal Summary
+ 11. Minimum Pulse Width Summary
+ 12. Setup: 'mclk'
+ 13. Hold: 'mclk'
+ 14. Minimum Pulse Width: 'mclk'
+ 15. Setup Times
+ 16. Hold Times
+ 17. Clock to Output Times
+ 18. Minimum Clock to Output Times
+ 19. Propagation Delay
+ 20. Minimum Propagation Delay
+ 21. Output Enable Times
+ 22. Minimum Output Enable Times
+ 23. Output Disable Times
+ 24. Minimum Output Disable Times
+ 25. Setup Transfers
+ 26. Hold Transfers
+ 27. Report TCCS
+ 28. Report RSKM
+ 29. Unconstrained Paths
+ 30. TimeQuest Timing Analyzer Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 1991-2013 Altera Corporation
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, Altera MegaCore Function License 
+Agreement, or other applicable license agreement, including, 
+without limitation, that your use is for the sole purpose of 
+programming logic devices manufactured by Altera and sold by 
+Altera or its authorized distributors.  Please refer to the 
+applicable agreement for further details.
+
+
+
++----------------------------------------------------------------------------------------+
+; TimeQuest Timing Analyzer Summary                                                      ;
++--------------------+-------------------------------------------------------------------+
+; Quartus II Version ; Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition ;
+; Revision Name      ; zx50_cpld_core                                                    ;
+; Device Family      ; MAX7000S                                                          ;
+; Device Name        ; EPM7128STC100-10                                                  ;
+; Timing Models      ; Final                                                             ;
+; Delay Model        ; Slow Model                                                        ;
+; Rise/Fall Delays   ; Unavailable                                                       ;
++--------------------+-------------------------------------------------------------------+
+
+
+Parallel compilation was disabled, but you have multiple processors available. Enable parallel compilation to reduce compilation time.
++-------------------------------------+
+; Parallel Compilation                ;
++----------------------------+--------+
+; Processors                 ; Number ;
++----------------------------+--------+
+; Number detected on machine ; 4      ;
+; Maximum allowed            ; 1      ;
++----------------------------+--------+
+
+
++--------------------------------------------------------+
+; SDC File List                                          ;
++--------------------+--------+--------------------------+
+; SDC File Path      ; Status ; Read at                  ;
++--------------------+--------+--------------------------+
+; zx50_cpld_core.sdc ; OK     ; Sat Mar 21 02:36:19 2026 ;
++--------------------+--------+--------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Clocks                                                                                                                                                                           ;
++------------+------+--------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+----------+
+; Clock Name ; Type ; Period ; Frequency ; Rise  ; Fall   ; Duty Cycle ; Divide by ; Multiply by ; Phase ; Offset ; Edge List ; Edge Shift ; Inverted ; Master ; Source ; Targets  ;
++------------+------+--------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+----------+
+; mclk       ; Base ; 33.333 ; 30.0 MHz  ; 0.000 ; 16.666 ;            ;           ;             ;       ;        ;           ;            ;          ;        ;        ; { mclk } ;
++------------+------+--------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+----------+
+
+
++-------------------------------------------------+
+; Fmax Summary                                    ;
++-----------+-----------------+------------+------+
+; Fmax      ; Restricted Fmax ; Clock Name ; Note ;
++-----------+-----------------+------------+------+
+; 31.45 MHz ; 31.45 MHz       ; mclk       ;      ;
++-----------+-----------------+------------+------+
+This panel reports FMAX for every clock in the design, regardless of the user-specified clock periods.  FMAX is only computed for paths where the source and destination registers or ports are driven by the same clock.  Paths of different clocks, including generated clocks, are ignored.  For paths between a clock and its inversion, FMAX is computed as if the rising and falling edges are scaled along with FMAX, such that the duty cycle (in terms of a percentage) is maintained. Altera recommends that you always use clock constraints and other slack reports for sign-off analysis.
+
+
++-------------------------------+
+; Setup Summary                 ;
++-------+-------+---------------+
+; Clock ; Slack ; End Point TNS ;
++-------+-------+---------------+
+; mclk  ; 1.533 ; 0.000         ;
++-------+-------+---------------+
+
+
++-------------------------------+
+; Hold Summary                  ;
++-------+-------+---------------+
+; Clock ; Slack ; End Point TNS ;
++-------+-------+---------------+
+; mclk  ; 5.000 ; 0.000         ;
++-------+-------+---------------+
+
+
+--------------------
+; Recovery Summary ;
+--------------------
+No paths to report.
+
+
+-------------------
+; Removal Summary ;
+-------------------
+No paths to report.
+
+
++--------------------------------+
+; Minimum Pulse Width Summary    ;
++-------+--------+---------------+
+; Clock ; Slack  ; End Point TNS ;
++-------+--------+---------------+
+; mclk  ; 12.666 ; 0.000         ;
++-------+--------+---------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Setup: 'mclk'                                                                                                                                                                    ;
++--------+---------------------------------------+-----------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack  ; From Node                             ; To Node                                                   ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++--------+---------------------------------------+-----------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[9]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[9]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 1.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.800     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[9]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[9]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 2.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ; mclk         ; mclk        ; 33.333       ; 0.000      ; 29.000     ;
+; 4.133  ; latched_id[0]                         ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 27.200     ;
+; 4.133  ; latched_id[2]                         ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 27.200     ;
+; 4.133  ; zx50_dma:dma_unit|transfer_armed      ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 27.200     ;
+; 4.133  ; zx50_dma:dma_unit|yielding            ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 27.200     ;
+; 4.933  ; latched_id[1]                         ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 26.400     ;
+; 4.933  ; latched_id[3]                         ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ; mclk         ; mclk        ; 33.333       ; 0.000      ; 26.400     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[0]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 6.533  ; latched_id[2]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.800     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[1]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 7.333  ; latched_id[3]                         ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 24.000     ;
+; 9.533  ; latched_id[0]                         ; zx50_dma:dma_unit|transfer_armed                          ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.800     ;
+; 9.533  ; latched_id[2]                         ; zx50_dma:dma_unit|transfer_armed                          ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.800     ;
+; 10.333 ; zx50_dma:dma_unit|transfer_armed      ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|is_master           ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|m_state.state_bit_2 ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|m_state.state_bit_0 ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|arm_req             ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|transfer_armed      ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|is_master           ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|m_state.state_bit_2 ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|m_state.state_bit_0 ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|arm_req             ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|transfer_armed      ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
+; 10.333 ; zx50_dma:dma_unit|is_master           ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ; mclk         ; mclk        ; 33.333       ; 0.000      ; 21.000     ;
++--------+---------------------------------------+-----------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Hold: 'mclk'                                                                                                                                                                                  ;
++-------+--------------------------------------------------------+--------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack ; From Node                                              ; To Node                                                ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++-------+--------------------------------------------------------+--------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; 5.000 ; zx50_dma:dma_unit|arm_req                              ; zx50_dma:dma_unit|arm_req                              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|is_master                            ; zx50_dma:dma_unit|yielding                             ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_1                  ; zx50_dma:dma_unit|yielding                             ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_0                  ; zx50_dma:dma_unit|yielding                             ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_2                  ; zx50_dma:dma_unit|yielding                             ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_dma:dma_unit|yielding                             ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[1]                     ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[3]                     ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[2]                     ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|init_ptr[0]                     ; zx50_mmu_sram:mmu_unit|is_initializing                 ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[2]               ; zx50_mmu_sram:mmu_unit|page_ownership[2]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[10]              ; zx50_mmu_sram:mmu_unit|page_ownership[10]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[10]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[10]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[10]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[6]               ; zx50_mmu_sram:mmu_unit|page_ownership[6]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[14]              ; zx50_mmu_sram:mmu_unit|page_ownership[14]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[12]              ; zx50_mmu_sram:mmu_unit|page_ownership[12]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[12]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[12]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[12]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[15]              ; zx50_mmu_sram:mmu_unit|page_ownership[15]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[15]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[15]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[15]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[0]               ; zx50_mmu_sram:mmu_unit|page_ownership[0]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[8]               ; zx50_mmu_sram:mmu_unit|page_ownership[8]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[8]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[8]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[8]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[4]               ; zx50_mmu_sram:mmu_unit|page_ownership[4]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[7]               ; zx50_mmu_sram:mmu_unit|page_ownership[7]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[5]               ; zx50_mmu_sram:mmu_unit|page_ownership[5]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[13]              ; zx50_mmu_sram:mmu_unit|page_ownership[13]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[13]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[13]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[13]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[3]               ; zx50_mmu_sram:mmu_unit|page_ownership[3]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[11]              ; zx50_mmu_sram:mmu_unit|page_ownership[11]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[11]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[11]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[11]              ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[1]               ; zx50_mmu_sram:mmu_unit|page_ownership[1]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|page_ownership[9]               ; zx50_mmu_sram:mmu_unit|page_ownership[9]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_mmu_sram:mmu_unit|reset_armed                     ; zx50_mmu_sram:mmu_unit|page_ownership[9]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_mmu_sram:mmu_unit|page_ownership[9]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_mmu_sram:mmu_unit|page_ownership[9]               ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|is_master                            ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_0                  ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_2                  ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|m_state.state_bit_1                  ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|yielding                             ; zx50_dma:dma_unit|m_state.state_bit_0                  ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|arm_req                              ; zx50_dma:dma_unit|transfer_armed                       ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|transfer_armed                       ; zx50_dma:dma_unit|transfer_armed                       ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|is_master                            ; zx50_dma:dma_unit|transfer_armed                       ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
+; 5.000 ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3] ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5] ; mclk         ; mclk        ; 0.000        ; 0.000      ; 8.000      ;
++-------+--------------------------------------------------------+--------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++--------------------------------------------------------------------------------------------------------------------------------------------+
+; Minimum Pulse Width: 'mclk'                                                                                                                ;
++--------+--------------+----------------+------------------+-------+------------+-----------------------------------------------------------+
+; Slack  ; Actual Width ; Required Width ; Type             ; Clock ; Clock Edge ; Target                                                    ;
++--------+--------------+----------------+------------------+-------+------------+-----------------------------------------------------------+
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; iorq_sync[0]                                              ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; iorq_sync[1]                                              ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; latched_id[0]                                             ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; latched_id[1]                                             ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; latched_id[2]                                             ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; latched_id[3]                                             ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_1       ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|arm_req                                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|dir_from_bus                            ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|int_pending                             ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|is_master                               ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[9]  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|m_state.state_bit_0                     ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|m_state.state_bit_1                     ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|m_state.state_bit_2                     ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[0]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[1]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[2]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[3]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[4]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[5]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[6]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|phys_addr_hi[7]                         ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|transfer_armed                          ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_dma:dma_unit|yielding                                ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|init_ptr[0]                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|init_ptr[1]                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|init_ptr[2]                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|init_ptr[3]                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|is_initializing                    ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[0]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[10]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[11]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[12]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[13]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[14]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[15]                 ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[1]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[2]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[3]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[4]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[5]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[6]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[7]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[8]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|page_ownership[9]                  ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|reset_armed                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|rom_enabled                        ;
+; 12.666 ; 16.666       ; 4.000          ; High Pulse Width ; mclk  ; Rise       ; zx50_mmu_sram:mmu_unit|sync_we                            ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; iorq_sync[0]                                              ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; iorq_sync[1]                                              ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; latched_id[0]                                             ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; latched_id[1]                                             ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; latched_id[2]                                             ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; latched_id[3]                                             ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_0       ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_bus_arbiter:arbiter_unit|bus_state.state_bit_1       ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|arm_req                                 ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|dir_from_bus                            ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|int_pending                             ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|is_master                               ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[0]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[1]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[2]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[3]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[4]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[5]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[6]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|dffs[7]    ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[0]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[10] ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[11] ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[1]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[2]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[3]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[4]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[5]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[6]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[7]  ;
+; 12.667 ; 16.667       ; 4.000          ; Low Pulse Width  ; mclk  ; Rise       ; zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|dffs[8]  ;
++--------+--------------+----------------+------------------+-------+------------+-----------------------------------------------------------+
+
+
++-----------------------------------------------------------------------------+
+; Setup Times                                                                 ;
++---------------+------------+--------+--------+------------+-----------------+
+; Data Port     ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++---------------+------------+--------+--------+------------+-----------------+
+; duplex_in[*]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  duplex_in[0] ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  duplex_in[1] ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  duplex_in[2] ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+;  duplex_in[3] ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+; l_data[*]     ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[0]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[1]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[2]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[3]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[4]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[5]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[6]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+;  l_data[7]    ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+; reset_n       ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+; sh_busy_n     ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+; sh_done_n     ; mclk       ; 12.000 ; 12.000 ; Rise       ; mclk            ;
+; sh_en_n       ; mclk       ; 7.000  ; 7.000  ; Rise       ; mclk            ;
+; sh_inc_n      ; mclk       ; 20.000 ; 20.000 ; Rise       ; mclk            ;
+; z80_addr[*]   ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[0]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[1]  ; mclk       ; 28.000 ; 28.000 ; Rise       ; mclk            ;
+;  z80_addr[2]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[3]  ; mclk       ; 28.000 ; 28.000 ; Rise       ; mclk            ;
+;  z80_addr[4]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[5]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[6]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[7]  ; mclk       ; 28.800 ; 28.800 ; Rise       ; mclk            ;
+;  z80_addr[8]  ; mclk       ; 12.000 ; 12.000 ; Rise       ; mclk            ;
+;  z80_addr[9]  ; mclk       ; 12.000 ; 12.000 ; Rise       ; mclk            ;
+;  z80_addr[10] ; mclk       ; 12.000 ; 12.000 ; Rise       ; mclk            ;
+;  z80_addr[11] ; mclk       ; 12.000 ; 12.000 ; Rise       ; mclk            ;
+;  z80_addr[12] ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+;  z80_addr[13] ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+;  z80_addr[14] ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+;  z80_addr[15] ; mclk       ; 17.400 ; 17.400 ; Rise       ; mclk            ;
+; z80_iei       ; mclk       ; 15.000 ; 15.000 ; Rise       ; mclk            ;
+; z80_m1_n      ; mclk       ; 15.000 ; 15.000 ; Rise       ; mclk            ;
++---------------+------------+--------+--------+------------+-----------------+
+
+
++-------------------------------------------------------------------------------+
+; Hold Times                                                                    ;
++---------------+------------+---------+---------+------------+-----------------+
+; Data Port     ; Clock Port ; Rise    ; Fall    ; Clock Edge ; Clock Reference ;
++---------------+------------+---------+---------+------------+-----------------+
+; duplex_in[*]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  duplex_in[0] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  duplex_in[1] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  duplex_in[2] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  duplex_in[3] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; l_data[*]     ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[0]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[1]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[2]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[3]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[4]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[5]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[6]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  l_data[7]    ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; reset_n       ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; sh_busy_n     ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; sh_done_n     ; mclk       ; -7.000  ; -7.000  ; Rise       ; mclk            ;
+; sh_en_n       ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; sh_inc_n      ; mclk       ; -7.000  ; -7.000  ; Rise       ; mclk            ;
+; z80_addr[*]   ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[0]  ; mclk       ; -10.800 ; -10.800 ; Rise       ; mclk            ;
+;  z80_addr[1]  ; mclk       ; -10.000 ; -10.000 ; Rise       ; mclk            ;
+;  z80_addr[2]  ; mclk       ; -10.800 ; -10.800 ; Rise       ; mclk            ;
+;  z80_addr[3]  ; mclk       ; -10.000 ; -10.000 ; Rise       ; mclk            ;
+;  z80_addr[4]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[5]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[6]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[7]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[8]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[9]  ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[10] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[11] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[12] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[13] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[14] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+;  z80_addr[15] ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; z80_iei       ; mclk       ; -2.000  ; -2.000  ; Rise       ; mclk            ;
+; z80_m1_n      ; mclk       ; -10.000 ; -10.000 ; Rise       ; mclk            ;
++---------------+------------+---------+---------+------------+-----------------+
+
+
++-----------------------------------------------------------------------------+
+; Clock to Output Times                                                       ;
++---------------+------------+--------+--------+------------+-----------------+
+; Data Port     ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++---------------+------------+--------+--------+------------+-----------------+
+; atl_addr[*]   ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_addr[0]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_addr[1]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_addr[2]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_addr[3]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+; atl_ce_n      ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; atl_data[*]   ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_data[0]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_data[1]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_data[2]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_data[3]  ; mclk       ; 26.800 ; 26.800 ; Rise       ; mclk            ;
+;  atl_data[4]  ; mclk       ; 21.800 ; 21.800 ; Rise       ; mclk            ;
+;  atl_data[5]  ; mclk       ; 21.800 ; 21.800 ; Rise       ; mclk            ;
+;  atl_data[6]  ; mclk       ; 21.800 ; 21.800 ; Rise       ; mclk            ;
+;  atl_data[7]  ; mclk       ; 21.800 ; 21.800 ; Rise       ; mclk            ;
+; atl_oe_n      ; mclk       ; 21.800 ; 21.800 ; Rise       ; mclk            ;
+; atl_we_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; l_addr[*]     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[0]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[1]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[2]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[3]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[4]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[5]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[6]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[7]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[8]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[9]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[10]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[11]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; l_data[*]     ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+;  l_data[0]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[1]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[2]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[3]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[4]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_data[5]    ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+;  l_data[7]    ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+; l_dir         ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+; ram_ce0_n     ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; ram_ce1_n     ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; ram_oe_n      ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; ram_we_n      ; mclk       ; 37.200 ; 37.200 ; Rise       ; mclk            ;
+; rom_ce_n      ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; sh_busy_n     ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; sh_c_dir      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_data_oe_n  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_done_n     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_en_n       ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_inc_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_rw_n       ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+; sh_stb_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; z80_data_oe_n ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; z80_ieo       ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; z80_int_n     ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+; z80_wait_n    ; mclk       ; 32.200 ; 32.200 ; Rise       ; mclk            ;
+; atl_we_n      ; mclk       ; 10.000 ; 10.000 ; Fall       ; mclk            ;
++---------------+------------+--------+--------+------------+-----------------+
+
+
++-----------------------------------------------------------------------------+
+; Minimum Clock to Output Times                                               ;
++---------------+------------+--------+--------+------------+-----------------+
+; Data Port     ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++---------------+------------+--------+--------+------------+-----------------+
+; atl_addr[*]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_addr[0]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_addr[1]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_addr[2]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_addr[3]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; atl_ce_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; atl_data[*]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[0]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[1]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[2]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[3]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[4]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[5]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[6]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  atl_data[7]  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; atl_oe_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; atl_we_n      ; mclk       ; 10.000 ; 10.000 ; Rise       ; mclk            ;
+; l_addr[*]     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[0]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[1]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[2]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[3]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[4]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[5]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[6]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[7]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[8]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[9]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[10]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_addr[11]   ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; l_data[*]     ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[0]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[1]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[2]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[3]    ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+;  l_data[4]    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+;  l_data[5]    ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+;  l_data[7]    ; mclk       ; 21.000 ; 21.000 ; Rise       ; mclk            ;
+; l_dir         ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; ram_ce0_n     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; ram_ce1_n     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; ram_oe_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; ram_we_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; rom_ce_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_busy_n     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_c_dir      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_data_oe_n  ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_done_n     ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_en_n       ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_inc_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; sh_rw_n       ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+; sh_stb_n      ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; z80_data_oe_n ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; z80_ieo       ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; z80_int_n     ; mclk       ; 5.000  ; 5.000  ; Rise       ; mclk            ;
+; z80_wait_n    ; mclk       ; 13.000 ; 13.000 ; Rise       ; mclk            ;
+; atl_we_n      ; mclk       ; 10.000 ; 10.000 ; Fall       ; mclk            ;
++---------------+------------+--------+--------+------------+-----------------+
+
+
++------------------------------------------------------------------+
+; Propagation Delay                                                ;
++--------------+---------------+--------+--------+--------+--------+
+; Input Port   ; Output Port   ; RR     ; RF     ; FR     ; FF     ;
++--------------+---------------+--------+--------+--------+--------+
+; atl_data[7]  ; ram_ce0_n     ;        ; 10.000 ; 10.000 ;        ;
+; atl_data[7]  ; ram_ce1_n     ; 10.000 ;        ;        ; 10.000 ;
+; duplex_in[0] ; l_dir         ; 10.000 ;        ;        ; 10.000 ;
+; duplex_in[0] ; ram_oe_n      ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[1] ; atl_addr[0]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[1] ; atl_addr[1]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[1] ; atl_addr[2]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[1] ; atl_addr[3]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[1] ; atl_ce_n      ; 29.200 ;        ;        ; 29.200 ;
+; duplex_in[1] ; atl_data[0]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[1] ; atl_data[1]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[1] ; atl_data[2]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[1] ; atl_data[3]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[1] ; atl_data[4]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[1] ; atl_data[5]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[1] ; atl_data[6]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[1] ; atl_data[7]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[1] ; atl_oe_n      ;        ; 18.800 ; 18.800 ;        ;
+; duplex_in[1] ; ram_ce0_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[1] ; ram_ce1_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[1] ; ram_oe_n      ;        ; 29.200 ; 29.200 ;        ;
+; duplex_in[1] ; ram_we_n      ;        ; 34.200 ; 34.200 ;        ;
+; duplex_in[1] ; rom_ce_n      ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[1] ; sh_busy_n     ;        ; 29.200 ; 29.200 ;        ;
+; duplex_in[1] ; z80_data_oe_n ; 29.200 ;        ;        ; 29.200 ;
+; duplex_in[1] ; z80_wait_n    ; 29.200 ;        ;        ; 29.200 ;
+; duplex_in[2] ; atl_ce_n      ; 20.400 ;        ;        ; 20.400 ;
+; duplex_in[2] ; ram_ce0_n     ;        ; 20.400 ; 20.400 ;        ;
+; duplex_in[2] ; ram_ce1_n     ;        ; 20.400 ; 20.400 ;        ;
+; duplex_in[2] ; ram_oe_n      ;        ; 20.400 ; 20.400 ;        ;
+; duplex_in[2] ; ram_we_n      ;        ; 25.400 ; 25.400 ;        ;
+; duplex_in[2] ; rom_ce_n      ;        ; 20.400 ; 20.400 ;        ;
+; duplex_in[2] ; sh_busy_n     ;        ; 20.400 ; 20.400 ;        ;
+; duplex_in[2] ; z80_data_oe_n ; 20.400 ;        ;        ; 20.400 ;
+; duplex_in[2] ; z80_wait_n    ; 20.400 ;        ;        ; 20.400 ;
+; duplex_in[3] ; atl_addr[0]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[3] ; atl_addr[1]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[3] ; atl_addr[2]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[3] ; atl_addr[3]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; duplex_in[3] ; atl_ce_n      ; 29.200 ;        ;        ; 29.200 ;
+; duplex_in[3] ; atl_data[0]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[3] ; atl_data[1]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[3] ; atl_data[2]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[3] ; atl_data[3]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; duplex_in[3] ; atl_data[4]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[3] ; atl_data[5]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[3] ; atl_data[6]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[3] ; atl_data[7]   ;        ; 25.300 ; 25.300 ;        ;
+; duplex_in[3] ; atl_oe_n      ;        ; 18.800 ; 18.800 ;        ;
+; duplex_in[3] ; l_data[0]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[1]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[2]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[3]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[4]     ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[3] ; l_data[5]     ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; l_data[6]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[7]     ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; l_dir         ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; ram_ce0_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[3] ; ram_ce1_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[3] ; ram_oe_n      ; 18.000 ; 29.200 ; 29.200 ; 18.000 ;
+; duplex_in[3] ; ram_we_n      ; 23.000 ; 34.200 ; 34.200 ; 23.000 ;
+; duplex_in[3] ; rom_ce_n      ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; duplex_in[3] ; sh_busy_n     ; 18.000 ; 29.200 ; 29.200 ; 18.000 ;
+; duplex_in[3] ; z80_data_oe_n ; 29.200 ; 18.000 ; 18.000 ; 29.200 ;
+; duplex_in[3] ; z80_wait_n    ; 29.200 ; 18.000 ; 18.000 ; 29.200 ;
+; l_data[0]    ; atl_data[0]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[1]    ; atl_data[1]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[2]    ; atl_data[2]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[3]    ; atl_data[3]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[4]    ; atl_data[4]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[5]    ; atl_data[5]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[6]    ; atl_data[6]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[7]    ; atl_data[7]   ; 10.000 ;        ;        ; 10.000 ;
+; reset_n      ; atl_ce_n      ;        ; 20.400 ; 20.400 ;        ;
+; reset_n      ; ram_ce0_n     ; 20.400 ;        ;        ; 20.400 ;
+; reset_n      ; ram_ce1_n     ; 20.400 ;        ;        ; 20.400 ;
+; reset_n      ; ram_oe_n      ; 20.400 ;        ;        ; 20.400 ;
+; reset_n      ; ram_we_n      ; 25.400 ;        ;        ; 25.400 ;
+; reset_n      ; rom_ce_n      ; 20.400 ;        ;        ; 20.400 ;
+; reset_n      ; sh_busy_n     ; 20.400 ;        ;        ; 20.400 ;
+; reset_n      ; z80_data_oe_n ;        ; 20.400 ; 20.400 ;        ;
+; reset_n      ; z80_wait_n    ;        ; 20.400 ; 20.400 ;        ;
+; sh_rw_n      ; l_dir         ;        ; 10.000 ; 10.000 ;        ;
+; sh_stb_n     ; ram_we_n      ;        ; 10.000 ; 10.000 ;        ;
+; sh_stb_n     ; rom_ce_n      ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[0]  ; atl_addr[0]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; atl_addr[1]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; atl_addr[2]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; atl_addr[3]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; atl_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; atl_data[0]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[1]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[2]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[3]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[4]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[5]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[6]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_data[7]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[0]  ; atl_oe_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; l_addr[0]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[0]  ; ram_ce0_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; ram_ce1_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; ram_oe_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; ram_we_n      ; 34.200 ; 34.200 ; 34.200 ; 34.200 ;
+; z80_addr[0]  ; rom_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; sh_busy_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; z80_data_oe_n ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[0]  ; z80_wait_n    ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[1]  ; atl_addr[0]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; atl_addr[1]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; atl_addr[2]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; atl_addr[3]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; atl_ce_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; atl_data[0]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[1]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[2]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[3]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[4]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[5]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[6]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_data[7]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[1]  ; atl_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; l_addr[1]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[1]  ; ram_ce0_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; ram_ce1_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; ram_oe_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; ram_we_n      ; 33.400 ; 33.400 ; 33.400 ; 33.400 ;
+; z80_addr[1]  ; rom_ce_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; sh_busy_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; z80_data_oe_n ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[1]  ; z80_wait_n    ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[2]  ; atl_addr[0]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; atl_addr[1]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; atl_addr[2]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; atl_addr[3]   ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; atl_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; atl_data[0]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[1]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[2]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[3]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[4]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[5]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[6]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_data[7]   ; 25.300 ; 25.300 ; 25.300 ; 25.300 ;
+; z80_addr[2]  ; atl_oe_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; l_addr[2]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[2]  ; ram_ce0_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; ram_ce1_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; ram_oe_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; ram_we_n      ; 34.200 ; 34.200 ; 34.200 ; 34.200 ;
+; z80_addr[2]  ; rom_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; sh_busy_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; z80_data_oe_n ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[2]  ; z80_wait_n    ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[3]  ; atl_addr[0]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; atl_addr[1]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; atl_addr[2]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; atl_addr[3]   ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; atl_ce_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; atl_data[0]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[1]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[2]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[3]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[4]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[5]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[6]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_data[7]   ; 24.500 ; 24.500 ; 24.500 ; 24.500 ;
+; z80_addr[3]  ; atl_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; l_addr[3]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[3]  ; ram_ce0_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; ram_ce1_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; ram_oe_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; ram_we_n      ; 33.400 ; 33.400 ; 33.400 ; 33.400 ;
+; z80_addr[3]  ; rom_ce_n      ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; sh_busy_n     ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; z80_data_oe_n ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[3]  ; z80_wait_n    ; 28.400 ; 28.400 ; 28.400 ; 28.400 ;
+; z80_addr[4]  ; atl_addr[0]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[4]  ; atl_addr[1]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[4]  ; atl_addr[2]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[4]  ; atl_addr[3]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[4]  ; atl_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; atl_data[0]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[4]  ; atl_data[1]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[4]  ; atl_data[2]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[4]  ; atl_data[3]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[4]  ; atl_data[4]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[4]  ; atl_data[5]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[4]  ; atl_data[6]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[4]  ; atl_data[7]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[4]  ; atl_oe_n      ; 18.800 ;        ;        ; 18.800 ;
+; z80_addr[4]  ; l_addr[4]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[4]  ; ram_ce0_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; ram_ce1_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; ram_oe_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; ram_we_n      ; 34.200 ; 34.200 ; 34.200 ; 34.200 ;
+; z80_addr[4]  ; rom_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; sh_busy_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; z80_data_oe_n ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[4]  ; z80_wait_n    ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; atl_addr[0]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[5]  ; atl_addr[1]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[5]  ; atl_addr[2]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[5]  ; atl_addr[3]   ; 18.800 ; 23.800 ; 23.800 ; 18.800 ;
+; z80_addr[5]  ; atl_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; atl_data[0]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[5]  ; atl_data[1]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[5]  ; atl_data[2]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[5]  ; atl_data[3]   ; 25.300 ; 23.800 ; 23.800 ; 25.300 ;
+; z80_addr[5]  ; atl_data[4]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[5]  ; atl_data[5]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[5]  ; atl_data[6]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[5]  ; atl_data[7]   ; 25.300 ;        ;        ; 25.300 ;
+; z80_addr[5]  ; atl_oe_n      ; 18.800 ;        ;        ; 18.800 ;
+; z80_addr[5]  ; l_addr[5]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[5]  ; ram_ce0_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; ram_ce1_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; ram_oe_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; ram_we_n      ; 34.200 ; 34.200 ; 34.200 ; 34.200 ;
+; z80_addr[5]  ; rom_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; sh_busy_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; z80_data_oe_n ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[5]  ; z80_wait_n    ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; atl_addr[0]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[6]  ; atl_addr[1]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[6]  ; atl_addr[2]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[6]  ; atl_addr[3]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[6]  ; atl_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; atl_data[0]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[6]  ; atl_data[1]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[6]  ; atl_data[2]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[6]  ; atl_data[3]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[6]  ; atl_data[4]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[6]  ; atl_data[5]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[6]  ; atl_data[6]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[6]  ; atl_data[7]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[6]  ; atl_oe_n      ;        ; 18.800 ; 18.800 ;        ;
+; z80_addr[6]  ; l_addr[6]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[6]  ; ram_ce0_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; ram_ce1_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; ram_oe_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; ram_we_n      ; 34.200 ; 34.200 ; 34.200 ; 34.200 ;
+; z80_addr[6]  ; rom_ce_n      ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; sh_busy_n     ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; z80_data_oe_n ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[6]  ; z80_wait_n    ; 29.200 ; 29.200 ; 29.200 ; 29.200 ;
+; z80_addr[7]  ; atl_addr[0]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[7]  ; atl_addr[1]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[7]  ; atl_addr[2]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[7]  ; atl_addr[3]   ; 23.800 ; 18.800 ; 18.800 ; 23.800 ;
+; z80_addr[7]  ; atl_ce_n      ; 29.200 ;        ;        ; 29.200 ;
+; z80_addr[7]  ; atl_data[0]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[7]  ; atl_data[1]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[7]  ; atl_data[2]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[7]  ; atl_data[3]   ; 23.800 ; 25.300 ; 25.300 ; 23.800 ;
+; z80_addr[7]  ; atl_data[4]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[7]  ; atl_data[5]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[7]  ; atl_data[6]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[7]  ; atl_data[7]   ;        ; 25.300 ; 25.300 ;        ;
+; z80_addr[7]  ; atl_oe_n      ;        ; 18.800 ; 18.800 ;        ;
+; z80_addr[7]  ; l_addr[7]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[7]  ; ram_ce0_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; z80_addr[7]  ; ram_ce1_n     ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; z80_addr[7]  ; ram_oe_n      ;        ; 29.200 ; 29.200 ;        ;
+; z80_addr[7]  ; ram_we_n      ;        ; 34.200 ; 34.200 ;        ;
+; z80_addr[7]  ; rom_ce_n      ; 23.800 ; 29.200 ; 29.200 ; 23.800 ;
+; z80_addr[7]  ; sh_busy_n     ;        ; 29.200 ; 29.200 ;        ;
+; z80_addr[7]  ; z80_data_oe_n ; 29.200 ;        ;        ; 29.200 ;
+; z80_addr[7]  ; z80_wait_n    ; 29.200 ;        ;        ; 29.200 ;
+; z80_addr[8]  ; atl_addr[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[8]  ; l_addr[8]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[9]  ; atl_addr[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[9]  ; l_addr[9]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[10] ; atl_addr[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[10] ; l_addr[10]    ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[11] ; atl_addr[3]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[11] ; l_addr[11]    ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; atl_addr[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; atl_ce_n      ; 18.800 ; 20.400 ; 20.400 ; 18.800 ;
+; z80_addr[12] ; atl_data[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; ram_ce0_n     ; 20.400 ; 18.800 ; 18.800 ; 20.400 ;
+; z80_addr[12] ; ram_ce1_n     ; 20.400 ; 18.800 ; 18.800 ; 20.400 ;
+; z80_addr[12] ; ram_oe_n      ; 20.400 ; 18.800 ; 18.800 ; 20.400 ;
+; z80_addr[12] ; ram_we_n      ; 25.400 ; 23.800 ; 23.800 ; 25.400 ;
+; z80_addr[12] ; rom_ce_n      ; 20.400 ; 18.800 ; 18.800 ; 20.400 ;
+; z80_addr[12] ; sh_busy_n     ; 20.400 ; 18.800 ; 18.800 ; 20.400 ;
+; z80_addr[12] ; z80_data_oe_n ; 18.800 ; 20.400 ; 20.400 ; 18.800 ;
+; z80_addr[12] ; z80_wait_n    ; 18.800 ; 20.400 ; 20.400 ; 18.800 ;
+; z80_addr[13] ; atl_addr[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[13] ; atl_ce_n      ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[13] ; atl_data[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[13] ; ram_ce0_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[13] ; ram_ce1_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[13] ; ram_oe_n      ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[13] ; ram_we_n      ; 24.600 ; 25.400 ; 25.400 ; 24.600 ;
+; z80_addr[13] ; rom_ce_n      ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[13] ; sh_busy_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[13] ; z80_data_oe_n ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[13] ; z80_wait_n    ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[14] ; atl_addr[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[14] ; atl_ce_n      ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[14] ; atl_data[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[14] ; ram_ce0_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[14] ; ram_ce1_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[14] ; ram_oe_n      ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[14] ; ram_we_n      ; 24.600 ; 25.400 ; 25.400 ; 24.600 ;
+; z80_addr[14] ; rom_ce_n      ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[14] ; sh_busy_n     ; 19.600 ; 20.400 ; 20.400 ; 19.600 ;
+; z80_addr[14] ; z80_data_oe_n ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[14] ; z80_wait_n    ; 20.400 ; 19.600 ; 19.600 ; 20.400 ;
+; z80_addr[15] ; atl_addr[3]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[15] ; atl_ce_n      ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; atl_data[0]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[1]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[2]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[3]   ; 10.000 ; 16.500 ; 16.500 ; 10.000 ;
+; z80_addr[15] ; atl_data[4]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[5]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[6]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[7]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_oe_n      ;        ; 10.000 ; 10.000 ;        ;
+; z80_addr[15] ; ram_ce0_n     ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; ram_ce1_n     ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; ram_oe_n      ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; ram_we_n      ; 25.400 ; 25.400 ; 25.400 ; 25.400 ;
+; z80_addr[15] ; rom_ce_n      ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; sh_busy_n     ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; z80_data_oe_n ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_addr[15] ; z80_wait_n    ; 20.400 ; 20.400 ; 20.400 ; 20.400 ;
+; z80_iei      ; l_data[0]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[1]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[2]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[3]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[4]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_iei      ; l_data[5]     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; l_data[6]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[7]     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; l_dir         ; 18.000 ;        ;        ; 18.000 ;
+; z80_iei      ; ram_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; ram_we_n      ;        ; 23.000 ; 23.000 ;        ;
+; z80_iei      ; sh_busy_n     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; z80_data_oe_n ; 18.000 ;        ;        ; 18.000 ;
+; z80_iei      ; z80_ieo       ; 10.000 ;        ;        ; 10.000 ;
+; z80_iei      ; z80_wait_n    ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_data[0]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[1]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[2]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[3]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[4]     ;        ; 10.000 ; 10.000 ;        ;
+; z80_m1_n     ; l_data[5]     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_data[6]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[7]     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_dir         ;        ; 18.000 ; 18.000 ;        ;
+; z80_m1_n     ; ram_oe_n      ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; ram_we_n      ; 23.000 ;        ;        ; 23.000 ;
+; z80_m1_n     ; sh_busy_n     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; z80_data_oe_n ;        ; 18.000 ; 18.000 ;        ;
+; z80_m1_n     ; z80_wait_n    ;        ; 18.000 ; 18.000 ;        ;
++--------------+---------------+--------+--------+--------+--------+
+
+
++------------------------------------------------------------------+
+; Minimum Propagation Delay                                        ;
++--------------+---------------+--------+--------+--------+--------+
+; Input Port   ; Output Port   ; RR     ; RF     ; FR     ; FF     ;
++--------------+---------------+--------+--------+--------+--------+
+; atl_data[7]  ; ram_ce0_n     ;        ; 10.000 ; 10.000 ;        ;
+; atl_data[7]  ; ram_ce1_n     ; 10.000 ;        ;        ; 10.000 ;
+; duplex_in[0] ; l_dir         ; 10.000 ;        ;        ; 10.000 ;
+; duplex_in[0] ; ram_oe_n      ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[1] ; atl_addr[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_addr[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_addr[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_addr[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_ce_n      ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[1] ; atl_data[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_data[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_data[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_data[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[1] ; atl_data[4]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[1] ; atl_data[5]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[1] ; atl_data[6]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[1] ; atl_data[7]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[1] ; atl_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[1] ; ram_ce0_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; duplex_in[1] ; ram_ce1_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; duplex_in[1] ; ram_oe_n      ;        ; 26.000 ; 26.000 ;        ;
+; duplex_in[1] ; ram_we_n      ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[1] ; rom_ce_n      ; 15.000 ; 26.000 ; 26.000 ; 15.000 ;
+; duplex_in[1] ; sh_busy_n     ;        ; 26.000 ; 26.000 ;        ;
+; duplex_in[1] ; z80_data_oe_n ; 26.000 ;        ;        ; 26.000 ;
+; duplex_in[1] ; z80_wait_n    ; 26.000 ;        ;        ; 26.000 ;
+; duplex_in[2] ; atl_ce_n      ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[2] ; ram_ce0_n     ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[2] ; ram_ce1_n     ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[2] ; ram_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[2] ; ram_we_n      ;        ; 23.000 ; 23.000 ;        ;
+; duplex_in[2] ; rom_ce_n      ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[2] ; sh_busy_n     ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[2] ; z80_data_oe_n ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[2] ; z80_wait_n    ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; atl_addr[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_addr[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_addr[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_addr[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_ce_n      ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; atl_data[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_data[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_data[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_data[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; duplex_in[3] ; atl_data[4]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; atl_data[5]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; atl_data[6]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; atl_data[7]   ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; atl_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; l_data[0]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[1]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[2]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[3]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[4]     ;        ; 10.000 ; 10.000 ;        ;
+; duplex_in[3] ; l_data[5]     ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; l_data[6]     ;        ; 16.500 ; 16.500 ;        ;
+; duplex_in[3] ; l_data[7]     ; 18.000 ;        ;        ; 18.000 ;
+; duplex_in[3] ; l_dir         ;        ; 18.000 ; 18.000 ;        ;
+; duplex_in[3] ; ram_ce0_n     ; 23.000 ; 20.400 ; 20.400 ; 23.000 ;
+; duplex_in[3] ; ram_ce1_n     ; 23.000 ; 20.400 ; 20.400 ; 23.000 ;
+; duplex_in[3] ; ram_oe_n      ; 18.000 ; 20.400 ; 20.400 ; 18.000 ;
+; duplex_in[3] ; ram_we_n      ; 23.000 ; 25.400 ; 25.400 ; 23.000 ;
+; duplex_in[3] ; rom_ce_n      ; 23.000 ; 20.400 ; 20.400 ; 23.000 ;
+; duplex_in[3] ; sh_busy_n     ; 18.000 ; 20.400 ; 20.400 ; 18.000 ;
+; duplex_in[3] ; z80_data_oe_n ; 20.400 ; 18.000 ; 18.000 ; 20.400 ;
+; duplex_in[3] ; z80_wait_n    ; 20.400 ; 18.000 ; 18.000 ; 20.400 ;
+; l_data[0]    ; atl_data[0]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[1]    ; atl_data[1]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[2]    ; atl_data[2]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[3]    ; atl_data[3]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[4]    ; atl_data[4]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[5]    ; atl_data[5]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[6]    ; atl_data[6]   ; 10.000 ;        ;        ; 10.000 ;
+; l_data[7]    ; atl_data[7]   ; 10.000 ;        ;        ; 10.000 ;
+; reset_n      ; atl_ce_n      ;        ; 18.000 ; 18.000 ;        ;
+; reset_n      ; ram_ce0_n     ; 18.000 ;        ;        ; 18.000 ;
+; reset_n      ; ram_ce1_n     ; 18.000 ;        ;        ; 18.000 ;
+; reset_n      ; ram_oe_n      ; 18.000 ;        ;        ; 18.000 ;
+; reset_n      ; ram_we_n      ; 23.000 ;        ;        ; 23.000 ;
+; reset_n      ; rom_ce_n      ; 18.000 ;        ;        ; 18.000 ;
+; reset_n      ; sh_busy_n     ; 18.000 ;        ;        ; 18.000 ;
+; reset_n      ; z80_data_oe_n ;        ; 18.000 ; 18.000 ;        ;
+; reset_n      ; z80_wait_n    ;        ; 18.000 ; 18.000 ;        ;
+; sh_rw_n      ; l_dir         ;        ; 10.000 ; 10.000 ;        ;
+; sh_stb_n     ; ram_we_n      ;        ; 10.000 ; 10.000 ;        ;
+; sh_stb_n     ; rom_ce_n      ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[0]  ; atl_addr[0]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_addr[1]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_addr[2]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_addr[3]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_ce_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[0]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[1]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[2]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[3]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[4]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[5]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[6]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_data[7]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; atl_oe_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[0]  ; l_addr[0]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[0]  ; ram_ce0_n     ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; ram_ce1_n     ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; ram_oe_n      ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[0]  ; ram_we_n      ; 31.800 ; 31.800 ; 31.800 ; 31.800 ;
+; z80_addr[0]  ; rom_ce_n      ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[0]  ; sh_busy_n     ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[0]  ; z80_data_oe_n ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[0]  ; z80_wait_n    ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[1]  ; atl_addr[0]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_addr[1]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_addr[2]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_addr[3]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_ce_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[0]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[1]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[2]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[3]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[4]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[5]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[6]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_data[7]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; atl_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[1]  ; l_addr[1]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[1]  ; ram_ce0_n     ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; ram_ce1_n     ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; ram_oe_n      ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[1]  ; ram_we_n      ; 31.000 ; 31.000 ; 31.000 ; 31.000 ;
+; z80_addr[1]  ; rom_ce_n      ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[1]  ; sh_busy_n     ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[1]  ; z80_data_oe_n ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[1]  ; z80_wait_n    ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[2]  ; atl_addr[0]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_addr[1]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_addr[2]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_addr[3]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_ce_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[0]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[1]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[2]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[3]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[4]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[5]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[6]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_data[7]   ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; atl_oe_n      ; 18.800 ; 18.800 ; 18.800 ; 18.800 ;
+; z80_addr[2]  ; l_addr[2]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[2]  ; ram_ce0_n     ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; ram_ce1_n     ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; ram_oe_n      ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[2]  ; ram_we_n      ; 31.800 ; 31.800 ; 31.800 ; 31.800 ;
+; z80_addr[2]  ; rom_ce_n      ; 23.800 ; 23.800 ; 23.800 ; 23.800 ;
+; z80_addr[2]  ; sh_busy_n     ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[2]  ; z80_data_oe_n ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[2]  ; z80_wait_n    ; 26.800 ; 26.800 ; 26.800 ; 26.800 ;
+; z80_addr[3]  ; atl_addr[0]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_addr[1]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_addr[2]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_addr[3]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_ce_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[0]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[1]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[2]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[3]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[4]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[5]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[6]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_data[7]   ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; atl_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[3]  ; l_addr[3]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[3]  ; ram_ce0_n     ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; ram_ce1_n     ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; ram_oe_n      ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[3]  ; ram_we_n      ; 31.000 ; 31.000 ; 31.000 ; 31.000 ;
+; z80_addr[3]  ; rom_ce_n      ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[3]  ; sh_busy_n     ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[3]  ; z80_data_oe_n ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[3]  ; z80_wait_n    ; 26.000 ; 26.000 ; 26.000 ; 26.000 ;
+; z80_addr[4]  ; atl_addr[0]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_addr[1]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_addr[2]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_addr[3]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_ce_n      ; 28.400 ; 18.000 ; 18.000 ; 28.400 ;
+; z80_addr[4]  ; atl_data[0]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_data[1]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_data[2]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_data[3]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[4]  ; atl_data[4]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[4]  ; atl_data[5]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[4]  ; atl_data[6]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[4]  ; atl_data[7]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[4]  ; atl_oe_n      ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[4]  ; l_addr[4]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[4]  ; ram_ce0_n     ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[4]  ; ram_ce1_n     ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[4]  ; ram_oe_n      ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[4]  ; ram_we_n      ; 31.000 ; 33.400 ; 33.400 ; 31.000 ;
+; z80_addr[4]  ; rom_ce_n      ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[4]  ; sh_busy_n     ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[4]  ; z80_data_oe_n ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[4]  ; z80_wait_n    ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[5]  ; atl_addr[0]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_addr[1]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_addr[2]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_addr[3]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_ce_n      ; 28.400 ; 18.000 ; 18.000 ; 28.400 ;
+; z80_addr[5]  ; atl_data[0]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_data[1]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_data[2]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_data[3]   ; 18.000 ; 23.000 ; 23.000 ; 18.000 ;
+; z80_addr[5]  ; atl_data[4]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[5]  ; atl_data[5]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[5]  ; atl_data[6]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[5]  ; atl_data[7]   ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[5]  ; atl_oe_n      ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[5]  ; l_addr[5]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[5]  ; ram_ce0_n     ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[5]  ; ram_ce1_n     ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[5]  ; ram_oe_n      ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[5]  ; ram_we_n      ; 31.000 ; 33.400 ; 33.400 ; 31.000 ;
+; z80_addr[5]  ; rom_ce_n      ; 26.000 ; 23.000 ; 23.000 ; 26.000 ;
+; z80_addr[5]  ; sh_busy_n     ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[5]  ; z80_data_oe_n ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[5]  ; z80_wait_n    ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[6]  ; atl_addr[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_addr[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_addr[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_addr[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_ce_n      ; 18.000 ; 28.400 ; 28.400 ; 18.000 ;
+; z80_addr[6]  ; atl_data[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_data[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_data[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_data[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[6]  ; atl_data[4]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[6]  ; atl_data[5]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[6]  ; atl_data[6]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[6]  ; atl_data[7]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[6]  ; atl_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[6]  ; l_addr[6]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[6]  ; ram_ce0_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[6]  ; ram_ce1_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[6]  ; ram_oe_n      ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[6]  ; ram_we_n      ; 33.400 ; 31.000 ; 31.000 ; 33.400 ;
+; z80_addr[6]  ; rom_ce_n      ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[6]  ; sh_busy_n     ; 28.400 ; 26.000 ; 26.000 ; 28.400 ;
+; z80_addr[6]  ; z80_data_oe_n ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[6]  ; z80_wait_n    ; 26.000 ; 28.400 ; 28.400 ; 26.000 ;
+; z80_addr[7]  ; atl_addr[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_addr[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_addr[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_addr[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_ce_n      ; 18.000 ;        ;        ; 18.000 ;
+; z80_addr[7]  ; atl_data[0]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_data[1]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_data[2]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_data[3]   ; 23.000 ; 18.000 ; 18.000 ; 23.000 ;
+; z80_addr[7]  ; atl_data[4]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[7]  ; atl_data[5]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[7]  ; atl_data[6]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[7]  ; atl_data[7]   ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[7]  ; atl_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; z80_addr[7]  ; l_addr[7]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[7]  ; ram_ce0_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[7]  ; ram_ce1_n     ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[7]  ; ram_oe_n      ;        ; 26.000 ; 26.000 ;        ;
+; z80_addr[7]  ; ram_we_n      ;        ; 31.000 ; 31.000 ;        ;
+; z80_addr[7]  ; rom_ce_n      ; 23.000 ; 26.000 ; 26.000 ; 23.000 ;
+; z80_addr[7]  ; sh_busy_n     ;        ; 26.000 ; 26.000 ;        ;
+; z80_addr[7]  ; z80_data_oe_n ; 26.000 ;        ;        ; 26.000 ;
+; z80_addr[7]  ; z80_wait_n    ; 26.000 ;        ;        ; 26.000 ;
+; z80_addr[8]  ; atl_addr[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[8]  ; l_addr[8]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[9]  ; atl_addr[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[9]  ; l_addr[9]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[10] ; atl_addr[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[10] ; l_addr[10]    ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[11] ; atl_addr[3]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[11] ; l_addr[11]    ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; atl_addr[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; atl_ce_n      ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[12] ; atl_data[0]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[12] ; ram_ce0_n     ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[12] ; ram_ce1_n     ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[12] ; ram_oe_n      ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[12] ; ram_we_n      ; 23.800 ; 23.000 ; 23.000 ; 23.800 ;
+; z80_addr[12] ; rom_ce_n      ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[12] ; sh_busy_n     ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[12] ; z80_data_oe_n ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[12] ; z80_wait_n    ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; atl_addr[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[13] ; atl_ce_n      ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[13] ; atl_data[1]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[13] ; ram_ce0_n     ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; ram_ce1_n     ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; ram_oe_n      ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; ram_we_n      ; 23.000 ; 23.800 ; 23.800 ; 23.000 ;
+; z80_addr[13] ; rom_ce_n      ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; sh_busy_n     ; 18.000 ; 18.800 ; 18.800 ; 18.000 ;
+; z80_addr[13] ; z80_data_oe_n ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[13] ; z80_wait_n    ; 18.800 ; 18.000 ; 18.000 ; 18.800 ;
+; z80_addr[14] ; atl_addr[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[14] ; atl_ce_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; atl_data[2]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[14] ; ram_ce0_n     ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; ram_ce1_n     ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; ram_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; ram_we_n      ; 23.000 ; 23.000 ; 23.000 ; 23.000 ;
+; z80_addr[14] ; rom_ce_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; sh_busy_n     ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; z80_data_oe_n ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[14] ; z80_wait_n    ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[15] ; atl_addr[3]   ; 10.000 ;        ;        ; 10.000 ;
+; z80_addr[15] ; atl_ce_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[15] ; atl_data[0]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[1]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[2]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[3]   ; 10.000 ; 16.500 ; 16.500 ; 10.000 ;
+; z80_addr[15] ; atl_data[4]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[5]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[6]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_data[7]   ;        ; 16.500 ; 16.500 ;        ;
+; z80_addr[15] ; atl_oe_n      ;        ; 10.000 ; 10.000 ;        ;
+; z80_addr[15] ; ram_ce0_n     ; 15.000 ; 18.000 ; 18.000 ; 15.000 ;
+; z80_addr[15] ; ram_ce1_n     ; 15.000 ; 18.000 ; 18.000 ; 15.000 ;
+; z80_addr[15] ; ram_oe_n      ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[15] ; ram_we_n      ; 15.000 ; 23.000 ; 23.000 ; 15.000 ;
+; z80_addr[15] ; rom_ce_n      ; 18.000 ; 10.000 ; 10.000 ; 18.000 ;
+; z80_addr[15] ; sh_busy_n     ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[15] ; z80_data_oe_n ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_addr[15] ; z80_wait_n    ; 18.000 ; 18.000 ; 18.000 ; 18.000 ;
+; z80_iei      ; l_data[0]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[1]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[2]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[3]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[4]     ; 10.000 ;        ;        ; 10.000 ;
+; z80_iei      ; l_data[5]     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; l_data[6]     ; 16.500 ;        ;        ; 16.500 ;
+; z80_iei      ; l_data[7]     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; l_dir         ; 18.000 ;        ;        ; 18.000 ;
+; z80_iei      ; ram_oe_n      ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; ram_we_n      ;        ; 23.000 ; 23.000 ;        ;
+; z80_iei      ; sh_busy_n     ;        ; 18.000 ; 18.000 ;        ;
+; z80_iei      ; z80_data_oe_n ; 18.000 ;        ;        ; 18.000 ;
+; z80_iei      ; z80_ieo       ; 10.000 ;        ;        ; 10.000 ;
+; z80_iei      ; z80_wait_n    ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_data[0]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[1]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[2]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[3]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[4]     ;        ; 10.000 ; 10.000 ;        ;
+; z80_m1_n     ; l_data[5]     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_data[6]     ;        ; 16.500 ; 16.500 ;        ;
+; z80_m1_n     ; l_data[7]     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; l_dir         ;        ; 18.000 ; 18.000 ;        ;
+; z80_m1_n     ; ram_oe_n      ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; ram_we_n      ; 23.000 ;        ;        ; 23.000 ;
+; z80_m1_n     ; sh_busy_n     ; 18.000 ;        ;        ; 18.000 ;
+; z80_m1_n     ; z80_data_oe_n ;        ; 18.000 ; 18.000 ;        ;
+; z80_m1_n     ; z80_wait_n    ;        ; 18.000 ; 18.000 ;        ;
++--------------+---------------+--------+--------+--------+--------+
+
+
++--------------------------------------------------------------------------+
+; Output Enable Times                                                      ;
++--------------+------------+--------+------+------------+-----------------+
+; Data Port    ; Clock Port ; Rise   ; Fall ; Clock Edge ; Clock Reference ;
++--------------+------------+--------+------+------------+-----------------+
+; atl_data[*]  ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[0] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[1] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[2] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[3] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[4] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[5] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[6] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+;  atl_data[7] ; mclk       ; 28.300 ;      ; Rise       ; mclk            ;
+; l_data[*]    ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[0]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[1]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[2]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[3]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[6]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+; sh_rw_n      ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+; sh_stb_n     ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
++--------------+------------+--------+------+------------+-----------------+
+
+
++--------------------------------------------------------------------------+
+; Minimum Output Enable Times                                              ;
++--------------+------------+--------+------+------------+-----------------+
+; Data Port    ; Clock Port ; Rise   ; Fall ; Clock Edge ; Clock Reference ;
++--------------+------------+--------+------+------------+-----------------+
+; atl_data[*]  ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[0] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[1] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[2] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[3] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[4] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[5] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[6] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  atl_data[7] ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+; l_data[*]    ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[0]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[1]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[2]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[3]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+;  l_data[6]   ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+; sh_rw_n      ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
+; sh_stb_n     ; mclk       ; 19.500 ;      ; Rise       ; mclk            ;
++--------------+------------+--------+------+------------+-----------------+
+
+
++----------------------------------------------------------------------------------+
+; Output Disable Times                                                             ;
++--------------+------------+-----------+-----------+------------+-----------------+
+; Data Port    ; Clock Port ; 0 to Hi-Z ; 1 to Hi-Z ; Clock Edge ; Clock Reference ;
++--------------+------------+-----------+-----------+------------+-----------------+
+; atl_data[*]  ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[0] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[1] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[2] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[3] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[4] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[5] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[6] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+;  atl_data[7] ; mclk       ; 28.300    ;           ; Rise       ; mclk            ;
+; l_data[*]    ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[0]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[1]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[2]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[3]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[6]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+; sh_rw_n      ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+; sh_stb_n     ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
++--------------+------------+-----------+-----------+------------+-----------------+
+
+
++----------------------------------------------------------------------------------+
+; Minimum Output Disable Times                                                     ;
++--------------+------------+-----------+-----------+------------+-----------------+
+; Data Port    ; Clock Port ; 0 to Hi-Z ; 1 to Hi-Z ; Clock Edge ; Clock Reference ;
++--------------+------------+-----------+-----------+------------+-----------------+
+; atl_data[*]  ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[0] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[1] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[2] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[3] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[4] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[5] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[6] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  atl_data[7] ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+; l_data[*]    ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[0]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[1]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[2]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[3]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+;  l_data[6]   ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+; sh_rw_n      ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
+; sh_stb_n     ; mclk       ; 19.500    ;           ; Rise       ; mclk            ;
++--------------+------------+-----------+-----------+------------+-----------------+
+
+
++-------------------------------------------------------------------+
+; Setup Transfers                                                   ;
++------------+----------+----------+----------+----------+----------+
+; From Clock ; To Clock ; RR Paths ; FR Paths ; RF Paths ; FF Paths ;
++------------+----------+----------+----------+----------+----------+
+; mclk       ; mclk     ; 3358     ; 0        ; 0        ; 0        ;
++------------+----------+----------+----------+----------+----------+
+Entries labeled "false path" only account for clock-to-clock false paths and not path-based false paths. As a result, actual path counts may be lower than reported.
+
+
++-------------------------------------------------------------------+
+; Hold Transfers                                                    ;
++------------+----------+----------+----------+----------+----------+
+; From Clock ; To Clock ; RR Paths ; FR Paths ; RF Paths ; FF Paths ;
++------------+----------+----------+----------+----------+----------+
+; mclk       ; mclk     ; 3358     ; 0        ; 0        ; 0        ;
++------------+----------+----------+----------+----------+----------+
+Entries labeled "false path" only account for clock-to-clock false paths and not path-based false paths. As a result, actual path counts may be lower than reported.
+
+
+---------------
+; Report TCCS ;
+---------------
+No dedicated SERDES Transmitter circuitry present in device or used in design
+
+
+---------------
+; Report RSKM ;
+---------------
+No dedicated SERDES Receiver circuitry present in device or used in design
+
+
++------------------------------------------------+
+; Unconstrained Paths                            ;
++---------------------------------+-------+------+
+; Property                        ; Setup ; Hold ;
++---------------------------------+-------+------+
+; Illegal Clocks                  ; 0     ; 0    ;
+; Unconstrained Clocks            ; 0     ; 0    ;
+; Unconstrained Input Ports       ; 39    ; 39   ;
+; Unconstrained Input Port Paths  ; 1123  ; 1123 ;
+; Unconstrained Output Ports      ; 53    ; 53   ;
+; Unconstrained Output Port Paths ; 818   ; 818  ;
++---------------------------------+-------+------+
+
+
++------------------------------------+
+; TimeQuest Timing Analyzer Messages ;
++------------------------------------+
+Info: *******************************************************************
+Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
+    Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+    Info: Processing started: Sat Mar 21 02:36:19 2026
+Info: Command: quartus_sta zx50_cpld -c zx50_cpld_core
+Info: qsta_default_script.tcl version: #1
+Warning (20028): Parallel compilation is not licensed and has been disabled
+Info (306004): Started post-fitting delay annotation
+Info (306005): Delay annotation completed successfully
+Warning (335095): TimeQuest Timing Analyzer does not support the analysis of latches as synchronous elements for the currently selected device family.
+Info (332104): Reading SDC File: 'zx50_cpld_core.sdc'
+Info: Found TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
+Info (332146): Worst-case setup slack is 1.533
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):     1.533         0.000 mclk 
+Info (332146): Worst-case hold slack is 5.000
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):     5.000         0.000 mclk 
+Info (332140): No Recovery paths to report
+Info (332140): No Removal paths to report
+Info (332146): Worst-case minimum pulse width slack is 12.666
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):    12.666         0.000 mclk 
+Info (332001): The selected device family is not supported by the report_metastability command.
+Info (332102): Design is not fully constrained for setup requirements
+Info (332102): Design is not fully constrained for hold requirements
+Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
+    Info: Peak virtual memory: 466 megabytes
+    Info: Processing ended: Sat Mar 21 02:36:19 2026
+    Info: Elapsed time: 00:00:00
+    Info: Total CPU time (on all processors): 00:00:01
+
+

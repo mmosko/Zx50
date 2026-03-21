@@ -1,0 +1,389 @@
+Analysis & Synthesis report for zx50_cpld_core
+Sat Mar 21 02:36:08 2026
+Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Analysis & Synthesis Summary
+  3. Analysis & Synthesis Settings
+  4. Parallel Compilation
+  5. Analysis & Synthesis Source Files Read
+  6. Analysis & Synthesis Resource Usage Summary
+  7. Analysis & Synthesis Resource Utilization by Entity
+  8. State Machine - |zx50_cpld_core|zx50_dma:dma_unit|m_state
+  9. State Machine - |zx50_cpld_core|zx50_bus_arbiter:arbiter_unit|bus_state
+ 10. Registers Removed During Synthesis
+ 11. Parameter Settings for Inferred Entity Instance: zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0
+ 12. Parameter Settings for Inferred Entity Instance: zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0
+ 13. Port Connectivity Checks: "zx50_dma:dma_unit"
+ 14. Port Connectivity Checks: "zx50_mmu_sram:mmu_unit"
+ 15. Port Connectivity Checks: "zx50_bus_arbiter:arbiter_unit"
+ 16. Analysis & Synthesis Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 1991-2013 Altera Corporation
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, Altera MegaCore Function License 
+Agreement, or other applicable license agreement, including, 
+without limitation, that your use is for the sole purpose of 
+programming logic devices manufactured by Altera and sold by 
+Altera or its authorized distributors.  Please refer to the 
+applicable agreement for further details.
+
+
+
++-------------------------------------------------------------------------------+
+; Analysis & Synthesis Summary                                                  ;
++-----------------------------+-------------------------------------------------+
+; Analysis & Synthesis Status ; Successful - Sat Mar 21 02:36:08 2026           ;
+; Quartus II 64-Bit Version   ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
+; Revision Name               ; zx50_cpld_core                                  ;
+; Top-level Entity Name       ; zx50_cpld_core                                  ;
+; Family                      ; MAX7000S                                        ;
+; Total macrocells            ; 128                                             ;
+; Total pins                  ; 77                                              ;
++-----------------------------+-------------------------------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Settings                                                                                  ;
++----------------------------------------------------------------------------+------------------+----------------+
+; Option                                                                     ; Setting          ; Default Value  ;
++----------------------------------------------------------------------------+------------------+----------------+
+; Device                                                                     ; EPM7128STC100-10 ;                ;
+; Top-level entity name                                                      ; zx50_cpld_core   ; zx50_cpld_core ;
+; Family name                                                                ; MAX7000S         ; Cyclone IV GX  ;
+; Ignore CARRY Buffers                                                       ; On               ; Off            ;
+; Ignore CASCADE Buffers                                                     ; On               ; Off            ;
+; Optimization Technique                                                     ; Area             ; Speed          ;
+; Use smart compilation                                                      ; Off              ; Off            ;
+; Enable parallel Assembler and TimeQuest Timing Analyzer during compilation ; On               ; On             ;
+; Enable compact report table                                                ; Off              ; Off            ;
+; Create Debugging Nodes for IP Cores                                        ; Off              ; Off            ;
+; Preserve fewer node names                                                  ; On               ; On             ;
+; Disable OpenCore Plus hardware evaluation                                  ; Off              ; Off            ;
+; Verilog Version                                                            ; Verilog_2001     ; Verilog_2001   ;
+; VHDL Version                                                               ; VHDL_1993        ; VHDL_1993      ;
+; State Machine Processing                                                   ; Auto             ; Auto           ;
+; Safe State Machine                                                         ; Off              ; Off            ;
+; Extract Verilog State Machines                                             ; On               ; On             ;
+; Extract VHDL State Machines                                                ; On               ; On             ;
+; Ignore Verilog initial constructs                                          ; Off              ; Off            ;
+; Iteration limit for constant Verilog loops                                 ; 5000             ; 5000           ;
+; Iteration limit for non-constant Verilog loops                             ; 250              ; 250            ;
+; Add Pass-Through Logic to Inferred RAMs                                    ; On               ; On             ;
+; Infer RAMs from Raw Logic                                                  ; On               ; On             ;
+; Parallel Synthesis                                                         ; On               ; On             ;
+; NOT Gate Push-Back                                                         ; On               ; On             ;
+; Power-Up Don't Care                                                        ; On               ; On             ;
+; Remove Duplicate Registers                                                 ; On               ; On             ;
+; Ignore GLOBAL Buffers                                                      ; Off              ; Off            ;
+; Ignore ROW GLOBAL Buffers                                                  ; Off              ; Off            ;
+; Ignore LCELL Buffers                                                       ; Auto             ; Auto           ;
+; Ignore SOFT Buffers                                                        ; Off              ; Off            ;
+; Limit AHDL Integers to 32 Bits                                             ; Off              ; Off            ;
+; Allow XOR Gate Usage                                                       ; On               ; On             ;
+; Auto Logic Cell Insertion                                                  ; On               ; On             ;
+; Parallel Expander Chain Length                                             ; 4                ; 4              ;
+; Auto Parallel Expanders                                                    ; On               ; On             ;
+; Auto Open-Drain Pins                                                       ; On               ; On             ;
+; Auto Resource Sharing                                                      ; Off              ; Off            ;
+; Maximum Fan-in Per Macrocell                                               ; 100              ; 100            ;
+; Use LogicLock Constraints during Resource Balancing                        ; On               ; On             ;
+; Ignore translate_off and synthesis_off directives                          ; Off              ; Off            ;
+; Report Parameter Settings                                                  ; On               ; On             ;
+; Report Source Assignments                                                  ; On               ; On             ;
+; Report Connectivity Checks                                                 ; On               ; On             ;
+; HDL message level                                                          ; Level2           ; Level2         ;
+; Suppress Register Optimization Related Messages                            ; Off              ; Off            ;
+; Number of Removed Registers Reported in Synthesis Report                   ; 5000             ; 5000           ;
+; Number of Swept Nodes Reported in Synthesis Report                         ; 5000             ; 5000           ;
+; Number of Inverted Registers Reported in Synthesis Report                  ; 100              ; 100            ;
+; Block Design Naming                                                        ; Auto             ; Auto           ;
+; Synthesis Effort                                                           ; Auto             ; Auto           ;
+; Shift Register Replacement - Allow Asynchronous Clear Signal               ; On               ; On             ;
+; Pre-Mapping Resynthesis Optimization                                       ; Off              ; Off            ;
+; Analysis & Synthesis Message Level                                         ; Medium           ; Medium         ;
+; Disable Register Merging Across Hierarchies                                ; Auto             ; Auto           ;
+; Synthesis Seed                                                             ; 1                ; 1              ;
++----------------------------------------------------------------------------+------------------+----------------+
+
+
+Parallel compilation was disabled, but you have multiple processors available. Enable parallel compilation to reduce compilation time.
++-------------------------------------+
+; Parallel Compilation                ;
++----------------------------+--------+
+; Processors                 ; Number ;
++----------------------------+--------+
+; Number detected on machine ; 4      ;
+; Maximum allowed            ; 1      ;
++----------------------------+--------+
+
+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Source Files Read                                                                                                                                    ;
++---------------------------------------------+-----------------+------------------------+------------------------------------------------------------------------+---------+
+; File Name with User-Entered Path            ; Used in Netlist ; File Type              ; File Name with Absolute Path                                           ; Library ;
++---------------------------------------------+-----------------+------------------------+------------------------------------------------------------------------+---------+
+; ../../git/Zx50/model/src/zx50_bus_arbiter.v ; yes             ; User Verilog HDL File  ; /home/marc/git/Zx50/model/src/zx50_bus_arbiter.v                       ;         ;
+; ../../git/Zx50/model/src/zx50_cpld_core.v   ; yes             ; User Verilog HDL File  ; /home/marc/git/Zx50/model/src/zx50_cpld_core.v                         ;         ;
+; ../../git/Zx50/model/src/zx50_dma.v         ; yes             ; User Verilog HDL File  ; /home/marc/git/Zx50/model/src/zx50_dma.v                               ;         ;
+; ../../git/Zx50/model/src/zx50_mmu_sram.v    ; yes             ; User Verilog HDL File  ; /home/marc/git/Zx50/model/src/zx50_mmu_sram.v                          ;         ;
+; lpm_counter.tdf                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_counter.tdf         ;         ;
+; lpm_constant.inc                            ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_constant.inc        ;         ;
+; lpm_decode.inc                              ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_decode.inc          ;         ;
+; lpm_add_sub.inc                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_add_sub.inc         ;         ;
+; cmpconst.inc                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/cmpconst.inc            ;         ;
+; lpm_compare.inc                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_compare.inc         ;         ;
+; lpm_counter.inc                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_counter.inc         ;         ;
+; dffeea.inc                                  ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/dffeea.inc              ;         ;
+; alt_counter_stratix.inc                     ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/alt_counter_stratix.inc ;         ;
+; aglobal130.inc                              ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/aglobal130.inc          ;         ;
+; lpm_add_sub.tdf                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_add_sub.tdf         ;         ;
+; addcore.inc                                 ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/addcore.inc             ;         ;
+; look_add.inc                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/look_add.inc            ;         ;
+; bypassff.inc                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/bypassff.inc            ;         ;
+; altshift.inc                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/altshift.inc            ;         ;
+; alt_stratix_add_sub.inc                     ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/alt_stratix_add_sub.inc ;         ;
+; addcore.tdf                                 ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/addcore.tdf             ;         ;
+; a_csnbuffer.inc                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/a_csnbuffer.inc         ;         ;
+; a_csnbuffer.tdf                             ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/a_csnbuffer.tdf         ;         ;
+; look_add.tdf                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/look_add.tdf            ;         ;
+; altshift.tdf                                ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/altshift.tdf            ;         ;
+; lpm_constant.tdf                            ; yes             ; Megafunction           ; /opt/quartus13/quartus/libraries/megafunctions/lpm_constant.tdf        ;         ;
++---------------------------------------------+-----------------+------------------------+------------------------------------------------------------------------+---------+
+
+
++---------------------------------------------+
+; Analysis & Synthesis Resource Usage Summary ;
++----------------------+----------------------+
+; Resource             ; Usage                ;
++----------------------+----------------------+
+; Logic cells          ; 128                  ;
+; Total registers      ; 69                   ;
+; I/O pins             ; 77                   ;
+; Shareable expanders  ; 25                   ;
+; Parallel expanders   ; 6                    ;
+; Maximum fan-out node ; reset_n              ;
+; Maximum fan-out      ; 76                   ;
+; Total fan-out        ; 1242                 ;
+; Average fan-out      ; 5.40                 ;
++----------------------+----------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Resource Utilization by Entity                                                                                          ;
++----------------------------------------+------------+------+------------------------------------------------------------------+--------------+
+; Compilation Hierarchy Node             ; Macrocells ; Pins ; Full Hierarchy Name                                              ; Library Name ;
++----------------------------------------+------------+------+------------------------------------------------------------------+--------------+
+; |zx50_cpld_core                        ; 128        ; 77   ; |zx50_cpld_core                                                  ; work         ;
+;    |zx50_bus_arbiter:arbiter_unit|     ; 3          ; 0    ; |zx50_cpld_core|zx50_bus_arbiter:arbiter_unit                    ; work         ;
+;    |zx50_dma:dma_unit|                 ; 44         ; 0    ; |zx50_cpld_core|zx50_dma:dma_unit                                ; work         ;
+;       |lpm_counter:byte_count_rtl_0|   ; 8          ; 0    ; |zx50_cpld_core|zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0   ; work         ;
+;       |lpm_counter:phys_addr_lo_rtl_0| ; 12         ; 0    ; |zx50_cpld_core|zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0 ; work         ;
+;    |zx50_mmu_sram:mmu_unit|            ; 29         ; 0    ; |zx50_cpld_core|zx50_mmu_sram:mmu_unit                           ; work         ;
++----------------------------------------+------------+------+------------------------------------------------------------------+--------------+
+
+
+Encoding Type:  Minimal Bits
++------------------------------------------------------------------------------------+
+; State Machine - |zx50_cpld_core|zx50_dma:dma_unit|m_state                          ;
++------------------+---------------------+---------------------+---------------------+
+; Name             ; m_state.state_bit_2 ; m_state.state_bit_1 ; m_state.state_bit_0 ;
++------------------+---------------------+---------------------+---------------------+
+; m_state.M_IDLE   ; 0                   ; 0                   ; 0                   ;
+; m_state.M_START  ; 0                   ; 0                   ; 1                   ;
+; m_state.M_STROBE ; 0                   ; 1                   ; 0                   ;
+; m_state.M_INC    ; 1                   ; 0                   ; 1                   ;
+; m_state.M_WAIT   ; 1                   ; 1                   ; 0                   ;
+; m_state.M_DONE   ; 0                   ; 1                   ; 1                   ;
++------------------+---------------------+---------------------+---------------------+
+
+
+Encoding Type:  Minimal Bits
++-------------------------------------------------------------------------+
+; State Machine - |zx50_cpld_core|zx50_bus_arbiter:arbiter_unit|bus_state ;
++----------------------+-----------------------+--------------------------+
+; Name                 ; bus_state.state_bit_1 ; bus_state.state_bit_0    ;
++----------------------+-----------------------+--------------------------+
+; bus_state.BUS_Z80    ; 0                     ; 0                        ;
+; bus_state.BUS_DEAD_1 ; 0                     ; 1                        ;
+; bus_state.BUS_SHADOW ; 1                     ; 0                        ;
+; bus_state.BUS_DEAD_2 ; 1                     ; 1                        ;
++----------------------+-----------------------+--------------------------+
+
+
++------------------------------------------------------------+
+; Registers Removed During Synthesis                         ;
++---------------------------------------+--------------------+
+; Register name                         ; Reason for Removal ;
++---------------------------------------+--------------------+
+; zx50_dma:dma_unit|m_state~1           ; Lost fanout        ;
+; zx50_dma:dma_unit|m_state~2           ; Lost fanout        ;
+; Total Number of Removed Registers = 2 ;                    ;
++---------------------------------------+--------------------+
+
+
++---------------------------------------------------------------------------------------------------+
+; Parameter Settings for Inferred Entity Instance: zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0 ;
++------------------------+-------------------+------------------------------------------------------+
+; Parameter Name         ; Value             ; Type                                                 ;
++------------------------+-------------------+------------------------------------------------------+
+; AUTO_CARRY_CHAINS      ; OFF               ; AUTO_CARRY                                           ;
+; IGNORE_CARRY_BUFFERS   ; ON                ; IGNORE_CARRY                                         ;
+; AUTO_CASCADE_CHAINS    ; ON                ; AUTO_CASCADE                                         ;
+; IGNORE_CASCADE_BUFFERS ; ON                ; IGNORE_CASCADE                                       ;
+; LPM_WIDTH              ; 12                ; Untyped                                              ;
+; LPM_DIRECTION          ; UP                ; Untyped                                              ;
+; LPM_MODULUS            ; 0                 ; Untyped                                              ;
+; LPM_AVALUE             ; UNUSED            ; Untyped                                              ;
+; LPM_SVALUE             ; UNUSED            ; Untyped                                              ;
+; LPM_PORT_UPDOWN        ; PORT_CONNECTIVITY ; Untyped                                              ;
+; DEVICE_FAMILY          ; MAX7000S          ; Untyped                                              ;
+; CARRY_CHAIN            ; IGNORE            ; Untyped                                              ;
+; CARRY_CHAIN_LENGTH     ; 48                ; CARRY_CHAIN_LENGTH                                   ;
+; NOT_GATE_PUSH_BACK     ; ON                ; NOT_GATE_PUSH_BACK                                   ;
+; CARRY_CNT_EN           ; SMART             ; Untyped                                              ;
+; LABWIDE_SCLR           ; ON                ; Untyped                                              ;
+; USE_NEW_VERSION        ; TRUE              ; Untyped                                              ;
+; CBXI_PARAMETER         ; NOTHING           ; Untyped                                              ;
++------------------------+-------------------+------------------------------------------------------+
+Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
+
+
++-------------------------------------------------------------------------------------------------+
+; Parameter Settings for Inferred Entity Instance: zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0 ;
++------------------------+-------------------+----------------------------------------------------+
+; Parameter Name         ; Value             ; Type                                               ;
++------------------------+-------------------+----------------------------------------------------+
+; AUTO_CARRY_CHAINS      ; OFF               ; AUTO_CARRY                                         ;
+; IGNORE_CARRY_BUFFERS   ; ON                ; IGNORE_CARRY                                       ;
+; AUTO_CASCADE_CHAINS    ; ON                ; AUTO_CASCADE                                       ;
+; IGNORE_CASCADE_BUFFERS ; ON                ; IGNORE_CASCADE                                     ;
+; LPM_WIDTH              ; 8                 ; Untyped                                            ;
+; LPM_DIRECTION          ; DOWN              ; Untyped                                            ;
+; LPM_MODULUS            ; 0                 ; Untyped                                            ;
+; LPM_AVALUE             ; UNUSED            ; Untyped                                            ;
+; LPM_SVALUE             ; UNUSED            ; Untyped                                            ;
+; LPM_PORT_UPDOWN        ; PORT_CONNECTIVITY ; Untyped                                            ;
+; DEVICE_FAMILY          ; MAX7000S          ; Untyped                                            ;
+; CARRY_CHAIN            ; IGNORE            ; Untyped                                            ;
+; CARRY_CHAIN_LENGTH     ; 48                ; CARRY_CHAIN_LENGTH                                 ;
+; NOT_GATE_PUSH_BACK     ; ON                ; NOT_GATE_PUSH_BACK                                 ;
+; CARRY_CNT_EN           ; SMART             ; Untyped                                            ;
+; LABWIDE_SCLR           ; ON                ; Untyped                                            ;
+; USE_NEW_VERSION        ; TRUE              ; Untyped                                            ;
+; CBXI_PARAMETER         ; NOTHING           ; Untyped                                            ;
++------------------------+-------------------+----------------------------------------------------+
+Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
+
+
++--------------------------------------------------------------------------------------------------------------------------+
+; Port Connectivity Checks: "zx50_dma:dma_unit"                                                                            ;
++----------------+--------+----------+-------------------------------------------------------------------------------------+
+; Port           ; Type   ; Severity ; Details                                                                             ;
++----------------+--------+----------+-------------------------------------------------------------------------------------+
+; dma_dir_to_bus ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
+; dma_is_master  ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
++----------------+--------+----------+-------------------------------------------------------------------------------------+
+
+
++------------------------------------------------------------------------------------------------------------------+
+; Port Connectivity Checks: "zx50_mmu_sram:mmu_unit"                                                               ;
++--------+--------+----------+-------------------------------------------------------------------------------------+
+; Port   ; Type   ; Severity ; Details                                                                             ;
++--------+--------+----------+-------------------------------------------------------------------------------------+
+; active ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
++--------+--------+----------+-------------------------------------------------------------------------------------+
+
+
++---------------------------------------------------------------------------------------------------------------------+
+; Port Connectivity Checks: "zx50_bus_arbiter:arbiter_unit"                                                           ;
++-----------+--------+----------+-------------------------------------------------------------------------------------+
+; Port      ; Type   ; Severity ; Details                                                                             ;
++-----------+--------+----------+-------------------------------------------------------------------------------------+
+; sh_busy_n ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
++-----------+--------+----------+-------------------------------------------------------------------------------------+
+
+
++-------------------------------+
+; Analysis & Synthesis Messages ;
++-------------------------------+
+Info: *******************************************************************
+Info: Running Quartus II 64-Bit Analysis & Synthesis
+    Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+    Info: Processing started: Sat Mar 21 02:36:02 2026
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off zx50_cpld -c zx50_cpld_core
+Warning (20028): Parallel compilation is not licensed and has been disabled
+Info (12021): Found 1 design units, including 1 entities, in source file /home/marc/git/Zx50/model/src/zx50_bus_arbiter.v
+    Info (12023): Found entity 1: zx50_bus_arbiter
+Info (12021): Found 1 design units, including 1 entities, in source file /home/marc/git/Zx50/model/src/zx50_cpld_core.v
+    Info (12023): Found entity 1: zx50_cpld_core
+Info (12021): Found 1 design units, including 1 entities, in source file /home/marc/git/Zx50/model/src/zx50_dma.v
+    Info (12023): Found entity 1: zx50_dma
+Info (12021): Found 1 design units, including 1 entities, in source file /home/marc/git/Zx50/model/src/zx50_mmu_sram.v
+    Info (12023): Found entity 1: zx50_mmu_sram
+Info (12127): Elaborating entity "zx50_cpld_core" for the top level hierarchy
+Info (12128): Elaborating entity "zx50_bus_arbiter" for hierarchy "zx50_bus_arbiter:arbiter_unit"
+Info (12128): Elaborating entity "zx50_mmu_sram" for hierarchy "zx50_mmu_sram:mmu_unit"
+Warning (10230): Verilog HDL assignment warning at zx50_mmu_sram.v(145): truncated value with size 5 to match size of target (4)
+Info (12128): Elaborating entity "zx50_dma" for hierarchy "zx50_dma:dma_unit"
+Info (19000): Inferred 2 megafunctions from design logic
+    Info (19001): Inferred lpm_counter megafunction (LPM_WIDTH=12) from the following logic: "zx50_dma:dma_unit|phys_addr_lo_rtl_0"
+    Info (19001): Inferred lpm_counter megafunction (LPM_WIDTH=8) from the following logic: "zx50_dma:dma_unit|byte_count_rtl_0"
+Info (12130): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12133): Instantiated megafunction "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0" with the following parameter:
+    Info (12134): Parameter "LPM_WIDTH" = "12"
+    Info (12134): Parameter "LPM_DIRECTION" = "UP"
+    Info (12134): Parameter "LPM_TYPE" = "LPM_COUNTER"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|addcore:adder[1]", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|addcore:adder[1]|a_csnbuffer:oflow_node", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|addcore:adder[1]|a_csnbuffer:result_node", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|addcore:adder[0]", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|look_add:look_ahead_unit", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|altshift:result_ext_latency_ffs", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_add_sub:add_sub|altshift:carry_ext_latency_ffs", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0|lpm_constant:scdw", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:phys_addr_lo_rtl_0"
+Info (12130): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (12133): Instantiated megafunction "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0" with the following parameter:
+    Info (12134): Parameter "LPM_WIDTH" = "8"
+    Info (12134): Parameter "LPM_DIRECTION" = "DOWN"
+    Info (12134): Parameter "LPM_TYPE" = "LPM_COUNTER"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|lpm_add_sub:add_sub", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|lpm_add_sub:add_sub|addcore:adder[0]", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|lpm_add_sub:add_sub|look_add:look_ahead_unit", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|lpm_add_sub:add_sub|altshift:result_ext_latency_ffs", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (12131): Elaborated megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0|lpm_constant:scdw", which is child of megafunction instantiation "zx50_dma:dma_unit|lpm_counter:byte_count_rtl_0"
+Info (13014): Ignored 21 buffer(s)
+    Info (13019): Ignored 21 SOFT buffer(s)
+Info (13000): Registers with preset signals will power-up high
+Info (280013): Promoted pin-driven signal(s) to global signal
+    Info (280014): Promoted clock signal driven by pin "mclk" to global clock signal
+    Info (280015): Promoted clear signal driven by pin "reset_n" to global clear signal
+Info (17049): 2 registers lost all their fanouts during netlist optimizations.
+Info (21057): Implemented 230 device resources after synthesis - the final resource count might be different
+    Info (21058): Implemented 24 input pins
+    Info (21059): Implemented 29 output pins
+    Info (21060): Implemented 24 bidirectional pins
+    Info (21063): Implemented 128 macrocells
+    Info (21073): Implemented 25 shareable expanders
+Info: Quartus II 64-Bit Analysis & Synthesis was successful. 0 errors, 2 warnings
+    Info: Peak virtual memory: 597 megabytes
+    Info: Processing ended: Sat Mar 21 02:36:09 2026
+    Info: Elapsed time: 00:00:07
+    Info: Total CPU time (on all processors): 00:00:06
+
+
