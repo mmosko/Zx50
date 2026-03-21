@@ -2,11 +2,22 @@
 
 /***************************************************************************************
  * MODULE: zx50_bus_arbiter
+ * =====================================================================================
  * DESCRIPTION:
- * A 4-state synchronous bus arbiter. Ensures absolute mutual exclusion between 
- * the Z80 Backplane and the Shadow DMA bus. Injects 1-clock "Dead States" during 
- * handoffs to guarantee transceivers never cross-conduct (preventing magic smoke).
- * Controls the shared l_dir pin for the unified local data bus.
+ * A 4-state synchronous bus arbiter. It ensures absolute mutual exclusion between 
+ * the Z80 Backplane transceivers and the Shadow DMA transceivers on a single card.
+ *
+ * ARCHITECTURAL RULES & GOTCHAS:
+ * 1. The Z80 is the default bus master. It owns the local bus upon reset.
+ * 2. The Shadow DMA can only cycle-steal if the Z80 is NOT currently targeting 
+ * this specific card (z80_card_hit == 0).
+ * 3. BREAK-BEFORE-MAKE: Hardware transceivers take a few nanoseconds to turn off. 
+ * If we flip bus ownership instantly, both transceivers will drive the bus 
+ * simultaneously, causing a massive current spike (magic smoke). This module 
+ * injects mandatory 1-clock "DEAD" states during handoffs to let the lines settle.
+ * 4. STALLING: If a master tries to access the card while it doesn't have ownership, 
+ * the arbiter immediately pulls that master's WAIT/BUSY line low to stall it 
+ * until ownership can be safely handed over.
  ***************************************************************************************/
 
 module zx50_bus_arbiter (
@@ -30,29 +41,34 @@ module zx50_bus_arbiter (
     output wire sh_data_oe_n,   // Shadow Data Buffer Enable
     output wire l_dir           // SHARED Direction Line (1 = In/Write, 0 = Out/Read)
 );
-
+    // State Definitions
     localparam BUS_Z80    = 2'b00;
     localparam BUS_DEAD_1 = 2'b01; 
     localparam BUS_SHADOW = 2'b10;
-    localparam BUS_DEAD_2 = 2'b11; 
-
+    localparam BUS_DEAD_2 = 2'b11;
+    
     reg [1:0] bus_state;
 
-    // --- Clocked State Machine ---
+    // ==========================================
+    // 1. Clocked Arbitration State Machine
+    // ==========================================
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            bus_state <= BUS_Z80; // Default to Z80 ownership on boot
+            bus_state <= BUS_Z80; // Z80 is the primary master on boot
         end else begin
             case (bus_state)
-                // Z80 OWNS THE BUS: Yield to Shadow ONLY if Z80 isn't actively hitting the card
+                // Z80 OWNS THE BUS: 
+                // Yield to the Shadow Bus ONLY if the Z80 isn't actively hitting this card.
                 BUS_Z80: begin
                     if (!sh_en_n && !z80_card_hit) bus_state <= BUS_DEAD_1;
                 end
                 
                 // DEAD STATE 1: Break-before-make buffer isolation
+                // Guarantees Z80 transceivers are fully off before Shadow transceivers turn on.
                 BUS_DEAD_1: bus_state <= BUS_SHADOW;
                 
-                // SHADOW OWNS THE BUS: Yield back to Z80 as soon as Shadow drops its enable
+                // SHADOW OWNS THE BUS: 
+                // Yield back to Z80 as soon as the Shadow DMA drops its request.
                 BUS_SHADOW: begin
                     if (sh_en_n) bus_state <= BUS_DEAD_2;
                 end
@@ -63,23 +79,34 @@ module zx50_bus_arbiter (
         end
     end
 
-    // --- The Wait / Busy Generators ---
-    // If Z80 targets the card but doesn't own the bus, assert WAIT
+    // ==========================================
+    // 2. The Wait / Busy Generators
+    // ==========================================
+    // GOTCHA: These are combinatorial. They must assert instantly to catch the CPU/DMA.
+    
+    // If Z80 targets the card but doesn't own the bus, assert WAIT instantly.
     assign z80_wait_n = (z80_card_hit && (bus_state != BUS_Z80)) ? 1'b0 : 1'b1;
     
-    // If Shadow bus wants the card but doesn't own it, assert BUSY
+    // If Shadow bus wants the card but doesn't own it, assert BUSY instantly.
     assign sh_busy_n = (!sh_en_n && (bus_state != BUS_SHADOW)) ? 1'b0 : 1'b1;
 
-    // --- Transceiver Output Enables ---
-    // Only open the specific transceiver if that bus is fully in the active state
+    // ==========================================
+    // 3. Transceiver Output Enables
+    // ==========================================
+    // Only open the specific transceiver if that bus is fully in the active state.
+    // They are forced High (closed) during DEAD_1 and DEAD_2.
     assign z80_data_oe_n = ~((bus_state == BUS_Z80) && z80_card_hit);
     assign sh_data_oe_n  = ~((bus_state == BUS_SHADOW) && !sh_en_n);
 
-    // --- Direction Control ---
-    // 1 = Master writing to Card, 0 = Card outputting to Master
-    // For Z80: RD_n low (0) means Z80 wants to read (Card outputs: dir=0)
-    // For Shadow: RW_n high (1) means Shadow wants to read (Card outputs: dir=0)
+    // ==========================================
+    // 4. Shared Direction Control (l_dir)
+    // ==========================================
+    // Hardware Rule: 1 = Master writing to Card, 0 = Card outputting to Master
+    // GOTCHA - Polarity Inversion: 
+    //   - For Z80: RD_n is Active-LOW (0 means Z80 wants to read).
+    //   - For DMA: RW_n is Active-HIGH (1 means Shadow wants to read).
+    // This multiplexer safely unifies them into a single l_dir pin.
     assign l_dir = (bus_state == BUS_Z80)    ? z80_rd_n :
-                   (bus_state == BUS_SHADOW) ? !sh_rw_n : 1'b1; // Default inward for safety
-
+                   (bus_state == BUS_SHADOW) ? !sh_rw_n : 
+                                               1'b1; // Default inward (Write) for safety during dead states
 endmodule

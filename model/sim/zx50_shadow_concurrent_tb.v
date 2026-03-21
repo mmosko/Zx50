@@ -2,16 +2,24 @@
 
 /***************************************************************************************
  * MODULE: zx50_shadow_concurrent_tb
- * DESCRIPTION:
- * The ultimate stress test for Spatial Independence.
- * Proves that the Universal Shadow Bus can execute a 128-byte Block DMA transfer 
- * between Card 0 and Card 1 while the Z80 CPU concurrently executes continuous 
- * memory read/write operations against Card 2 without a single wait state or 
- * dropped DMA byte.
- * * TIMING VALIDATION:
- * Measures the exact elapsed time of 32 uninterrupted Z80 memory transactions.
- * If the background DMA illegally bleeds over and asserts WAIT_N, the elapsed 
- * time will exceed the theoretical minimum, and the test will fail.
+ * =====================================================================================
+ * WHAT IS BEING TESTED:
+ * The ultimate stress test for Spatial Independence on the Universal Shadow Bus.
+ * It proves that the backplane can execute a massive 128-byte Block DMA transfer 
+ * between Card 0 and Card 1 over the Shadow Bus, while the Z80 CPU concurrently 
+ * executes continuous memory read/write operations against Card 2 over the Local Bus.
+ *
+ * ARCHITECTURAL VALIDATION:
+ * - Isolation: Proves the CPLD routing matrices correctly isolate the shared Local 
+ * Bus from the Shadow Bus when cards are acting as DMA nodes.
+ * - Non-Interference: Proves that Card 2's Z80 transceivers remain open and 
+ * responsive to the CPU while the backplane is flooded with DMA traffic.
+ *
+ * TIMING VALIDATION (THE TRUE STRESS TEST):
+ * Measures the exact elapsed time of 32 uninterrupted Z80 memory transactions 
+ * executed while the DMA burst is active. If the background DMA illegally bleeds 
+ * over and forces Card 2 to assert `WAIT_N`, the Z80 state machine will stall. 
+ * The elapsed time will exceed the theoretical minimum limit, and the test will fail.
  ***************************************************************************************/
 
 module zx50_shadow_concurrent_tb;
@@ -26,10 +34,11 @@ module zx50_shadow_concurrent_tb;
     wire [7:0]  z80_data;
     wire z80_mreq_n, z80_iorq_n, z80_wr_n, z80_rd_n, z80_m1_n;
     
+    // Wired-AND Wait states from all 3 cards
     wire c0_wait_n, c1_wait_n, c2_wait_n;
-    wire shared_wait_n = c0_wait_n & c1_wait_n & c2_wait_n;
+    wire shared_wait_n = c0_wait_n & c1_wait_n & c2_wait_n; 
     
-    // Interrupt Daisy Chain
+    // Interrupt Daisy Chain (0 -> 1 -> 2)
     wire c0_ieo, c1_ieo, c2_ieo;
     wire z80_int_n;
 
@@ -49,6 +58,8 @@ module zx50_shadow_concurrent_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
+    // --- 4. System Instantiations (3 CARDS!) ---
+    
     z80_cpu_util z80 (
         .clk(zclk), .addr(z80_addr), .data(z80_data),
         .mreq_n(z80_mreq_n), .iorq_n(z80_iorq_n), 
@@ -56,7 +67,6 @@ module zx50_shadow_concurrent_tb;
         .wait_n(shared_wait_n)
     );
 
-    // --- 4. System Instantiations (3 CARDS!) ---
     zx50_mem_card card0 ( // MASTER (Source for DMA)
         .mclk(mclk), .reset_n(reset_n), .card_id_sw(4'h0),
         .z80_addr(z80_addr), .z80_data(z80_data),
@@ -90,6 +100,41 @@ module zx50_shadow_concurrent_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
+    // ==========================================
+    // HELPER TASK: Program the DMA via Z80 I/O
+    // ==========================================
+    task program_dma_node(
+        input [3:0] target_card,
+        input is_master, 
+        input to_bus, 
+        input [19:0] phys_addr, 
+        input [7:0] count
+    );
+        reg [15:0] addr_out;
+        reg [7:0]  data_out;
+        begin
+            // WRITE 1: Opcode 0
+            // A[15]=0, A[14]=Master, A[13]=Dir, A[12:8]=PA[12:8] | D[7:0]=PA[7:0]
+            addr_out[7:0]  = 8'h40 | target_card; // Base Port
+            addr_out[15]   = 1'b0;
+            addr_out[14]   = is_master;
+            addr_out[13]   = to_bus;
+            addr_out[12:8] = phys_addr[12:8];
+            data_out       = phys_addr[7:0];
+            z80.io_write(addr_out, data_out);
+            z80.wait_cycles(2);
+
+            // WRITE 2: Opcode 1 (Arms the DMA)
+            // A[15]=1, A[14:8]=Count[7:1] | D[7]=Count[0], D[6:0]=PA[19:13]
+            addr_out[7:0]  = 8'h40 | target_card;
+            addr_out[15]   = 1'b1;
+            addr_out[14:8] = count[7:1];
+            data_out[7]    = count[0];
+            data_out[6:0]  = phys_addr[19:13];
+            z80.io_write(addr_out, data_out);
+        end
+    endtask
+
     // --- 5. Main Test Sequence ---
     integer i;
     reg [7:0] read_val, vector;
@@ -110,9 +155,9 @@ module zx50_shadow_concurrent_tb;
         // 1. Map 4K pages to each card
         // ---------------------------------------------------------
         $display("[%0t] Mapping Z80 Banks to physical cards...", $time);
-        z80.io_write(16'h0030, 8'h00); // Card 0 -> Bank 0 (0x0000)
-        z80.io_write(16'h0131, 8'h00); // Card 1 -> Bank 1 (0x1000)
-        z80.io_write(16'h0232, 8'h00); // Card 2 -> Bank 2 (0x2000)
+        z80.mmu_map_page(4'h0, 4'h0, 8'h00); // Card 0 -> Logical Bank 0 (0x0000)
+        z80.mmu_map_page(4'h1, 4'h1, 8'h01); // Card 1 -> Logical Bank 1 (0x1000)
+        z80.mmu_map_page(4'h2, 4'h2, 8'h02); // Card 2 -> Logical Bank 2 (0x2000)
 
         // ---------------------------------------------------------
         // 2. Load Payload
@@ -124,15 +169,12 @@ module zx50_shadow_concurrent_tb;
         // 3. Configure and Fire a 128-byte DMA transfer
         // ---------------------------------------------------------
         $display("[%0t] Arming 128-byte background DMA burst...", $time);
-        // SETUP COMMAND (Opcode 0): 0x2041 -> Setup, Slave, Listen, Lower Addr=0x00
-        z80.io_write(16'h2041, 8'h00); 
-        // ARM COMMAND (Opcode 1): 0xC041 -> Arm, Count=128, Upper Addr=0x00
-        z80.io_write(16'hC041, 8'h00); 
         
-        // SETUP COMMAND (Opcode 0): 0x4040 -> Setup, Master, Drive, Lower Addr=0x00
-        z80.io_write(16'h4040, 8'h00); 
-        // ARM COMMAND (Opcode 1): 0xC040 -> Arm, Count=128, Upper Addr=0x00 (FIRES!)
-        z80.io_write(16'hC040, 8'h00); 
+        // Setup Card 1 as Slave: FromBus(1), PA=0x01000. Count=127 (transfers 128 bytes).
+        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h7F);
+        
+        // Setup Card 0 as Master: ToBus(0), PA=0x00000. Count=127. (FIRES!)
+        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h7F);
 
         // ---------------------------------------------------------
         // 4. Concurrently execute Z80 Read/Writes on Card 2
