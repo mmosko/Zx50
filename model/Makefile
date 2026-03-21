@@ -90,7 +90,7 @@ yosys-check_dma: $(DMA_FILES)
 	@mkdir -p $(SYN_DIR)
 	yosys -q -l $(SYN_DIR)/yosys_check_dma.log -p " \
 		read_liberty -lib $(ATF_DIR)/cells.lib; \
-		read_verilog $(DMA_FILES); \
+		read_verilog $(FLAGS) $(DMA_FILES); \
 		tribuf; \
 		synth -flatten -noabc -top $(DMA_TOP); \
 		techmap -map $(ATF_DIR)/techmap.v -D skip_DFFE_XX_; \
@@ -116,7 +116,7 @@ yosys-check_nodma: $(NODMA_FILES)
 	@mkdir -p $(SYN_DIR)
 	yosys -q -l $(SYN_DIR)/yosys_check_nodma.log -p " \
 		read_liberty -lib $(ATF_DIR)/cells.lib; \
-		read_verilog $(NODMA_FILES); \
+		read_verilog -DHW_REV_A11_BUG $(NODMA_FILES); \
 		tribuf; \
 		synth -flatten -noabc -top $(NODMA_TOP); \
 		techmap -map $(ATF_DIR)/techmap.v -D skip_DFFE_XX_; \
@@ -175,7 +175,7 @@ syn_dma: $(DMA_FILES)
 		ln -sf ../$(SRC_DIR)/$$file $(SYN_DIR)/$$file; \
 	done
 	
-	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(DMA_SRC)
+	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(FLAGS) $(DMA_SRC)
 	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP)
 
 	@echo "\n--- 2. Converting JED to SVF ---"

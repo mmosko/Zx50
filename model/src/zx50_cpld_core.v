@@ -1,17 +1,15 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_cpld_core (Rev 1.0 - Clean Hardware & Rev A Bug Support)
+ * MODULE: zx50_cpld_core (Rev A - Fit Optimizations)
  ***************************************************************************************/
 
 `ifdef HW_REV_A11_BUG
 // ==========================================
 // ATMEL FITTER PIN CONSTRAINTS (RevA Hardware - A11 Bug)
-// The run_fitter.sh script greps these lines to build the .pin file.
 // ==========================================
 //PIN: 87 = mclk;
 //PIN: 89 = reset_n;
-// Note: boot_en_n is N/C so the fitter ignores the hardwired switch
 
 //PIN: 40 = duplex_in[3];
 //PIN: 37 = duplex_in[2];
@@ -92,7 +90,7 @@
 //PIN: 70 = atl_oe_n;
 //PIN: 71 = atl_ce_n;
 
-//PIN: 90 = ram_ce0_n;
+//PIN: 99 = ram_ce0_n;
 //PIN: 92 = ram_ce1_n;
 //PIN: 98 = rom_ce_n;
 //PIN: 93 = ram_oe_n;
@@ -101,7 +99,6 @@
 // ==========================================
 // ATMEL FITTER PIN CONSTRAINTS (Clean Hardware)
 // ==========================================
-// (Constraints floated for external routing tools)
 `endif
 
 module zx50_cpld_core (
@@ -163,15 +160,11 @@ module zx50_cpld_core (
     // 2. INTERNAL SUBSYSTEM WIRES & HIT LOGIC
     // ==========================================
     wire internal_active, mmu_busy;
-    wire mmu_cpu_updating, mmu_is_initializing;
-    wire [3:0] mmu_init_ptr;
+    wire mmu_cpu_updating;
     
     wire dma_is_active, dma_int_pending, dma_is_master;
     wire safe_z80_iorq_n = dma_is_active ? 1'b1 : z80_iorq_n;
 
-    // --- FITTER OPTIMIZATION: CENTRALIZED I/O DECODING ---
-    // We decode the lower 8 bits of the address bus ONCE at the top level 
-    // and pass single-bit boolean flags to the sub-modules to save routing limits.
     wire mmu_snoop_wr  = (!safe_z80_iorq_n && !z80_wr_n && ((z80_addr[7:0] & 8'hF0) == 8'h30));
     wire mmu_direct_wr = mmu_snoop_wr && (z80_addr[7:0] == (8'h30 | latched_id));
     wire dma_io_write  = (!z80_iorq_n && !z80_wr_n && (z80_addr[7:0] == (8'h40 | latched_id)));
@@ -179,20 +172,16 @@ module zx50_cpld_core (
     wire active_bus_cycle = !z80_mreq_n || !z80_iorq_n;
     wire mmu_card_hit;
     wire qualified_mmu_hit = mmu_card_hit && active_bus_cycle;
-    wire dma_card_hit = (!z80_iorq_n && (z80_addr[7:0] == (8'h40 | latched_id)));
+    wire dma_card_hit = (!z80_iorq_n && (z80_addr[7:0] == (8'h40 | latched_id))); 
     wire internal_z80_card_hit = qualified_mmu_hit | dma_card_hit;
 
-    wire arbiter_sh_busy_n;
-    wire arbiter_l_dir;
-    wire arbiter_z80_data_oe_n;
-    wire arbiter_sh_data_oe_n; 
-    wire arbiter_wait_n;
+    wire arbiter_sh_busy_n, arbiter_l_dir, arbiter_z80_data_oe_n;
+    wire arbiter_sh_data_oe_n, arbiter_wait_n;
     
     wire [19:0] dma_phys_addr;
     wire dma_local_we_n, dma_local_oe_n, dma_dir_to_bus;
 
     wire memory_cycle = !z80_mreq_n;
-
     wire internal_z80_data_oe_n = dma_is_active ? 1'b1 : arbiter_z80_data_oe_n;
     wire internal_l_dir         = arbiter_l_dir; 
     wire z80_grant = !internal_z80_data_oe_n;
@@ -203,13 +192,14 @@ module zx50_cpld_core (
     wire intack_cycle = !z80_m1_n && !z80_iorq_n;
     wire responding_to_intack = intack_cycle && z80_iei && dma_int_pending;
 
-    reg [1:0] iorq_sync;
+    // OPTIMIZATION: 1-stage edge detector.
+    reg iorq_sync;
     always @(posedge mclk or negedge reset_n) begin
-        if (!reset_n) iorq_sync <= 2'b11;
-        else iorq_sync <= {iorq_sync[0], z80_iorq_n};
+        if (!reset_n) iorq_sync <= 1'b1;
+        else iorq_sync <= z80_iorq_n;
     end
     
-    wire iorq_rising = (iorq_sync == 2'b01);
+    wire iorq_rising = (!iorq_sync && z80_iorq_n);
     wire intack_clear = iorq_rising && z80_iei && dma_int_pending;
 
     assign z80_int_n = dma_int_pending ? 1'b0 : 1'bz;
@@ -239,15 +229,13 @@ module zx50_cpld_core (
     zx50_mmu_sram mmu_unit (
         .mclk(mclk), .reset_n(reset_n), 
         .boot_en_n(mmu_boot_en_n), 
-        .z80_addr_hi(z80_addr[15:8]),   // ONLY passing the upper byte!
-        .mmu_snoop_wr(mmu_snoop_wr),    // Centralized trigger
-        .mmu_direct_wr(mmu_direct_wr),  // Centralized trigger
+        .z80_addr_hi(z80_addr[15:8]),   
+        .mmu_snoop_wr(mmu_snoop_wr),    
+        .mmu_direct_wr(mmu_direct_wr),  
         .z80_mreq_n(z80_mreq_n), 
         .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(mmu_atl_oe_n), 
         .active(internal_active),
         .cpu_updating(mmu_cpu_updating),
-        .is_initializing(mmu_is_initializing),
-        .init_ptr(mmu_init_ptr), 
         .z80_card_hit(mmu_card_hit), 
         .is_busy(mmu_busy),
         .is_rom_enabled(mmu_is_rom_enabled)
@@ -257,10 +245,10 @@ module zx50_cpld_core (
 
     zx50_dma dma_unit (
         .mclk(mclk), .reset_n(reset_n), 
-        .z80_addr_hi(z80_addr[15:8]),   // ONLY passing the upper byte!
+        .z80_addr_hi(z80_addr[15:8]),   
         .z80_data_in(l_data), 
         .z80_iorq_n(z80_iorq_n), 
-        .dma_io_write(dma_io_write),    // Centralized trigger
+        .dma_io_write(dma_io_write),    
         .dma_phys_addr(dma_phys_addr), 
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
         .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
@@ -271,12 +259,11 @@ module zx50_cpld_core (
     );
 
     // ==========================================
-    // 5. LOCAL MEMORY & LUT TAKEOVER MULTIPLEXING
+    // 5. LOCAL MEMORY & LUT MULTIPLEXING
     // ==========================================
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy);
 
     wire dma_hitting_rom = (dma_phys_addr[19:15] == 5'b00000);
-    // THE FIX: ROM hit logic must completely ignore I/O cycles to prevent false kill-switch activations!
     wire z80_hitting_rom = (z80_addr[15] == 1'b0) && memory_cycle;
     wire target_is_rom_space = dma_is_active ? dma_hitting_rom : z80_hitting_rom;
     wire effective_use_rom = (latched_id == 4'h0) && mmu_is_rom_enabled && target_is_rom_space; 
@@ -284,11 +271,9 @@ module zx50_cpld_core (
     assign atl_oe_n = (dma_is_active || effective_use_rom) ? 1'b1 : mmu_atl_oe_n;
 
     // --- TRI-STATE LOGIC (ATL DATA BUS) ---
-    wire atl_drive_en = dma_is_active | mmu_is_initializing | mmu_cpu_updating | effective_use_rom;
+    wire atl_drive_en = dma_is_active | mmu_cpu_updating | effective_use_rom;
 
     `ifdef HW_REV_A11_BUG
-        // A11 is wired to the RAM Chip Selects instead of the RAM Address pins.
-        // The CPLD provides L_A[10:0].
         assign l_addr[10:0] = dma_is_active ? dma_phys_addr[10:0] : z80_addr[10:0];
         assign l_addr[11]   = 1'b0;
         
@@ -298,31 +283,22 @@ module zx50_cpld_core (
         assign ram_ce0_n = (safe_to_access_ram && !effective_use_rom && active_a11 == 1'b0) ? 1'b0 : 1'b1;
         assign ram_ce1_n = (safe_to_access_ram && !effective_use_rom && active_a11 == 1'b1) ? 1'b0 : 1'b1;
 
-        // When reading ROM, it ignores CE but needs a linear address bus. 
-        // Because A11 is missing from the copper, it was physically routed to ATL_D0.
-        // We supply A[18:11] over the ATL data bus to fulfill the ROM's upper address pins.
         wire [7:0] rom_atl_data  = dma_is_active ? dma_phys_addr[18:11] : {3'b000, z80_addr[15:11]};
         
-        // RAM ATL lookup is identical to clean hardware (4KB logic pages are preserved!)
-        wire [7:0] z80_atl_intent = mmu_is_initializing ? {4'h0, mmu_init_ptr} :
-                                    mmu_cpu_updating    ? l_data :
-                                                          {4'b0000, z80_addr[15:12]};
+        wire [7:0] z80_atl_intent = mmu_cpu_updating ? l_data : {4'b0000, z80_addr[15:12]};
                                                           
         wire [7:0] ram_atl_data  = dma_is_active ? dma_phys_addr[19:12] : z80_atl_intent;
         wire [7:0] final_atl_out = effective_use_rom ? rom_atl_data : ram_atl_data;
     `else
         // Clean Hardware
         assign l_addr = dma_is_active ? dma_phys_addr[11:0] : z80_addr[11:0];
-        // --- CHIP SELECT LOGIC ---
         wire bank_select = atl_data[7];
         
         wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && !mmu_cpu_updating && memory_cycle);
         assign ram_ce0_n = (safe_to_access_ram && !effective_use_rom && bank_select == 1'b0) ? 1'b0 : 1'b1;
         assign ram_ce1_n = (safe_to_access_ram && !effective_use_rom && bank_select == 1'b1) ? 1'b0 : 1'b1;
 
-        wire [7:0] z80_atl_intent = mmu_is_initializing ? {4'h0, mmu_init_ptr} :
-                                    mmu_cpu_updating    ? l_data :
-                                                          {4'b0000, z80_addr[15:12]};
+        wire [7:0] z80_atl_intent = mmu_cpu_updating ? l_data : {4'b0000, z80_addr[15:12]};
 
         wire [7:0] final_atl_out = dma_is_active ? dma_phys_addr[19:12] : z80_atl_intent;
     `endif
