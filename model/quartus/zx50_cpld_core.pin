@@ -1,0 +1,163 @@
+ -- Copyright (C) 1991-2013 Altera Corporation
+ -- Your use of Altera Corporation's design tools, logic functions 
+ -- and other software and tools, and its AMPP partner logic 
+ -- functions, and any output files from any of the foregoing 
+ -- (including device programming or simulation files), and any 
+ -- associated documentation or information are expressly subject 
+ -- to the terms and conditions of the Altera Program License 
+ -- Subscription Agreement, Altera MegaCore Function License 
+ -- Agreement, or other applicable license agreement, including, 
+ -- without limitation, that your use is for the sole purpose of 
+ -- programming logic devices manufactured by Altera and sold by 
+ -- Altera or its authorized distributors.  Please refer to the 
+ -- applicable agreement for further details.
+ -- 
+ -- This is a Quartus II output file. It is for reporting purposes only, and is
+ -- not intended for use as a Quartus II input file. This file cannot be used
+ -- to make Quartus II pin assignments - for instructions on how to make pin
+ -- assignments, please see Quartus II help.
+ ---------------------------------------------------------------------------------
+
+
+
+ ---------------------------------------------------------------------------------
+ -- NC            : No Connect. This pin has no internal connection to the device.
+ -- DNU           : Do Not Use. This pin MUST NOT be connected.
+ -- VCC           : Dedicated power pin, which MUST be connected to VCC.
+ -- VCCIO         : Dedicated power pin, which MUST be connected to VCC
+ --                 of its bank.
+ -- GND           : Dedicated ground pin. Dedicated GND pins MUST be connected to GND.
+ --					It can also be used to report unused dedicated pins. The connection
+ --					on the board for unused dedicated pins depends on whether this will
+ --					be used in a future design. One example is device migration. When
+ --					using device migration, refer to the device pin-tables. If it is a
+ --					GND pin in the pin table or if it will not be used in a future design
+ --					for another purpose the it MUST be connected to GND. If it is an unused
+ --					dedicated pin, then it can be connected to a valid signal on the board
+ --					(low, high, or toggling) if that signal is required for a different
+ --					revision of the design.
+ -- GND+          : Unused input pin. It can also be used to report unused dual-purpose pins.
+ --					This pin should be connected to GND. It may also be connected  to a
+ --					valid signal  on the board  (low, high, or toggling)  if that signal
+ --					is required for a different revision of the design.
+ -- GND*          : Unused  I/O  pin. Connect each pin marked GND* directly to GND
+ --           	    or leave it unconnected.
+ -- RESERVED      : Unused I/O pin, which MUST be left unconnected.
+ -- RESERVED_INPUT    : Pin is tri-stated and should be connected to the board.
+ -- RESERVED_INPUT_WITH_WEAK_PULLUP    : Pin is tri-stated with internal weak pull-up resistor.
+ -- RESERVED_INPUT_WITH_BUS_HOLD       : Pin is tri-stated with bus-hold circuitry.
+ -- RESERVED_OUTPUT_DRIVEN_HIGH        : Pin is output driven high.
+ -- NON_MIGRATABLE: This pin cannot be migrated.
+ ---------------------------------------------------------------------------------
+
+
+
+ ---------------------------------------------------------------------------------
+ -- Pin directions (input, output or bidir) are based on device operating in user mode.
+ ---------------------------------------------------------------------------------
+
+Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+CHIP  "zx50_cpld_core"  ASSIGNED TO AN: EPM7128STC100-10
+
+Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment
+-------------------------------------------------------------------------------------------------------------
+RESERVED                     : 1         :        :                   :         :           :                
+duplex_in[0]                 : 2         : input  : TTL               :         :           : N              
+VCCIO                        : 3         : power  :                   : 5.0V    :           :                
+TDI                          : 4         : input  : TTL               :         :           : N              
+z80_addr[8]                  : 5         : input  : TTL               :         :           : N              
+z80_addr[0]                  : 6         : input  : TTL               :         :           : N              
+z80_addr[9]                  : 7         : input  : TTL               :         :           : N              
+z80_addr[11]                 : 8         : input  : TTL               :         :           : N              
+RESERVED                     : 9         :        :                   :         :           :                
+duplex_in[2]                 : 10        : input  : TTL               :         :           : N              
+GND                          : 11        : gnd    :                   :         :           :                
+z80_addr[2]                  : 12        : input  : TTL               :         :           : N              
+l_data[0]                    : 13        : bidir  : TTL               :         :           : N              
+l_data[1]                    : 14        : bidir  : TTL               :         :           : N              
+TMS                          : 15        : input  : TTL               :         :           : N              
+atl_data[4]                  : 16        : bidir  : TTL               :         :           : N              
+ram_we_n                     : 17        : output : TTL               :         :           : N              
+VCCIO                        : 18        : power  :                   : 5.0V    :           :                
+ram_ce0_n                    : 19        : output : TTL               :         :           : N              
+ram_ce1_n                    : 20        : output : TTL               :         :           : N              
+rom_ce_n                     : 21        : output : TTL               :         :           : N              
+ram_oe_n                     : 22        : output : TTL               :         :           : N              
+z80_wait_n                   : 23        : bidir  : TTL               :         :           : N              
+l_dir                        : 24        : output : TTL               :         :           : N              
+z80_data_oe_n                : 25        : output : TTL               :         :           : N              
+GND                          : 26        : gnd    :                   :         :           :                
+sh_rw_n                      : 27        : bidir  : TTL               :         :           : N              
+atl_data[0]                  : 28        : bidir  : TTL               :         :           : N              
+sh_data_oe_n                 : 29        : output : TTL               :         :           : N              
+l_data[6]                    : 30        : bidir  : TTL               :         :           : N              
+atl_addr[0]                  : 31        : output : TTL               :         :           : N              
+sh_c_dir                     : 32        : output : TTL               :         :           : N              
+l_data[3]                    : 33        : bidir  : TTL               :         :           : N              
+VCCIO                        : 34        : power  :                   : 5.0V    :           :                
+l_data[2]                    : 35        : bidir  : TTL               :         :           : N              
+z80_addr[3]                  : 36        : input  : TTL               :         :           : N              
+z80_addr[5]                  : 37        : input  : TTL               :         :           : N              
+GND                          : 38        : gnd    :                   :         :           :                
+VCCINT                       : 39        : power  :                   : 5.0V    :           :                
+l_addr[8]                    : 40        : output : TTL               :         :           : N              
+l_addr[9]                    : 41        : output : TTL               :         :           : N              
+l_addr[11]                   : 42        : output : TTL               :         :           : N              
+GND                          : 43        : gnd    :                   :         :           :                
+l_addr[10]                   : 44        : output : TTL               :         :           : N              
+z80_addr[7]                  : 45        : input  : TTL               :         :           : N              
+z80_addr[6]                  : 46        : input  : TTL               :         :           : N              
+z80_addr[10]                 : 47        : input  : TTL               :         :           : N              
+duplex_in[1]                 : 48        : input  : TTL               :         :           : N              
+z80_addr[13]                 : 49        : input  : TTL               :         :           : N              
+z80_m1_n                     : 50        : input  : TTL               :         :           : N              
+VCCIO                        : 51        : power  :                   : 5.0V    :           :                
+l_addr[4]                    : 52        : output : TTL               :         :           : N              
+l_addr[6]                    : 53        : output : TTL               :         :           : N              
+atl_addr[3]                  : 54        : output : TTL               :         :           : N              
+atl_addr[2]                  : 55        : output : TTL               :         :           : N              
+atl_addr[1]                  : 56        : output : TTL               :         :           : N              
+atl_data[1]                  : 57        : bidir  : TTL               :         :           : N              
+atl_data[2]                  : 58        : bidir  : TTL               :         :           : N              
+GND                          : 59        : gnd    :                   :         :           :                
+duplex_in[3]                 : 60        : input  : TTL               :         :           : N              
+atl_data[3]                  : 61        : bidir  : TTL               :         :           : N              
+TCK                          : 62        : input  : TTL               :         :           : N              
+l_data[7]                    : 63        : bidir  : TTL               :         :           : N              
+sh_busy_n                    : 64        : bidir  : TTL               :         :           : N              
+l_data[5]                    : 65        : bidir  : TTL               :         :           : N              
+VCCIO                        : 66        : power  :                   : 5.0V    :           :                
+l_addr[0]                    : 67        : output : TTL               :         :           : N              
+l_addr[2]                    : 68        : output : TTL               :         :           : N              
+l_addr[3]                    : 69        : output : TTL               :         :           : N              
+l_addr[5]                    : 70        : output : TTL               :         :           : N              
+l_addr[1]                    : 71        : output : TTL               :         :           : N              
+z80_addr[12]                 : 72        : input  : TTL               :         :           : N              
+TDO                          : 73        : output : TTL               :         :           : N              
+GND                          : 74        : gnd    :                   :         :           :                
+sh_inc_n                     : 75        : bidir  : TTL               :         :           : N              
+sh_done_n                    : 76        : bidir  : TTL               :         :           : N              
+sh_stb_n                     : 77        : bidir  : TTL               :         :           : N              
+z80_int_n                    : 78        : bidir  : TTL               :         :           : N              
+sh_en_n                      : 79        : bidir  : TTL               :         :           : N              
+z80_addr[14]                 : 80        : input  : TTL               :         :           : N              
+l_data[4]                    : 81        : bidir  : TTL               :         :           : N              
+VCCIO                        : 82        : power  :                   : 5.0V    :           :                
+z80_addr[15]                 : 83        : input  : TTL               :         :           : N              
+z80_addr[1]                  : 84        : input  : TTL               :         :           : N              
+z80_ieo                      : 85        : output : TTL               :         :           : N              
+GND                          : 86        : gnd    :                   :         :           :                
+mclk                         : 87        : input  : TTL               :         :           : Y              
+z80_addr[4]                  : 88        : input  : TTL               :         :           : N              
+reset_n                      : 89        : input  : TTL               :         :           : Y              
+z80_iei                      : 90        : input  : TTL               :         :           : N              
+VCCINT                       : 91        : power  :                   : 5.0V    :           :                
+atl_data[6]                  : 92        : bidir  : TTL               :         :           : N              
+RESERVED                     : 93        :        :                   :         :           :                
+atl_data[7]                  : 94        : bidir  : TTL               :         :           : N              
+GND                          : 95        : gnd    :                   :         :           :                
+atl_data[5]                  : 96        : bidir  : TTL               :         :           : N              
+atl_ce_n                     : 97        : output : TTL               :         :           : N              
+l_addr[7]                    : 98        : output : TTL               :         :           : N              
+atl_oe_n                     : 99        : output : TTL               :         :           : N              
+atl_we_n                     : 100       : output : TTL               :         :           : N              

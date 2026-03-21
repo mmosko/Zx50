@@ -1,53 +1,48 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_dma
+ * MODULE: zx50_dma (12-Bit Adder & High Fitter Optimization)
  * =====================================================================================
  * DESCRIPTION:
- * This module acts as a Universal Shadow Bus Node. It is a highly specialized Block 
- * DMA controller that negotiates high-speed transfers across a shared physical 
- * backplane without Z80 CPU intervention.
+ * Universal Shadow Bus Node. Acts as a highly specialized Block DMA controller 
+ * that negotiates transfers across a shared physical backplane.
  *
- * I/O BIT-PACKING PROTOCOL (24-bit Instruction Set via `OUT (C), A`):
- * The Z80 configures this module by executing two successive I/O writes to the card's 
- * base port (0x40 | Card_ID). The Z80 places the high 8 bits of the configuration on 
- * the B register (A[15:8]), the port on the C register (A[7:0]), and the low 8 bits 
- * on the accumulator (D[7:0]).
+ * CPLD FITTING OPTIMIZATION 1 (THE 4K PAGE LIMIT):
+ * To fit within the tight routing constraints of a 128-macrocell CPLD, the 20-bit 
+ * address counter has been split. It uses a static 8-bit upper address latch (A19-A12) 
+ * and a fast 12-bit lower address counter (A11-A0). 
+ * SOFTWARE RULE: DMA transfers will smoothly increment up to 4,096 bytes, but will 
+ * wrap around physical 4KB boundaries (A12). The Z80 programmer must manually chunk 
+ * transfers that cross logical page boundaries.
  *
- * OPCODE 0 (Setup):
- * A[15]    = 0 (Opcode 0)
- * A[14]    = Master/Slave (1 = Master, 0 = Slave)
- * A[13]    = Direction (0 = To Bus/Read RAM, 1 = From Bus/Write RAM)
- * A[12:8]  = PhysicalAddress[12:8]
- * D[7:0]   = PhysicalAddress[7:0]
+ * CPLD FITTING OPTIMIZATION 2 (CENTRALIZED DECODING):
+ * Address bus decoding logic is centralized in the top-level core to reduce macrocell 
+ * Fan-In. This module only receives the upper address byte and a single, pre-decoded 
+ * boolean `dma_io_write` flag.
  *
- * OPCODE 1 (Arm & Execute):
- * A[15]    = 1 (Opcode 1)
- * A[14:8]  = ByteCount[7:1] (Number of bytes to transfer minus 1)
- * D[7]     = ByteCount[0]
- * D[6:0]   = PhysicalAddress[19:13]
- *
- * CYCLE STEALING (YIELD LOGIC):
- * If the Z80 (or another higher-priority master) requests the bus during an active 
- * burst, this module will gracefully finish its current byte, enter a safe `M_WAIT` 
- * state, drop its transceivers to yield the bus, and seamlessly resume once clear.
+ * CPLD FITTING OPTIMIZATION 3 (DEAD DATA ELIMINATION):
+ * The DMA module is strictly an Address Generator and Strobe Sequencer. The 
+ * actual 8-bit data payload flows externally between the local bus and the 
+ * Shadow Bus transceivers. Dead internal pass-through routing has been purged.
  ***************************************************************************************/
 
 module zx50_dma (
     input  wire mclk,
     input  wire reset_n,
-    input  wire [3:0] card_id, 
 
-    // --- Z80 Configuration Interface ---
-    input  wire [15:0] z80_addr,
-    input  wire [7:0]  z80_data_in,
-    input  wire z80_iorq_n,
-    input  wire z80_wr_n,
+    // --- Z80 Configuration Interface (Highly Optimized) ---
+    // Only the upper byte of the address bus is passed to unpack the DMA operand.
+    input  wire [7:0] z80_addr_hi, 
+    input  wire [7:0] z80_data_in,
+    
+    // Used to detect the end of the OUT cycle to safely arm the state machine
+    input  wire z80_iorq_n,        
+    
+    // Centralized boolean hit flag from the top-level routing matrix
+    input  wire dma_io_write,      
 
     // --- DMA Local Bus Master Output ---
     output wire [19:0] dma_phys_addr, 
-    output wire [7:0]  dma_data_out,
-    input  wire [7:0]  dma_data_in,
     output wire dma_local_we_n,       
     output wire dma_local_oe_n,       
 
@@ -68,21 +63,21 @@ module zx50_dma (
     output reg  int_pending,
     input  wire intack_clear
 );
+
     // ==========================================
     // 1. DYNAMIC PORT DECODING & BIT-UNPACKING
     // ==========================================
-    wire [7:0] dma_port = 8'h40 | {4'h0, card_id};
-    wire z80_io_write = (!z80_iorq_n && !z80_wr_n && (z80_addr[7:0] == dma_port));
-    
-    // Decode the Z80 Bus directly into our logical operands
-    wire opcode         = z80_addr[15];
-    wire [14:0] operand = {z80_addr[14:8], z80_data_in[7:0]};
+    // Extract the opcode (A15) and 15-bit operand (A14-A8 + D7-D0)
+    wire opcode         = z80_addr_hi[7];
+    wire [14:0] operand = {z80_addr_hi[6:0], z80_data_in[7:0]};
 
-    // Clean contiguous 20-bit physical address register
-    reg [19:0] phys_addr;
+    // --- OPTIMIZED REGISTERS ---
+    reg [7:0]  phys_addr_hi; // Static upper latch (A19-A12)
+    reg [11:0] phys_addr_lo; // Fast lower counter (A11-A0)
+    
     reg [7:0]  byte_count;
     reg is_master;
-    reg dir_from_bus; // 0 = To Bus (Read RAM), 1 = From Bus (Write RAM)    
+    reg dir_from_bus; 
     reg transfer_armed;
     reg arm_req;
 
@@ -109,32 +104,34 @@ module zx50_dma (
     // ==========================================
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            phys_addr      <= 20'h00000;
+            phys_addr_hi   <= 8'h00;
+            phys_addr_lo   <= 12'h000;
             byte_count     <= 8'h00;
             is_master      <= 1'b0;
             dir_from_bus   <= 1'b0;
             transfer_armed <= 1'b0;
             arm_req        <= 1'b0;
-        end else if (z80_io_write) begin
+        end else if (dma_io_write) begin
             if (opcode == 1'b0) begin
-                // OPCODE 0: Setup (Loads PA[12:0])
-                is_master       <= operand[14];
-                dir_from_bus    <= operand[13];
-                phys_addr[12:0] <= operand[12:0];
+                // OPCODE 0: Setup
+                is_master         <= operand[14];
+                dir_from_bus      <= operand[13];
+                phys_addr_lo      <= operand[11:0]; // Load 4K offset (A11-A0)
+                phys_addr_hi[0]   <= operand[12];   // Load A12
             end else begin
-                // OPCODE 1: Arm & High Address (Loads PA[19:13])
-                byte_count      <= operand[14:7];
-                phys_addr[19:13]<= operand[6:0];  
-                arm_req         <= 1'b1;
+                // OPCODE 1: Arm & High Address
+                byte_count        <= operand[14:7];
+                phys_addr_hi[7:1] <= operand[6:0];  // Load A19-A13
+                arm_req           <= 1'b1;
             end
+        // Safely wait for the Z80 to finish its OUT instruction before blasting the bus
         end else if (arm_req && z80_iorq_n) begin
-            // Wait for the Z80 I/O cycle to fully complete before asserting the bus
             transfer_armed <= 1'b1;
             arm_req        <= 1'b0;
         end else if (local_inc) begin
-            // Beautiful contiguous increment. Smoothly rolls over 4K boundaries!
-            phys_addr  <= phys_addr + 1'b1;
-            byte_count <= byte_count - 1'b1;
+            // OPTIMIZATION: Only the 12-bit register participates in the math!
+            phys_addr_lo <= phys_addr_lo + 1'b1;
+            byte_count   <= byte_count - 1'b1;
         end else if (local_done) begin
             transfer_armed <= 1'b0;
         end
@@ -198,8 +195,8 @@ module zx50_dma (
     assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
     assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
 
-    assign dma_phys_addr = phys_addr; 
-    assign dma_data_out  = dma_data_in; 
+    // Concatenate the static high bits and the fast 4K counter for the local address
+    assign dma_phys_addr = {phys_addr_hi, phys_addr_lo}; 
     
     assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? 1'b0 : 1'b1;
     assign dma_local_we_n = (dma_active && dir_from_bus == 1'b1) ? int_sh_stb_n : 1'b1;

@@ -98,6 +98,9 @@ Address 1:
 PhysicalAddress[13:19] = Operand[0:6]
 ByteCount[0:7]         = Operand[7:14] (up to 256 bytes)
 
+NOTE: A DMA transfer should NOT cross a 4KB boundary, as physical pages are not
+guaranteed to be contiguous in the virtual memory space.
+
 Process:
 
 CPU configures SLAVE fist, to read memory to the bus
