@@ -2,10 +2,26 @@
 
 /***************************************************************************************
  * MODULE: zx50_mem_card_tb
- * DESCRIPTION:
- * The top-level integration test.
- * This proves that the CPLD core correctly manages the external SRAM and Flash models 
- * and physically routes the bidirectional data across the 74ABT245 transceivers.
+ * =====================================================================================
+ * WHAT IS BEING TESTED:
+ * This is the ultimate integration test for a single physical memory card. It proves 
+ * that the internal CPLD core correctly arbitrates and multiplexes signals to the 
+ * external SRAM, Flash ROM, and backplane transceivers.
+ *
+ * TEST SEQUENCE:
+ * - TEST SUITE 1 (Card 1: RAM Only): Simulates a standard secondary RAM card. Verifies 
+ * that the MMU can map a page, and that reads/writes correctly pass through the Z80 
+ * data transceivers to the physical SRAM ICs.
+ * - TEST SUITE 2 (Card 0: Boot ROM): Simulates a primary boot card. 
+ * - 2A: Verifies that logical reads to the lower 32K bypass the MMU and target 
+ * the physical Flash ROM IC, crossing a 4KB boundary seamlessly.
+ * - 2B: Verifies that physical writes to the ROM space are actively suppressed 
+ * to prevent accidental EEPROM corruption.
+ * - 2C: Verifies that the upper 32K of logical memory still successfully targets 
+ * the physical SRAM ICs while the lower 32K is locked to ROM.
+ * - 2D/E: Simulates the Z80 executing an `OUT` to program Logical Page 0, 
+ * verifying that the MMU's kill-switch instantly disables the ROM and 
+ * exposes the underlying physical SRAM IC.
  ***************************************************************************************/
 
 module zx50_mem_card_tb;
@@ -102,20 +118,12 @@ module zx50_mem_card_tb;
         reset_n = 0; #500; reset_n = 1; 
         clk_gen.wait_mclk(20);
 
-        // Preload the ROM model with test data across the 2K and 4K boundaries
-        dut.rom.memory_array[19'h07FF] = 8'h12; // Just before 2K boundary
-        dut.rom.memory_array[19'h0800] = 8'h34; // Just after 2K boundary
+        // Preload the ROM model with test data across a 4KB boundary
         dut.rom.memory_array[19'h0FFF] = 8'h56; // Just before 4K boundary
         dut.rom.memory_array[19'h1000] = 8'h78; // Just after 4K boundary
 
         // 2A: Verify ROM reads span boundaries linearly
-        $display("[%0t] Card 0: Verifying linear ROM reads across 2K and 4K boundaries...", $time);
-        
-        z80.mem_read(16'h07FF, read_val);
-        if (read_val !== 8'h12) begin $display("!!! FAILURE: ROM 0x07FF. Expected 12, got %h !!!", read_val); $fatal(1); end
-        
-        z80.mem_read(16'h0800, read_val);
-        if (read_val !== 8'h34) begin $display("!!! FAILURE: ROM 0x0800. Expected 34, got %h !!!", read_val); $fatal(1); end
+        $display("[%0t] Card 0: Verifying linear ROM reads across a 4K boundary...", $time);
         
         z80.mem_read(16'h0FFF, read_val);
         if (read_val !== 8'h56) begin $display("!!! FAILURE: ROM 0x0FFF. Expected 56, got %h !!!", read_val); $fatal(1); end
@@ -124,12 +132,12 @@ module zx50_mem_card_tb;
         if (read_val !== 8'h78) begin $display("!!! FAILURE: ROM 0x1000. Expected 78, got %h !!!", read_val); $fatal(1); end
 
         // 2B: Verify ROM Write Protection
-        $display("[%0t] Card 0: Attempting protected write to ROM at 0x07FF...", $time);
-        z80.mem_write(16'h07FF, 8'h99);
+        $display("[%0t] Card 0: Attempting protected write to ROM at 0x0FFF...", $time);
+        z80.mem_write(16'h0FFF, 8'h99);
         z80.wait_cycles(5);
-        z80.mem_read(16'h07FF, read_val);
-        if (read_val !== 8'h12) begin
-            $display("!!! FAILURE: Card 0 ROM Write Protect failed. Expected 12, got %h !!!", read_val);
+        z80.mem_read(16'h0FFF, read_val);
+        if (read_val !== 8'h56) begin
+            $display("!!! FAILURE: Card 0 ROM Write Protect failed. Expected 56, got %h !!!", read_val);
             $fatal(1);
         end
 

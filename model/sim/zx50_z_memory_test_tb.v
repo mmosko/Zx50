@@ -3,182 +3,189 @@
 /***************************************************************************************
  * MODULE: zx50_memory_test_tb
  * =====================================================================================
- * * WHAT IT IS TESTING:
- * An exhaustive 1 Megabyte Memory Striping and Paging test for the Zx50 Memory Card.
+ * WHAT IT IS TESTING:
+ * An exhaustive 1 Megabyte Memory validation test for the Zx50 Memory Card.
  * This simulates writing to and reading from every single addressable byte across the 
  * two 512KB physical SRAM chips through the CPLD's dynamic Address Translation Lookaside 
  * (ATL) SRAM.
- * * * WHY WE ARE TESTING IT:
- * The physical Rev A PCB design routes 11 bits of the Z80 address bus (A0-A10) and 
- * 8 bits of the ATL page table data to the physical SRAM chips. This yields exactly 
- * 19 bits (512KB per chip), leaving the Z80's A11 pin orphaned and leaving zero bits 
- * available for dedicated Chip Select lines. 
- * To solve this without cutting traces, the CPLD intercepts Z80 A11 and uses it to 
- * dynamically toggle between CE0 and CE1. As a result, every 4KB logical page 
- * (defined by A15:A12) is actually physically striped across both SRAM chips in 
- * interleaved 2KB blocks. This testbench proves this non-standard RAID-0 style 
- * striping provides a perfectly contiguous, alias-free 1MB space.
- * * * HOW IT WORKS:
+ *
+ * WHY WE ARE TESTING IT:
+ * With the move to "Rev 1.0 Clean Hardware", the CPLD no longer has to execute 
+ * complex 2KB interleaving hacks. Instead, it provides a full 12-bit physical offset 
+ * directly to the memory chips (A0-A11), yielding native 4KB paging boundaries.
+ * The upper physical address bit (A19 / atl_data[7]) acts as a clean logical 
+ * chip select to toggle between CE0 and CE1.
+ * This testbench proves that this translation provides a perfectly contiguous, 
+ * alias-free 1MB space.
+ *
+ * HOW IT WORKS:
  * 1. Boots the zx50_clock and Z80 BFM.
  * 2. Iterates through all 256 physical 4KB pages.
  * 3. Programs the MMU (via the BFM) to map each physical page into logical Window 0.
  * 4. Writes a pseudo-random hash byte (derived from the full 20-bit physical address) 
- * to all 4,096 offsets.
- * 5. After writing all 1MB, it remaps the pages and reads all 1MB back.
- * 6. Asserts $fatal(1) if any byte read does not match its expected hash.
+ * to all 4,096 offsets within the page.
+ * 5. After writing all 1MB, it iterates through the pages again and reads all 1MB back.
+ * 6. Asserts $fatal(1) if any byte read does not match its mathematically expected hash.
  ***************************************************************************************/
 
 module zx50_memory_test_tb;
 
     // --- System Signals ---
-    wire mclk;
-    wire zclk;
-    reg reset_n;
-    reg [3:0] card_id_sw;
+    wire mclk; 
+    wire zclk; 
+    reg reset_n; 
+    reg [3:0] card_id_sw; 
 
     // --- Clock Generation (Digital Twin) ---
     zx50_clock clk_gen (
-        .run_in(1'b1),    // Free run enabled
-        .step_n_in(1'b1), // Not stepping
-        .mclk(mclk),
-        .zclk(zclk)
+        .run_in(1'b1),    // Free run enabled 
+        .step_n_in(1'b1), // Not stepping 
+        .mclk(mclk), 
+        .zclk(zclk) 
     );
 
     // --- Z80 Backplane Buses (Driven by BFM) ---
-    wire [15:0] z80_addr;
-    wire [7:0]  z80_data;
-    wire z80_mreq_n, z80_iorq_n, z80_wr_n, z80_rd_n, z80_m1_n;
-    wire z80_wait_n, z80_ieo, z80_int_n;
+    wire [15:0] z80_addr; 
+    wire [7:0]  z80_data; 
+    wire z80_mreq_n, z80_iorq_n, z80_wr_n, z80_rd_n, z80_m1_n; 
+    wire z80_wait_n, z80_ieo, z80_int_n; 
 
     // --- Shadow Bus Mock ---
-    wire [15:0] sh_addr;
-    wire [7:0]  sh_data;
-    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n;
+    wire [15:0] sh_addr; 
+    wire [7:0]  sh_data; 
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n, sh_busy_n; 
 
     // Pullups for open-drain/tri-state lines
-    assign sh_en_n    = 1'H1;
-    assign sh_busy_n  = 1'H1;
-    assign z80_wait_n = 1'H1;
+    assign sh_en_n    = 1'H1; 
+    assign sh_busy_n  = 1'H1; 
+    assign z80_wait_n = 1'H1; 
 
     // ==========================================
     // The Z80 Bus Master (BFM)
     // ==========================================
     z80_cpu_util z80 (
-        .clk(zclk), // BFM runs on the divided Z80 clock!
-        .addr(z80_addr), 
-        .data(z80_data),
-        .mreq_n(z80_mreq_n), 
-        .iorq_n(z80_iorq_n), 
-        .rd_n(z80_rd_n), 
-        .wr_n(z80_wr_n), 
-        .m1_n(z80_m1_n),
-        .wait_n(1'b1) 
+        .clk(zclk), // BFM runs on the divided Z80 clock! 
+        .addr(z80_addr),  
+        .data(z80_data), 
+        .mreq_n(z80_mreq_n),  
+        .iorq_n(z80_iorq_n),  
+        .rd_n(z80_rd_n),  
+        .wr_n(z80_wr_n),  
+        .m1_n(z80_m1_n), 
+        .wait_n(1'b1)  
     );
 
     // ==========================================
     // Device Under Test (Memory Card)
     // ==========================================
     zx50_mem_card UUT (
-        .mclk(mclk), // Memory Card runs on the fast master clock!
-        .reset_n(reset_n),
-        .card_id_sw(card_id_sw),
-        .z80_addr(z80_addr),
-        .z80_data(z80_data),
-        .z80_mreq_n(z80_mreq_n),
-        .z80_iorq_n(z80_iorq_n),
-        .z80_wr_n(z80_wr_n),
-        .z80_rd_n(z80_rd_n),
-        .z80_m1_n(z80_m1_n),
-        .z80_iei(1'b1),
-        .z80_wait_n(z80_wait_n),
-        .z80_ieo(z80_ieo),
-        .z80_int_n(z80_int_n),
-        .sh_addr(sh_addr),
-        .sh_data(sh_data),
-        .sh_en_n(sh_en_n),
-        .sh_rw_n(sh_rw_n),
-        .sh_inc_n(sh_inc_n),
-        .sh_stb_n(sh_stb_n),
-        .sh_done_n(sh_done_n),
-        .sh_busy_n(sh_busy_n)
+        .mclk(mclk), // Memory Card runs on the fast master clock! 
+        .reset_n(reset_n), 
+        .card_id_sw(card_id_sw), 
+        .z80_addr(z80_addr), 
+        .z80_data(z80_data), 
+        .z80_mreq_n(z80_mreq_n), 
+        .z80_iorq_n(z80_iorq_n), 
+        .z80_wr_n(z80_wr_n), 
+        .z80_rd_n(z80_rd_n), 
+        .z80_m1_n(z80_m1_n), 
+        .z80_iei(1'b1), // Top of the interrupt chain 
+        .z80_wait_n(z80_wait_n), 
+        .z80_ieo(z80_ieo), 
+        .z80_int_n(z80_int_n), 
+        .sh_addr(sh_addr), 
+        .sh_data(sh_data), 
+        .sh_en_n(sh_en_n), 
+        .sh_rw_n(sh_rw_n), 
+        .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n), 
+        .sh_done_n(sh_done_n), 
+        .sh_busy_n(sh_busy_n) 
     );
 
     // --- Main Test Sequence ---
-    integer phys_page;
-    integer offset;
-    reg [19:0] full_phys_addr;
-    reg [7:0]  hash_pattern;
-    reg [7:0]  read_val;
+    integer phys_page; 
+    integer offset; 
+    reg [19:0] full_phys_addr; 
+    reg [7:0]  hash_pattern; 
+    reg [7:0]  read_val; 
 
     initial begin
-        $display("========================================");
-        $display(" ZX50 MEMORY CARD 1MB EXHAUSTIVE TEST");
-        $display("========================================");
+        $display("========================================"); 
+        $display(" ZX50 MEMORY CARD 1MB EXHAUSTIVE TEST"); 
+        $display("========================================"); 
 
-        reset_n = 0;
-        card_id_sw = 4'h0;
-
+        // Setup for a Standard RAM Card
+        reset_n = 0; 
+        card_id_sw = 4'h1; // Card 1 avoids Boot ROM lockouts during Phase 1
+        
         // Hold reset to let clocks stabilize
-        #100 reset_n = 1;
+        #100 reset_n = 1; 
         
         // Let the CPLD's internal auto-wipe state machine finish
         clk_gen.wait_mclk(20); 
-
-        $display("-> CPLD Booted. Commencing 1MB Write Cycle...");
+        
+        $display("-> CPLD Booted. Commencing 1MB Write Cycle..."); 
 
         // 1. WRITE CYCLE: 256 physical pages * 4096 bytes
-        for (phys_page = 0; phys_page < 256; phys_page = phys_page + 1) begin
+        for (phys_page = 0; phys_page < 256; phys_page = phys_page + 1) begin 
             
-            // Use BFM to map physical page to logical Window 0 (0x0000) on Card 0
-            z80.mmu_map_page(4'h0, 4'h0, phys_page);
+            // Use BFM to map physical page to logical Window 0 (0x0000) on Card 1
+            z80.mmu_map_page(4'h1, 4'h0, phys_page); 
             
-            for (offset = 0; offset < 4096; offset = offset + 1) begin
-                full_phys_addr = (phys_page << 12) | offset;
+            for (offset = 0; offset < 4096; offset = offset + 1) begin 
+                // Construct the true 20-bit physical address mathematically
+                full_phys_addr = (phys_page << 12) | offset; 
                 
                 // Deterministic pseudo-random pattern based on absolute address
-                hash_pattern = (full_phys_addr ^ (full_phys_addr >> 8) ^ (full_phys_addr >> 16)) & 8'hFF;
+                hash_pattern = (full_phys_addr ^ (full_phys_addr >> 8) ^ (full_phys_addr >> 16)) & 8'hFF; 
                 
-                // Use BFM to write to the offset
-                z80.mem_write(offset, hash_pattern);
-            end
+                // Use BFM to write the hash to the logical offset (0x0000 - 0x0FFF)
+                z80.mem_write(offset, hash_pattern); 
+            end 
             
-            if (phys_page % 32 == 0) $display("   ... Wrote %0d / 256 pages", phys_page);
-        end
+            // Display Progress
+            if (phys_page % 32 == 0) $display("   ... Wrote %0d / 256 pages", phys_page); 
+        end 
 
-        $display("-> Write Complete. Commencing 1MB Verification Cycle...");
-
+        $display("-> Write Complete. Commencing 1MB Verification Cycle..."); 
+        
         // 2. READ/VERIFY CYCLE
-        for (phys_page = 0; phys_page < 256; phys_page = phys_page + 1) begin
+        for (phys_page = 0; phys_page < 256; phys_page = phys_page + 1) begin 
             
-            z80.mmu_map_page(4'h0, 4'h0, phys_page);
+            // Remap the physical page back to logical Window 0
+            z80.mmu_map_page(4'h1, 4'h0, phys_page); 
             
-            for (offset = 0; offset < 4096; offset = offset + 1) begin
-                full_phys_addr = (phys_page << 12) | offset;
-                hash_pattern = (full_phys_addr ^ (full_phys_addr >> 8) ^ (full_phys_addr >> 16)) & 8'hFF;
+            for (offset = 0; offset < 4096; offset = offset + 1) begin 
+                // Reconstruct the 20-bit address and expected hash
+                full_phys_addr = (phys_page << 12) | offset; 
+                hash_pattern = (full_phys_addr ^ (full_phys_addr >> 8) ^ (full_phys_addr >> 16)) & 8'hFF; 
                 
-                // Use BFM to read the value back
-                z80.mem_read(offset, read_val);
+                // Use BFM to read the value back from the logical offset
+                z80.mem_read(offset, read_val); 
                 
-                if (read_val !== hash_pattern) begin
-                    $fatal(1, "FAIL: Aliasing or Write Error at Z80 Addr %04X. Expected %02X, Got %02X", offset, hash_pattern, read_val);
-                end
+                if (read_val !== hash_pattern) begin 
+                    $display("FATAL: Aliasing or Write Error at Phys Page %0x, Offset %04X.", phys_page, offset);
+                    $display("Expected Hash: %02X, Got: %02X", hash_pattern, read_val);
+                    $fatal(1); 
+                end 
             end
             
-            // ADDED: Read Progress Indicator
-            if (phys_page % 32 == 0) $display("   ... Read %0d / 256 pages", phys_page);
-        end
+            // Read Progress Indicator
+            if (phys_page % 32 == 0) $display("   ... Read %0d / 256 pages", phys_page); 
+        end 
 
-        $display("========================================");
-        $display(" SUCCESS! 1MB Striped RAM verified with 0 Aliasing Errors.");
-        $display("========================================");
-        $finish;
+        $display("========================================"); 
+        $display(" SUCCESS! 1MB RAM verified with 0 Aliasing Errors."); 
+        $display("========================================"); 
+        $finish; 
     end
 
-        // --- System Watchdog Timer ---
+    // --- System Watchdog Timer ---
     initial begin
-        #700000000;
-        $display("FATAL [%0t]: Watchdog Timer Expired! Testbench deadlock detected.", $time); 
-        $fatal(1);
+        #700000000; 
+        $display("FATAL [%0t]: Watchdog Timer Expired! Testbench deadlock detected.", $time);  
+        $fatal(1); 
     end
 
 endmodule

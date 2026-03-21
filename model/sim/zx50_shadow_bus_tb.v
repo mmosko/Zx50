@@ -3,9 +3,22 @@
 /***************************************************************************************
  * MODULE: zx50_shadow_bus_tb
  * =====================================================================================
- * Description:
- * This testbench physically simulates a direct card-to-card DMA transfer over the 
- * Universal Shadow Bus.
+ * WHAT IS BEING TESTED:
+ * This testbench is the ultimate physical simulation of a direct card-to-card DMA 
+ * transfer over the Universal Shadow Bus. It proves that the Z80 can configure two 
+ * distinct memory cards, step out of the way, and let the CPLDs autonomously blast 
+ * data across the backplane at high speed.
+ *
+ * TEST SEQUENCE:
+ * 1. Payload Prep: Preloads Card 0's ROM with a payload, and uses the Z80 to seed 
+ * Card 0's Upper RAM with a second payload.
+ * 2. TEST 1 (ROM to RAM): Programs Card 0 DMA to read from Physical Page 0x00000 (ROM)
+ * and Card 1 DMA to write to Physical Page 0x01000 (RAM). Fires DMA and verifies.
+ * 3. TEST 2 (RAM to RAM): Programs Card 0 DMA to read from Physical Page 0x10000 (RAM)
+ * and Card 1 DMA to write to Physical Page 0x12000 (RAM). Fires DMA and verifies.
+ * 4. Interrupt & Acknowledge: Upon completion of each transfer, the Master pulls the 
+ * shared Z80_INT_n line low. The Z80 performs an INTACK cycle, the Master drops 
+ * its vector (0x40) onto the bus, and clears the interrupt.
  ***************************************************************************************/
 
 module zx50_shadow_bus_tb;
@@ -76,6 +89,41 @@ module zx50_shadow_bus_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
+    // ==========================================
+    // HELPER TASK: Program the DMA via Z80 I/O
+    // ==========================================
+    task program_dma_node(
+        input [3:0] target_card,
+        input is_master, 
+        input to_bus, 
+        input [19:0] phys_addr, 
+        input [7:0] count
+    );
+        reg [15:0] addr_out;
+        reg [7:0]  data_out;
+        begin
+            // WRITE 1: Opcode 0
+            // A[15]=0, A[14]=Master, A[13]=Dir, A[12:8]=PA[12:8] | D[7:0]=PA[7:0]
+            addr_out[7:0]  = 8'h40 | target_card; // Base Port
+            addr_out[15]   = 1'b0;
+            addr_out[14]   = is_master;
+            addr_out[13]   = to_bus;
+            addr_out[12:8] = phys_addr[12:8];
+            data_out       = phys_addr[7:0];
+            z80.io_write(addr_out, data_out);
+            z80.wait_cycles(2);
+
+            // WRITE 2: Opcode 1 (Arms the DMA)
+            // A[15]=1, A[14:8]=Count[7:1] | D[7]=Count[0], D[6:0]=PA[19:13]
+            addr_out[7:0]  = 8'h40 | target_card;
+            addr_out[15]   = 1'b1;
+            addr_out[14:8] = count[7:1];
+            data_out[7]    = count[0];
+            data_out[6:0]  = phys_addr[19:13];
+            z80.io_write(addr_out, data_out);
+        end
+    endtask
+
     // --- 6. Test Sequence ---
     integer i;
     reg [7:0] read_val, vector;
@@ -100,7 +148,7 @@ module zx50_shadow_bus_tb;
         end
 
         // Map Card 0 RAM (Physical Page 0x10 = 0x10000) to Z80 Logical Page 8 (0x8000)
-        z80.io_write(16'h0830, 8'h10);
+        z80.mmu_map_page(4'h0, 4'h8, 8'h10);
         
         $display("[%0t] Z80 seeding Card 0 RAM with 16-byte payload at 0x8000...", $time);
         for (i = 0; i < 16; i = i + 1) begin
@@ -113,19 +161,15 @@ module zx50_shadow_bus_tb;
         $display("\n[%0t] --- TEST 1: DMA ROM (Card 0) to RAM (Card 1) ---", $time);
 
         // Map Card 1 RAM (Physical Page 0x01 = 0x01000) to Z80 Logical Page 1 (0x1000)
-        z80.io_write(16'h0131, 8'h01);
+        z80.mmu_map_page(4'h1, 4'h1, 8'h01);
 
         $display("[%0t] Programming Card 1 as SLAVE (Dest: Phys Page 0x01000)...", $time);
-        // Setup: Slave(0), FromBus(1), PA[12:0]=0x1000. Operand = 15'b0_1_1000000000000 = 15'h3000.
-        z80.io_write(16'h3041, 8'h00); 
-        // Arm: Count=16 (0x10), PA[19:13]=0. Operand = 15'h0800
-        z80.io_write(16'h8841, 8'h00);
+        // Setup: Slave(0), FromBus(1), PA=0x01000. Count=15 (transfers 16 bytes).
+        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h0F);
 
         $display("[%0t] Programming Card 0 as MASTER (Source: ROM Phys Page 0x00000). Firing DMA...", $time);
-        // Setup: Master(1), ToBus(0), PA[12:0]=0. Operand = 15'h4000
-        z80.io_write(16'h4040, 8'h00); 
-        // Arm: Count=16 (0x10), PA[19:13]=0. Operand = 15'h0800
-        z80.io_write(16'h8840, 8'h00);
+        // Setup: Master(1), ToBus(0), PA=0x00000. Count=15.
+        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h0F);
 
         $display("[%0t] Z80 yields bus. Waiting for Shadow Bus transfer...", $time);
         wait(z80_int_n == 1'b0);
@@ -159,21 +203,13 @@ module zx50_shadow_bus_tb;
         $display("\n[%0t] --- TEST 2: DMA RAM (Card 0) to RAM (Card 1) ---", $time);
 
         // Map Card 1 RAM (Physical Page 0x12 = 0x12000) to Z80 Logical Page 9 (0x9000)
-        z80.io_write(16'h0931, 8'h12);
+        z80.mmu_map_page(4'h1, 4'h9, 8'h12);
 
         $display("[%0t] Programming Card 1 as SLAVE (Dest: Phys Page 0x12000)...", $time);
-        // PA=0x12000. PA[12:0]=0. PA[19:13]=0x09.
-        // Setup: Slave(0), FromBus(1), PA[12:0]=0. Operand = 15'h2000
-        z80.io_write(16'h2041, 8'h00);
-        // Arm: Count=16 (0x10), PA[19:13]=0x09. Operand = 15'h0809
-        z80.io_write(16'h8841, 8'h09); 
+        program_dma_node(4'h1, 1'b0, 1'b1, 20'h12000, 8'h0F);
 
         $display("[%0t] Programming Card 0 as MASTER (Source: RAM Phys Page 0x10000). Firing DMA...", $time);
-        // PA=0x10000. PA[12:0]=0. PA[19:13]=0x08.
-        // Setup: Master(1), ToBus(0), PA[12:0]=0. Operand = 15'h4000
-        z80.io_write(16'h4040, 8'h00);
-        // Arm: Count=16 (0x10), PA[19:13]=0x08. Operand = 15'h0808
-        z80.io_write(16'h8840, 8'h08);
+        program_dma_node(4'h0, 1'b1, 1'b0, 20'h10000, 8'h0F);
 
         $display("[%0t] Z80 yields bus. Waiting for Shadow Bus transfer...", $time);
         wait(z80_int_n == 1'b0);

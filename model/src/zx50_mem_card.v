@@ -1,12 +1,22 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_mem_card
+ * MODULE: zx50_mem_card (Rev 1.0 - Clean Hardware)
+ * =====================================================================================
  * DESCRIPTION:
  * The absolute top-level integration module. This is a 1-to-1 "Digital Twin" of the 
  * physical PCB schematic. It instantiates the CPLD logic core, the SRAM chips, 
- * and the physical bus transceivers, wiring them all together to simulate the 
- * complete hardware card before manufacturing the board.
+ * the Flash ROM, and the physical bus transceivers, wiring them all together to 
+ * simulate the complete hardware card.
+ *
+ * MEMORY ARCHITECTURE (CLEAN 4K PAGING):
+ * - Local Address (`l_addr[11:0]`): Provides the 4KB physical page offset directly 
+ * to the memory ICs.
+ * - Translation Data (`atl_data[7:0]`): The lower 7 bits provide physical address 
+ * bits [18:12]. Bit [7] acts as the logical bank select to toggle between `ram0` 
+ * and `ram1` inside the CPLD.
+ * - The physical address passed to the memory ICs is formed by concatenating 
+ * `atl_data[6:0]` with `l_addr[11:0]`, creating a linear 19-bit (512KB) space.
  ***************************************************************************************/
 
 module zx50_mem_card (
@@ -31,7 +41,7 @@ module zx50_mem_card (
     // ==========================================
     // Internal Card Wires (PCB Traces)
     // ==========================================
-    wire [10:0] l_addr;       // Lower 11 bits (2K offset)
+    wire [11:0] l_addr;       // Lower 12 bits (4K offset)
     wire [7:0]  l_data;       // Local shared data bus
     
     wire [3:0]  atl_addr;     // ATL SRAM Address
@@ -44,10 +54,9 @@ module zx50_mem_card (
     
     wire z80_data_oe_n, sh_data_oe_n, l_dir, sh_c_dir;
 
-    // The physical 19-bit address bus for the RAM and ROM chips
-    // N.B. This wiring is wierd and not correct.  We have to work around it
-    // for the ROM.
-    wire [18:0] phys_addr = {atl_data[7:0], l_addr[10:0]};
+    // The physical 19-bit address bus for the RAM and ROM chips (512KB max per IC)
+    // atl_data[7] is consumed by the CPLD as a chip select, so only [6:0] are passed to the ICs
+    wire [18:0] phys_addr = {atl_data[6:0], l_addr[11:0]};
 
     // ==========================================
     // CPLD Core
