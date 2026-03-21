@@ -74,29 +74,47 @@ module zx50_conflict_tb;
     wire is_init_a, is_init_b;
     wire [3:0] init_ptr_a, init_ptr_b;
 
+    // --- BRIDGE LOGIC: Centralized Decode Simulation ---
+    // Simulating the top-level core's routing optimization for both cards
+    wire mmu_snoop_wr    = (!z80_iorq_n && !z80_wr_n && ((z80_addr[7:0] & 8'hF0) == 8'h30));
+    wire mmu_direct_wr_a = mmu_snoop_wr && (z80_addr[7:0] == (8'h30 | id_sw_a));
+    wire mmu_direct_wr_b = mmu_snoop_wr && (z80_addr[7:0] == (8'h30 | id_sw_b));
+
     // --- Card A (ID 0, Boot Card) ---
     zx50_mmu_sram card_a (
         .mclk(mclk), .reset_n(reset_n), 
-        .boot_en_n(1'b0), .card_id_sw(id_sw_a), 
-        .z80_addr(z80_addr), .l_data(z80_data),        
-        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
+        .boot_en_n(1'b0), 
+        
+        // --- FITTER OPTIMIZED PORTS ---
+        .z80_addr_hi(z80_addr[15:8]),
+        .mmu_snoop_wr(mmu_snoop_wr),
+        .mmu_direct_wr(mmu_direct_wr_a),
+        .z80_mreq_n(z80_mreq_n), 
+        // ------------------------------
         
         .atl_addr(atl_addr_a), .atl_we_n(atl_we_n_a), .atl_oe_n(atl_oe_n_a), 
         .active(active_a), .z80_card_hit(hit_a), .is_busy(is_busy_a),
-        .cpu_updating(cpu_updating_a), .is_initializing(is_init_a), .init_ptr(init_ptr_a),
+        .cpu_updating(cpu_updating_a), 
+        .is_initializing(is_init_a), .init_ptr(init_ptr_a),
         .is_rom_enabled()
     );
 
     // --- Card B (ID 1, RAM Card) ---
     zx50_mmu_sram card_b (
         .mclk(mclk), .reset_n(reset_n), 
-        .boot_en_n(1'b1), .card_id_sw(id_sw_b), 
-        .z80_addr(z80_addr), .l_data(z80_data),        
-        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n), 
+        .boot_en_n(1'b1), 
+        
+        // --- FITTER OPTIMIZED PORTS ---
+        .z80_addr_hi(z80_addr[15:8]),
+        .mmu_snoop_wr(mmu_snoop_wr),
+        .mmu_direct_wr(mmu_direct_wr_b),
+        .z80_mreq_n(z80_mreq_n), 
+        // ------------------------------
         
         .atl_addr(atl_addr_b), .atl_we_n(atl_we_n_b), .atl_oe_n(atl_oe_n_b), 
         .active(active_b), .z80_card_hit(hit_b), .is_busy(is_busy_b),
-        .cpu_updating(cpu_updating_b), .is_initializing(is_init_b), .init_ptr(init_ptr_b),
+        .cpu_updating(cpu_updating_b), 
+        .is_initializing(is_init_b), .init_ptr(init_ptr_b),
         .is_rom_enabled()
     );
 
@@ -114,7 +132,7 @@ module zx50_conflict_tb;
     // Behavioral memory arrays to represent the physical pages
     reg [7:0] mock_ram_a [0:255];
     reg [7:0] mock_ram_b [0:255];
-    
+
     // Multiplex the active card's data onto the shared Z80 bus
     assign z80_data = (active_a && !z80_rd_n) ? mock_ram_a[atl_data_a] : 8'hzz;
     assign z80_data = (active_b && !z80_rd_n) ? mock_ram_b[atl_data_b] : 8'hzz;
@@ -135,7 +153,7 @@ module zx50_conflict_tb;
         mock_ram_b[8'hBB] = 8'hBB; // Card B Physical Page 0xBB -> Data 0xBB
 
         // 1. Initial State Setup
-        reset_n = 1; 
+        reset_n = 1;
         id_sw_a = 4'h0;
         id_sw_b = 4'h1;
 
@@ -157,7 +175,7 @@ module zx50_conflict_tb;
             z80.mem_read(16'h8000, dummy_data);
             begin
                 wait(z80_mreq_n == 1'b0); // Wait for the Z80 to start the read
-                #15; // Give CPLD time to decode the address bus
+                #15;                      // Give CPLD time to decode the address bus
                 
                 if (active_a !== 1'b1 || active_b !== 1'b0) begin
                     $display("FAIL: Initial boot state conflict or missing ownership.");
@@ -191,7 +209,6 @@ module zx50_conflict_tb;
             begin
                 wait(z80_mreq_n == 1'b0);
                 #15;
-                
                 if (active_a === 1'b1) begin
                     $display("FAIL: BUS CONFLICT! Card A failed to release Page 8.");
                     failed = 1;

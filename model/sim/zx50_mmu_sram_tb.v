@@ -4,8 +4,8 @@
  * MODULE: zx50_mmu_sram_tb
  * =====================================================================================
  * WHAT THE MMU DOES:
- * The Memory Management Unit (MMU) is a snoop-based hardware paging controller. 
- * It monitors the Z80 bus for I/O writes to its specific hardware ID (Base port 0x30). 
+ * The Memory Management Unit (MMU) is a snoop-based hardware paging controller.
+ * It monitors the Z80 bus for I/O writes to its specific hardware ID (Base port 0x30).
  * When targeted, it performs two critical tasks:
  * 1. Updates an internal 16-bit `page_ownership` mask to track which of the Z80's 
  * 16 logical 4KB pages currently belong to this specific physical card.
@@ -60,14 +60,15 @@ module zx50_mmu_sram_tb;
     wire active, z80_card_hit, is_busy;
     wire mmu_is_initializing;
     wire mmu_cpu_updating;
-    wire [7:0] mmu_l_data;
     wire [3:0] mmu_init_ptr;
     wire is_rom_enabled; // NEW: Catches the kill-switch output
 
     // --- 5. BFM Instantiations ---
 
-    // BRIDGE LOGIC: Connect the Z80 BFM bus to the MMU snoop port
-    assign mmu_l_data = z80_data;
+    // BRIDGE LOGIC: Testbench replicates top-level centralized decode
+    // This generates the boolean hit flags the optimized MMU expects.
+    wire mmu_snoop_wr  = (!z80_iorq_n && !z80_wr_n && ((z80_addr[7:0] & 8'hF0) == 8'h30));
+    wire mmu_direct_wr = mmu_snoop_wr && (z80_addr[7:0] == (8'h30 | id_sw));
 
     // VERIFICATION LOOPBACK: Bridge translation results to Z80 bus for BFM check
     // This allows z80.mem_read to "see" the physical page output from the LUT 
@@ -85,9 +86,14 @@ module zx50_mmu_sram_tb;
     zx50_mmu_sram dut (
         .mclk(mclk), .reset_n(reset_n), 
         .boot_en_n(id_sw != 4'h0), // Card 0 is the Boot Card
-        .card_id_sw(id_sw),
-        .z80_addr(z80_addr), .l_data(z80_data), 
-        .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_mreq_n(z80_mreq_n),
+        
+        // --- FITTER OPTIMIZED PORTS ---
+        .z80_addr_hi(z80_addr[15:8]), 
+        .mmu_snoop_wr(mmu_snoop_wr),
+        .mmu_direct_wr(mmu_direct_wr),
+        .z80_mreq_n(z80_mreq_n),
+        // ------------------------------
+        
         .atl_addr(atl_addr), .atl_we_n(atl_we_n), .atl_oe_n(atl_oe_n),
         .active(active), .z80_card_hit(z80_card_hit), .is_busy(is_busy),
         .cpu_updating(mmu_cpu_updating),
@@ -99,7 +105,7 @@ module zx50_mmu_sram_tb;
     // The Structural LUT SRAM 
     // Note: Since this is just the isolated MMU, we mock the top-level CE logic here
     assign atl_ce_n = !(z80_card_hit || is_busy);
-
+    
     assign atl_data = mmu_is_initializing ? {4'h0, mmu_init_ptr} : 
                       (mmu_cpu_updating   ? z80_data : 8'hzz);
 
@@ -128,7 +134,8 @@ module zx50_mmu_sram_tb;
         reset_n = 1; 
 
         // The simulated Z80 Boot ROM initializes the MMU maps
-        z80.init_mmu(4'h0); // Init Card A
+        z80.init_mmu(4'h0);
+        // Init Card A
 
         // Concurrently read memory and check if the MMU flags 'active'
         fork

@@ -14,7 +14,7 @@
  * 0x30 (the MMU Family ID).
  * 2. DISTRIBUTED OWNERSHIP: Instead of a single central MMU, every memory card 
  * has its own MMU. When an I/O write occurs, the MMU checks if the target 
- * matches its specific `card_id_sw`. If it matches, it claims the page in its 
+ * matches its specific Card ID. If it matches, it claims the page in its 
  * `page_ownership` mask. If it doesn't match, it actively drops ownership. 
  * This guarantees zero bus contention across multiple cards.
  * 3. HARDWARE WIPE: On power-up/reset, the MMU autonomously steps through a 
@@ -24,21 +24,26 @@
  * CPLD routing matrix to bypass the ATL SRAM and boot from the physical ROM. 
  * If the Z80 maps ANY RAM page into the lower 32KB (Logical Pages 0-7), the MMU 
  * permanently flips this kill-switch Low, hiding the ROM and exposing the RAM.
+ *
+ * CPLD FITTER OPTIMIZATIONS:
+ * To prevent routing matrix congestion (Fan-In starvation), address decoding 
+ * is centralized in the top-level core. This module only receives the upper 
+ * address byte and two pre-decoded boolean hit flags.
  ***************************************************************************************/
 
 module zx50_mmu_sram (
     input wire mclk,              
     input wire reset_n,           
     input wire boot_en_n,         // Hardware flag: 0 = Boot ROM Card, 1 = Normal RAM Card
-    input wire [3:0] card_id_sw,  
 
-    // --- Backplane & Local Bus Inputs ---
-    input wire [15:0] z80_addr,   
-    input wire [7:0] l_data,      
+    // --- Centralized Decoding & Reduced Fan-In ---
+    // Only the upper byte of the Z80 address bus is needed for page mapping math.
+    input wire [7:0] z80_addr_hi,   
     
-    // --- Z80 Control Signals ---
-    input wire z80_iorq_n, 
-    input wire z80_wr_n, 
+    // Pre-calculated boolean flags from the top-level core
+    input wire mmu_snoop_wr,      // High if ANY MMU is being written to
+    input wire mmu_direct_wr,     // High if THIS specific MMU is being written to
+
     input wire z80_mreq_n, 
 
     // --- Address Translation Table (ATL / ISSI SRAM) ---
@@ -58,12 +63,9 @@ module zx50_mmu_sram (
     output wire is_rom_enabled    // The raw kill-switch state (1 = ROM active, 0 = RAM active)
 );
 
-    // I/O Address Space configuration for the MMU family
-    localparam MMU_FAMILY_ID = 8'h30;
-    localparam MMU_MASK      = 8'hF0;
-
-    // Decodes the top 4 bits of the Z80 address into a 1-hot 16-bit mask for fast ownership checking
-    wire [15:0] decoded_page = (16'b1 << z80_addr[15:12]);
+    // Decodes the top 4 bits of the Z80 address (A15-A12) into a 1-hot 16-bit mask 
+    // for fast ownership checking during active memory cycles.
+    wire [15:0] decoded_page = (16'b1 << z80_addr_hi[7:4]); 
     
     reg [15:0] page_ownership;    // Bitmask: 1 = Card owns this logical page, 0 = Ignored
     reg        reset_armed;
@@ -101,31 +103,30 @@ module zx50_mmu_sram (
             reset_armed     <= 1'b0;
             is_initializing <= 1'b0;
 
-            // --- SNOOP LOGIC: MMU FAMILY I/O WRITE ---
-            // Triggers if the Z80 executes an I/O write targeting the 0x3X port range.
-            if (!z80_iorq_n && !z80_wr_n && ((z80_addr[7:0] & MMU_MASK) == MMU_FAMILY_ID)) begin
+            // --- SNOOP LOGIC ---
+            // Triggers if ANY card on the backplane is updating its MMU.
+            if (mmu_snoop_wr) begin
                 
-                // Does the exact port match this specific card's ID? (e.g., 0x30 for Card 0, 0x31 for Card 1)
-                if (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)) begin
+                // Does the exact port match this specific card's ID?
+                if (mmu_direct_wr) begin
                     
                     // Claim the logical page (Z80 B register / A[11:8] holds the logical page number)
-                    page_ownership[z80_addr[11:8]] <= 1'b1;
+                    page_ownership[z80_addr_hi[3:0]] <= 1'b1; 
                     
                     // KILL SWITCH: If the CPU maps ANY physical page into the lower 32K 
                     // of the logical space (Pages 0-7, where A[11] is 0), permanently disable the Boot ROM.
-                    if (z80_addr[11] == 1'b0) begin
+                    if (z80_addr_hi[3] == 1'b0) begin 
                         rom_enabled <= 1'b0;
                     end
                 end else begin
                     // Another memory card on the backplane claimed this logical page. 
                     // Drop ownership to prevent physical bus contention.
-                    page_ownership[z80_addr[11:8]] <= 1'b0;
+                    page_ownership[z80_addr_hi[3:0]] <= 1'b0;
                 end
             end
 
             // Generate a 1-clock pulse to write the physical page target into the ATL SRAM
-            sync_we <= (!is_initializing && !z80_iorq_n && !z80_wr_n && 
-                       (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)));
+            sync_we <= (!is_initializing && mmu_direct_wr);
         end
     end
 
@@ -133,8 +134,7 @@ module zx50_mmu_sram (
     // ATL (ISSI SRAM) Interface Logic
     // ==========================================
     // Combinatorial flag: True when the Z80 is writing to THIS card's MMU port
-    wire l_cpu_updating = (!is_initializing && !z80_iorq_n && !z80_wr_n && 
-                          (z80_addr[7:0] == (MMU_FAMILY_ID | card_id_sw)));
+    wire l_cpu_updating = (!is_initializing && mmu_direct_wr);
 
     assign cpu_updating = l_cpu_updating;
 
@@ -143,19 +143,18 @@ module zx50_mmu_sram (
     // 2. During update: Use the Z80's B register (A[11:8]) as the target slot.
     // 3. During normal memory access: Use the Z80's active logical page (A[15:12]).
     assign atl_addr = is_initializing ? {1'b0, init_ptr} : 
-                      (l_cpu_updating   ? z80_addr[11:8] : z80_addr[15:12]);
+                      (l_cpu_updating   ? z80_addr_hi[3:0] : z80_addr_hi[7:4]);
 
     // Write Enable is held low continuously during the 16-cycle wipe, or pulsed by sync_we.
     assign atl_we_n = is_initializing ? !mclk : !sync_we;
 
     // Turn off the ATL SRAM output buffer if we are writing to it. 
-    // Note: The top-level CPLD routing matrix will forcefully override this if the ROM bypass is active.
     assign atl_oe_n = (is_initializing || l_cpu_updating) ? 1'b1 : 1'b0;
 
     // ==========================================
     // Active & Hit Signal Logic
     // ==========================================
-    // Uses the 1-hot decoded page mask to instantly check if the `page_ownership` register has a '1' in the target slot.
+    // Uses the 1-hot decoded page mask to instantly check if the `page_ownership` register has a '1'.
     wire current_page_owned = |(page_ownership & decoded_page);
     
     // Asserts active only if it's a valid memory cycle, the hardware wipe is done, and we own the page.

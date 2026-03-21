@@ -7,12 +7,12 @@
  * This is an isolated unit test for the `zx50_dma` (Universal Shadow Bus Node).
  * It strictly verifies that the DMA state machine correctly decodes the Z80 24-bit 
  * bit-packed `OUT (C), A` configuration protocol and properly generates a contiguous 
- * 20-bit physical address.
+ * physical address, respecting the 12-bit/8-bit counter optimization.
  *
  * TEST SEQUENCE:
  * - Phase 1 (Master Mode): The DMA is programmed to read from local memory and write 
  * to the Shadow Bus. The TB verifies it asserts the bus, cycles through STROBE/INC, 
- * accurately increments the 20-bit address, and asserts `int_pending`.
+ * accurately increments the address, and asserts `int_pending`.
  * - Phase 2 (Slave Mode): The DMA is programmed to listen to the Shadow Bus and write 
  * to local memory. The TB takes manual control of the shadow control lines to simulate 
  * an external master, verifying the Slave safely disarms on `sh_done_n`.
@@ -33,9 +33,9 @@ module zx50_dma_tb;
     wire z80_mreq_n, z80_iorq_n, z80_rd_n, z80_wr_n, z80_m1_n;
     
     // --- 4. DMA Local Output Buses ---
+    // Note: The data bus is no longer routed through the DMA module. It only 
+    // manages the address generation and transceiver direction controls.
     wire [19:0] dma_phys_addr;
-    wire [7:0]  dma_data_out;
-    reg  [7:0]  dma_data_in;
     wire dma_local_we_n, dma_local_oe_n;
 
     // --- 5. Shadow Bus Controls (inout) ---
@@ -65,12 +65,24 @@ module zx50_dma_tb;
         .wait_n(1'b1)
     );
 
+    // --- BRIDGE LOGIC: Centralized Decode Simulation ---
+    // We replicate the top-level CPLD routing matrix decoding here so the 
+    // optimized DMA module gets the exact boolean flag it expects.
+    // Note: This testbench assumes Card ID is 0x0. Base port = 0x40.
+    wire dma_io_write = (!z80_iorq_n && !z80_wr_n && (z80_addr[7:0] == 8'h40));
+
     // --- 8. DUT Instantiation ---
     zx50_dma dut (
         .mclk(mclk), .reset_n(reset_n),
-        .card_id(4'h0), 
-        .z80_addr(z80_addr), .z80_data_in(z80_data), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n),
-        .dma_phys_addr(dma_phys_addr), .dma_data_out(dma_data_out), .dma_data_in(dma_data_in), 
+        
+        // --- FITTER OPTIMIZED PORTS ---
+        .z80_addr_hi(z80_addr[15:8]), 
+        .z80_data_in(z80_data), 
+        .z80_iorq_n(z80_iorq_n), 
+        .dma_io_write(dma_io_write),
+        // ------------------------------
+        
+        .dma_phys_addr(dma_phys_addr), 
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
         .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n), 
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), 
@@ -94,7 +106,7 @@ module zx50_dma_tb;
         begin
             // WRITE 1: Opcode 0
             // A[15]=0, A[14]=Master, A[13]=Dir, A[12:8]=PA[12:8] | D[7:0]=PA[7:0]
-            addr_out[7:0]  = 8'h40; // Base Port
+            addr_out[7:0]  = 8'h40; // Base Port (Card 0)
             addr_out[15]   = 1'b0;
             addr_out[14]   = is_master;
             addr_out[13]   = to_bus;
@@ -123,7 +135,6 @@ module zx50_dma_tb;
         
         // Setup defaults
         intack_clear = 0;
-        dma_data_in  = 8'hAA;
         tb_sh_drive  = 0;
         tb_sh_inc_n  = 1; tb_sh_stb_n = 1; tb_sh_done_n = 1;
 
@@ -145,7 +156,7 @@ module zx50_dma_tb;
         
         // Wait for state machine to finish blasting the bytes
         wait(int_pending == 1'b1);
-        
+
         // Because the count was 4 bytes (0, 1, 2, 3), the address should have incremented 4 times.
         if (dma_phys_addr !== 20'h12349) begin
             $display("FATAL: Master did not increment physical address correctly! Expected 12349, Got %0x", dma_phys_addr);

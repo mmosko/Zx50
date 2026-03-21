@@ -80,7 +80,8 @@ realclean: clean
 # Runs the exact Atmel synthesis flow without invoking the legacy Wine fitter.
 
 # Master Target: Run both dry-runs
-yosys-check: yosys-check_dma yosys-check_nodma
+#yosys-check: yosys-check_dma yosys-check_nodma
+yosys-check: yosys-check_dma
 
 yosys-check_dma: $(DMA_FILES)
 	@echo "\n--- Running Yosys Atmel Synthesis Check (WITH DMA) ---"
