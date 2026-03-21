@@ -52,7 +52,11 @@ module zx50_cpld_core_tb;
     assign sh_rw_n = 1'b1;
 
     // --- 5. CPLD Output Pins to Monitor ---
-    wire [11:0] l_addr; // Rev 1.0 Clean Hardware 12-bit offset
+    `ifdef HW_REV_A11_BUG
+        wire [10:0] l_addr;
+    `else
+        wire [11:0] l_addr;
+    `endif
     wire [3:0]  atl_addr;
     wire [7:0]  atl_data;
     wire atl_we_n, atl_oe_n, atl_ce_n;

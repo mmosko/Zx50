@@ -10,7 +10,7 @@
  * CPLD FITTING OPTIMIZATION 1 (THE 4K PAGE LIMIT):
  * To fit within the tight routing constraints of a 128-macrocell CPLD, the 20-bit 
  * address counter has been split. It uses a static 8-bit upper address latch (A19-A12) 
- * and a fast 12-bit lower address counter (A11-A0). 
+ * and a fast 12-bit lower address counter (A11-A0).
  * SOFTWARE RULE: DMA transfers will smoothly increment up to 4,096 bytes, but will 
  * wrap around physical 4KB boundaries (A12). The Z80 programmer must manually chunk 
  * transfers that cross logical page boundaries.
@@ -72,12 +72,12 @@ module zx50_dma (
     wire [14:0] operand = {z80_addr_hi[6:0], z80_data_in[7:0]};
 
     // --- OPTIMIZED REGISTERS ---
-    reg [7:0]  phys_addr_hi; // Static upper latch (A19-A12)
-    reg [11:0] phys_addr_lo; // Fast lower counter (A11-A0)
+    reg [7:0]  phys_addr_hi;   // Static upper latch (A19-A12)
+    reg [11:0] phys_addr_lo;   // Fast lower counter (A11-A0)
     
     reg [7:0]  byte_count;
     reg is_master;
-    reg dir_from_bus; 
+    reg dir_from_bus;
     reg transfer_armed;
     reg arm_req;
 
@@ -88,17 +88,19 @@ module zx50_dma (
     // 2. STATE MACHINE DECLARATIONS
     // ==========================================
     wire dma_go = transfer_armed;
+
     localparam M_IDLE   = 3'd0;
     localparam M_START  = 3'd1;
     localparam M_STROBE = 3'd2;
     localparam M_INC    = 3'd3;
     localparam M_WAIT   = 3'd4;
     localparam M_DONE   = 3'd5;
+
     reg [2:0] m_state;
 
     wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
     wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
-    
+
     // ==========================================
     // 3. CONFIGURATION REGISTER LATCHING
     // ==========================================
@@ -116,12 +118,12 @@ module zx50_dma (
                 // OPCODE 0: Setup
                 is_master         <= operand[14];
                 dir_from_bus      <= operand[13];
-                phys_addr_lo      <= operand[11:0]; // Load 4K offset (A11-A0)
-                phys_addr_hi[0]   <= operand[12];   // Load A12
+                phys_addr_lo      <= operand[11:0];     // Load 4K offset (A11-A0)
+                phys_addr_hi[0]   <= operand[12];       // Load A12
             end else begin
                 // OPCODE 1: Arm & High Address
                 byte_count        <= operand[14:7];
-                phys_addr_hi[7:1] <= operand[6:0];  // Load A19-A13
+                phys_addr_hi[7:1] <= operand[6:0];      // Load A19-A13
                 arm_req           <= 1'b1;
             end
         // Safely wait for the Z80 to finish its OUT instruction before blasting the bus
@@ -144,6 +146,7 @@ module zx50_dma (
     wire safe_to_yield = is_master ?
         (m_state == M_IDLE || m_state == M_WAIT || m_state == M_DONE) 
         : (sh_en_n !== 1'b0);
+
     reg yielding;
     
     always @(posedge mclk or negedge reset_n) begin
@@ -153,7 +156,7 @@ module zx50_dma (
     end
 
     assign dma_active = dma_go && !yielding;
-    
+
     // ==========================================
     // 5. MASTER STATE MACHINE
     // ==========================================
@@ -194,11 +197,13 @@ module zx50_dma (
     assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? generated_stb_n : 1'bz;
     assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
     assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
-
-    // Concatenate the static high bits and the fast 4K counter for the local address
-    assign dma_phys_addr = {phys_addr_hi, phys_addr_lo}; 
     
-    assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? 1'b0 : 1'b1;
+    // Concatenate the static high bits and the fast 4K counter for the local address
+    assign dma_phys_addr = {phys_addr_hi, phys_addr_lo};
+    
+    // THE FIX: Output Enable and Write Enable are now tightly bound to the Strobe pulse
+    // to prevent local data bus collisions with the Z80 OUT commands.
+    assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? int_sh_stb_n : 1'b1;
     assign dma_local_we_n = (dma_active && dir_from_bus == 1'b1) ? int_sh_stb_n : 1'b1;
 
 endmodule

@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Tue Mar 17 18:45:21 2026
+[*] Wed Mar 18 00:56:30 2026
 [*]
 [dumpfile] "/media/psf/Electronics/z80/Zx50/model/waves/zx50_shadow_bus.vcd"
-[dumpfile_mtime] "Fri Mar 20 21:41:12 2026"
-[dumpfile_size] 170512
+[dumpfile_mtime] "Sat Mar 21 07:21:06 2026"
+[dumpfile_size] 202751
 [savefile] "/media/psf/Electronics/z80/Zx50/model/gtkw/zx50_shadow_bus.gtkw"
-[timestart] 8901000
-[size] 1512 870
-[pos] -27 -24
-*-19.935431 11894000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 18303000
+[size] 1512 949
+[pos] -1 -1
+*-20.296701 21668000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] zx50_shadow_bus_tb.
 [treeopen] zx50_shadow_bus_tb.card0.
 [treeopen] zx50_shadow_bus_tb.card1.
 [sst_width] 278
-[signals_width] 142
+[signals_width] 167
 [sst_expanded] 1
-[sst_vpaned_height] 267
+[sst_vpaned_height] 178
 @28
 zx50_shadow_bus_tb.mclk
 zx50_shadow_bus_tb.zclk
@@ -54,11 +54,15 @@ zx50_shadow_bus_tb.card0.atl_data[7:0]
 zx50_shadow_bus_tb.card0.ram_oe_n
 zx50_shadow_bus_tb.card0.ram_we_n
 zx50_shadow_bus_tb.card0.ram_ce0_n
-zx50_shadow_bus_tb.card0.ram_ce1_n
 @29
+zx50_shadow_bus_tb.card0.ram_ce1_n
+@28
 zx50_shadow_bus_tb.card0.rom_ce_n
 @22
 zx50_shadow_bus_tb.card0.l_data[7:0]
+@28
+zx50_shadow_bus_tb.card0.sh_c_dir
+zx50_shadow_bus_tb.card0.sh_data_oe_n
 @200
 -
 -CARD1
@@ -73,6 +77,9 @@ zx50_shadow_bus_tb.card1.ram_ce1_n
 zx50_shadow_bus_tb.card1.rom_ce_n
 @22
 zx50_shadow_bus_tb.card0.l_data[7:0]
+@28
+zx50_shadow_bus_tb.card1.sh_c_dir
+zx50_shadow_bus_tb.card1.sh_data_oe_n
 @200
 -
 -Z80

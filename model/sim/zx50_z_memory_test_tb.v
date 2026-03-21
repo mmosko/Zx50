@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_memory_test_tb
+ * MODULE: zx50_z_memory_test_tb
  * =====================================================================================
  * WHAT IT IS TESTING:
  * An exhaustive 1 Megabyte Memory validation test for the Zx50 Memory Card.
@@ -28,7 +28,7 @@
  * 6. Asserts $fatal(1) if any byte read does not match its mathematically expected hash.
  ***************************************************************************************/
 
-module zx50_memory_test_tb;
+module zx50_z_memory_test_tb;
 
     // --- System Signals ---
     wire mclk; 

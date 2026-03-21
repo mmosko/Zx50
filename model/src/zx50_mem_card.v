@@ -1,13 +1,11 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_mem_card (Rev 1.0 - Clean Hardware)
+ * MODULE: zx50_mem_card (Rev 1.0 - Clean Hardware & Rev A Bug Support)
  * =====================================================================================
  * DESCRIPTION:
  * The absolute top-level integration module. This is a 1-to-1 "Digital Twin" of the 
- * physical PCB schematic. It instantiates the CPLD logic core, the SRAM chips, 
- * the Flash ROM, and the physical bus transceivers, wiring them all together to 
- * simulate the complete hardware card.
+ * physical PCB schematic. 
  *
  * MEMORY ARCHITECTURE (CLEAN 4K PAGING):
  * - Local Address (`l_addr[11:0]`): Provides the 4KB physical page offset directly 
@@ -17,6 +15,12 @@
  * and `ram1` inside the CPLD.
  * - The physical address passed to the memory ICs is formed by concatenating 
  * `atl_data[6:0]` with `l_addr[11:0]`, creating a linear 19-bit (512KB) space.
+ *
+ * A11 BUG ARCHITECTURE (REV A):
+ * Because the A11 trace is physically missing from the local address bus, the 
+ * CPLD dynamically stripes 4K requests across two 2K chip boundaries.
+ * The physical address is formed by concatenating `atl_data[7:0]` directly to 
+ * `l_addr[10:0]`, preserving the full 1MB capacity.
  ***************************************************************************************/
 
 module zx50_mem_card (
@@ -41,11 +45,11 @@ module zx50_mem_card (
     // ==========================================
     // Internal Card Wires (PCB Traces)
     // ==========================================
-    wire [11:0] l_addr;       // Lower 12 bits (4K offset)
-    wire [7:0]  l_data;       // Local shared data bus
+    wire [11:0] l_addr;
+    wire [7:0]  l_data;
     
-    wire [3:0]  atl_addr;     // ATL SRAM Address
-    wire [7:0]  atl_data;     // ATL SRAM Data (Also acts as upper 8 bits of physical address)
+    wire [3:0]  atl_addr; // 16 slots for 4K paging
+    wire [7:0]  atl_data;
     
     // Control lines
     wire atl_we_n, atl_oe_n, atl_ce_n;
@@ -54,14 +58,19 @@ module zx50_mem_card (
     
     wire z80_data_oe_n, sh_data_oe_n, l_dir, sh_c_dir;
 
-    // The physical 19-bit address bus for the RAM and ROM chips (512KB max per IC)
-    // atl_data[7] is consumed by the CPLD as a chip select, so only [6:0] are passed to the ICs
-    wire [18:0] phys_addr = {atl_data[6:0], l_addr[11:0]};
+    // --- PHYSICAL ADDRESS RECONSTRUCTION ---
+    `ifdef HW_REV_A11_BUG
+        // A11 was physically routed to the RAM CS pins. 
+        // The CPLD only drives A[10:0] on the l_addr bus.
+        // We concatenate the FULL atl_data[7:0] bus to l_addr[10:0] to build the 19-bit bus the chips actually see.
+        wire [18:0] phys_addr = {atl_data[7:0], l_addr[10:0]};
+    `else
+        wire [18:0] phys_addr = {atl_data[6:0], l_addr[11:0]};
+    `endif
 
     // ==========================================
     // CPLD Core
     // ==========================================
-    // Note: The Duplex bus multiplexes the control signals with the DIP switches during reset.
     wire [3:0] duplex_bus = (!reset_n) ? card_id_sw : {z80_iorq_n, z80_mreq_n, z80_wr_n, z80_rd_n};
 
     zx50_cpld_core cpld (
@@ -88,44 +97,37 @@ module zx50_mem_card (
     // Physical Memory ICs
     // ==========================================
     
-    // 1. Address Translation Lookaside (ATL) SRAM - IS61C256AL (32KB)
+    // Address Translation Lookaside (ATL) SRAM - IS61C256AL (32KB)
     is61c256al lut_sram (
-        .addr({11'b0, atl_addr}), // Padded to fit 15-bit address
+        .addr({11'b0, atl_addr}), // Pad the 4-bit ATL address to fit the 15-bit chip
         .data(atl_data),
         .ce_n(atl_ce_n), .oe_n(atl_oe_n), .we_n(atl_we_n)
     );
 
-    // 2. Main RAM 0 - CY7C1049 (512KB)
+    // 2. Main RAM 0 - CY7C1049 (512KB footprint)
     cy7c1049 ram0 (
         .addr(phys_addr), .data(l_data),
         .ce_n(ram_ce0_n), .oe_n(ram_oe_n), .we_n(ram_we_n)
     );
 
-    // 3. Main RAM 1 - CY7C1049 (512KB)
+    // 3. Main RAM 1 - CY7C1049 (512KB footprint)
     cy7c1049 ram1 (
         .addr(phys_addr), .data(l_data),
         .ce_n(ram_ce1_n), .oe_n(ram_oe_n), .we_n(ram_we_n)
     );
 
-    // 4. Boot ROM - SST39SF040 (512KB)
+    // 4. Boot ROM - SST39SF040 (512KB footprint)
     sst39sf040 rom (
         .addr(phys_addr), .data(l_data),
         .ce_n(rom_ce_n), .oe_n(ram_oe_n), .we_n(ram_we_n)
     );
 
     // ==========================================
-    // Transceiver Emulation (74ABT245 / 74LVC245)
+    // Transceiver Emulation
     // ==========================================
-    
-    // Z80 Data Bus Transceiver (Controlled by l_dir)
-    // l_dir = 1: Z80 -> Local Bus (Write)
-    // l_dir = 0: Local Bus -> Z80 (Read)
     assign l_data   = (!z80_data_oe_n && l_dir == 1'b1) ? z80_data : 8'hzz;
     assign z80_data = (!z80_data_oe_n && l_dir == 1'b0) ? l_data   : 8'hzz;
 
-    // Shadow Data Bus Transceiver (Controlled by sh_c_dir)
-    // sh_c_dir = 1: Local Bus -> Shadow Bus (Master driving)
-    // sh_c_dir = 0: Shadow Bus -> Local Bus (Slave listening)
     assign sh_data  = (!sh_data_oe_n && sh_c_dir == 1'b1) ? l_data  : 8'hzz;
     assign l_data   = (!sh_data_oe_n && sh_c_dir == 1'b0) ? sh_data : 8'hzz;
 

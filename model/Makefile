@@ -1,5 +1,7 @@
 .PHONY: run-% view-% syn
 
+FLAGS = -DHW_REV_A11_BUG
+
 # Variables
 VERILOG_COMPILER = iverilog
 SIM_RUNTIME      = vvp
@@ -41,7 +43,7 @@ $(WAVES_DIR)/%.vcd: $(OUT_DIR)/%.vvp
 
 run-%: $(SIM_DIR)/%_tb.v $(wildcard $(SRC_DIR)/*.v)
 	@echo "\n--- Compiling $* ---"
-	$(VERILOG_COMPILER) -y $(SRC_DIR) -o $(OUT_DIR)/$*.vvp $<
+	$(VERILOG_COMPILER) $(FLAGS) -y $(SRC_DIR) -o $(OUT_DIR)/$*.vvp $<
 	@echo "--- Running Simulation ---"
 	$(SIM_RUNTIME) $(OUT_DIR)/$*.vvp
 	@echo "--- Simulation Complete. Waves saved to $(WAVES_DIR)/$*.vcd ---"
