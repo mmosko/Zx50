@@ -93,3 +93,5 @@ syn/quartus/output_files/*
 *.jam
 *.jbc
 
+/probe_sw/Zx50_Bus_Probe.X/build/
+/probe_sw/Zx50_Bus_Probe.X/dist/
