@@ -9,6 +9,7 @@
     <orderEntry type="jdk" jdkName="Python 3.9 (Zx50_BusProbe_Firmware)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="docs" />
+    <orderEntry type="module" module-name="Zx50_FrontPanelFirmware" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

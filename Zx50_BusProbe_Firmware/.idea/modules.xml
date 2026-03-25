@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Zx50_BusProbe_Firmware.iml" filepath="$PROJECT_DIR$/.idea/Zx50_BusProbe_Firmware.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Zx50_FrontPanel_Firmware/.idea/Zx50_FrontPanelFirmware.iml" filepath="$PROJECT_DIR$/../Zx50_FrontPanel_Firmware/.idea/Zx50_FrontPanelFirmware.iml" />
       <module fileurl="file://$PROJECT_DIR$/../docs/.idea/docs.iml" filepath="$PROJECT_DIR$/../docs/.idea/docs.iml" />
     </modules>
   </component>

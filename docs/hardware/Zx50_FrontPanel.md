@@ -83,21 +83,48 @@ The Latch Enable (`LE`) pins of all 7 chips are tied together. The Pico pulses t
 * **Latch 6:** Z80 Control 1 (`~M1~`, `~MREQ~`, `~IORQ~`, `~RD~`, `~WR~`, `~RFSH~`, `~HALT~`, `~WAIT~`)
 * **Latch 7:** Z80 Control 2 (`~INT~`, `~NMI~`, `~RESET~`, `~BUSRQ~`, `~BUSAK~`)
 
-### The Pi Pico GPIO Map (26/26 Pins Used)
-The outputs of all seven latches are tied to a shared 8-bit local bus. The Pico multiplexes this bus by asserting the specific Output Enable (`~OE`) of the latch it wishes to read.
+## Pi Pico GPIO Pin Mapping (Final)
 
-* **Shared 8-Bit Read Bus (8 Pins):** * `GP0` - `GP7` (Reads `Q0-Q7` from the active latch)
-* **Hardware Latch Control (8 Pins):**
-  * `GP8` - `GP14`: Selects `~OE` for Latches 1 through 7.
-  * `GP15`: Global Latch Enable (`LE`) to freeze the snapshot.
-* **Faceplate SPI Bus (5 Pins):** * `GP16` - `GP20`: `SCLK`, `MOSI`, `LCD_CS`, `HCMS_CE`, `595_LATCH`.
-* **Faceplate Switches (3 Pins):** * `GP21`: `RUN_SW`
-  * `GP22`: `STEP_SW`
-  * `GP26`: `DISP_EN_SW`
-* **Fast PIO Triggers (2 Pins):** * `GP27`: `~IORQ` (Hardware trigger for OTIR capture).
-  * `GP28`: `~WR` (Hardware trigger modifier).
-
+| Pico Pin | GPIO | Function | Sub-System | Hardware Routing |
+| :--- | :--- | :--- | :--- | :--- |
+| 1-10 | GP0-GP7 | `D0` - `D7` | Z80 Data Bus | via U2 (74LVC245) |
+| 11-20| GP8-GP15| `A0` - `A7` | Z80 Address Bus | via U1 (74LVC245) |
+| 21 | GP16 | `~LCD_CS` | SPI Control | to J3 (Pin 6) |
+| 22 | GP17 | `REG_SEL` | SPI Control (RS) | to J3 (Pin 7) |
+| 24 | GP18 | `SCLK` | SPI Clock | to J3 (Pin 4) |
+| 25 | GP19 | `MOSI` | SPI Data Out | to J3 (Pin 5) |
+| 26 | GP20 | `~LED_CE` | 74HC595 Latch (RCLK) | to J3 (Pin 8) |
+| 27 | GP21 | `~RUN` | Switch Input | to J4 (Pin 7) |
+| 29 | GP22 | `~STEP` | Switch Input | to J3 (Pin 9) |
+| 31 | GP26 | `~DISP_EN` | Z80 IO Select | to J4 (Pin 3) |
+| 32 | GP27 | `~WAIT` | Z80 Control (Out) | to J4 (Pin 2) |
+| 34 | GP28 | `~BUSRQ` | Z80 Control (Out) | to J4 (Pin 1) |
 ---
+
+## 3.5 Firmware Architecture & Multiplexed Bus Workflow
+
+To overcome the Pi Pico's 26-pin limitation, the Brain Card utilizes a multiplexed 8-bit GPIO data bus paired with high-speed priority interrupts. The Pico operates in two distinct modes: a high-speed Priority Transfer Mode for direct Z80 communication, and a passive Polling Mode for front-panel UI updates.
+
+### 1. The Shared 8-Bit Bus (GP0-GP7)
+Instead of dedicating 24 Pico pins to read the full Z80 Address and Data buses simultaneously, the Pi Pico uses a single shared 8-bit input bus (`GP0-GP7`). The Pico selectively reads the Z80 state by driving the Output Enable (`~OE`) lines of three 74LVC245 transceivers:
+* **U1 (`~OE` = GP8):** Reads the Lower Address Bus (`A0-A7`) / Z80 `C` Register.
+* **U3 (`~OE` = GP9):** Reads the Upper Address Bus (`A8-A15`) / Z80 `B` Register.
+* **U4 (`~OE` = GP10):** Reads the Data Bus (`D0-D7`).
+
+### 2. Priority Transfer Mode (The `OTIR` Catch)
+When the Z80 executes an `OUT` or block `OTIR` instruction, the Pico relies on its Programmable I/O (PIO) or high-speed hardware interrupts to catch the data at full bus speed.
+* **The Trigger:** The Pico monitors `~IORQ` and `~WR` via priority hardware interrupts.
+* **Port Verification:** Upon detecting an I/O write, the Pico asserts U1 `~OE` to read the lower address bus, which contains the target I/O Port Address. 
+* **The `OTIR` Loop:** If the port matches the Pico's assigned address, it immediately enters a high-speed transfer loop. It asserts U4 `~OE` to latch and read the incoming data byte. Next, it asserts U3 `~OE` to read the upper address bus. 
+* **End of Block Detection:** During an `OTIR` instruction, the Z80 places the remaining byte counter (the `B` register) on the upper address bus. The Pico's high-speed loop continues capturing data bytes until the U3 read returns `0`, signaling the block transfer is complete.
+
+### 3. Passive Display Polling (10Hz - 20Hz)
+Outside of priority block transfers, the Pico acts as a classic front-panel observer.
+* At a fixed interval (10Hz to 20Hz), the Pico sequentially latches U1, U3, and U4 to capture a snapshot of the current Address and Data buses.
+* If the `~DISP_EN` signal is active, the Pico formats this snapshot and shifts it out over SPI to the Faceplate's HCMS dot-matrix displays and discrete LEDs.
+
+### 4. Switch State Monitoring
+In the background, the Pico monitors the physical Faceplate switches (`~RUN`, `~STEP`). State changes trigger immediate updates to the Z80 control lines (`~WAIT`, `~BUSRQ`) to pause, step, or release the CPU.
 
 ## 4. High-Speed Pico Integration
 

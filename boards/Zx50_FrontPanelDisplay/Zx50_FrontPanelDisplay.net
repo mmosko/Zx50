@@ -1,7 +1,7 @@
 (export (version "E")
   (design
     (source "/Users/marc/Library/CloudStorage/GoogleDrive-marc@tear.com/My Drive/Electronics/z80/Zx50/boards/Zx50_FrontPanelDisplay/Zx50_FrontPanelDisplay.kicad_sch")
-    (date "2026-03-24T19:50:10-0700")
+    (date "2026-03-25T08:58:39-0700")
     (tool "Eeschema 9.0.7")
     (sheet (number "1") (name "/") (tstamps "/")
       (title_block
