@@ -1,0 +1,171 @@
+(footprint "NKK_MN15_SPDT_W03"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "NKK MN Series Toggle Switch, SPDT, PC terminals (W03)")
+	(tags "Toggle Switch NKK MN15 SPDT")
+	(property "Reference" "REF**"
+		(at 0 -7.5 0)
+		(layer "F.SilkS")
+		(uuid "452260ad-e8dd-46d4-8332-1df5783ff247")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "MN15SS1W03"
+		(at 0 7.5 0)
+		(layer "F.Fab")
+		(uuid "255e469e-fe43-4f0c-bd2c-682ec60f22f5")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "30c5bd5e-19ea-45a2-8893-437b5bf5a89f")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e97c2de6-622a-4191-8f1d-ad95017117e0")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -4.7 -6.5)
+		(end 4.7 -6.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f478e142-0ab1-4f9c-bfa7-ff1a982d1c0b")
+	)
+	(fp_line
+		(start -4.7 6.5)
+		(end -4.7 -6.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "d64c4a53-34e9-47c2-8f96-5b5bc662fd19")
+	)
+	(fp_line
+		(start 4.7 -6.5)
+		(end 4.7 6.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "fc0392dd-3243-4f3b-993c-de80ec652891")
+	)
+	(fp_line
+		(start 4.7 6.5)
+		(end -4.7 6.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "d6bad05b-0ae9-4544-9484-c014cdba31fb")
+	)
+	(fp_rect
+		(start -4.95 -6.75)
+		(end 4.95 6.75)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "45ddaca7-5394-4f57-bb1c-15c142b01d83")
+	)
+	(fp_line
+		(start -4.7 -6.5)
+		(end 4.7 -6.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "140e2604-b59c-44ea-9b49-68f42ba42a18")
+	)
+	(fp_line
+		(start -4.7 6.5)
+		(end -4.7 -6.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "01017ae5-fc5f-4127-86d3-0c2d292efafc")
+	)
+	(fp_line
+		(start 4.7 -6.5)
+		(end 4.7 6.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ec3ac085-be5a-4aca-aedd-605170023e08")
+	)
+	(fp_line
+		(start 4.7 6.5)
+		(end -4.7 6.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "d064c666-738c-4774-98f0-29614fb9e7f5")
+	)
+	(pad "1" thru_hole rect
+		(at 0 -4.7)
+		(size 3 3)
+		(drill 1.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "b14abc78-ecb4-4533-aa70-17dbdd595dc6")
+	)
+	(pad "2" thru_hole circle
+		(at 0 0)
+		(size 3 3)
+		(drill 1.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "69f67dc0-7611-484e-8203-8cac69e6ec37")
+	)
+	(pad "3" thru_hole circle
+		(at 0 4.7)
+		(size 3 3)
+		(drill 1.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "0fbbe404-7a4a-4ddc-bb50-00c5cc086617")
+	)
+	(embedded_fonts no)
+)

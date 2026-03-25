@@ -1,96 +1,136 @@
-# Zx50 Front Panel Card
+# Zx50 Front Panel Architecture
 
-This card drives the flashy front panel.  The front panel will have LEDs for bus state
-plus a programmable LCD display (e.g. EA DIP205G-4NLED SPI).  It will also have
-some system control switches.
+The Zx50 Front Panel provides a comprehensive, diagnostic-level physical user interface. To minimize PCB routing complexity and eliminate the need for secondary microcontrollers, the design is split into two halves:
+1. **The Brain (Front Panel Bus Card):** Plugs into the Zx50 backplane. It contains the Pi Pico, seven 8-bit bus latches, and the high-speed PIO trigger logic.
+2. **The Faceplate (Dumb Terminal):** A physical panel containing only SPI displays, a single shift register, LEDs, and mechanical switches. It contains no firmware and is driven entirely by the Pico over two 2x5 ribbon cables.
 
-## Physical Interface
+---
 
-- LCD Display: Driven by a Pi PICO on the front panel card, it can display messages
-from the Pico or the Z80.
+## 1. Physical User Interface (The Faceplate)
 
-- LEDs
-  - Z80 Address [0:15]
-  - Z80 Data [0:8]
-  - Z80 Control (about 12 of them)
-  - Shadow Bus data [0:8]
-  - Shadow Bus control (8 lines)
-  - Power
-  - Some of these could be hex digit mult-segment
+The faceplate utilizes an aerospace-grade UI, relying on alphanumeric dot-matrix displays and custom pixel glyphs to reduce discrete LED clutter.
 
-- Switches
-  - Power switch (e.g. SPST to turn on power supply)
-  - Run/Stop (SPST pulls line low)
-  - Step (momentary, pulls line low)
+### Displays (SPI Bus)
+* **Z80 Bus Readout:** 1x **HCMS-3973** (8-Character, 3.3V, Green).
+  * Displays: Address (4 Hex), Data (2 Hex), Read/Write flag (1 Char), Mem/IO flag (1 Char).
+* **Shadow Bus Readout:** 1x **HCMS-3962** (4-Character, 3.3V, Red).
+  * Displays: Shadow Data (2 Hex), Shadow Control Signals (2 Chars).
+  * *Glyph Logic:* Because HCMS displays allow direct 5x7 pixel RAM access, the 6 shadow control lines (`~SSTB~`, `~SINC~`, `~S_EN~`, `~S_DONE~`, `SRW`, `~S_BUSY~`) are mapped into two characters using custom bitmap glyphs (e.g., illuminating the top 3 rows for one signal, and the bottom 3 rows for another).
+* **System Display:** 1x **EA DIP205G-4NLED** (LCD, SPI Mode). Displays high-level system text, Pico diagnostics, and DMA strings.
 
-## Pico Interface
+### Status LEDs
+* **Real-Time Indicators (Yellow):** * 1x `POWER` (Hardwired to power rails).
+  * 1x `RUN` (Hardwired to the Run/Stop switch).
+* **Latched Z80 Status (Green):**
+  * 8x discrete LEDs displaying `~M1~`, `~HALT~`, `~WAIT~`, `~BUSRQ~`, `~BUSAK~`, `~INT~`, `~NMI~`, `~RESET~`. 
+  * Driven locally on the faceplate by a single **74HC595** 8-bit shift register sharing the SPI bus.
 
-The Pico controls multple tri-state buffers (e.g. '244) attached to the different
-8-bit buses (address hi, address low, data, control, shadow data, shadow control).
-It reads each bus periodically and updates the front panel LEDs.
+### Switches
+* **POWER:** Heavy-duty SPST toggle (Wired directly to the ATX supply or power relay).
+* **RUN / STOP:** SPST Toggle. Grounds the `/RUN` line, illuminates the Yellow RUN LED, and signals the Pico to either sleep the displays (RUN) or sample the bus (STOP).
+* **STEP:** Momentary pushbutton. Manually clocks the Z80 when in STOP mode.
+* **RESET:** Momentary pushbutton. Hardwired directly to the CPU card's reset circuit.
+* **DISPLAY ON / OFF:** SPST Toggle. Allows the user to manually blank the SPI displays and shift registers to eliminate visual noise during full-speed runs.
 
-There is an IORQ decoder chip that fires an interrupt whenever the Z80 writes to
-the front panel card's IO address.  The Z80 can transfer commands to the Pico
-by using, e.g. OTIR transfers.  During an I/O instruction, the Z80 places the contents of the B register on the upper address bus (A8-A15), while the C register (the port address) goes on the lower bus (A0-A7).
+---
 
-Because OTIR decrements B with every loop, the Pico literally gets a real-time hardware countdown timer handed to it on A8-A15 with every single byte.  At the end of the burst,
-the Pico can udpate the LCD display from its local memory.
+## 2. Ribbon Cable Pinouts
 
-Because the Pico has fast PIO (Programmable I/O) state machines, it does not even need to write this in C. You can write a tiny 4-line PIO assembly program that just sits there, watching the ~IORQ pin, and instantly pushes those 16 pins into a DMA FIFO buffer for your main Pico code to read at its leisure. It won't miss a single byte, even at 8MHz, 10MHz, or 20MHz.
+The faceplate connects to the Front Panel Card via two 10-pin (2x5) IDC ribbon cables. 
 
-## Shadow Bus transfers
+### Cable 1: CPU Control & Switches
+This cable mirrors the front panel header on the Zx50 CPU card, allowing the faceplate to plug directly into the CPU card for a minimal setup (bypassing the Pico UI entirely).
+* **Pin 1:** `+5V`
+* **Pin 2:** `+5V`
+* **Pin 3:** `NC`
+* **Pin 4:** `DISP_EN` (From Display On/Off Switch -> To Pico GPIO)
+* **Pin 5:** `NC`
+* **Pin 6:** `/RUN` (From Run/Stop Switch)
+* **Pin 7:** `~RESET_SW` (From Reset Switch)
+* **Pin 8:** `~STEP` (From Step Switch)
+* **Pin 9:** `GND`
+* **Pin 10:** `GND`
 
-The other option is for the Pico to work as a Shadow Bus slave or master.  The Z80 can setup a
-DMA transfer from meory to the Pico, and this can then run at 40 MHz.
+### Cable 2: SPI Display Bus
+This cable is driven exclusively by the Pico's SPI peripheral to update the UI hardware. Because the HCMS-39xx series is natively 3.3V, no level-shifting is required on the data lines.
+* **Pin 1:** `+3.3V` (Logic power for LCD, HCMS displays, and 74HC595)
+* **Pin 2:** `+5V` (Required for EA DIP205 LCD LED Backlight)
+* **Pin 3:** `SCLK` (Shared SPI Clock)
+* **Pin 4:** `MOSI` (Shared SPI Data Out)
+* **Pin 5:** `LCD_CS` (Chip Select for EA DIP205)
+* **Pin 6:** `SHARED_RS` (Register Select, shared by EA DIP205 and HCMS displays)
+* **Pin 7:** `HCMS_CE` (Chip Enable for the two HCMS dot-matrix displays)
+* **Pin 8:** `595_LATCH` (Latch clock for the 74HC595 Green LED driver)
+* **Pin 9:** `GND`
+* **Pin 10:** `GND`
 
-See [Zx50 Bus Protocol](https://github.com/mmosko/Zx50Bus/blob/main/README.md).
+---
 
-## Physical UI and the Zx50 CPU Card
+## 3. The Brain: Front Panel Bus Card Architecture
 
-The Front Panel card attaches via two 2x50 cables to the front panel.  One is for the
-SPI control of the LCD display.  The other is for updating the LCDs and the physical
-switches.  A small MCU (e.g. small 18Fxxxx) controls the LEDs based on commands from
-the Pico.
+To safely read the 5V Zx50 backplane without damaging the 3.3V Pi Pico, the Front Panel Card relies on a multiplexed, native 3.3V local bus driven by 5V-tolerant latches.
 
-This arrangement allows one to use the fancy front panel control card or bypass it
-directly to the CPU card for a minimum interface.
+### The 74LVC573A Latches
+The card utilizes seven **74LVC573A** (Octal Transparent D-Type Latches with 3-State Outputs). Powered at 3.3V, these chips possess fully 5V-tolerant inputs, acting as perfect one-way voltage step-downs from the Z80 to the Pico.
 
-Front Panel Connector (exact pinout TBD, 2x5 IDC)
-1. +5V
-2. +5V
-3. TX (from Pico level shifter)
-4. RX (to Pico level shifter)
-5. Power switch
-6. Run switch
-7. Reset switch
-8. Step_N switch
-9. GND
-10. GND
+The Latch Enable (`LE`) pins of all 7 chips are tied together. The Pico pulses this single line to instantly "freeze" a coherent, microsecond-accurate snapshot of the entire 56-pin bus state before reading the data.
 
-Note that the Zx50 CPU card has the exact same header on it, so one could attach
+* **Latch 1:** Z80 Address Low (`A0` - `A7`)
+* **Latch 2:** Z80 Address High (`A8` - `A15`)
+* **Latch 3:** Z80 Data (`D0` - `D7`)
+* **Latch 4:** Shadow Data (`SD0` - `SD7`)
+* **Latch 5:** Shadow Control (`~SSTB~`, `~SINC~`, `~S_EN~`, `~S_DONE~`, `SRW`, `~S_BUSY~`)
+* **Latch 6:** Z80 Control 1 (`~M1~`, `~MREQ~`, `~IORQ~`, `~RD~`, `~WR~`, `~RFSH~`, `~HALT~`, `~WAIT~`)
+* **Latch 7:** Z80 Control 2 (`~INT~`, `~NMI~`, `~RESET~`, `~BUSRQ~`, `~BUSAK~`)
 
-LCD Display Connector (2x5 IDC)
-- 3.3V
-- SCLK
-- SDI (to Pico)
-- SDO (from pico)
-- GND
-- RST (~MCLR)
+### The Pi Pico GPIO Map (26/26 Pins Used)
+The outputs of all seven latches are tied to a shared 8-bit local bus. The Pico multiplexes this bus by asserting the specific Output Enable (`~OE`) of the latch it wishes to read.
 
+* **Shared 8-Bit Read Bus (8 Pins):** * `GP0` - `GP7` (Reads `Q0-Q7` from the active latch)
+* **Hardware Latch Control (8 Pins):**
+  * `GP8` - `GP14`: Selects `~OE` for Latches 1 through 7.
+  * `GP15`: Global Latch Enable (`LE`) to freeze the snapshot.
+* **Faceplate SPI Bus (5 Pins):** * `GP16` - `GP20`: `SCLK`, `MOSI`, `LCD_CS`, `HCMS_CE`, `595_LATCH`.
+* **Faceplate Switches (3 Pins):** * `GP21`: `RUN_SW`
+  * `GP22`: `STEP_SW`
+  * `GP26`: `DISP_EN_SW`
+* **Fast PIO Triggers (2 Pins):** * `GP27`: `~IORQ` (Hardware trigger for OTIR capture).
+  * `GP28`: `~WR` (Hardware trigger modifier).
 
-Wiring
-- If only the CPU card is installed, the front panel Connetor is wired directly to
-the CPU card.
-- If the Front Panel Card is installed, the front panel connector goes to the Front panel
-card, and then a daisy chain short ribbon cables goes from the front pane card to the cpu card,
-to wire the RUN and STEP switches to the clock mezzanine. The CPU card does not use the AUX pin.
-- There will be some 2 position jumpers on the CPU card to connect pin 79 to RUN and pin 80
-to STEP_N, in case I want to do that.  Otherwise, it will leave the 16-bit GPIO pins free.
+---
 
-## Interface to Zx50 Bus Probe
+## 4. High-Speed Pico Integration
 
-It is desirable for the Zx50 Bus Probe to see the Step switch.  The Reset switch is
-already on the bus.  The Step switch will use Pin 80 (labelled AUX). 
+### OTIR High-Speed Capture
+The Pico is capable of intercepting LCD strings directly from the Z80 utilizing block I/O instructions (`OTIR`).
 
-It is assumed that if one is using the bus probe to control the system, there is a control
-PC somewhere with the main interface and the STEP switch is just a convencience.
+During an `OTIR` instruction, the Z80 places the `B` register on the upper address bus (`A8-A15`). Because `OTIR` decrements `B` with every loop, the Pico receives a real-time hardware countdown timer handed to it on `A8-A15` with every single byte. 
+
+The Pico uses a fast PIO (Programmable I/O) state machine hardwired to `GP27` (`~IORQ`) and `GP28` (`~WR`) to instantly assert the `~OE` pins for the Data and Address High latches, pushing the results directly into a DMA FIFO buffer. This ensures zero dropped bytes even at maximum backplane speeds.
+
+### Shadow Bus Transfers
+Alternatively, the Pico can act as a Shadow Bus slave or master. The Z80 can set up a DMA transfer from memory directly to the Pico, transferring display buffers out-of-band at up to 40 MHz.
+
+### 5. Bill of Materials (Front Panel Bus Card)
+
+To safely interface the 3.3V Pi Pico with the 5V Zx50 backplane and supply enough current for the faceplate displays, the card requires the following core components:
+
+**Logic & Control:**
+1. **1x Raspberry Pi Pico** (The core state machine and SPI master).
+2. **7x 74LVC573A** (Octal Transparent D-Type Latches). *Must be LVC family for 5V input tolerance while powered at 3.3V.*
+3. **1x 74AHCT1G04** (Optional single inverter for hardware interrupt conditioning, if needed).
+
+**Power Supply:**
+Because the HCMS-39xx dot-matrix displays on the faceplate can draw upwards of 150mA at full brightness, the system bypasses the Pico's internal 300mA regulator in favor of a dedicated high-current LDO.
+4. **1x AMS1117-3.3** (or equivalent 3.3V, 1A LDO Linear Regulator in SOT-223).
+   * **Input:** Powered directly from the Zx50 5V rail.
+   * **Output:** Supplies the 3.3V rail for the Pi Pico (`VSYS`), the seven `74LVC573A` latches, and Pin 1 of the SPI Ribbon Cable.
+5. **Capacitors:**
+   * 1x `100µF` to `220µF` Electrolytic (Bulk input decoupling on the 5V rail).
+   * 1x `10µF` Ceramic (LDO Input stability).
+   * 1x `22µF` Ceramic (LDO Output stability).
+   * 8x `0.1µF` Ceramic (Bypass capacitors for the Pico and the 7 latches).
+
+**Connectors:**
+6. **1x Zx50 Edge Connector** (Backplane interface).
+7. **2x 2x5 IDC Headers** (Ribbon cable interfaces to the Faceplate).
