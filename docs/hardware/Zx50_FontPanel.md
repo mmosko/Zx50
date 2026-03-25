@@ -1,6 +1,3 @@
-Here is the complete, consolidated `Zx50_FrontPanel.md` file. I have removed the redundancies, added a clear introductory overview, mapped out the system architecture with a PlantUML diagram, and included the pseudo-code for the high-speed `OTIR` state machine.
-
-```markdown
 # Zx50 Front Panel & Controller Card Architecture
 
 ## 1. Introduction
@@ -113,6 +110,10 @@ def handle_z80_write_irq():
         wait_for_next_WR_falling_edge()
 ```
 
+**Shadow Bus Transfers**:
+Alternatively, the Pico can act as a Shadow Bus slave or master. The Z80 can set up a DMA transfer from memory directly to the Pico, transferring display buffers out-of-band at up to 40 MHz.
+
+
 ### Mode B: Passive Polling (10Hz - 20Hz)
 Outside of priority data bursts, the Pico acts as a classic front-panel observer.
 1. A timer interrupt triggers 10 to 20 times per second.
@@ -122,7 +123,6 @@ Outside of priority data bursts, the Pico acts as a classic front-panel observer
 ### Mode C: Switch State Monitoring
 In the background, the Pico monitors the physical Faceplate switches (`~RUN`, `~STEP`). State changes trigger immediate updates to the Z80 control lines (e.g., pulling `~WAIT` low) to pause, step, or release the CPU execution.
 
----
 
 ## 4. Pi Pico GPIO Pin Mapping
 
@@ -149,7 +149,6 @@ This table reflects the final netlist routing on the Brain Card (`Zx50_FrontPane
 | 31 | GP26 | `~STEP` | Switch Input (STEP) | to Faceplate J4 |
 | 32 | GP27 | `~DISP_EN`| Z80 IO Address Select | to Faceplate J4 |
 | 34 | GP28 | `~WAIT` | Z80 Wait (Output) | to Faceplate J4 |
-```
 
 ## 5. Physical Connectors (Faceplate to Brain Card)
 
@@ -208,3 +207,27 @@ To facilitate the shared 8-bit bus, three 74LVC245 octal bus transceivers sit be
 | **LVC245 A-Side Pin**| Pin 2 | Pin 3 | Pin 4 | Pin 5 | Pin 6 | Pin 7 | Pin 8 | Pin 9 |
 
 *(Note: During an `OTIR` burst, U1 holds the Target I/O Port, U3 holds the remaining byte counter, and U4 holds the payload data).*
+
+### A. Bill of Materials (Front Panel Bus Card)
+
+To safely interface the 3.3V Pi Pico with the 5V Zx50 backplane and supply enough current for the faceplate displays, the card requires the following core components:
+
+**Logic & Control:**
+1. **1x Raspberry Pi Pico** (The core state machine and SPI master).
+2. **7x 74LVC573A** (Octal Transparent D-Type Latches). *Must be LVC family for 5V input tolerance while powered at 3.3V.*
+3. **1x 74AHCT1G04** (Optional single inverter for hardware interrupt conditioning, if needed).
+
+**Power Supply:**
+Because the HCMS-39xx dot-matrix displays on the faceplate can draw upwards of 150mA at full brightness, the system bypasses the Pico's internal 300mA regulator in favor of a dedicated high-current LDO.
+4. **1x AMS1117-3.3** (or equivalent 3.3V, 1A LDO Linear Regulator in SOT-223).
+   * **Input:** Powered directly from the Zx50 5V rail.
+   * **Output:** Supplies the 3.3V rail for the Pi Pico (`VSYS`), the seven `74LVC573A` latches, and Pin 1 of the SPI Ribbon Cable.
+5. **Capacitors:**
+   * 1x `100µF` to `220µF` Electrolytic (Bulk input decoupling on the 5V rail).
+   * 1x `10µF` Ceramic (LDO Input stability).
+   * 1x `22µF` Ceramic (LDO Output stability).
+   * 8x `0.1µF` Ceramic (Bypass capacitors for the Pico and the 7 latches).
+
+**Connectors:**
+6. **1x Zx50 Edge Connector** (Backplane interface).
+7. **2x 2x5 IDC Headers** (Ribbon cable interfaces to the Faceplate).
