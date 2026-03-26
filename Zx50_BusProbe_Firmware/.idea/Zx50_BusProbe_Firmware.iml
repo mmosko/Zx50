@@ -10,6 +10,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="docs" />
     <orderEntry type="module" module-name="Zx50_FrontPanelFirmware" />
+    <orderEntry type="module" module-name="BasicPico" />
+    <orderEntry type="library" name="MicroPythonToolsStubs" level="project" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
