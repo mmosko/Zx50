@@ -1,126 +1,113 @@
-import machine
-import sys
 import select
+import sys
 
-# Import our custom modules
 import display
-from pin_map import BACKPLANE_PINS, MUX_ADDR, LOCAL_GPIO_MAP, REMOTE_GPIO_MAP
+from bus import BusController
+from pic18_link import PIC18Link
 
-# ====================================================================
-# Hardware Initialization (Multiplexers)
-# ====================================================================
+# Define your application version here
+APP_VERSION = "RevA-0.1.0"
 
-rx_pins = {name: machine.Pin(pin_num, machine.Pin.OUT) for name, pin_num in LOCAL_GPIO_MAP.items()}
-tx_pins = {name: machine.Pin(pin_num, machine.Pin.OUT) for name, pin_num in REMOTE_GPIO_MAP.items()}
+class Zx50Console:
+    """A lightweight line-processing CLI for MicroPython."""
 
-# State variables to track what is currently routed
-current_tx_str = "None"
-current_rx_str = "None"
+    def __init__(self):
+        self.pic = PIC18Link(uart_id=0, tx_gpio=0, rx_gpio=1)
+        self.bus = BusController()
 
-def ghost_all():
-    """Isolates both the Sender and Receiver cards from the backplane."""
-    global current_tx_str, current_rx_str
-    
-    for i in range(4):
-        # 15 (0b1111) is the phantom address that selects nothing
-        rx_pins[f"CHIP{i}"].value(1)
-        tx_pins[f"CHIP{i}"].value(1)
-        
-    current_tx_str = "Isolated"
-    current_rx_str = "Isolated"
+        self.poll_obj = select.poll()
+        self.poll_obj.register(sys.stdin, select.POLLIN)
+        self.prompt = "Zx50> "
 
-def route_signal(target_pins, mux_addr, channel):
-    """Executes a break-before-make routing sequence on a target pin group."""
-    # 1. BREAK: Disable the 74LS154 decoder
-    for i in range(4):
-        target_pins[f"CHIP{i}"].value(1)
-        
-    # 2. SELECT: Set the multiplexer channel (S0, S1, S2)
-    for i in range(3):
-        target_pins[f"PORT{i}"].value((channel >> i) & 1)
-        
-    # 3. MAKE: Enable the specific MUX by writing its address
-    for i in range(4):
-        target_pins[f"CHIP{i}"].value((mux_addr >> i) & 1)
+    def cmdloop(self):
+        """Standard line-processing REPL loop."""
 
-# Start in a safe, isolated state
-ghost_all()
+        # Grab the underlying OS build string
+        mpy_build = os.uname().version
+        board_hw = os.uname().machine
 
-# Boot up the display
-display.init()
-display.update("BOOTING...", "Initializing MUX...", "Waiting for Serial")
+        print("\n==================================================")
+        print(f" Zx50 Bus Probe - Interactive Terminal")
+        print(f" Firmware: {APP_VERSION}")
+        print(f" Hardware: {board_hw}")
+        print(f" Core:     MicroPython {mpy_build}")
+        print("==================================================")
+        print("Type 'help' for a list of commands.\n")
 
-# ====================================================================
-# Main Serial Control Loop
-# ====================================================================
+        sys.stdout.write(self.prompt)
 
-poll_obj = select.poll()
-poll_obj.register(sys.stdin, select.POLLIN)
+        while True:
+            # Poll stdin without blocking so we don't freeze the Pico
+            poll_res = self.poll_obj.poll(10)
 
-display.update("READY", f"TX: {current_tx_str}", f"RX: {current_rx_str}")
+            if poll_res:
+                line = sys.stdin.readline().strip()
+                if line:
+                    self._execute(line)
 
-while True:
-    poll_res = poll_obj.poll(10)
-    
-    if poll_res:
-        line = sys.stdin.readline().strip()
-        if not line:
-            continue
-            
-        parts = line.upper().split()
-        cmd = parts[0]
-        
-        if cmd == "GHOST":
-            ghost_all()
-            print("OK GHOST")
-            display.update("GHOST MODE", f"TX: {current_tx_str}", f"RX: {current_rx_str}")
-            
-        elif cmd == "SELECT":
-            if len(parts) == 3:
-                target = parts[1]  # 'TX' or 'RX'
-                pin_str = parts[2]
-                
-                if target not in ["TX", "RX"]:
-                    print("ERR INVALID_TARGET_MUST_BE_TX_OR_RX")
-                    continue
-                
-                # Enforce integer pin values
-                try:
-                    pin_num = int(pin_str)
-                except ValueError:
-                    print("ERR PIN_MUST_BE_INTEGER")
-                    continue
-                
-                # Protect power/GND and check mapping
-                if pin_num not in BACKPLANE_PINS:
-                    print(f"ERR PIN_{pin_num}_UNMAPPED_OR_POWER")
-                else:
-                    signal_name = BACKPLANE_PINS[pin_num]["signal"]
-                    mux_name = BACKPLANE_PINS[pin_num]["mux"]
-                    mux_addr = MUX_ADDR[mux_name]
-                    channel = BACKPLANE_PINS[pin_num]["channel"]
-                    
-                    # Route the hardware and update the state string
-                    if target == "TX":
-                        route_signal(tx_pins, mux_addr, channel)
-                        current_tx_str = f"{pin_num} - {signal_name}"
-                    else:
-                        route_signal(rx_pins, mux_addr, channel)
-                        current_rx_str = f"{pin_num} - {signal_name}"
-                    
-                    # Echo back to laptop
-                    print(f"OK {target} {pin_num} {signal_name}")
-                    
-                    # Update local UI with both tracked states
-                    display.update("ROUTING ACTIVE", f"TX: {current_tx_str}", f"RX: {current_rx_str}")
-            else:
-                print("ERR SYNTAX_SELECT_TX|RX_PIN")
-                
-        elif cmd == "IDN?":
-            print("OK Zx50_PROBE_REVA")
-            
-        elif cmd == "BRIDGE":
-            print("ERR BRIDGE_NOT_IMPLEMENTED_YET")
-            
-        else:
-            print(f"ERR UNKNOWN_COMMAND_{cmd}")
+                # Re-print the prompt after command execution
+                sys.stdout.write(self.prompt)
+
+    def _execute(self, line):
+        """Uses reflection to route commands to the correct do_method."""
+        parts = line.split()
+        cmd = parts[0].lower()
+        args = parts[1:]
+
+        # Handle identifiers that contain special characters directly
+        if cmd == "idn?":
+            self.do_idn(args)
+            return
+
+        # Look for a method named do_<cmd> (e.g., "do_bus" or "do_pic")
+        func = getattr(self, f"do_{cmd}", self.default)
+        func(args)
+
+    # ==========================================
+    # CLI COMMAND DEFINITIONS (Like cmd.Cmd)
+    # ==========================================
+    def default(self, args):
+        print("ERR UNKNOWN_COMMAND. Type 'help' for a list of commands.")
+
+    def do_help(self, args):
+        print("Available Subsystems:")
+        print("  pic   - Commands for the PIC18F4620 Z80 Controller")
+        print("  bus   - Commands for the Multiplexer routing")
+        print("  idn?  - Get device identity")
+        print("Type 'pic help' or 'bus help' for subsystem commands.")
+
+    def do_idn(self, args):
+        print("OK Zx50_PROBE_REVA")
+
+    def do_pic(self, args):
+        # If the user just typed "pic", inject "help" so the module prints its menu
+        if not args:
+            args = ["help"]
+
+        response = self.pic.handle_command(args)
+        print(response)
+
+    def do_bus(self, args):
+        # If the user just typed "bus", inject "help" so the module prints its menu
+        if not args:
+            args = ["help"]
+
+        response = self.bus.handle_command(args)
+        print(response)
+
+        # Update the physical OLED/LCD if routing changed successfully
+        if "OK" in response and args and args[0].upper() in ["SELECT", "GHOST"]:
+            display.update("ROUTING ACTIVE", f"TX: {self.bus.current_tx_str}", f"RX: {self.bus.current_rx_str}")
+
+
+def main():
+    # Assumes display.py exists and is working. Comment out if not ready yet!
+    display.init()
+    display.update("BOOTING...", "Hardware Initialized", "Waiting for Console")
+
+    console = Zx50Console()
+    console.cmdloop()
+
+
+if __name__ == '__main__':
+    main()
