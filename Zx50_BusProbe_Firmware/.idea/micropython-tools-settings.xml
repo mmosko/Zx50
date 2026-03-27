@@ -3,7 +3,7 @@
   <component name="MicroPythonTools">
     <option name="lastShownVersion" value="2026.1.1" />
     <option name="pluginEnabled" value="true" />
-    <option name="portName" value="/dev/cu.usbmodem3101" />
+    <option name="portName" value="/dev/cu.usbmodem1101" />
     <option name="shouldAutoDetect" value="false" />
   </component>
 </project>

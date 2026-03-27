@@ -35,6 +35,9 @@ void Clock_Init(void) {
 }
 
 void GPIO_Init(void) {
+    // Enable internal weak pull-ups on PORTB to prevent WAIT/INT hangs
+    INTCON2bits.RBPU = 0;
+
     // 1. Disable all analog inputs to safely read digital logic levels
     ADCON1 = 0x0F; // All pins set to Digital I/O
     CMCON  = 0x07; // Disable Comparators
@@ -60,6 +63,7 @@ void GPIO_Init(void) {
     TRISC = 0xFF; // UART/SPI will override their specific pins later
     TRISD = 0xFF; 
     TRISE = 0xFF; 
+    
 }
 
 void UART_Init(void) {

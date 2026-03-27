@@ -82,7 +82,10 @@ The Pi Pico orchestrates the routing of signals across both the local (Receiver)
 
 ### Modular Codebase
 * **`pin_map.py`**: A pure configuration file containing the hardware dictionaries. It maps the physical J1 Edge Connector integer pin numbers (critical for calculating physical trace adjacency) to their logical signal names, the specific `CD74HC4051E` multiplexer chip, and the channel index (0-7). It also maintains the Pico GPIO assignments for the local and remote control buses.
-* **`display.py`**: A dedicated hardware driver for the `EA DIP205-4` LCD. It handles the SPI initialization, the hard-reset sequence on boot, and the specific 3-byte formatting required by the display's `RW1073` controller. It abstracts all formatting so the main loop can update the UI with a single function call.
+* **`display.py`**: A dedicated hardware driver for the `EA DIP205-4` LCD equipped with the notoriously strict `RW1073` controller. 
+  * **SPI Protocol Quirks:** Unlike standard controllers, the RW1073 requires data to be sent **Least Significant Bit (LSB) first**. Because the Pico's hardware SPI block strictly transmits MSB-first, the software utilizes a pre-computed `BIT_REVERSE` lookup table to mathematically flip the bytes before transmission. This allows the driver to leverage the high-speed hardware SPI (500kHz, SPI Mode 3: Clock Idle High, Active-Low CS) while perfectly emulating an LSB-first waveform.
+  * **Payload Formatting:** The driver abstracts the strict 3-byte payload required by the display (Start Byte + Lower Nibble + Upper Nibble). 
+  * **Hardware Contrast Note:** The EA DIP205 contrast pin (VEE / Pin 3) operates inversely to standard HD44780 screens; it is driven *against* VDD, meaning higher voltages result in darker pixels. The display requires a hardware voltage divider (e.g., 2.2kΩ to 3.3V and 1kΩ to GND) to feed roughly ~0.6V to 0.85V to VEE. Tying it to GND makes the screen transparent, while tying it to 3.3V completely washes it out with solid black blocks.
 * **`main.py`**: The execution core. It establishes a non-blocking serial loop using `select.poll()`, parsing ASCII commands from the laptop. It maintains state variables for the currently routed `TX` and `RX` signals, updating the LCD in real-time.
 
 ### Break-Before-Make Safety
@@ -111,8 +114,9 @@ The PIC acts as a slave to the Pi Pico via a 1 Mbps UART link. It continuously l
 * `CMD_GHOST` (0x08): Hardware isolation toggle.
 * `CMD_STEP` (0x11): Issues a single manual clock pulse.
 
-### Hardware Ghost Mode
-To prevent bus contention when the PIC is not actively driving the bus, the system defaults to "Ghost Mode". In this state, the `74ABT245` bidirectional transceivers (`U6` and `U7`) are driven into a High-Z state by pulling their Output Enable (`~OE`) pins HIGH, safely isolating the PIC's local pins from the active Zx50 backplane.
+### Hardware Ghost Mode & Internal Pull-Ups
+To prevent bus contention when the PIC is not actively driving the bus, the system defaults to "Ghost Mode". In this state, the `74ABT245` bidirectional transceivers (`U6` and `U7`) are driven into a High-Z state by pulling their Output Enable (`~OE`) pins HIGH, safely isolating the PIC's local pins from the active Zx50 backplane. 
+* **Floating Input Prevention:** To ensure the PIC's input registers do not read spurious noise or trigger false interrupts while the transceivers are in High-Z mode, the PIC firmware explicitly enables its internal pull-up resistors on the Z80 bus listening pins.
 
 ### Exact Cycle Emulation
 Unlike standard microcontrollers that just toggle pins arbitrarily, the PIC firmware meticulously emulates Z80 machine cycles.
