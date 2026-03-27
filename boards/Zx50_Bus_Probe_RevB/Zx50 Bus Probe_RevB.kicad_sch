@@ -12357,7 +12357,7 @@
 		)
 		(uuid "3077265c-1a77-4f62-94e9-e6f0b7516cbe")
 	)
-	(text "Rev B Changes:\n- reverse Pico GPIO0 and GPIO 1\n- LCD pin 2 to +5V\n- LCD pin 3 to GND"
+	(text "Rev B Changes:\n- reverse Pico GPIO0 and GPIO 1\n- LCD pin 3 to GND"
 		(exclude_from_sim yes)
 		(at 113.284 26.924 0)
 		(effects
@@ -19902,6 +19902,16 @@
 			(type default)
 		)
 		(uuid "51e3a074-02d1-48e5-a3d5-679ec656b07e")
+	)
+	(wire
+		(pts
+			(xy 54.61 27.94) (xy 76.2 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "51f0ccc9-3572-475a-8a7c-45a0864471ce")
 	)
 	(wire
 		(pts
