@@ -135,19 +135,22 @@ class Zx50TestRunner:
         return buffer
 
     def send_pico_cmd(self, cmd) -> str:
-        """Sends a command and reads the complete response."""
+        """Sends a command and reads the complete response based on the active mode."""
         full_cmd = (cmd + "\n").encode('utf-8')
 
+        # 1. Route the command to the correct hardware interface
         if self.mode == 'WIFI' and self.pico_sock:
             self.pico_sock.sendall(full_cmd)
         elif self.mode == 'USB' and self.pico_serial:
             self.pico_serial.write(full_cmd)
             self.pico_serial.flush()
+        else:
+            return "ERR NO_CONNECTION"
 
-        # Wait for execution to finish and prompt to return
+        # 2. Wait for execution to finish and prompt to return
         response = self._wait_for_prompt()
 
-        # Parse for OK or ERR
+        # 3. Parse for OK or ERR
         for line in response.split('\n'):
             clean_line = line.strip()
             if clean_line.startswith("OK") or clean_line.startswith("ERR"):
