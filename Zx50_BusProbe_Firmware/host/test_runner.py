@@ -5,19 +5,27 @@ Refactored to use object-oriented measurement classes and Wi-Fi Pico control.
 """
 
 import socket
+import serial
 import time
 import csv
 import json
-from dataclasses import asdict
-
 from dataclasses import dataclass, asdict
 from typing import Optional
 from scope_control import TektronixMDO
 
 # --- Hardware Configuration ---
 SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
+
+# Connection Toggle: 'USB' or 'WIFI'
+PICO_MODE = 'USB'
+
+# USB Settings
+PICO_PORT = '/dev/ttyACM0' # Update to your Ubuntu /dev/ttyACM* or Mac /dev/cu.usbmodem*
+PICO_BAUD = 115200
+
+# Wi-Fi Settings
 PICO_IP = '172.16.1.108'
-PICO_PORT = 5050
+PICO_PORT_TCP = 5050
 
 # --- Test Definitions ---
 TEST_FREQS = [100_000, 1_000_000, 10_000_000]
@@ -74,21 +82,29 @@ class Measurement:
 # ==========================================
 
 class Zx50TestRunner:
-    def __init__(self, pico_ip, pico_port, scope_addr):
-        self.pico_addr = (pico_ip, pico_port)
+    def __init__(self, mode, pico_ip, pico_tcp_port, pico_serial_port, pico_baud, scope_addr):
+        self.mode = mode
+        self.pico_addr = (pico_ip, pico_tcp_port)
+        self.pico_serial_cfg = (pico_serial_port, pico_baud)
+
         self.scope = TektronixMDO(scope_addr)
         self.pico_sock = None
-        self.csv_file = None
-        self.csv_writer = None
+        self.pico_serial = None
 
     def connect(self):
-        """Initializes LAN connections to both the Scope and the Pico."""
-        print(f"Connecting to Pico via TCP {self.pico_addr[0]}:{self.pico_addr[1]}...")
-        self.pico_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.pico_sock.settimeout(5.0)  # 5 seconds to allow the banner to arrive
-        self.pico_sock.connect(self.pico_addr)
+        """Initializes LAN connection to Scope and selected connection to Pico."""
+        if self.mode == 'WIFI':
+            print(f"Connecting to Pico via TCP {self.pico_addr[0]}:{self.pico_addr[1]}...")
+            self.pico_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.pico_sock.settimeout(5.0)
+            self.pico_sock.connect(self.pico_addr)
+        elif self.mode == 'USB':
+            print(f"Connecting to Pico via USB {self.pico_serial_cfg[0]}...")
+            self.pico_serial = serial.Serial(self.pico_serial_cfg[0], self.pico_serial_cfg[1], timeout=2.0)
+            self.pico_serial.reset_input_buffer()
+            self.pico_serial.write(b'\r\n')  # Kick the prompt
 
-        # Read the buffer until the welcome banner finishes and we see the prompt
+        # Sync up with the command prompt
         self._wait_for_prompt()
 
         resp = self.send_pico_cmd("IDN?")
@@ -97,32 +113,41 @@ class Zx50TestRunner:
 
         self.scope.connect()
         self.scope.match_channels()
-
-        # Configure scope for 50-sample statistical population
         self.scope.configure_acquisition(record_length=10000, stat_population=50)
 
     def _wait_for_prompt(self):
-        """Helper method: reads the TCP stream until the Zx50> prompt appears."""
+        """Reads the stream (USB or TCP) until the Zx50> prompt appears."""
         buffer = ""
         while "Zx50>" not in buffer:
             try:
-                chunk = self.pico_sock.recv(1024).decode('utf-8')
-                if not chunk:
-                    break  # Socket was closed
-                buffer += chunk
-            except socket.timeout:
-                print("  [Warning] Timeout waiting for Zx50> prompt.")
+                if self.mode == 'WIFI' and self.pico_sock:
+                    chunk = self.pico_sock.recv(1024).decode('utf-8')
+                    if not chunk: break
+                    buffer += chunk
+                elif self.mode == 'USB' and self.pico_serial:
+                    if self.pico_serial.in_waiting:
+                        chunk = self.pico_serial.read(self.pico_serial.in_waiting).decode('utf-8')
+                        buffer += chunk
+                    else:
+                        time.sleep(0.01)
+            except Exception:
                 break
         return buffer
 
     def send_pico_cmd(self, cmd) -> str:
-        """Sends a command to the Pico via TCP and reads the complete response."""
-        self.pico_sock.sendall((cmd + "\n").encode('utf-8'))
+        """Sends a command and reads the complete response."""
+        full_cmd = (cmd + "\n").encode('utf-8')
 
-        # Wait for the Pico to finish executing and send the prompt back
+        if self.mode == 'WIFI' and self.pico_sock:
+            self.pico_sock.sendall(full_cmd)
+        elif self.mode == 'USB' and self.pico_serial:
+            self.pico_serial.write(full_cmd)
+            self.pico_serial.flush()
+
+        # Wait for execution to finish and prompt to return
         response = self._wait_for_prompt()
 
-        # Parse the block of text for the OK or ERR line
+        # Parse for OK or ERR
         for line in response.split('\n'):
             clean_line = line.strip()
             if clean_line.startswith("OK") or clean_line.startswith("ERR"):
@@ -132,18 +157,16 @@ class Zx50TestRunner:
 
     def disconnect(self):
         """Safely tears down hardware connections."""
+        try:
+            self.send_pico_cmd("GHOST")
+            self.send_pico_cmd("BYE")
+        except Exception:
+            pass  # Ignore if dead
+
         if self.pico_sock:
-            try:
-                # 1. Safe the hardware
-                self.send_pico_cmd("GHOST")
-
-                # 2. Tell the Pico server to cleanly drop our socket
-                self.send_pico_cmd("BYE")
-
-            except Exception:
-                pass  # Ignore if the socket is already dead
-            finally:
-                self.pico_sock.close()
+            self.pico_sock.close()
+        if self.pico_serial:
+            self.pico_serial.close()
 
         try:
             self.scope.disconnect()
@@ -308,7 +331,7 @@ class Zx50TestRunner:
 
 
 def main():
-    runner = Zx50TestRunner(PICO_IP, PICO_PORT, SCOPE_ADDR)
+    runner = Zx50TestRunner(PICO_MODE, PICO_IP, PICO_PORT_TCP, PICO_PORT, PICO_BAUD, SCOPE_ADDR)
     try:
         runner.connect()
         runner.run_sweep()
@@ -316,7 +339,6 @@ def main():
         print(f"\nHardware Error: {e}")
     finally:
         runner.disconnect()
-
 
 if __name__ == "__main__":
     main()
