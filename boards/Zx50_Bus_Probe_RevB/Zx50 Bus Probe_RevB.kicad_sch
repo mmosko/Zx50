@@ -5497,6 +5497,170 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Device:R_Potentiometer_Trim"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "RV"
+				(at -4.445 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R_Potentiometer_Trim"
+				(at -2.54 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Trim-potentiometer"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "resistor variable trimpot trimmer"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Potentiometer*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_Potentiometer_Trim_0_1"
+				(rectangle
+					(start 1.016 2.54)
+					(end -1.016 -2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.524 0.762) (xy 1.524 -0.762)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 0) (xy 1.524 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_Potentiometer_Trim_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:R_Small"
 			(pin_numbers
 				(hide yes)
@@ -8295,10 +8459,10 @@
 						)
 					)
 				)
-				(pin no_connect line
+				(pin input line
 					(at -13.97 5.08 0)
 					(length 2.54)
-					(name ""
+					(name "Contrast"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -12357,7 +12521,7 @@
 		)
 		(uuid "3077265c-1a77-4f62-94e9-e6f0b7516cbe")
 	)
-	(text "Rev B Changes:\n- reverse Pico GPIO0 and GPIO 1\n- LCD pin 3 to GND"
+	(text "Rev B Changes:\n- reverse Pico GPIO0 and GPIO 1\n- LCD pin 3 to contrast adjustment\n- Pico pin 39 (Vsys) to +5V"
 		(exclude_from_sim yes)
 		(at 113.284 26.924 0)
 		(effects
@@ -12661,6 +12825,12 @@
 		(uuid "4845156b-d375-4551-84f7-cb3c9ea3e4ff")
 	)
 	(junction
+		(at 58.42 27.94)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "48accdee-2c98-48a9-8e30-5380c5060ac6")
+	)
+	(junction
 		(at 407.67 361.95)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -12809,6 +12979,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "7b5a4c06-0bc1-4d11-82a3-394cdffd56fd")
+	)
+	(junction
+		(at 72.39 25.4)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7dc67705-76b1-4281-b158-4e7717ccd51e")
 	)
 	(junction
 		(at 297.18 119.38)
@@ -13439,7 +13615,7 @@
 		(uuid "00daa314-c525-48c5-aa0d-de2732b5a1e9")
 	)
 	(no_connect
-		(at 19.05 146.05)
+		(at 492.76 213.36)
 		(uuid "054d4306-24ed-499c-a84d-4578a5cd0aaf")
 	)
 	(no_connect
@@ -13451,7 +13627,7 @@
 		(uuid "14ebe588-4600-4d21-b7be-4c4c5c44fde7")
 	)
 	(no_connect
-		(at 19.05 133.35)
+		(at 492.76 200.66)
 		(uuid "195191f9-f1bb-4141-8005-c0d3147b05b1")
 	)
 	(no_connect
@@ -13475,7 +13651,7 @@
 		(uuid "2f51ee38-6e59-4d26-8f27-c39bb93b5eca")
 	)
 	(no_connect
-		(at 19.05 161.29)
+		(at 494.03 247.65)
 		(uuid "30da1d27-5804-4358-b2ad-a1cdc8f54c62")
 	)
 	(no_connect
@@ -13507,7 +13683,7 @@
 		(uuid "50bc4490-dd87-4f19-9ee9-18ff4b8e52c6")
 	)
 	(no_connect
-		(at 19.05 163.83)
+		(at 494.03 250.19)
 		(uuid "53c3f249-6b32-46e5-9ee8-668caf6183ea")
 	)
 	(no_connect
@@ -13519,11 +13695,11 @@
 		(uuid "6633b7a5-8504-433c-9ad8-55efdcf7d729")
 	)
 	(no_connect
-		(at 19.05 138.43)
+		(at 492.76 205.74)
 		(uuid "69005a5c-eea7-4f83-813b-b065e8df7065")
 	)
 	(no_connect
-		(at 19.05 148.59)
+		(at 492.76 215.9)
 		(uuid "77ff3862-e30b-455f-b200-d2ee3295f1b8")
 	)
 	(no_connect
@@ -13535,7 +13711,7 @@
 		(uuid "7b9f4180-4298-416a-a4d0-f142c2f2b5ac")
 	)
 	(no_connect
-		(at 19.05 173.99)
+		(at 494.03 260.35)
 		(uuid "7fdc7225-dc22-48f1-ab0f-cb6f55ffcb4f")
 	)
 	(no_connect
@@ -13551,27 +13727,23 @@
 		(uuid "8ed99df5-fc4e-43c7-b37b-005918e27a8f")
 	)
 	(no_connect
-		(at 19.05 135.89)
+		(at 492.76 203.2)
 		(uuid "92d24257-cb68-42c0-804c-322b1bd08684")
 	)
 	(no_connect
-		(at 19.05 176.53)
+		(at 494.03 262.89)
 		(uuid "a0669f17-f4be-41f8-9787-3f00fe83315d")
 	)
 	(no_connect
-		(at 19.05 140.97)
+		(at 492.76 208.28)
 		(uuid "a9ee294a-cb74-43eb-a97f-17d21791c725")
-	)
-	(no_connect
-		(at 64.77 66.04)
-		(uuid "ad240a1f-5e43-46b2-baf1-eb509d882ae2")
 	)
 	(no_connect
 		(at 36.83 119.38)
 		(uuid "aff2b512-1cb5-4ad4-a093-489f9b654e48")
 	)
 	(no_connect
-		(at 19.05 166.37)
+		(at 494.03 252.73)
 		(uuid "b0877bf4-a8f9-462f-927f-8a6cd54c3466")
 	)
 	(no_connect
@@ -13579,7 +13751,7 @@
 		(uuid "b30b6772-a275-4a99-852d-19b90e405c75")
 	)
 	(no_connect
-		(at 19.05 168.91)
+		(at 494.03 255.27)
 		(uuid "b8b89775-2e54-4757-982f-840d72f5db7e")
 	)
 	(no_connect
@@ -13607,7 +13779,7 @@
 		(uuid "cea3f58f-cf84-471d-8ddd-7f4abf61b871")
 	)
 	(no_connect
-		(at 19.05 171.45)
+		(at 494.03 257.81)
 		(uuid "d722c9e0-72b2-4563-bd03-4356fdc5824e")
 	)
 	(no_connect
@@ -13619,11 +13791,11 @@
 		(uuid "db0c065b-54f6-495f-9170-918aa7eac365")
 	)
 	(no_connect
-		(at 19.05 153.67)
+		(at 492.76 220.98)
 		(uuid "e27d5f75-beae-40c0-8dcc-03e5644e2566")
 	)
 	(no_connect
-		(at 19.05 151.13)
+		(at 492.76 218.44)
 		(uuid "e8d543b4-a224-487e-8bc1-2bdc1b56fb32")
 	)
 	(no_connect
@@ -13631,15 +13803,15 @@
 		(uuid "f2ef0d5b-e975-4608-8088-325837748a74")
 	)
 	(no_connect
-		(at 19.05 156.21)
+		(at 494.03 242.57)
 		(uuid "f4128b84-fda8-4ae5-bf21-30266a260dde")
 	)
 	(no_connect
-		(at 19.05 158.75)
+		(at 494.03 245.11)
 		(uuid "fd63640a-4e5c-4fec-9f07-f7922cc4f84e")
 	)
 	(no_connect
-		(at 19.05 143.51)
+		(at 492.76 210.82)
 		(uuid "fe4eacad-5c90-476e-ba1f-611284c76132")
 	)
 	(bus_entry
@@ -17855,6 +18027,16 @@
 	)
 	(wire
 		(pts
+			(xy 76.2 30.48) (xy 62.23 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ff918cd-2cde-4840-bb43-ac0b9a460cd4")
+	)
+	(wire
+		(pts
 			(xy 303.53 242.57) (xy 303.53 297.18)
 		)
 		(stroke
@@ -19603,6 +19785,16 @@
 		)
 		(uuid "4b42060b-038c-48c7-aba4-2c5b2175de4c")
 	)
+	(wire
+		(pts
+			(xy 58.42 19.05) (xy 72.39 19.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4b8d5f88-b249-4e1c-a14b-85bc431cd368")
+	)
 	(bus
 		(pts
 			(xy 391.16 166.37) (xy 391.16 168.91)
@@ -19825,16 +20017,6 @@
 	)
 	(wire
 		(pts
-			(xy 72.39 25.4) (xy 72.39 49.53)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4fb2e1c1-debf-4001-b3c0-cef6be5c9042")
-	)
-	(wire
-		(pts
 			(xy 110.49 158.75) (xy 110.49 157.48)
 		)
 		(stroke
@@ -19905,7 +20087,7 @@
 	)
 	(wire
 		(pts
-			(xy 54.61 27.94) (xy 76.2 27.94)
+			(xy 54.61 27.94) (xy 58.42 27.94)
 		)
 		(stroke
 			(width 0)
@@ -19942,6 +20124,16 @@
 			(type default)
 		)
 		(uuid "527b8e65-5fa7-4e5a-b753-6bc370b6c6f3")
+	)
+	(wire
+		(pts
+			(xy 72.39 25.4) (xy 72.39 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "530b205e-2685-4421-b1f7-616bd597f2a1")
 	)
 	(wire
 		(pts
@@ -20312,6 +20504,16 @@
 			(type default)
 		)
 		(uuid "5f4c2df1-c46f-45f2-9ccb-a808f14ad475")
+	)
+	(wire
+		(pts
+			(xy 58.42 26.67) (xy 58.42 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5fd64d63-4101-4fc0-8812-1c2fa0329bb7")
 	)
 	(wire
 		(pts
@@ -21943,6 +22145,16 @@
 		)
 		(uuid "83a60ac9-cfc2-4c90-b046-eff2cf65d6c5")
 	)
+	(wire
+		(pts
+			(xy 58.42 27.94) (xy 76.2 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "83e0967f-e73e-4d92-8679-42a740ab2281")
+	)
 	(bus
 		(pts
 			(xy 318.77 234.95) (xy 321.31 234.95)
@@ -22492,6 +22704,16 @@
 			(type default)
 		)
 		(uuid "927270f1-ea67-440b-a93c-83c3893b5f2b")
+	)
+	(wire
+		(pts
+			(xy 62.23 22.86) (xy 62.23 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9277b0b8-f328-4b4a-9dff-224abde1e412")
 	)
 	(wire
 		(pts
@@ -24152,6 +24374,16 @@
 			(type default)
 		)
 		(uuid "bcec76e7-448a-4fd9-b087-483ebbbf2218")
+	)
+	(wire
+		(pts
+			(xy 72.39 19.05) (xy 72.39 25.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bd0940a6-b207-4f09-9756-c5973ffc7481")
 	)
 	(wire
 		(pts
@@ -27243,6 +27475,16 @@
 		)
 		(uuid "0e5b0089-ff66-4efb-a8ca-7d0f4499cbd3")
 	)
+	(label "PICO_RX"
+		(at 88.9 91.44 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "0ebdaa66-c9ba-4963-a6a7-d109ad1cfd9d")
+	)
 	(label "~RFSH~"
 		(at 270.51 297.18 90)
 		(effects
@@ -30033,6 +30275,16 @@
 		)
 		(uuid "da11be2c-095e-4aae-a56d-91457d9ef7ab")
 	)
+	(label "PICO_TX"
+		(at 88.9 88.9 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "da1cee39-3ca9-467b-b98e-df877a5b1459")
+	)
 	(label "PORT2"
 		(at 367.03 283.21 180)
 		(effects
@@ -30646,7 +30898,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "0280a077-415b-44ca-a8d2-994cc3c878a4")
-		(property "Reference" "#PWR058"
+		(property "Reference" "#PWR012"
 			(at 148.59 138.43 0)
 			(effects
 				(font
@@ -30694,9 +30946,9 @@
 			(uuid "f854a2cc-c333-4bbb-b132-296b7f2b5301")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR058")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
@@ -30792,7 +31044,7 @@
 			(uuid "87666218-6d71-49db-b914-3cc33d410da9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J4")
 					(unit 1)
@@ -30888,7 +31140,7 @@
 			(uuid "3bdc0fe3-3f77-4048-b62a-e2ef4ef7e704")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "D2")
 					(unit 1)
@@ -30975,7 +31227,7 @@
 			(uuid "4524f5ad-1bc8-4476-a9e7-155c6159efa4")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C12")
 					(unit 1)
@@ -30993,7 +31245,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "0ad48514-dbe6-4ecd-a3f3-dd36e76ac843")
-		(property "Reference" "#PWR050"
+		(property "Reference" "#PWR020"
 			(at 175.26 176.53 0)
 			(effects
 				(font
@@ -31041,9 +31293,9 @@
 			(uuid "7e545ec0-c176-401e-9714-5dae8cb66483")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR050")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -31059,7 +31311,7 @@
 		(on_board no)
 		(dnp no)
 		(uuid "0ea83c39-9421-43ac-9713-2affd0758cc7")
-		(property "Reference" "C4"
+		(property "Reference" "C3"
 			(at 157.48 328.9362 0)
 			(effects
 				(font
@@ -31129,9 +31381,9 @@
 			(uuid "2095ed4e-69ac-4f22-a846-e575a3be5db6")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "C4")
+					(reference "C3")
 					(unit 1)
 				)
 			)
@@ -31144,7 +31396,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "11d15120-bfb6-4111-8645-fa7b2cfedf59")
 		(property "Reference" "U4"
 			(at 214.376 324.104 0)
@@ -31258,7 +31510,7 @@
 			(uuid "44c72de2-9f0e-4bf6-bb0e-f3946d572b67")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U4")
 					(unit 1)
@@ -31276,7 +31528,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "178cb787-10c6-4747-b898-172beb2fe2d6")
-		(property "Reference" "#PWR037"
+		(property "Reference" "#PWR051"
 			(at 331.47 196.85 0)
 			(effects
 				(font
@@ -31324,9 +31576,9 @@
 			(uuid "3b92b781-11a5-40f8-8df2-62bae531abd5")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR037")
+					(reference "#PWR051")
 					(unit 1)
 				)
 			)
@@ -31342,7 +31594,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "17ded8af-4670-46a3-b25d-cc006504d263")
-		(property "Reference" "#PWR068"
+		(property "Reference" "#PWR01"
 			(at 59.69 148.59 0)
 			(effects
 				(font
@@ -31390,9 +31642,9 @@
 			(uuid "ad4ca130-768b-4acd-b148-f13cf0a306da")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR068")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -31477,7 +31729,7 @@
 			(uuid "b2a7d194-dfe2-4dc8-9004-7f2a3a0e4863")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C6")
 					(unit 1)
@@ -31495,7 +31747,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "18d525dd-3857-4392-aa2c-a90632da3fdd")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR064"
 			(at 393.7 337.82 0)
 			(effects
 				(font
@@ -31543,9 +31795,9 @@
 			(uuid "35ce0890-90b0-431b-aec2-a8e809e03577")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR019")
+					(reference "#PWR064")
 					(unit 1)
 				)
 			)
@@ -31561,7 +31813,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "19364866-8649-4321-9322-85ce2883cf23")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR061"
 			(at 360.68 325.12 0)
 			(effects
 				(font
@@ -31609,9 +31861,9 @@
 			(uuid "2c227629-cdfe-421c-bfa3-a6c6f16c02b2")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR026")
+					(reference "#PWR061")
 					(unit 1)
 				)
 			)
@@ -31627,7 +31879,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1cb1a63a-ed43-437d-baf5-a6821209dfa0")
-		(property "Reference" "#PWR022"
+		(property "Reference" "#PWR053"
 			(at 337.82 271.78 0)
 			(effects
 				(font
@@ -31675,9 +31927,9 @@
 			(uuid "f37858d4-ff90-4365-8397-ff7f3ca3b01a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR022")
+					(reference "#PWR053")
 					(unit 1)
 				)
 			)
@@ -31693,7 +31945,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "1d6f7535-9281-47b0-9850-090dd678f400")
-		(property "Reference" "#PWR035"
+		(property "Reference" "#PWR022"
 			(at 181.61 233.68 0)
 			(effects
 				(font
@@ -31741,9 +31993,9 @@
 			(uuid "e5fb8221-049c-4fe8-aa19-9f4e57e984bf")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR035")
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -31759,7 +32011,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "20481cbe-7ab8-4d62-9a32-31af99dd18e6")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR014"
 			(at 154.94 331.47 0)
 			(effects
 				(font
@@ -31807,9 +32059,9 @@
 			(uuid "05b37a52-30bd-4f6c-a6f4-74d136560cb9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR017")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -31825,7 +32077,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "22c64fe0-48d6-4d31-bd74-99342f438079")
-		(property "Reference" "#PWR051"
+		(property "Reference" "#PWR050"
 			(at 330.2 176.53 0)
 			(effects
 				(font
@@ -31873,9 +32125,9 @@
 			(uuid "01c2de72-d2b4-4c62-a2c2-7c5035ccd9c9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR051")
+					(reference "#PWR050")
 					(unit 1)
 				)
 			)
@@ -31891,7 +32143,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "26a50d20-0b8b-48e9-bd40-8a6a62b9d966")
-		(property "Reference" "#PWR045"
+		(property "Reference" "#PWR024"
 			(at 185.42 190.5 0)
 			(effects
 				(font
@@ -31939,9 +32191,9 @@
 			(uuid "d0f50087-eed3-471f-a238-9d8e833f809d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR045")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -31957,7 +32209,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "274bcaca-bad7-411a-9135-fc825c9f6a91")
-		(property "Reference" "#PWR055"
+		(property "Reference" "#PWR044"
 			(at 281.94 76.2 0)
 			(effects
 				(font
@@ -32005,9 +32257,9 @@
 			(uuid "658b92b2-3d22-4cee-9ef4-d032e8085988")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR055")
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -32020,7 +32272,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "27ba8759-d47f-465b-8a74-94017817b0cc")
 		(property "Reference" "U3"
 			(at 213.868 270.51 0)
@@ -32150,7 +32402,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "2a4c3cad-bfc7-457f-bf8b-73c6c294ec8e")
 		(property "Reference" "U11"
 			(at 410.7881 300.99 0)
@@ -32264,7 +32516,7 @@
 			(uuid "6d6c05d6-b9c3-4055-ae68-ad33b0a94eac")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U11")
 					(unit 1)
@@ -32392,7 +32644,7 @@
 			(uuid "32521c66-ef71-4729-8407-c4dea810427e")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J17")
 					(unit 1)
@@ -32402,7 +32654,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 53.34 227.33 0)
+		(at 492.76 162.56 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -32410,8 +32662,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2b82565b-6a63-4b1a-bc77-2827d54f5400")
-		(property "Reference" "U23"
-			(at 54.61 226.0599 0)
+		(property "Reference" "J84"
+			(at 494.03 161.2899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32420,7 +32672,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 54.61 228.5999 0)
+			(at 494.03 163.8299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32429,7 +32681,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 53.34 227.33 0)
+			(at 492.76 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32438,7 +32690,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 53.34 227.33 0)
+			(at 492.76 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32447,7 +32699,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 53.34 227.33 0)
+			(at 492.76 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32456,7 +32708,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 53.34 227.33 0)
+			(at 492.76 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32465,7 +32717,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 53.34 227.33 0)
+			(at 492.76 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32474,9 +32726,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U23")
+					(reference "J84")
 					(unit 1)
 				)
 			)
@@ -32570,7 +32822,7 @@
 			(uuid "133886e8-a4c1-4f27-9931-69e850004cb8")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "D3")
 					(unit 1)
@@ -32587,7 +32839,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "2cdaa07c-58e5-4072-b1a6-85fc1e96e613")
-		(property "Reference" "#PWR012"
+		(property "Reference" "#PWR057"
 			(at 358.14 302.26 0)
 			(effects
 				(font
@@ -32635,9 +32887,9 @@
 			(uuid "89b72651-b0ed-4e81-9bfe-a3b46618fd50")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR012")
+					(reference "#PWR057")
 					(unit 1)
 				)
 			)
@@ -32653,7 +32905,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "2e40140c-fbae-4758-a4d5-daa43ffd62b3")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR09"
 			(at 121.92 353.06 0)
 			(effects
 				(font
@@ -32701,9 +32953,9 @@
 			(uuid "d69bc5fc-e832-4cd4-a624-113b9806b2b0")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR014")
+					(reference "#PWR09")
 					(unit 1)
 				)
 			)
@@ -32719,7 +32971,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "2f225e5e-5858-4619-beb6-66e71703abf8")
-		(property "Reference" "#PWR062"
+		(property "Reference" "#PWR06"
 			(at 99.06 67.31 0)
 			(effects
 				(font
@@ -32767,9 +33019,9 @@
 			(uuid "5eff1f57-10f3-4997-bffa-2c155d5ddf91")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR062")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -32785,7 +33037,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2f99c139-2bed-423f-ad26-2920ed4b923b")
-		(property "Reference" "#PWR025"
+		(property "Reference" "#PWR054"
 			(at 337.82 327.66 0)
 			(effects
 				(font
@@ -32833,9 +33085,9 @@
 			(uuid "7bd5cc4e-0ea3-492c-876f-c5767ba49d2a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR025")
+					(reference "#PWR054")
 					(unit 1)
 				)
 			)
@@ -32851,7 +33103,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "34d2c81f-c45e-4fa1-bb7d-001b0095fbb3")
-		(property "Reference" "#PWR043"
+		(property "Reference" "#PWR08"
 			(at 118.11 199.39 0)
 			(effects
 				(font
@@ -32899,9 +33151,9 @@
 			(uuid "59dd3ad8-234a-4890-9bc0-3ae4ac6f6f3b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR043")
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -32917,7 +33169,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3561d755-46f9-43fb-9b8b-953ecb869a62")
-		(property "Reference" "#PWR040"
+		(property "Reference" "#PWR042"
 			(at 273.05 199.39 0)
 			(effects
 				(font
@@ -32965,9 +33217,9 @@
 			(uuid "44856972-b6a2-40aa-a350-82e7c236c6b4")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR040")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -33180,7 +33432,7 @@
 			(uuid "8aa66b96-3546-4707-a37a-74ac63098aac")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C16")
 					(unit 1)
@@ -33198,7 +33450,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3851b3fd-1548-4f05-b057-5561d7f14f11")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR026"
 			(at 196.85 326.39 0)
 			(effects
 				(font
@@ -33246,9 +33498,9 @@
 			(uuid "d95d85d0-f9ba-42c9-9965-8736faf3b1c9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR027")
+					(reference "#PWR026")
 					(unit 1)
 				)
 			)
@@ -33353,7 +33605,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "387b4d81-5335-4446-8967-081c0486e69a")
-		(property "Reference" "#PWR010"
+		(property "Reference" "#PWR066"
 			(at 412.75 368.3 0)
 			(effects
 				(font
@@ -33401,9 +33653,9 @@
 			(uuid "3eb249de-a3d7-485f-b3b9-bdd752ddcb03")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR010")
+					(reference "#PWR066")
 					(unit 1)
 				)
 			)
@@ -33419,7 +33671,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "38b3416d-7daf-49aa-a5e9-5c9fb1a6355d")
-		(property "Reference" "#PWR033"
+		(property "Reference" "#PWR031"
 			(at 218.44 237.49 0)
 			(effects
 				(font
@@ -33467,9 +33719,9 @@
 			(uuid "b5f64c9f-77ca-4a80-bd08-9842f112999a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR033")
+					(reference "#PWR031")
 					(unit 1)
 				)
 			)
@@ -33484,7 +33736,7 @@
 		(on_board no)
 		(dnp no)
 		(uuid "39f27db2-4241-4445-8bd1-c4921fad6fb3")
-		(property "Reference" "C3"
+		(property "Reference" "C4"
 			(at 146.05 306.0762 0)
 			(effects
 				(font
@@ -33554,9 +33806,9 @@
 			(uuid "404c6d31-ee19-4110-a9b0-50248c4d94a5")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "C3")
+					(reference "C4")
 					(unit 1)
 				)
 			)
@@ -33572,7 +33824,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3b3db1cb-0255-4706-a890-5899d642797d")
-		(property "Reference" "#PWR024"
+		(property "Reference" "#PWR059"
 			(at 360.68 236.22 0)
 			(effects
 				(font
@@ -33620,9 +33872,9 @@
 			(uuid "739b0f7c-322b-4d4e-863b-bac643be61ac")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR024")
+					(reference "#PWR059")
 					(unit 1)
 				)
 			)
@@ -33630,7 +33882,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 50.8 210.82 0)
+		(at 490.22 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -33638,8 +33890,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3b4b96f9-85c9-4c19-829b-7e99515d8cf5")
-		(property "Reference" "U19"
-			(at 52.07 209.5499 0)
+		(property "Reference" "J80"
+			(at 491.49 144.7799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33648,7 +33900,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 52.07 212.0899 0)
+			(at 491.49 147.3199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33657,7 +33909,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 50.8 210.82 0)
+			(at 490.22 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33666,7 +33918,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 50.8 210.82 0)
+			(at 490.22 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33675,7 +33927,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 50.8 210.82 0)
+			(at 490.22 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33684,7 +33936,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 50.8 210.82 0)
+			(at 490.22 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33693,7 +33945,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 50.8 210.82 0)
+			(at 490.22 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -33704,7 +33956,7 @@
 		(instances
 			(project ""
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U19")
+					(reference "J80")
 					(unit 1)
 				)
 			)
@@ -33935,7 +34187,7 @@
 			(uuid "e3eb796d-de31-49e2-8d13-d58da10d6a22")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J10")
 					(unit 1)
@@ -33953,7 +34205,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3cc3f604-67b6-4809-9b80-5a4b302ca764")
-		(property "Reference" "#PWR066"
+		(property "Reference" "#PWR062"
 			(at 379.73 222.25 0)
 			(effects
 				(font
@@ -34001,9 +34253,9 @@
 			(uuid "d25e4c95-844c-41df-836e-4a0393450a51")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR066")
+					(reference "#PWR062")
 					(unit 1)
 				)
 			)
@@ -34019,7 +34271,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3f49c3e0-1930-4775-8ee6-e789abb6864f")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR029"
 			(at 207.01 389.89 0)
 			(effects
 				(font
@@ -34067,9 +34319,9 @@
 			(uuid "2d7a7141-d200-46cd-bdd8-940c7c294873")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR07")
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -34398,7 +34650,7 @@
 			(uuid "ccc33f64-5377-41a8-ba77-2c8647013dad")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J1")
 					(unit 1)
@@ -34494,7 +34746,7 @@
 			(uuid "f5b9066b-1a3a-4886-b454-2c8b4834ef5b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "D1")
 					(unit 1)
@@ -34504,7 +34756,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 91.44 377.19 0)
+		(at 490.22 293.37 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -34512,8 +34764,8 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "44b3aef7-70c9-4ed8-ac6d-8b82091f52b9")
-		(property "Reference" "#FLG02"
-			(at 91.44 379.095 0)
+		(property "Reference" "#FLG01"
+			(at 490.22 295.275 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34522,7 +34774,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 91.44 382.27 0)
+			(at 490.22 298.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34530,7 +34782,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34539,7 +34791,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34548,7 +34800,7 @@
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34560,9 +34812,9 @@
 			(uuid "8240fbf7-351c-4a6f-8283-dc7c4c47a3bf")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#FLG02")
+					(reference "#FLG01")
 					(unit 1)
 				)
 			)
@@ -34578,7 +34830,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "452added-0eb0-4e78-b6de-b240157a546e")
-		(property "Reference" "#PWR047"
+		(property "Reference" "#PWR038"
 			(at 226.06 190.5 0)
 			(effects
 				(font
@@ -34626,9 +34878,9 @@
 			(uuid "3694ef8d-fc3f-4e63-acb1-088b51a28a88")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR047")
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -34653,7 +34905,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10uF"
+		(property "Value" "47uF"
 			(at 213.868 313.182 0)
 			(effects
 				(font
@@ -34723,7 +34975,7 @@
 			(uuid "05e59a56-92e4-4760-b13c-07076e9f2533")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C21")
 					(unit 1)
@@ -34733,16 +34985,15 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 53.34 234.95 0)
+		(at 492.76 170.18 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board no)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "4bcb909b-ce24-4a9f-8426-f68a5e853881")
-		(property "Reference" "U25"
-			(at 54.61 233.6799 0)
+		(property "Reference" "J86"
+			(at 488.696 170.434 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34751,7 +35002,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 54.61 236.2199 0)
+			(at 494.03 171.4499 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34760,7 +35011,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 53.34 234.95 0)
+			(at 492.76 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34769,7 +35020,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 53.34 234.95 0)
+			(at 492.76 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34778,7 +35029,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 53.34 234.95 0)
+			(at 492.76 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34787,7 +35038,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 53.34 234.95 0)
+			(at 492.76 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34796,7 +35047,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 53.34 234.95 0)
+			(at 492.76 170.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -34805,9 +35056,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U25")
+					(reference "J86")
 					(unit 1)
 				)
 			)
@@ -34823,7 +35074,7 @@
 		(on_board no)
 		(dnp no)
 		(uuid "50920683-2173-4ffc-85a9-85f179571b09")
-		(property "Reference" "C18"
+		(property "Reference" "C19"
 			(at 266.7 66.0462 0)
 			(effects
 				(font
@@ -34893,9 +35144,9 @@
 			(uuid "6e177cd8-7e4a-4c15-8f1d-a0ace05e7d3e")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "C18")
+					(reference "C19")
 					(unit 1)
 				)
 			)
@@ -34980,7 +35231,7 @@
 			(uuid "ff661abb-8cea-4c81-bbeb-b93875b8710b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C11")
 					(unit 1)
@@ -35151,7 +35402,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5515b15a-4c86-4ea0-9545-b811b252a575")
-		(property "Reference" "#PWR053"
+		(property "Reference" "#PWR045"
 			(at 283.21 99.06 0)
 			(effects
 				(font
@@ -35199,9 +35450,9 @@
 			(uuid "5c9c50e6-7cb1-4156-9e3c-d4eefdab47c0")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR053")
+					(reference "#PWR045")
 					(unit 1)
 				)
 			)
@@ -35209,16 +35460,16 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x09_Socket")
-		(at 24.13 143.51 0)
+		(at 497.84 210.82 0)
 		(unit 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "55ed46c4-8ab7-491b-ae43-b61059ede3da")
-		(property "Reference" "J13"
-			(at 25.4 142.2399 0)
+		(property "Reference" "J90"
+			(at 499.11 209.5499 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35227,7 +35478,7 @@
 			)
 		)
 		(property "Value" "DISPL SOCKET"
-			(at 25.4 144.7799 0)
+			(at 499.11 212.0899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35236,7 +35487,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinSocket_2.00mm:PinSocket_1x09_P2.00mm_Vertical"
-			(at 24.13 143.51 0)
+			(at 497.84 210.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35245,7 +35496,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 24.13 143.51 0)
+			(at 497.84 210.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35254,7 +35505,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x09, script generated"
-			(at 24.13 143.51 0)
+			(at 497.84 210.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35263,7 +35514,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "S5751-09-ND"
-			(at 24.13 143.51 0)
+			(at 497.84 210.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35272,7 +35523,7 @@
 			)
 		)
 		(property "SKU" "NPPN091BFCN-RC"
-			(at 24.13 143.51 0)
+			(at 497.84 210.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35310,7 +35561,7 @@
 		(instances
 			(project ""
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J13")
+					(reference "J90")
 					(unit 1)
 				)
 			)
@@ -35398,7 +35649,7 @@
 			(uuid "4b91f95a-cfc5-43d7-9baa-8d15d476a51d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J7")
 					(unit 1)
@@ -35408,16 +35659,15 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 53.34 233.68 0)
+		(at 492.76 168.91 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board no)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "57a35d4e-61ce-4bc6-a80c-5bbadb89de69")
-		(property "Reference" "U24"
-			(at 54.61 232.4099 0)
+		(property "Reference" "J85"
+			(at 494.03 167.6399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35426,7 +35676,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 54.61 234.9499 0)
+			(at 481.33 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35435,7 +35685,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 53.34 233.68 0)
+			(at 492.76 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35444,7 +35694,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 53.34 233.68 0)
+			(at 492.76 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35453,7 +35703,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 53.34 233.68 0)
+			(at 492.76 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35462,7 +35712,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 53.34 233.68 0)
+			(at 492.76 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35471,7 +35721,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 53.34 233.68 0)
+			(at 492.76 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -35480,9 +35730,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U24")
+					(reference "J85")
 					(unit 1)
 				)
 			)
@@ -35567,7 +35817,7 @@
 			(uuid "160f4500-a81c-4ee4-a4d7-92aceadcf28d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R10")
 					(unit 1)
@@ -35654,7 +35904,7 @@
 			(uuid "19ede425-73fe-4b5e-8259-13be6c6cd6fd")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R8")
 					(unit 1)
@@ -35741,7 +35991,7 @@
 			(uuid "2dba0b44-dfcd-4ac9-84d8-d398bd576645")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C9")
 					(unit 1)
@@ -35828,7 +36078,7 @@
 			(uuid "d6d97737-8046-4113-b1f5-c14862a47c81")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C8")
 					(unit 1)
@@ -35918,7 +36168,7 @@
 			(uuid "3a03eb17-298e-43f2-b954-d3da1f1d4183")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J12")
 					(unit 1)
@@ -36317,7 +36567,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "68653df4-bc77-4be2-b671-77f86443e634")
-		(property "Reference" "#PWR09"
+		(property "Reference" "#PWR058"
 			(at 358.14 358.14 0)
 			(effects
 				(font
@@ -36365,9 +36615,9 @@
 			(uuid "30b7731e-b31e-4ac8-bc81-61abf4ae9687")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR09")
+					(reference "#PWR058")
 					(unit 1)
 				)
 			)
@@ -36383,7 +36633,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "6a03fad1-6805-4de8-bec4-4314604603a0")
-		(property "Reference" "#PWR013"
+		(property "Reference" "#PWR060"
 			(at 360.68 269.24 0)
 			(effects
 				(font
@@ -36431,9 +36681,9 @@
 			(uuid "3b777098-9a45-46b2-91ca-0a16157aa6b1")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR013")
+					(reference "#PWR060")
 					(unit 1)
 				)
 			)
@@ -36446,7 +36696,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6a5a4a6a-6843-42db-b9e7-2ae0980aad24")
 		(property "Reference" "U5"
@@ -36563,7 +36813,7 @@
 			(uuid "ab440487-5b56-4641-b65c-5be2b73b6564")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U5")
 					(unit 1)
@@ -36579,7 +36829,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "6abcd4e0-4210-4f3d-9991-d4f3f4f42bc3")
 		(property "Reference" "U12"
 			(at 408.94 335.28 0)
@@ -36693,7 +36943,7 @@
 			(uuid "0de4030d-fd04-4e01-a624-8c0bbd770a3d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U12")
 					(unit 1)
@@ -36711,7 +36961,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "6d015e0d-f186-4724-a4cc-d351f5b63805")
-		(property "Reference" "#PWR038"
+		(property "Reference" "#PWR032"
 			(at 219.71 212.09 0)
 			(effects
 				(font
@@ -36759,9 +37009,9 @@
 			(uuid "11f7868f-a7fd-408c-a4ed-a2c23cff56ac")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR038")
+					(reference "#PWR032")
 					(unit 1)
 				)
 			)
@@ -36777,7 +37027,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "6d343f45-fc7f-4811-85db-540f6d7982e5")
-		(property "Reference" "#PWR065"
+		(property "Reference" "#PWR03"
 			(at 85.09 63.5 0)
 			(effects
 				(font
@@ -36825,9 +37075,9 @@
 			(uuid "0fe0b325-f038-4a6b-adef-6ca818a96122")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR065")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -36843,7 +37093,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6e634bd6-1be4-46b2-ad6a-a261f05ae93c")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR063"
 			(at 392.43 304.8 0)
 			(effects
 				(font
@@ -36891,9 +37141,9 @@
 			(uuid "1cc8a360-e21c-48b4-9db5-860793ba9f48")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR020")
+					(reference "#PWR063")
 					(unit 1)
 				)
 			)
@@ -36907,7 +37157,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "6f1f1ef0-ac26-479e-afc4-26e8f3acaa9e")
 		(property "Reference" "U8"
 			(at 354.33 236.22 0)
@@ -37021,9 +37271,81 @@
 			(uuid "e1dd9704-3cfb-453b-9f80-45a974114d24")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Potentiometer_Trim")
+		(at 58.42 22.86 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "70b612c3-5fb4-4a32-844f-4af8a1eade90")
+		(property "Reference" "R20"
+			(at 52.07 21.336 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3.3K"
+			(at 51.562 23.622 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Runtron_RM-063_Horizontal"
+			(at 58.42 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 58.42 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Trim-potentiometer"
+			(at 58.42 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "c78d0154-f30f-48cc-8a36-f48ad0c96fcf")
+		)
+		(pin "1"
+			(uuid "01ba8b1b-e1cf-4c20-b1c3-a949510abfb4")
+		)
+		(pin "3"
+			(uuid "4e335e21-f0ed-4231-b4b1-710ad2aa14bf")
+		)
+		(instances
+			(project ""
+				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
+					(reference "R20")
 					(unit 1)
 				)
 			)
@@ -37037,7 +37359,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "729480c8-0925-4956-b914-aed74e381f93")
 		(property "Reference" "U10"
 			(at 354.076 325.12 0)
@@ -37151,7 +37473,7 @@
 			(uuid "3eb02e0b-46e0-46e3-983b-b990d4fcec06")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U10")
 					(unit 1)
@@ -37169,7 +37491,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "74a96745-ede8-461a-b86a-c5292ee26655")
-		(property "Reference" "#PWR054"
+		(property "Reference" "#PWR043"
 			(at 281.94 68.58 0)
 			(effects
 				(font
@@ -37217,9 +37539,9 @@
 			(uuid "89ffe797-3d64-4944-b7b5-6d5c651e8afb")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR054")
+					(reference "#PWR043")
 					(unit 1)
 				)
 			)
@@ -37235,7 +37557,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "76ac6311-972e-40e8-9b1e-4df4656f31e2")
-		(property "Reference" "#PWR02"
+		(property "Reference" "#PWR033"
 			(at 219.71 304.8 0)
 			(effects
 				(font
@@ -37283,9 +37605,9 @@
 			(uuid "0e42405d-6cc7-41e0-b924-a555dc161e5e")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR02")
+					(reference "#PWR033")
 					(unit 1)
 				)
 			)
@@ -37301,7 +37623,7 @@
 		(on_board no)
 		(dnp no)
 		(uuid "78f82f3a-7c33-456f-8e76-21f5f11f4d42")
-		(property "Reference" "C19"
+		(property "Reference" "C18"
 			(at 275.59 66.0462 0)
 			(effects
 				(font
@@ -37371,9 +37693,9 @@
 			(uuid "38cfe036-b53a-4bd9-b9b8-18c74cce76bd")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "C19")
+					(reference "C18")
 					(unit 1)
 				)
 			)
@@ -37389,7 +37711,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7904dfc6-14e2-4ede-87b2-4983c4e1e936")
-		(property "Reference" "#PWR042"
+		(property "Reference" "#PWR07"
 			(at 118.11 191.77 0)
 			(effects
 				(font
@@ -37437,9 +37759,9 @@
 			(uuid "1d6f1c54-ab9b-4157-adeb-8c7046c51a7c")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR042")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -37524,7 +37846,7 @@
 			(uuid "00931a0f-0f35-45c7-a6ba-d93ea28fd75b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C7")
 					(unit 1)
@@ -37611,7 +37933,7 @@
 			(uuid "1c7f0998-2f95-441b-b421-93a627464232")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R1")
 					(unit 1)
@@ -37629,7 +37951,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7ac8c4e4-35e2-430c-8479-3fc100fb71a0")
-		(property "Reference" "#PWR034"
+		(property "Reference" "#PWR016"
 			(at 160.02 236.22 0)
 			(effects
 				(font
@@ -37677,9 +37999,9 @@
 			(uuid "4c1a014b-469d-4e06-ac97-7d39596aa5fd")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR034")
+					(reference "#PWR016")
 					(unit 1)
 				)
 			)
@@ -37695,7 +38017,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "7bab37ab-c22d-4ce8-8495-b70bd1d4fcbe")
-		(property "Reference" "#PWR05"
+		(property "Reference" "#PWR030"
 			(at 210.82 303.53 0)
 			(effects
 				(font
@@ -37743,9 +38065,9 @@
 			(uuid "d07a725d-4db7-4acc-bc16-3a71f91299b6")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR05")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -37830,7 +38152,7 @@
 			(uuid "8fe4871b-9786-4b97-bc56-46cdcafad30f")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C5")
 					(unit 1)
@@ -37917,7 +38239,7 @@
 			(uuid "23031fec-232f-4c7f-9686-995a13d09643")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R7")
 					(unit 1)
@@ -37935,7 +38257,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "84b4b3e7-b1e8-4a85-882f-664ff3ef64a5")
-		(property "Reference" "#PWR056"
+		(property "Reference" "#PWR039"
 			(at 256.54 154.94 0)
 			(effects
 				(font
@@ -37983,9 +38305,9 @@
 			(uuid "6784ea19-7144-4588-a80a-b9d12ebc6a4d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR056")
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
@@ -38001,7 +38323,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "866d81cb-8b18-4876-8482-73e8b6c7d8ba")
-		(property "Reference" "#PWR048"
+		(property "Reference" "#PWR055"
 			(at 340.36 81.28 0)
 			(effects
 				(font
@@ -38049,9 +38371,9 @@
 			(uuid "612c2ebe-b6c1-4b2d-9f31-0325f5e56fa3")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR048")
+					(reference "#PWR055")
 					(unit 1)
 				)
 			)
@@ -38059,7 +38381,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 91.44 377.19 0)
+		(at 490.22 293.37 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -38067,8 +38389,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "89d5174a-c077-412a-bce6-a5fbbafc3ad2")
-		(property "Reference" "#PWR057"
-			(at 91.44 381 0)
+		(property "Reference" "#PWR05"
+			(at 490.22 297.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -38077,7 +38399,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 91.44 372.11 0)
+			(at 490.22 288.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -38085,7 +38407,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -38094,7 +38416,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -38103,7 +38425,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 91.44 377.19 0)
+			(at 490.22 293.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -38115,9 +38437,9 @@
 			(uuid "682ceae8-01a6-4317-98a8-0cb01fd84663")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR057")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -38133,7 +38455,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8a137521-6709-42eb-b15d-b4e343f716d7")
-		(property "Reference" "#PWR052"
+		(property "Reference" "#PWR049"
 			(at 323.85 168.91 0)
 			(effects
 				(font
@@ -38181,9 +38503,9 @@
 			(uuid "668edb0a-2eef-4a65-8fe7-86e146dc722b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR052")
+					(reference "#PWR049")
 					(unit 1)
 				)
 			)
@@ -38196,7 +38518,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "8cf9c1b2-4f09-43f8-8808-7d9731c471cc")
 		(property "Reference" "U2"
 			(at 212.852 237.744 0)
@@ -38243,7 +38565,7 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "	 296-12810-5-ND"
+		(property "Digi-Key_PN" "296-12810-5-ND"
 			(at 210.82 248.92 0)
 			(effects
 				(font
@@ -38310,7 +38632,7 @@
 			(uuid "1da0df1b-055e-4c19-b12b-327330310476")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U2")
 					(unit 1)
@@ -38328,7 +38650,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "9129ca62-3e7c-4bcd-bdd9-283c6bedce13")
-		(property "Reference" "#PWR039"
+		(property "Reference" "#PWR021"
 			(at 176.53 196.85 0)
 			(effects
 				(font
@@ -38376,9 +38698,9 @@
 			(uuid "30eccf29-2e57-4e87-8c89-8b4ee1613cde")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR039")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -38639,7 +38961,7 @@
 			(uuid "fe79e6dc-625a-4830-b683-24b2912cba35")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C15")
 					(unit 1)
@@ -38657,7 +38979,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "9b89bfee-230c-4f10-9bc2-d4d068eecd44")
-		(property "Reference" "#PWR061"
+		(property "Reference" "#PWR04"
 			(at 90.17 176.53 0)
 			(effects
 				(font
@@ -38705,9 +39027,9 @@
 			(uuid "696a7ef3-8ea8-48e7-b0cc-df9ceee17084")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR061")
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -38723,7 +39045,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9eb945a7-5086-492c-895a-46209e5bf4fc")
-		(property "Reference" "#PWR015"
+		(property "Reference" "#PWR013"
 			(at 153.67 307.34 0)
 			(effects
 				(font
@@ -38771,9 +39093,9 @@
 			(uuid "196755f2-3737-4ed8-931d-12956d3dabc0")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR015")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -38789,7 +39111,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9f35845c-1b8b-4ba0-a32a-f064298290ff")
-		(property "Reference" "#PWR064"
+		(property "Reference" "#PWR046"
 			(at 284.48 148.59 0)
 			(effects
 				(font
@@ -38837,9 +39159,9 @@
 			(uuid "4285da87-0394-4fe5-b97b-a9f8cc6372a8")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR064")
+					(reference "#PWR046")
 					(unit 1)
 				)
 			)
@@ -38855,7 +39177,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "9f63a719-81aa-4d06-8b6e-51bba61465de")
-		(property "Reference" "#PWR028"
+		(property "Reference" "#PWR034"
 			(at 219.71 323.85 0)
 			(effects
 				(font
@@ -38903,9 +39225,9 @@
 			(uuid "d1fcd16e-f619-43e4-8c1b-8aa4f96a5e5d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR028")
+					(reference "#PWR034")
 					(unit 1)
 				)
 			)
@@ -38921,7 +39243,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "a118e33a-a592-456f-86c8-9d043de7ede2")
-		(property "Reference" "J3"
+		(property "Reference" "J2"
 			(at 120.65 336.8431 0)
 			(effects
 				(font
@@ -38991,9 +39313,9 @@
 			(uuid "71775ba5-c1ee-4cb3-9d29-0e774a23aa02")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J3")
+					(reference "J2")
 					(unit 1)
 				)
 			)
@@ -39001,7 +39323,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 50.8 218.44 0)
+		(at 490.22 153.67 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -39009,8 +39331,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a28ee4a9-261d-4cba-8349-a58411143978")
-		(property "Reference" "U21"
-			(at 52.07 217.1699 0)
+		(property "Reference" "J82"
+			(at 491.49 152.3999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39019,7 +39341,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 52.07 219.7099 0)
+			(at 491.49 154.9399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39028,7 +39350,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 50.8 218.44 0)
+			(at 490.22 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39037,7 +39359,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 50.8 218.44 0)
+			(at 490.22 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39046,7 +39368,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 50.8 218.44 0)
+			(at 490.22 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39055,7 +39377,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 50.8 218.44 0)
+			(at 490.22 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39064,7 +39386,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 50.8 218.44 0)
+			(at 490.22 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39073,9 +39395,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U21")
+					(reference "J82")
 					(unit 1)
 				)
 			)
@@ -39091,7 +39413,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a2edaf74-b410-4940-bfbe-1c71a2a9a763")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR025"
 			(at 196.85 240.03 0)
 			(effects
 				(font
@@ -39139,9 +39461,9 @@
 			(uuid "01726522-c0c6-43b8-82e1-4e61f11bde27")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR032")
+					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -39156,7 +39478,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "a3482127-f6f2-48d9-bc51-7ef08f577ec6")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR067"
 			(at 415.29 335.28 0)
 			(effects
 				(font
@@ -39204,9 +39526,9 @@
 			(uuid "813e334c-73e8-4ba4-84e6-7d245000be4d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR011")
+					(reference "#PWR067")
 					(unit 1)
 				)
 			)
@@ -39301,6 +39623,72 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
+		(at 64.77 66.04 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a6cd5a45-6d5d-4c23-820a-5293395d3fd6")
+		(property "Reference" "#PWR02"
+			(at 64.77 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 64.77 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 64.77 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 64.77 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 64.77 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "bfa54d3c-c919-409a-9924-4dac3f709cb4")
+		)
+		(instances
+			(project "Zx50 Bus Probe_RevB"
+				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
 		(at 273.05 187.96 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -39357,7 +39745,7 @@
 			(uuid "2bf7b471-7542-49e4-891e-e7d6bfc31957")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "#PWR041")
 					(unit 1)
@@ -39375,7 +39763,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "a93a5678-05d4-4ce9-a04b-0e34db3ffeb6")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR047"
 			(at 285.75 331.47 0)
 			(effects
 				(font
@@ -39423,9 +39811,9 @@
 			(uuid "6e0fb777-6826-43cf-9a01-78fcee3bcdd3")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR031")
+					(reference "#PWR047")
 					(unit 1)
 				)
 			)
@@ -39442,7 +39830,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a95ff192-d4cf-4521-877b-7c0219e6f08a")
-		(property "Reference" "U15"
+		(property "Reference" "U16"
 			(at 156.7881 302.26 0)
 			(effects
 				(font
@@ -39488,7 +39876,7 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "	 296-12407-5-ND"
+		(property "Digi-Key_PN" "296-12407-5-ND"
 			(at 151.13 312.42 0)
 			(effects
 				(font
@@ -39533,7 +39921,7 @@
 		(instances
 			(project ""
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U15")
+					(reference "U16")
 					(unit 1)
 				)
 			)
@@ -39541,7 +39929,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 52.07 222.25 0)
+		(at 491.49 157.48 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -39549,8 +39937,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "aa777b90-165c-4dee-835c-cf08e92aabca")
-		(property "Reference" "U22"
-			(at 53.34 220.9799 0)
+		(property "Reference" "J83"
+			(at 492.76 156.2099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39559,7 +39947,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 53.34 223.5199 0)
+			(at 492.76 158.7499 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39568,7 +39956,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 52.07 222.25 0)
+			(at 491.49 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39577,7 +39965,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 52.07 222.25 0)
+			(at 491.49 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39586,7 +39974,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 52.07 222.25 0)
+			(at 491.49 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39595,7 +39983,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 52.07 222.25 0)
+			(at 491.49 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39604,7 +39992,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 52.07 222.25 0)
+			(at 491.49 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -39613,9 +40001,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U22")
+					(reference "J83")
 					(unit 1)
 				)
 			)
@@ -39700,7 +40088,7 @@
 			(uuid "ff625dda-6001-4eef-86b7-729464fa5a57")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C14")
 					(unit 1)
@@ -39790,7 +40178,7 @@
 			(uuid "2ced1818-1716-4152-b3cc-c110e4ab397d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J11")
 					(unit 1)
@@ -40135,7 +40523,7 @@
 			(uuid "e6ce6ea4-4a6f-419b-83cd-edf6b6a0eb2c")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U7")
 					(unit 1)
@@ -40153,7 +40541,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b1f3026c-46fc-48f1-b42b-9d865e5d7874")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR052"
 			(at 337.82 238.76 0)
 			(effects
 				(font
@@ -40201,9 +40589,9 @@
 			(uuid "ed4c4328-461d-457b-b80c-55dad46b4fd5")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR023")
+					(reference "#PWR052")
 					(unit 1)
 				)
 			)
@@ -40217,7 +40605,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "b2a28356-086b-43aa-81c9-21f5edbcc20c")
 		(property "Reference" "U9"
 			(at 354.33 269.24 0)
@@ -40331,7 +40719,7 @@
 			(uuid "ae9ebb7d-4383-4408-8492-56d56f80567f")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U9")
 					(unit 1)
@@ -40528,7 +40916,7 @@
 			(uuid "32a0a360-db32-4773-befb-08b0d9d91e70")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R4")
 					(unit 1)
@@ -40748,7 +41136,7 @@
 			(uuid "1edab4e0-639e-47cf-9ec1-ebffd69bb68a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C10")
 					(unit 1)
@@ -40765,7 +41153,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "b9b19b4b-267a-4a59-9420-0b75e5f67572")
-		(property "Reference" "U16"
+		(property "Reference" "U15"
 			(at 144.526 350.52 0)
 			(effects
 				(font
@@ -40811,7 +41199,7 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "	 296-12407-5-ND"
+		(property "Digi-Key_PN" "296-12407-5-ND"
 			(at 152.4 335.28 0)
 			(effects
 				(font
@@ -40854,9 +41242,9 @@
 			(uuid "3733019e-69c8-4957-ba5a-a7d5c173e914")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U16")
+					(reference "U15")
 					(unit 1)
 				)
 			)
@@ -40982,7 +41370,7 @@
 			(uuid "b2d61cff-9183-4794-a203-fbf577e20bd6")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J19")
 					(unit 1)
@@ -41068,7 +41456,7 @@
 			(uuid "32d8e083-8810-463a-8aca-ea5f3e9d36b0")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R3")
 					(unit 1)
@@ -41086,7 +41474,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "c3b8c520-94f7-4369-9bcb-2692d060a014")
-		(property "Reference" "#PWR063"
+		(property "Reference" "#PWR048"
 			(at 292.1 125.73 0)
 			(effects
 				(font
@@ -41135,9 +41523,9 @@
 			(uuid "f15d3b21-2d1c-499b-a36e-735e489f13c6")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR063")
+					(reference "#PWR048")
 					(unit 1)
 				)
 			)
@@ -41153,7 +41541,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "c6ab0bd0-215b-4afa-a7e4-46c6eee833cf")
-		(property "Reference" "#PWR067"
+		(property "Reference" "#PWR065"
 			(at 411.48 222.25 0)
 			(effects
 				(font
@@ -41201,9 +41589,9 @@
 			(uuid "52ea5f0d-77f0-4fa3-8b0d-df126699045a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR067")
+					(reference "#PWR065")
 					(unit 1)
 				)
 			)
@@ -41211,16 +41599,16 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x09_Socket")
-		(at 24.13 166.37 0)
+		(at 499.11 252.73 0)
 		(unit 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c81081d9-5b22-474c-8e14-424464d0b4e5")
-		(property "Reference" "J14"
-			(at 25.4 165.0999 0)
+		(property "Reference" "J91"
+			(at 500.38 251.4599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41229,7 +41617,7 @@
 			)
 		)
 		(property "Value" "DISPL SOCKET"
-			(at 25.4 167.6399 0)
+			(at 500.38 253.9999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41238,7 +41626,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinSocket_2.00mm:PinSocket_1x09_P2.00mm_Vertical"
-			(at 24.13 166.37 0)
+			(at 499.11 252.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41247,7 +41635,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 24.13 166.37 0)
+			(at 499.11 252.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41256,7 +41644,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x09, script generated"
-			(at 24.13 166.37 0)
+			(at 499.11 252.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41265,7 +41653,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "S5751-09-ND"
-			(at 24.13 166.37 0)
+			(at 499.11 252.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41274,7 +41662,7 @@
 			)
 		)
 		(property "SKU" "NPPN091BFCN-RC"
-			(at 24.13 166.37 0)
+			(at 499.11 252.73 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41310,9 +41698,9 @@
 			(uuid "aeab4edc-3eaa-4a80-86e5-fc270b5469fe")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J14")
+					(reference "J91")
 					(unit 1)
 				)
 			)
@@ -41328,7 +41716,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "cb69b94e-036b-455c-a510-459e9d56e432")
-		(property "Reference" "#PWR044"
+		(property "Reference" "#PWR023"
 			(at 185.42 182.88 0)
 			(effects
 				(font
@@ -41376,9 +41764,9 @@
 			(uuid "68829917-647e-46bd-b6af-618e010698b7")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR044")
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -41542,7 +41930,7 @@
 			(uuid "e41f7869-5380-4b96-9942-956e18becc4d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "U13")
 					(unit 1)
@@ -41559,7 +41947,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "d0d59ee1-915a-45df-9a55-4c824555287d")
-		(property "Reference" "#PWR060"
+		(property "Reference" "#PWR018"
 			(at 166.37 81.28 0)
 			(effects
 				(font
@@ -41607,9 +41995,9 @@
 			(uuid "e9b93631-576a-4e59-bbce-c5c4d4b55d4d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR060")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -41624,7 +42012,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "d12661f5-6941-40ee-8891-d2bcac505864")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR068"
 			(at 417.83 302.26 0)
 			(effects
 				(font
@@ -41672,9 +42060,9 @@
 			(uuid "97e41ecf-6b8b-4a09-ac2f-c141997127c7")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR021")
+					(reference "#PWR068")
 					(unit 1)
 				)
 			)
@@ -41690,7 +42078,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d479c3e5-26ae-464a-adfb-8b6d4cec4d4d")
-		(property "Reference" "#PWR08"
+		(property "Reference" "#PWR027"
 			(at 199.39 273.05 0)
 			(effects
 				(font
@@ -41738,9 +42126,9 @@
 			(uuid "e820b406-070e-4b12-8d5a-f0cf095701f4")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR08")
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -41826,7 +42214,7 @@
 			(uuid "65f20f55-a17c-4bd2-a7d9-99b5c4b45ca4")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C20")
 					(unit 1)
@@ -41844,7 +42232,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "d60a2e55-c203-44bd-a540-d67cf4440ae3")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR010"
 			(at 130.81 351.79 0)
 			(effects
 				(font
@@ -41892,9 +42280,9 @@
 			(uuid "6199dc39-70fa-4739-9767-21075742a90c")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR018")
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -41982,7 +42370,7 @@
 			(uuid "5cb6b62b-a6bc-498b-94df-5524219708f7")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J6")
 					(unit 1)
@@ -42069,7 +42457,7 @@
 			(uuid "71132a0a-ed0a-44ce-aed8-6050c191522a")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R9")
 					(unit 1)
@@ -42087,7 +42475,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "de3d2894-edd1-4f18-81dc-f75e1841e262")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR019"
 			(at 173.99 292.1 0)
 			(effects
 				(font
@@ -42135,9 +42523,9 @@
 			(uuid "c70ab3ca-eee3-46ba-a3a1-aadb608dbc29")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR04")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -42222,7 +42610,7 @@
 			(uuid "2a957b88-662e-48e7-b07a-5164b382b5cb")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C2")
 					(unit 1)
@@ -42240,7 +42628,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "e0a3d056-6666-487e-90f3-e40ffffb5af7")
-		(property "Reference" "#PWR049"
+		(property "Reference" "#PWR056"
 			(at 340.36 88.9 0)
 			(effects
 				(font
@@ -42288,9 +42676,9 @@
 			(uuid "1b79f05c-1314-4091-8c8b-ad5cbc6538b4")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR049")
+					(reference "#PWR056")
 					(unit 1)
 				)
 			)
@@ -42306,7 +42694,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "e0fdae9e-d2e7-42a5-957e-4eb6e62a65e9")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR040"
 			(at 260.35 212.09 0)
 			(effects
 				(font
@@ -42354,9 +42742,9 @@
 			(uuid "85d8a7f5-1d04-4bb8-81bf-03f102bf67cb")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR036")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -42372,7 +42760,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "e174f294-9087-46a9-a984-61b8cdcd7fe8")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR015"
 			(at 158.75 264.16 0)
 			(effects
 				(font
@@ -42420,9 +42808,9 @@
 			(uuid "a47c0e58-6ea1-4b60-9cea-bf4d2a0e9a7d")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR03")
+					(reference "#PWR015")
 					(unit 1)
 				)
 			)
@@ -42507,7 +42895,7 @@
 			(uuid "b88702f0-8101-4641-adab-3616047288ad")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C17")
 					(unit 1)
@@ -42521,7 +42909,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board no)
+		(on_board yes)
 		(dnp no)
 		(uuid "e7e46f44-beda-4c7c-bad8-7fb92b224c32")
 		(property "Reference" "R6"
@@ -42594,7 +42982,7 @@
 			(uuid "e9e227a3-bc02-4c19-bdad-2952663dcbd2")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R6")
 					(unit 1)
@@ -42851,7 +43239,7 @@
 			(uuid "9e91e351-1b11-4978-a345-faece2b4bcc9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J9")
 					(unit 1)
@@ -42979,7 +43367,7 @@
 			(uuid "066f2c2b-cd91-4a67-b8b0-6f098548d399")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J20")
 					(unit 1)
@@ -42993,7 +43381,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board no)
+		(on_board yes)
 		(dnp no)
 		(uuid "eaf69863-2007-4ade-b691-2dd19a765a4e")
 		(property "Reference" "R5"
@@ -43066,7 +43454,7 @@
 			(uuid "05351b46-15cb-4e67-b3fb-a2bc51608fd3")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "R5")
 					(unit 1)
@@ -43083,7 +43471,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "f04c1182-96de-44f3-87ec-d6fc590561e4")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR035"
 			(at 220.98 270.51 0)
 			(effects
 				(font
@@ -43131,9 +43519,9 @@
 			(uuid "793059e3-e445-45e3-90f1-10b7df0a31b8")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR030")
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -43149,7 +43537,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "f382b619-c73f-4406-baff-59cf454cb700")
-		(property "Reference" "#PWR059"
+		(property "Reference" "#PWR011"
 			(at 148.59 87.63 0)
 			(effects
 				(font
@@ -43197,9 +43585,9 @@
 			(uuid "248e071a-41be-4d9b-945d-489afce0b370")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR059")
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
@@ -43215,7 +43603,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f4160b62-5926-4fb7-8a0a-5ec029cb3edd")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR028"
 			(at 200.66 359.41 0)
 			(effects
 				(font
@@ -43263,9 +43651,9 @@
 			(uuid "f90a11f7-dee5-4f83-bbf3-77309e365a31")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR06")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -43281,7 +43669,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f427d138-f3a8-4ae3-9ad9-cfefb386ab00")
-		(property "Reference" "#PWR046"
+		(property "Reference" "#PWR037"
 			(at 226.06 182.88 0)
 			(effects
 				(font
@@ -43329,9 +43717,9 @@
 			(uuid "9c92af3f-25ac-493e-bf16-2757fa724cc9")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR046")
+					(reference "#PWR037")
 					(unit 1)
 				)
 			)
@@ -43346,7 +43734,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "f7d3ff1e-3993-43f1-883e-32d113559f26")
-		(property "Reference" "#PWR029"
+		(property "Reference" "#PWR036"
 			(at 222.25 356.87 0)
 			(effects
 				(font
@@ -43394,9 +43782,9 @@
 			(uuid "47b84d96-8e3a-4820-b5e2-7cebdfa96a58")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR029")
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -43404,7 +43792,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:Jumper_1")
-		(at 50.8 214.63 0)
+		(at 490.22 149.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -43412,8 +43800,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fa82e837-ff06-4422-951a-3d26718375c4")
-		(property "Reference" "U20"
-			(at 52.07 213.3599 0)
+		(property "Reference" "J81"
+			(at 491.49 148.5899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43422,7 +43810,7 @@
 			)
 		)
 		(property "Value" "Jumper"
-			(at 52.07 215.8999 0)
+			(at 491.49 151.1299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43431,7 +43819,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 50.8 214.63 0)
+			(at 490.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43440,7 +43828,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 50.8 214.63 0)
+			(at 490.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43449,7 +43837,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 50.8 214.63 0)
+			(at 490.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43458,7 +43846,7 @@
 			)
 		)
 		(property "Digi-Key_PN" "732-2678-ND"
-			(at 50.8 214.63 0)
+			(at 490.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43467,7 +43855,7 @@
 			)
 		)
 		(property "SKU" ""
-			(at 50.8 214.63 0)
+			(at 490.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43476,9 +43864,9 @@
 			)
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "U20")
+					(reference "J81")
 					(unit 1)
 				)
 			)
@@ -43494,7 +43882,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "fc0264f5-3818-43ba-ab4f-92ced712b744")
-		(property "Reference" "J2"
+		(property "Reference" "J3"
 			(at 119.38 311.4431 0)
 			(effects
 				(font
@@ -43566,7 +43954,7 @@
 		(instances
 			(project ""
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J2")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -43651,7 +44039,7 @@
 			(uuid "ba5ec450-ccd0-4147-b42a-ef6169fc04e7")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C13")
 					(unit 1)
@@ -43755,7 +44143,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "fef14a4f-63e0-4fa6-a164-2911a2b9cb93")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR017"
 			(at 161.29 353.06 0)
 			(effects
 				(font
@@ -43803,9 +44191,9 @@
 			(uuid "3c9fbf70-a59f-4936-b369-43688fdb8f1b")
 		)
 		(instances
-			(project "Zx50 Bus Probe_RevA"
+			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "#PWR016")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)

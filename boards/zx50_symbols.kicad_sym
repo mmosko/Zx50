@@ -5806,10 +5806,10 @@
 					)
 				)
 			)
-			(pin no_connect line
+			(pin input line
 				(at -13.97 5.08 0)
 				(length 2.54)
-				(name ""
+				(name "Contrast"
 					(effects
 						(font
 							(size 1.27 1.27)

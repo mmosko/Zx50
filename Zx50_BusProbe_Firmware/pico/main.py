@@ -33,6 +33,21 @@ class Zx50Console:
         if USE_WIFI:
             self._setup_wifi()
 
+    def _get_banner(self):
+        """Generates the welcome banner for both USB and TCP clients."""
+        mpy_build = os.uname().version
+        board_hw = os.uname().machine
+        banner = "\n==================================================\n"
+        banner += f" Zx50 Bus Probe - Interactive Terminal\n"
+        banner += f" Firmware: {APP_VERSION}\n"
+        banner += f" Hardware: {board_hw}\n"
+        banner += f" Core:     MicroPython {mpy_build}\n"
+        if self.server_sock:
+            banner += f" Network:  TCP {self.pico_ip}:{TCP_PORT}\n"
+        banner += "==================================================\n"
+        banner += "Type 'help' for a list of commands.\n"
+        return banner
+
     def _setup_wifi(self):
         """Connects to Wi-Fi and starts a non-blocking TCP server."""
         import network
@@ -84,6 +99,11 @@ class Zx50Console:
                 self.client_sock.setblocking(False)
                 print(f"\n[TCP Client Connected: {addr[0]}]")
                 sys.stdout.write(self.prompt)
+
+                # Push the welcome banner and prompt to the new Wi-Fi client
+                welcome_msg = self._get_banner() + "\n" + self.prompt
+                self.client_sock.send(welcome_msg.encode('utf-8'))
+
             except OSError:
                 pass  # No new connection
 
@@ -97,8 +117,16 @@ class Zx50Console:
                     if '\n' in self.client_buffer:
                         lines = self.client_buffer.split('\n')
                         for line in lines[:-1]:
-                            if line.strip():
-                                self._execute(line.strip(), is_tcp=True)
+                            clean_line = line.strip()
+                            if clean_line:
+                                self._execute(clean_line, is_tcp=True)
+
+                            # Push the prompt back after executing (or if they just hit Enter)
+                            try:
+                                self.client_sock.send(self.prompt.encode('utf-8'))
+                            except OSError:
+                                pass
+
                         self.client_buffer = lines[-1]
                 else:
                     # Empty data means disconnect
@@ -111,24 +139,13 @@ class Zx50Console:
 
     def cmdloop(self):
         """Standard line-processing REPL loop handling both USB and TCP."""
-        mpy_build = os.uname().version
-        board_hw = os.uname().machine
 
-        print("\n==================================================")
-        print(f" Zx50 Bus Probe - Interactive Terminal")
-        print(f" Firmware: {APP_VERSION}")
-        print(f" Hardware: {board_hw}")
-        print(f" Core:     MicroPython {mpy_build}")
-        if self.server_sock:
-            print(f" Network:  TCP {self.pico_ip}:{TCP_PORT}")
-        print("==================================================")
-        print("Type 'help' for a list of commands.\n")
+        # Print the banner and prompt locally to the USB serial connection
+        sys.stdout.write(self._get_banner() + "\n" + self.prompt)
 
         # Initial UI update
         comm_mode = f"Wi-Fi: {self.pico_ip}" if self.server_sock else "USB Serial Active"
         display.update("IDLE", comm_mode, f"TX: None  RX: None")
-
-        sys.stdout.write(self.prompt)
 
         while True:
             # 1. Check TCP Client (if enabled)
