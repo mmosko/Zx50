@@ -188,6 +188,22 @@ class Zx50Console:
             self.do_idn(args, is_tcp)
             return
 
+        if cmd in ("bye", "exit", "quit"):
+            if is_tcp and self.client_sock:
+                try:
+                    self.client_sock.send("OK BYE\n".encode('utf-8'))
+                    self.client_sock.close()
+                except OSError:
+                    pass
+                self.client_sock = None
+                self.client_buffer = ""
+                print("\n[TCP Client Disconnected via BYE command]")
+                sys.stdout.write(self.prompt)
+            else:
+                # If typed over USB, just acknowledge it but don't close the USB serial
+                print("OK (USB session remains active)")
+            return
+
         # Look for a method named do_<cmd>
         func = getattr(self, f"do_{cmd}", self.default)
         func(args, is_tcp)
