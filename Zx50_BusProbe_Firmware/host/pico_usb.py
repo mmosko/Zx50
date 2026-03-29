@@ -23,7 +23,31 @@ class PicoUSB(PicoConnection):
 
         # 2. Send a blank carriage return to force the Pico to print a fresh prompt
         self.serial.write(b"\r\n")
-        self._wait_for_prompt()
+
+        # 3. Use a generous 20-second timeout specifically for cold boots/Wi-Fi connection
+        print("  Waiting for Pico boot sequence (up to 20s)...")
+        self._wait_for_prompt(timeout_override=20.0)
+
+    def _wait_for_prompt(self, timeout_override: float = None) -> str:
+        """Helper: Reads the serial stream until 'Zx50>' appears or it times out."""
+        buffer = ""
+        start_time = time.time()
+
+        # Use the override if provided, otherwise default to the standard 2.0s timeout
+        max_wait = timeout_override if timeout_override is not None else self.timeout
+
+        while "Zx50>" not in buffer:
+            if time.time() - start_time > max_wait:
+                print("  [Warning] USB Timeout waiting for Zx50> prompt.")
+                break
+
+            if self.serial.in_waiting > 0:
+                chunk = self.serial.read(self.serial.in_waiting).decode('utf-8', errors='ignore')
+                buffer += chunk
+            else:
+                time.sleep(0.01)  # Sleep 10ms to prevent pegging the CPU at 100%
+
+        return buffer
 
     def disconnect(self) -> None:
         if self.serial and self.serial.is_open:
@@ -32,26 +56,6 @@ class PicoUSB(PicoConnection):
             except:
                 pass
             self.serial.close()
-
-    def _wait_for_prompt(self) -> str:
-        """Helper: Reads the serial stream until 'Zx50>' appears or it times out."""
-        buffer = ""
-        start_time = time.time()
-
-        while "Zx50>" not in buffer:
-            # Hard timeout catch to prevent infinite hanging
-            if time.time() - start_time > self.timeout:
-                print("  [Warning] USB Timeout waiting for Zx50> prompt.")
-                break
-
-            if self.serial.in_waiting > 0:
-                # Use errors='ignore' so a random scrambled byte doesn't crash the script
-                chunk = self.serial.read(self.serial.in_waiting).decode('utf-8', errors='ignore')
-                buffer += chunk
-            else:
-                time.sleep(0.01)  # Sleep 10ms to prevent pegging the CPU at 100%
-
-        return buffer
 
     def send_cmd(self, cmd: str) -> str:
         if not self.serial or not self.serial.is_open:

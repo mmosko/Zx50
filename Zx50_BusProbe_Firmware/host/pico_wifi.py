@@ -67,10 +67,12 @@ class PicoWiFi(PicoConnection):
         try:
             # Send the command with a standard newline
             full_cmd = f"{cmd}\n".encode('utf-8')
+            print(f"    [WIFI TX] -> {cmd}")
             self.sock.sendall(full_cmd)
 
             # Read everything the Pico prints until the prompt comes back
             response = self._wait_for_prompt()
+            print(f"    [WIFI RX] <- {repr(response)}")
 
             # Sift through the output block to find the exact OK or ERR line
             for line in response.split('\n'):
