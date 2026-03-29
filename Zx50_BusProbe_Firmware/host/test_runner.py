@@ -18,14 +18,14 @@ from scope_control import TektronixMDO
 SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
 
 # Connection Toggle: 'USB' or 'WIFI'
-PICO_MODE = 'USB'
+PICO_MODE = 'WIFI'
 
 # USB Settings
 PICO_PORT = '/dev/ttyACM0'
 PICO_BAUD = 115200
 
 # Wi-Fi Settings
-PICO_IP = '172.16.1.108'
+PICO_IP = '172.16.1.46'
 PICO_PORT_TCP = 5050
 
 # --- Test Definitions ---
@@ -73,8 +73,8 @@ class Zx50TestRunner:
                                count=raw_tuple[4])
 
     def get_measurements(self, tx_pin, rx_pin, freq, amp_vpp=4.0) -> Measurement:
-        tx_resp = self.pico.send_cmd(f"SELECT TX {tx_pin}")
-        rx_resp = self.pico.send_cmd(f"SELECT RX {rx_pin}")
+        tx_resp = self.pico.send_cmd(f"BUS SELECT TX {tx_pin}")
+        rx_resp = self.pico.send_cmd(f"BUS SELECT RX {rx_pin}")
 
         if "ERR" in tx_resp or "ERR" in rx_resp:
             print(f"  [!] Routing Error - TX:{tx_resp} RX:{rx_resp}")
