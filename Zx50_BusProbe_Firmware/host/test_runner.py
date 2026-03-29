@@ -1,11 +1,13 @@
 """
 Zx50 Automated Backplane Characterization Runner
 ------------------------------------------------
-Refactored with an Abstract IO Layer for USB and Wi-Fi.
+Integrated Version: Individual Slot Reading, USB/WiFi Support,
+and Correct HH:MM:SS Logging.
 """
 
 import json
 import time
+from datetime import datetime
 from dataclasses import asdict
 
 from measurements import SignalStats, Measurement, SourceWaveform
@@ -18,7 +20,7 @@ from scope_control import TektronixMDO
 SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
 
 # Connection Toggle: 'USB' or 'WIFI'
-PICO_MODE = 'WIFI'
+PICO_MODE = 'USB'
 
 # USB Settings
 PICO_PORT = '/dev/ttyACM0'
@@ -31,20 +33,36 @@ PICO_PORT_TCP = 5050
 # --- Test Definitions ---
 TEST_FREQS = [100_000, 1_000_000, 10_000_000]
 QUICK_TEST_MATRIX = [
-    (42, 42),  # Primary Signal Integrity (CLK)
-    (42, 40),  # Crosstalk to Pin 40 (~HALT~)
-    (42, 41),  # Crosstalk to Pin 41
-    (42, 43),  # Crosstalk to Pin 43
-    (42, 44)  # Crosstalk to Pin 44 (MCLK)
+    (42, 42), (42, 40), (42, 44), (42, 38), (42, 48)
 ]
+
 
 class Zx50TestRunner:
     def __init__(self, pico_io: PicoConnection, scope_addr: str):
-        self.pico = pico_io  # Dependency injected!
+        self.pico = pico_io
         self.scope = TektronixMDO(scope_addr)
 
+    def _ts(self):
+        """Returns HH:MM:SS string."""
+        return datetime.now().strftime("%H:%M:%S")
+
+    def _build_stats(self, raw_tuple) -> SignalStats:
+        """Robustly converts scope tuples into SignalStats objects."""
+        if not raw_tuple or raw_tuple[0] is None:
+            return SignalStats()
+
+        # Handles 2-tuples (mean, std) or 5-tuples (mean, std, min, max, count)
+        if len(raw_tuple) == 2:
+            return SignalStats(mean=raw_tuple[0], stddev=raw_tuple[1])
+        else:
+            return SignalStats(
+                mean=raw_tuple[0], stddev=raw_tuple[1],
+                min_val=raw_tuple[2], max_val=raw_tuple[3],
+                count=raw_tuple[4]
+            )
+
     def connect(self):
-        """Initializes hardware connections."""
+        print(f"[{self._ts()}] Initializing Hardware Connections...")
         self.pico.connect()
 
         resp = self.pico.send_cmd("IDN?")
@@ -52,65 +70,43 @@ class Zx50TestRunner:
             raise ConnectionError(f"Pico verification failed: {resp}")
 
         self.scope.connect()
-        self.scope.match_channels()
-        self.scope.configure_acquisition(record_length=10000, stat_population=50)
 
-    def disconnect(self):
-        """Safely tears down hardware connections."""
-        self.pico.disconnect()
-        try:
-            self.scope.disconnect()
-        except Exception:
-            pass
-
-    def _build_stats(self, raw_tuple) -> SignalStats:
-        if not raw_tuple or raw_tuple[0] is None:
-            return SignalStats()
-        if len(raw_tuple) == 2:
-            return SignalStats(mean=raw_tuple[0], stddev=raw_tuple[1])
-        else:
-            return SignalStats(mean=raw_tuple[0], stddev=raw_tuple[1], min_val=raw_tuple[2], max_val=raw_tuple[3],
-                               count=raw_tuple[4])
-
-    def get_measurements(self, tx_pin, rx_pin, freq, amp_vpp=4.0) -> Measurement:
+    def get_measurements(self, tx_pin, rx_pin) -> Measurement:
+        """Routes pins and pulls all 8 statistical slots individually."""
         tx_resp = self.pico.send_cmd(f"BUS SELECT TX {tx_pin}")
         rx_resp = self.pico.send_cmd(f"BUS SELECT RX {rx_pin}")
 
         if "ERR" in tx_resp or "ERR" in rx_resp:
             print(f"  [!] Routing Error - TX:{tx_resp} RX:{rx_resp}")
 
+        # Restore: Parse signal names from Pico Response
         tx_sig = tx_resp.split()[3] if len(tx_resp.split()) > 3 else "UNKNOWN"
         rx_sig = rx_resp.split()[3] if len(rx_resp.split()) > 3 else "UNKNOWN"
 
-        ch1_vpp_raw = self.scope.get_vpp_stats("CH1")
-        ch4_vpp_raw = self.scope.get_vpp_stats("CH4")
-        phase_raw = self.scope.get_phase_stats("CH1", "CH4")
-        rise_raw = self.scope.get_rise_time_stats("CH4")
-        fall_raw = self.scope.get_fall_time_stats("CH4")
+        # Clear statistical buffer for the new routing path
+        self.scope.scope.write("MEASU:STATI:RES")
+        time.sleep(0.5)
 
-        high_raw, _, low_raw, _ = self.scope.get_logic_levels("CH4")
-        pos_over_raw, _, neg_over_raw, _ = self.scope.get_overshoot("CH4")
-        pw_raw = self.scope.get_pulse_width("CH4")
+        # New: Pull measurements using the robust individual-query method
+        batch = self.scope.get_all_measurements()
 
         return Measurement(
             tx_pin=tx_pin, rx_pin=rx_pin,
             tx_signal_name=tx_sig, rx_signal_name=rx_sig,
-            ch1_vpp=self._build_stats(ch1_vpp_raw),
-            ch4_vpp=self._build_stats(ch4_vpp_raw),
-            phase=self._build_stats(phase_raw),
-            rise_time=self._build_stats(rise_raw),
-            fall_time=self._build_stats(fall_raw),
-
-            # Pack the new stats (packaging them as 2-tuples so _build_stats accepts them)
-            ch4_vhigh=self._build_stats((high_raw, None)),
-            ch4_vlow=self._build_stats((low_raw, None)),
-            ch4_pos_overshoot=self._build_stats((pos_over_raw, None)),
-            ch4_neg_overshoot=self._build_stats((neg_over_raw, None)),
-            ch4_pulse_width=self._build_stats(pw_raw)
+            ch1_vpp=self._build_stats(batch[0]),  # Slot 1
+            ch4_vpp=self._build_stats(batch[1]),  # Slot 2
+            phase=self._build_stats(batch[2]),  # Slot 3
+            rise_time=self._build_stats(batch[3]),  # Slot 4
+            fall_time=self._build_stats(batch[4]),  # Slot 5
+            ch4_vhigh=self._build_stats(batch[5]),  # Slot 6
+            ch4_vlow=self._build_stats(batch[6]),  # Slot 7
+            ch4_pulse_width=self._build_stats(batch[7]),  # Slot 8
+            ch4_pos_overshoot=SignalStats(),
+            ch4_neg_overshoot=SignalStats()
         )
 
     def run_sweep(self):
-        print("\n--- Starting Automatic Sweep ---")
+        print(f"\n[{self._ts()}] --- Starting Automatic Sweep ---")
         sweep_data = {
             "metadata": {
                 "timestamp": int(time.time()),
@@ -121,51 +117,58 @@ class Zx50TestRunner:
         }
 
         for freq in TEST_FREQS:
-            print(f"\n=> Testing Frequency: {freq / 1e6} MHz")
-            self.scope.configure_afg(frequency_hz=freq, amplitude_vpp=4.0)
+            print(f"\n[{self._ts()}] => Testing Frequency: {freq / 1e6} MHz")
 
-            print("Running Scope AutoSet (Wait 6s)...")
-            self.scope.scope.write("AUTOSet EXECute")
-            time.sleep(6)
+            # Setup physical stimulus
+            self.scope.configure_afg(frequency_hz=freq, amplitude_vpp=4.5)
+
+            # Initial routing to give the scope something to see
+            self.pico.send_cmd(f"bus select tx 42")
+            self.pico.send_cmd(f"bus select rx 42")
+            time.sleep(1.0)
+
+            # Locked-Manual Setup (Centers the 4.5V signal at 2V/div)
+            self.scope.setup_acquisition_manual(freq)
+            self.scope.configure_acquisition(stat_population=50)
 
             current_run = {
-                "source_waveform": asdict(SourceWaveform(frequency_hz=freq, waveform_type="SQUARE", amplitude_vpp=4.0)),
+                "source_waveform": asdict(SourceWaveform(freq, "SQUARE", 4.5)),
                 "measurements": []
             }
 
             for tx_pin, rx_pin in QUICK_TEST_MATRIX:
-                print(f"  Measuring TX:{tx_pin} -> RX:{rx_pin}...", end="", flush=True)
-                meas_obj = self.get_measurements(tx_pin, rx_pin, freq, amp_vpp=4.0)
+                # FIXED: Newline and HH:MM:SS timestamps
+                print(f"[{self._ts()}] Measuring TX:{tx_pin} -> RX:{rx_pin}...")
+
+                meas_obj = self.get_measurements(tx_pin, rx_pin)
                 current_run["measurements"].append(asdict(meas_obj))
-                print(" Logged.")
+
+                print(f"[{self._ts()}] Logged.")
 
             sweep_data["test_runs"].append(current_run)
 
         json_name = f"zx50_sweep_{sweep_data['metadata']['timestamp']}.json"
         with open(json_name, "w") as f:
             json.dump(sweep_data, f, indent=4)
-        print(f"\nSweep Complete. Data saved to {json_name}")
+        print(f"\n[{self._ts()}] Sweep Complete. Saved to {json_name}")
 
 
 def main():
-    # 1. Instantiate the correct IO class based on the toggle
     if PICO_MODE == 'USB':
         pico_io = PicoUSB(PICO_PORT, PICO_BAUD)
     else:
         pico_io = PicoWiFi(PICO_IP, PICO_PORT_TCP)
 
-    # 2. Inject it into the runner
     runner = Zx50TestRunner(pico_io, SCOPE_ADDR)
 
     try:
         runner.connect()
         runner.run_sweep()
-    except KeyboardInterrupt:
-        print("\nSweep aborted by user.")
     except Exception as e:
-        print(f"\nHardware Error: {e}")
+        print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Hardware Error: {e}")
     finally:
-        runner.disconnect()
+        runner.pico.disconnect()
+        runner.scope.disconnect()
 
 
 if __name__ == "__main__":
