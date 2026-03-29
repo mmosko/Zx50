@@ -27,7 +27,10 @@ class PicoUSB(PicoConnection):
 
     def disconnect(self) -> None:
         if self.serial and self.serial.is_open:
-            # We don't strictly need to send 'BYE' over USB, but we close the port cleanly
+            try:
+                self.send_cmd("bus ghost")  # Updated here
+            except:
+                pass
             self.serial.close()
 
     def _wait_for_prompt(self) -> str:
@@ -54,13 +57,21 @@ class PicoUSB(PicoConnection):
         if not self.serial or not self.serial.is_open:
             return "ERR NO_CONNECTION"
 
-        # Send the command with standard serial line endings
-        full_cmd = f"{cmd}\r\n".encode('utf-8')
+        # 1. THE FIX: Nuke any leftover 'Zx50>' prompts from the previous command
+        self.serial.reset_input_buffer()
+
+        # 2. THE FIX: Use only \r (MicroPython's preferred execute char)
+        full_cmd = f"{cmd}\r".encode('utf-8')
+
+        print(f"    [TX] -> {cmd}")  # X-RAY Vision
         self.serial.write(full_cmd)
         self.serial.flush()
 
         # Read everything the Pico prints until the prompt comes back
         response = self._wait_for_prompt()
+
+        # X-RAY Vision: Print exactly what the Pico sent back (stripping newlines for readability)
+        print(f"    [RX] <- {repr(response)}")
 
         # Sift through the output block to find the exact OK or ERR line
         for line in response.split('\n'):

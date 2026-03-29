@@ -25,11 +25,10 @@ class PicoWiFi(PicoConnection):
     def disconnect(self) -> None:
         if self.sock:
             try:
-                # Cleanly tell the Pico server to drop our connection
-                # so it immediately goes back to listening for new ones
-                self.send_cmd("BYE")
-            except Exception:
-                pass  # Ignore if the connection is already dead
+                self.send_cmd("bus ghost")  # Updated here
+                self.send_cmd("bye")  # 'bye' is at the root level, so it stays as-is
+            except:
+                pass
             finally:
                 self.sock.close()
                 self.sock = None
