@@ -6,23 +6,22 @@ and Correct HH:MM:SS Logging.
 """
 
 import json
-import time
-from datetime import datetime
-from dataclasses import asdict
 import logging
+import time
+from dataclasses import asdict
 
-from measurements import SignalStats, Measurement, SourceWaveform
+from measurements import Measurement, SourceWaveform, SignalStats
 from pico_null import PicoNull
 from pico_usb import PicoUSB
 from pico_wifi import PicoWiFi
 from pin_connection import PicoConnection
-from scope_control import TektronixMDO, MeasurementEntry
+from scope_control import TektronixMDO
 
 # --- Hardware Configuration ---
 SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
 
-# Connection Toggle: 'USB' or 'WIFI'
-PICO_MODE = 'None'
+# Connection Toggle: 'USB' or 'WIFI' or 'None' (for debugging)
+PICO_MODE = 'WIFI'
 
 # USB Settings
 PICO_PORT = '/dev/ttyACM0'
@@ -33,11 +32,11 @@ PICO_IP = '172.16.1.46'
 PICO_PORT_TCP = 5050
 
 # --- Test Definitions ---
-# TEST_FREQS = [100_000, 1_000_000, 10_000_000]
-TEST_FREQS = [100_000]
+TEST_FREQS = [100_000, 1_000_000, 10_000_000]
+# TEST_FREQS = [100_000]
 QUICK_TEST_MATRIX = [
-    # (42, 42), (42, 40), (42, 44), (42, 38), (42, 48)
-    (42, 42)
+    (42, 42), (42, 40), (42, 44)
+    # (42, 42)
 ]
 
 
@@ -62,12 +61,9 @@ class Zx50TestRunner:
         self.pico.disconnect()
 
     def get_measurements(self, tx_pin, rx_pin) -> Measurement:
-        """Routes pins and pulls all 8 statistical slots individually."""
+        """Routes pins and pulls stats. Optimized for crosstalk."""
         tx_resp = self.pico.send_cmd(f"BUS SELECT TX {tx_pin}")
         rx_resp = self.pico.send_cmd(f"BUS SELECT RX {rx_pin}")
-
-        if "ERR" in tx_resp or "ERR" in rx_resp:
-            logging.error(f"  [!] Routing Error - TX:{tx_resp} RX:{rx_resp}")
 
         # Restore: Parse signal names from Pico Response
         tx_sig = tx_resp.split()[3] if len(tx_resp.split()) > 3 else "UNKNOWN"
@@ -75,24 +71,32 @@ class Zx50TestRunner:
 
         time.sleep(0.5)
 
-        # New: Pull measurements using the robust individual-query method
-        batch = self.scope.get_all_measurements(stat_population=50)
+        # Optimization: Only measure pk2pk for crosstalk to save significant time
+        is_crosstalk = (tx_pin != rx_pin)
+        if is_crosstalk:
+            batch = self.scope.get_crosstalk_measurements(stat_population=50)
+        else:
+            batch = self.scope.get_all_measurements(stat_population=50)
+
+        # Helper to safely get stats or return empty object for skipped metrics
+        def get_stat(key):
+            return batch.get(key, SignalStats())
 
         return Measurement(
             tx_pin=tx_pin,
             rx_pin=rx_pin,
             tx_signal_name=tx_sig,
             rx_signal_name=rx_sig,
-            ch1_vpp=batch[("pk2pk", 1)],
-            ch4_vpp=batch[("pk2pk", 4)],
-            phase=batch[("phase", 4)],
-            rise_time=batch[("rise", 4)],
-            fall_time=batch[("fall", 4)],
-            ch4_vhigh=batch[("vhigh", 4)],
-            ch4_vlow=batch[("vlow", 4)],
-            ch4_pulse_width=batch[("pwid", 4)],
-            ch4_pos_overshoot=batch[("pov", 4)],
-            ch4_neg_overshoot=batch[("nov", 4)],
+            ch1_vpp=get_stat(("pk2pk", 1)),
+            ch4_vpp=get_stat(("pk2pk", 4)),
+            phase=get_stat(("phase", 4)),
+            rise_time=get_stat(("rise", 4)),
+            fall_time=get_stat(("fall", 4)),
+            ch4_vhigh=get_stat(("vhigh", 4)),
+            ch4_vlow=get_stat(("vlow", 4)),
+            ch4_pulse_width=get_stat(("pwid", 4)),
+            ch4_pos_overshoot=get_stat(("pov", 4)),
+            ch4_neg_overshoot=get_stat(("nov", 4)),
         )
 
     def run_sweep(self):
@@ -139,7 +143,7 @@ class Zx50TestRunner:
 
         return current_run
 
-
+            
 def main():
     logging.basicConfig(
         format='%(asctime)s [%(levelname)-8s] %(message)s',

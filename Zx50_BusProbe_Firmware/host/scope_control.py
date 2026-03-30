@@ -8,16 +8,9 @@ from pyvisa import VisaIOError
 
 from measurements import SignalStats
 
-
-@dataclass
-class MeasurementEntry:
-    param: str
-    channel: int
-    stats: Optional[SignalStats]
-
-
 @dataclass
 class MeasCmdEntry:
+    """Used to configure an array of measurements"""
     kind: str
     cmd: str
     channel: int
@@ -79,14 +72,38 @@ class TektronixMDO:
             logging.info(f"AFG STATE: {afg_state}")
         except VisaIOError as e:
             # The error details are in the exception object 'e'
-            print(f"A PyVISA error occurred: {e.args[0]}")
-            print(f"The specific VISA error code is: {e.error_code}")
+            logging.error(f"A PyVISA error occurred: {e.args[0]}")
+            logging.error(f"The specific VISA error code is: {e.error_code}")
         except Exception as e:
             # Handle other potential exceptions
-            print(f"An unexpected error occurred: {e}")
+            logging.error(f"An unexpected error occurred: {e}")
 
     def get_all_measurements(self, stat_population=100):
-        return self._measure_parameters(stat_population)
+        """Full suite for Signal Integrity (TX == RX)."""
+        return self._measure_parameters(self._get_full_metric_list(), stat_population)
+
+    def get_crosstalk_measurements(self, stat_population=100):
+        """Lite suite for Crosstalk (TX != RX) - Peak-to-Peak only."""
+        metrics = [
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH1', 1),
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH4', 4),
+        ]
+        return self._measure_parameters(metrics, stat_population)
+
+    def _get_full_metric_list(self):
+        """Standard metrics for driven pins."""
+        return [
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH1', 1),
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH4', 4),
+            MeasCmdEntry('rise', 'TYP RISE;SOURCE1 CH4', 4),
+            MeasCmdEntry('fall', 'TYP FALL;SOURCE1 CH4', 4),
+            MeasCmdEntry('phase', 'TYP PHASE;SOURCE1 CH1; SOURCE2 CH4', 4),
+            MeasCmdEntry('vhigh', 'TYP HIGH;SOURCE1 CH4', 4),
+            MeasCmdEntry('vlow', 'TYP LOW;SOURCE1 CH4', 4),
+            MeasCmdEntry('pov', 'TYP POVershoot;SOURCE1 CH4', 4),
+            MeasCmdEntry('nov', 'TYP NOVershoot;SOURCE1 CH4', 4),
+            MeasCmdEntry('pwid', 'TYP PWID;SOURCE1 CH4', 4),
+        ]
 
     def setup_acquisition(self, freq):
         logging.debug(f"Setup Acquisition {freq} Hz")
@@ -107,32 +124,9 @@ class TektronixMDO:
         self._write("CH1:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS 0.0")
         self._write("CH4:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS -3.0")
 
-    def _measure_parameters(self, stat_population=50):
-        """Get measurement parameters"""
+    def _measure_parameters(self, meas_commands, stat_population=50):
+        """Generalized measurement runner using provided command list."""
         results = {}
-
-        # Tektronix measurement commands
-        meas_commands = [
-            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH1', 1),
-            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH4', 4),
-            MeasCmdEntry('freq', 'TYP FREQ;SOURCE1 CH1', 1),
-            MeasCmdEntry('freq', 'TYP FREQ;SOURCE1 CH4', 4),
-            MeasCmdEntry('rise', 'TYP RISE;SOURCE1 CH1', 1),
-            MeasCmdEntry('rise', 'TYP RISE;SOURCE1 CH4', 4),
-            MeasCmdEntry('fall', 'TYP FALL;SOURCE1 CH1', 1),
-            MeasCmdEntry('fall', 'TYP FALL;SOURCE1 CH4', 4),
-            MeasCmdEntry('amp', 'TYP AMP;SOURCE1 CH1', 1),
-            MeasCmdEntry('amp', 'TYP AMP;SOURCE1 CH4', 4),
-            MeasCmdEntry('pwid', 'TYP PWID;SOURCE1 CH1', 1),
-            MeasCmdEntry('pwid', 'TYP PWID;SOURCE1 CH4', 4),
-            MeasCmdEntry('nov', 'TYP NOVershoot;SOURCE1 CH1', 1),
-            MeasCmdEntry('nov', 'TYP NOVershoot;SOURCE1 CH4', 4),
-            MeasCmdEntry('pov', 'TYP POVershoot;SOURCE1 CH1', 1),
-            MeasCmdEntry('pov', 'TYP POVershoot;SOURCE1 CH4', 4),
-            MeasCmdEntry('phase', 'TYP PHASE;SOURCE1 CH1; SOURCE2 CH4', 4),
-            MeasCmdEntry('vhigh', 'TYP HIGH;SOURCE1 CH4', 4),
-            MeasCmdEntry('vlow', 'TYP LOW;SOURCE1 CH4', 4),
-        ]
 
         # Measure each parameter
         for chunk in _chunk_list(meas_commands, 4):
@@ -143,7 +137,7 @@ class TektronixMDO:
             self._write("ACQUIRE:STATE STOP")
             self._write("MEASU:CLEAR ALL")
             for idx, entry in enumerate(chunk):
-                print(f"idx {idx} param {entry.kind} cmd {entry.cmd}")
+                logging.debug(f"idx {idx} param {entry.kind} cmd {entry.cmd}")
                 # Reset stats
                 self._write(f"MEASU:MEAS{idx + 1}:STATE ON")
                 self._write(f"MEASU:MEAS{idx + 1}:STATS RESET")
@@ -167,7 +161,7 @@ class TektronixMDO:
                 units = self._query(f"MEASU:MEAS{idx + 1}:UNITS?").strip().strip('\"')
                 self._write(f"MEASU:MEAS{idx + 1}:STATE OFF")
                 stats = SignalStats(count=stat_population, units=units, mean=m, stddev=s, min_val=mn,max_val=mx) if m < 9.9e37 else SignalStats()
-                logging.info(f'kind {entry.kind} ch {entry.channel} stats {stats}')
+                logging.info(f'measurement {entry.kind} ch {entry.channel} stats {stats}')
                 results[(entry.kind, entry.channel)] = stats
 
             self._write("ACQUIRE:STATE STOP")

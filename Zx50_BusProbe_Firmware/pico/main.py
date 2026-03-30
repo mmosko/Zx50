@@ -8,7 +8,7 @@ from bus import BusController
 from pic18_link import PIC18Link
 
 # --- CONFIGURATION ---
-APP_VERSION = "RevA-0.1.0"
+APP_VERSION = "RevA-0.1.1"
 USE_WIFI = True  # Set to False to drop back to purely USB Serial
 TCP_PORT = 5050  # Port for the laptop host script to connect to
 
@@ -87,25 +87,36 @@ class Zx50Console:
         self.server_sock.listen(1)
         self.server_sock.setblocking(False)
 
+    def _close_client(self, reason):
+        """Safely closes the active client and resets state so accept() can run again."""
+        if self.client_sock:
+            try:
+                self.client_sock.close()
+            except:
+                pass
+            self.client_sock = None
+            self.client_buffer = ""
+            print(f"\n[TCP Client {reason}]")
+            # Restore the prompt to the USB serial terminal
+            sys.stdout.write(self.prompt)
+
     def _check_tcp_client(self):
         """Non-blocking check for new connections or incoming TCP data."""
         if not self.server_sock:
             return
 
-        # 1. Accept new clients
+        # 1. Accept new clients only if the previous one is cleared
         if not self.client_sock:
             try:
                 self.client_sock, addr = self.server_sock.accept()
                 self.client_sock.setblocking(False)
                 print(f"\n[TCP Client Connected: {addr[0]}]")
-                sys.stdout.write(self.prompt)
 
-                # Push the welcome banner and prompt to the new Wi-Fi client
+                # Push the welcome banner and prompt to the new client
                 welcome_msg = self._get_banner() + "\n" + self.prompt
                 self.client_sock.send(welcome_msg.encode('utf-8'))
-
             except OSError:
-                pass  # No new connection
+                pass  # No new connection pending
 
         # 2. Read from existing client
         if self.client_sock:
@@ -113,7 +124,6 @@ class Zx50Console:
                 data = self.client_sock.recv(1024)
                 if data:
                     self.client_buffer += data.decode('utf-8')
-                    # Process lines if they exist
                     if '\n' in self.client_buffer:
                         lines = self.client_buffer.split('\n')
                         for line in lines[:-1]:
@@ -121,37 +131,32 @@ class Zx50Console:
                             if clean_line:
                                 self._execute(clean_line, is_tcp=True)
 
-                            # Push the prompt back after executing (or if they just hit Enter)
-                            try:
-                                self.client_sock.send(self.prompt.encode('utf-8'))
-                            except OSError:
-                                pass
+                            # Re-verify client exists before sending the prompt back
+                            if self.client_sock:
+                                try:
+                                    self.client_sock.send(self.prompt.encode('utf-8'))
+                                except OSError:
+                                    pass
 
                         self.client_buffer = lines[-1]
                 else:
-                    # Empty data means disconnect
-                    self.client_sock.close()
-                    self.client_sock = None
-                    print("\n[TCP Client Disconnected]")
-                    sys.stdout.write(self.prompt)
-            except OSError:
-                pass  # No data ready
+                    # Received 0 bytes: The peer has performed an orderly shutdown
+                    self._close_client("Disconnected (EOF)")
+            except OSError as e:
+                # 11 is EAGAIN/EWOULDBLOCK, which is normal for non-blocking recv
+                if e.args[0] != 11:
+                    self._close_client(f"Connection Error ({e.args[0]})")
 
     def cmdloop(self):
         """Standard line-processing REPL loop handling both USB and TCP."""
-
-        # Print the banner and prompt locally to the USB serial connection
         sys.stdout.write(self._get_banner() + "\n" + self.prompt)
 
-        # Initial UI update
         comm_mode = f"Wi-Fi: {self.pico_ip}" if self.server_sock else "USB Serial Active"
         display.update("IDLE", comm_mode, f"TX: None  RX: None")
 
         while True:
-            # 1. Check TCP Client (if enabled)
             self._check_tcp_client()
 
-            # 2. Check USB Serial
             poll_res = self.poll_obj.poll(10)
             if poll_res:
                 line = sys.stdin.readline().strip()
@@ -161,17 +166,14 @@ class Zx50Console:
 
     def _send_response(self, response, is_tcp):
         """Routes the output string back to the requestor."""
-        # Ensure it always has a newline for parsing
         out_str = response.strip() + "\n"
-
-        # Always echo to USB terminal for debugging
         print(response)
 
-        # If the request came from TCP, send it back over TCP
         if is_tcp and self.client_sock:
             try:
                 self.client_sock.send(out_str.encode('utf-8'))
             except OSError:
+                # If we fail to send, the socket is likely broken; clean it up next loop
                 pass
 
     def _execute(self, line, is_tcp=False):
@@ -183,7 +185,6 @@ class Zx50Console:
         cmd = parts[0].lower()
         args = parts[1:]
 
-        # Handle identifiers that contain special characters directly
         if cmd == "idn?":
             self.do_idn(args, is_tcp)
             return
@@ -192,19 +193,13 @@ class Zx50Console:
             if is_tcp and self.client_sock:
                 try:
                     self.client_sock.send("OK BYE\n".encode('utf-8'))
-                    self.client_sock.close()
                 except OSError:
                     pass
-                self.client_sock = None
-                self.client_buffer = ""
-                print("\n[TCP Client Disconnected via BYE command]")
-                sys.stdout.write(self.prompt)
+                self._close_client("Disconnected via Command")
             else:
-                # If typed over USB, just acknowledge it but don't close the USB serial
                 print("OK (USB session remains active)")
             return
 
-        # Look for a method named do_<cmd>
         func = getattr(self, f"do_{cmd}", self.default)
         func(args, is_tcp)
 
@@ -237,14 +232,12 @@ class Zx50Console:
         response = self.bus.handle_command(args)
         self._send_response(response, is_tcp)
 
-        # Update the physical OLED/LCD if routing changed successfully
         if "OK" in response and args and args[0].upper() in ["SELECT", "GHOST"]:
             display.update("ROUTING ACTIVE", f"TX: {self.bus.current_tx_str}", f"RX: {self.bus.current_rx_str}")
 
 
 def main():
     display.init()
-
     console = Zx50Console()
     console.cmdloop()
 

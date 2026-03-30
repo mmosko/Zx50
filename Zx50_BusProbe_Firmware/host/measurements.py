@@ -24,6 +24,7 @@ class SignalStats:
 
 @dataclass
 class Measurement:
+    """External data format for analysis notebook"""
     tx_pin: int
     rx_pin: int
     tx_signal_name: str
