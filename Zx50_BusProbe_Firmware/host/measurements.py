@@ -19,6 +19,7 @@ class SignalStats:
     min_val: Optional[float] = None
     max_val: Optional[float] = None
     count: Optional[int] = None
+    units: Optional[str] = None
 
 
 @dataclass

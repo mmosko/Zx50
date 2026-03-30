@@ -33,4 +33,4 @@ def analyze_zx50_data(json_file):
 
 
 if __name__ == "__main__":
-    analyze_zx50_data('zx50_sweep_1774768987.json')
+    analyze_zx50_data('zx50_sweep_1774833897.json')

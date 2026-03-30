@@ -1,95 +1,225 @@
-import pyvisa
+import logging
 import time
-from datetime import datetime
+from dataclasses import dataclass
+from typing import Optional
+
+import pyvisa
+from pyvisa import VisaIOError
+
+from measurements import SignalStats
+
+
+@dataclass
+class MeasurementEntry:
+    param: str
+    channel: int
+    stats: Optional[SignalStats]
+
+
+@dataclass
+class MeasCmdEntry:
+    kind: str
+    cmd: str
+    channel: int
 
 
 class TektronixMDO:
     def __init__(self, address):
         self.address = address
-        self.rm = pyvisa.ResourceManager('@py')
-        self.scope = None
-
-    def _ts(self):
-        return datetime.now().strftime("%H:%M:%S")
+        self._rm = pyvisa.ResourceManager('@py')
+        self._scope = None
 
     def connect(self):
-        print(f"[{self._ts()}] Connecting to {self.address}...")
-        self.scope = self.rm.open_resource(self.address)
-        self.scope.timeout = 10000
-        self.scope.write("*CLS;HEADer OFF")
+        logging.info(f"Connecting to {self.address}...")
+        self._scope = self._rm.open_resource(self.address)
+        self._scope.timeout = 10000
+        self._scope.read_termination = '\n'
+        self._write_termination = '\n'
+        self._write("*CLS;HEADer OFF")
+        logging.info(f"Connected to {self._query('*IDN?')}")
 
     def disconnect(self):
-        if self.scope:
+        if self._scope:
             try:
-                self.scope.write("AFG:OUTPUT:STATE OFF")
-                self.scope.close()
+                logging.info("Disconnecting")
+                self._write("AFG:OUTPUT:STATE OFF")
+                self._scope.close()
             except:
                 pass
 
-    def match_channels(self):
-        """Hard-locks the scope to the successful 2V/div manual settings."""
-        self.scope.write("CH1:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0")
-        self.scope.write("CH4:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0")
-        self.scope.write("AUTORange:STATE OFF")
+    def initialize(self):
+        """Initialize scope"""
+        logging.info("Initialize scope")
+        self._write('*RST')  # Reset
+        self._write('*CLS')  # Clear status
 
-    def configure_afg(self, frequency_hz, amplitude_vpp=4.5):
-        self.scope.write("AFG:FUNCTION SQUARE")
-        self.scope.write(f"AFG:FREQUENCY {frequency_hz}")
-        self.scope.write(f"AFG:AMPLITUDE {amplitude_vpp}")
-        self.scope.write("AFG:OFFSET 2.25")
-        self.scope.write("AFG:OUTPUT:STATE ON")
+        # Set up for optimal data transfer
+        self._write('DAT:ENC RIB')  # Binary encoding
+        self._write('DAT:WID 2')  # 16-bit data
+        self._write('VERB OFF')
 
-    def setup_acquisition_manual(self, freq):
-        self.match_channels()
-        self.scope.write(f"HOR:SCA {0.4 / freq}")
-        self.scope.write("TRIG:A:MODe AUTO;EDGE:SOU CH1;LEV:CH1 2.25")
-        self.scope.write("ACQ:STATE RUN")
-        self.scope.write("MEASU:STATI:RES")
+        self._write('ACQuire:STATE OFF')
+        self._write("AUTORange:STATE OFF")
+        self._setup_channels()
+        # Wait for scope to complete
 
-    def configure_acquisition(self, stat_population=50):
-        self.scope.write("HOR:RECO 2000")
-        slots = [
-            (1, "PK2pk", "CH1"), (2, "PK2pk", "CH4"), (3, "PHAse", "CH1", "CH4"),
-            (4, "RISe", "CH4"), (5, "FALL", "CH4"), (6, "HIGH", "CH4"),
-            (7, "LOW", "CH4"), (8, "PWIdth", "CH4")
+    def configure_afg(self, frequency_hz, amplitude_vpp=4.75):
+        logging.info(f"Configure AFG {frequency_hz} Hz {amplitude_vpp} Vpp")
+
+        try:
+            self._write("AFG:OUTPut:LOAd:IMPEDance HIGHZ")
+            self._write("AFG:FUNCTION SQUARE")
+            self._write(f"AFG:FREQUENCY {frequency_hz}")
+            self._write(f"AFG:AMPLITUDE {amplitude_vpp}")
+            self._write(f"AFG:OFFSET 2.5")
+            # self._write("AFG:LEVELPreset CMOS_5_0V")
+            self._write("AFG:STATE ON")
+            self._write("AFG:OUTPut:STATE ON")
+            afg_state = self._query("AFG:OUTPut:STATE?")
+            logging.info(f"AFG STATE: {afg_state}")
+        except VisaIOError as e:
+            # The error details are in the exception object 'e'
+            print(f"A PyVISA error occurred: {e.args[0]}")
+            print(f"The specific VISA error code is: {e.error_code}")
+        except Exception as e:
+            # Handle other potential exceptions
+            print(f"An unexpected error occurred: {e}")
+
+    def get_all_measurements(self, stat_population=100):
+        return self._measure_parameters(stat_population)
+
+    def setup_acquisition(self, freq):
+        logging.debug(f"Setup Acquisition {freq} Hz")
+        self._write(f"HOR:SCA {0.4 / freq}")
+        # self._write('ACQ:MODE SAM')  # Sample mode
+        # self._write('ACQ:STOPA SEQ')  # Single sequen
+        # self._write("ACQ:STATE RUN")
+        # self._write("MEASU:STATI:RES")
+        self._setup_trigger()
+
+    # === Private Methods
+
+    def _setup_channels(self):
+        self._write(f'SEL:CH1 ON')
+        self._write(f'SEL:CH2 OFF')
+        self._write(f'SEL:CH3 OFF')
+        self._write(f'SEL:CH4 ON')
+        self._write("CH1:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS 0.0")
+        self._write("CH4:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS -3.0")
+
+    def _measure_parameters(self, stat_population=50):
+        """Get measurement parameters"""
+        results = {}
+
+        # Tektronix measurement commands
+        meas_commands = [
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH1', 1),
+            MeasCmdEntry('pk2pk', 'TYP PK2Pk;SOURCE1 CH4', 4),
+            MeasCmdEntry('freq', 'TYP FREQ;SOURCE1 CH1', 1),
+            MeasCmdEntry('freq', 'TYP FREQ;SOURCE1 CH4', 4),
+            MeasCmdEntry('rise', 'TYP RISE;SOURCE1 CH1', 1),
+            MeasCmdEntry('rise', 'TYP RISE;SOURCE1 CH4', 4),
+            MeasCmdEntry('fall', 'TYP FALL;SOURCE1 CH1', 1),
+            MeasCmdEntry('fall', 'TYP FALL;SOURCE1 CH4', 4),
+            MeasCmdEntry('amp', 'TYP AMP;SOURCE1 CH1', 1),
+            MeasCmdEntry('amp', 'TYP AMP;SOURCE1 CH4', 4),
+            MeasCmdEntry('pwid', 'TYP PWID;SOURCE1 CH1', 1),
+            MeasCmdEntry('pwid', 'TYP PWID;SOURCE1 CH4', 4),
+            MeasCmdEntry('nov', 'TYP NOVershoot;SOURCE1 CH1', 1),
+            MeasCmdEntry('nov', 'TYP NOVershoot;SOURCE1 CH4', 4),
+            MeasCmdEntry('pov', 'TYP POVershoot;SOURCE1 CH1', 1),
+            MeasCmdEntry('pov', 'TYP POVershoot;SOURCE1 CH4', 4),
+            MeasCmdEntry('phase', 'TYP PHASE;SOURCE1 CH1; SOURCE2 CH4', 4),
+            MeasCmdEntry('vhigh', 'TYP HIGH;SOURCE1 CH4', 4),
+            MeasCmdEntry('vlow', 'TYP LOW;SOURCE1 CH4', 4),
         ]
-        for s in slots:
-            self.scope.write(f"MEASU:MEAS{s[0]}:TYP {s[1]}")
-            self.scope.write(f"MEASU:MEAS{s[0]}:SOU1 {s[2]}")
-            if len(s) > 3: self.scope.write(f"MEASU:MEAS{s[0]}:SOU2 {s[3]}")
-            self.scope.write(f"MEASU:MEAS{s[0]}:STATE ON")
-        self.scope.write(f"MEASU:STATI:MODE ALL;WEIG {stat_population}")
 
-    def _wait_for_all_stats(self, target_count=50, timeout=10.0):
+        # Measure each parameter
+        for chunk in _chunk_list(meas_commands, 4):
+            self._write("HOR:RECO 2000")
+            self._write(f"MEASU:STATI:WEIG {stat_population}")
+            self._write("MEASUrement:GAT FULLRECORD")
+
+            self._write("ACQUIRE:STATE STOP")
+            self._write("MEASU:CLEAR ALL")
+            for idx, entry in enumerate(chunk):
+                print(f"idx {idx} param {entry.kind} cmd {entry.cmd}")
+                # Reset stats
+                self._write(f"MEASU:MEAS{idx + 1}:STATE ON")
+                self._write(f"MEASU:MEAS{idx + 1}:STATS RESET")
+                self._write(f"MEASU:MEAS{idx + 1}:{entry.cmd}")
+
+            self._write("MEASU:STATI:MODE ALL")
+            self._write("MEASU:STATS:STATE ON")
+            self._write("MEASU:STATI RES")
+            self._write("ACQUIRE:STATE RUN")
+
+            # Need to pause here to give the stats buffer time to clear
+            time.sleep(2)
+
+            self._wait_for_all_stats(channel=1, target_count=stat_population)
+
+            for idx, entry in enumerate(chunk):
+                m = float(self._query(f"MEASU:MEAS{idx + 1}:MEAN?").strip())
+                s = float(self._query(f"MEASU:MEAS{idx + 1}:STDdev?").strip())
+                mn = float(self._query(f"MEASU:MEAS{idx + 1}:MINI?").strip())
+                mx = float(self._query(f"MEASU:MEAS{idx + 1}:MAX?").strip())
+                units = self._query(f"MEASU:MEAS{idx + 1}:UNITS?").strip().strip('\"')
+                self._write(f"MEASU:MEAS{idx + 1}:STATE OFF")
+                stats = SignalStats(count=stat_population, units=units, mean=m, stddev=s, min_val=mn,max_val=mx) if m < 9.9e37 else SignalStats()
+                logging.info(f'kind {entry.kind} ch {entry.channel} stats {stats}')
+                results[(entry.kind, entry.channel)] = stats
+
+            self._write("ACQUIRE:STATE STOP")
+            self._write("MEASU:STATS:STATE OFF")
+            self._write("MEASU:STATI:MODE OFF")
+        return results
+
+    def _setup_trigger(self, channel=1, level=0.0, edge='RISE'):
+        """Configure trigger"""
+        try:
+            self._write(f'TRIGger:A:EDGE:SOUrce CH{channel}')  # Edge trigger
+            self._write(f'TRIG:A:EDGE:SOU CH{channel}')
+            self._write(f'TRIGger:A:LEVel:CH{channel} TTL')
+            self._write(f'TRIG:A:EDGE:SLO {edge}')
+        except Exception as e:
+            logging.error(e)
+
+    def _wait_for_all_stats(self, channel, target_count=50, timeout=60.0):
         start_time = time.time()
+        next_progress = 25
         while time.time() - start_time < timeout:
             try:
-                c1 = int(float(self.scope.query("MEASU:MEAS1:COUNt?").strip()))
-                c4 = int(float(self.scope.query("MEASU:MEAS4:COUNt?").strip()))
-                if c1 >= target_count and c4 >= target_count: return True
+                raw_count = self._query(f"MEASU:MEAS{channel}:COUNt?")
+                c = int(float(raw_count.strip()))
+                if c >= target_count:
+                    return True
+                else:
+                    if c > next_progress:
+                        logging.info(f"ch {channel} count {c}, waiting for {target_count}")
+                        next_progress = c + 25
             except:
                 pass
-            time.sleep(0.5)
+            time.sleep(1.0)
+        logging.error(f"Timed out waiting for {target_count} samples")
         return False
 
-    def get_all_measurements(self):
-        """Implementing the STOP -> READ -> RUN workflow for consistent data."""
-        # 1. Wait for stats to accumulate while running
-        self._wait_for_all_stats()
+    def _write(self, message):
+        logging.debug(f"[TX] => {message}")
+        self._scope.write(f"{message}")
+        result = self._query("*OPC?")
+        if result != "1":
+            logging.error("Scope did not return status 1 for OPC")
 
-        # 2. STOP acquisition to freeze the values for reading
-        self.scope.write("ACQuire:STATE STOP")
+    def _query(self, query) -> str:
+        logging.debug(f"[TX] => {query}")
+        result = self._scope.query(query)
+        logging.debug(f"[RX] <= {result}")
+        return result
 
-        results = []
-        # 3. Read each slot INDIVIDUALLY to avoid buffer truncation
-        for i in range(1, 9):
-            try:
-                m = float(self.scope.query(f"MEASU:MEAS{i}:MEAN?").strip())
-                s = float(self.scope.query(f"MEASU:MEAS{i}:STDdev?").strip())
-                results.append((None, None) if m >= 9.9e37 else (m, s))
-            except:
-                results.append((None, None))
 
-        # 4. Resume acquisition
-        self.scope.write("ACQuire:STATE RUN")
-        return results
+def _chunk_list(data, size):
+    it = iter(data)
+    for _ in range(0, len(data), size):
+        # Create a dictionary from the next 'size' items
+        yield [v for v in [next(it) for _ in range(min(size, len(data) - _))]]
