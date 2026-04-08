@@ -1,0 +1,147 @@
+(footprint "OMNI-UNI-PF-38"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "OMNI-UNI-PF-38 Pin Fin Heatsink for TO-220/TO-247, 38.1mm tall")
+	(tags "heatsink omni-uni-pf-38 aavid")
+	(property "Reference" ""
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(uuid "73038cd4-bdef-4f2b-b3ea-23b0b17d934f")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "93692f60-69c2-4967-b339-a4feaf9e2f88")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "0d10e508-018b-4ec7-b89e-b9b302adcfab")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a3d26c4a-3e15-49fe-b651-2079a7dfb9e0")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr board_only)
+	(fp_line
+		(start -15 -17.5)
+		(end -15 3.1)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "e33e33e3-33e3-33e3-33e3-33e333e333e3")
+	)
+	(fp_line
+		(start -15 -17.5)
+		(end 15 -17.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "89832870-711c-43f1-9d10-863675691e84")
+	)
+	(fp_line
+		(start -15 3.1)
+		(end 15 3.1)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "d2976d91-4966-419b-839f-9c0201d4a004")
+	)
+	(fp_line
+		(start 15 -17.5)
+		(end 15 3.1)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f44f44f4-44f4-44f4-44f4-44f444f444f4")
+	)
+	(fp_rect
+		(start -15.5 -18)
+		(end 15.5 3.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "c22c22c2-22c2-22c2-22c2-22c222c222c2")
+	)
+	(fp_line
+		(start -5 0)
+		(end 5 0)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "a11a11a1-11a1-11a1-11a1-11a111a111a1")
+	)
+	(pad "" np_thru_hole circle
+		(at -9 3.1)
+		(size 2.67 2.67)
+		(drill 2.67)
+		(layers "*.Cu" "*.Mask")
+		(uuid "d11d11d1-11d1-11d1-11d1-11d111d111d1")
+	)
+	(pad "" np_thru_hole circle
+		(at 9 3.1)
+		(size 2.67 2.67)
+		(drill 2.67)
+		(layers "*.Cu" "*.Mask")
+		(uuid "e22e22e2-22e2-22e2-22e2-22e222e222e2")
+	)
+	(pad "1" thru_hole circle
+		(at -9 3.1)
+		(size 4 4)
+		(drill 2.7)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "b33b33b3-33b3-33b3-33b3-33b333b333b3")
+	)
+	(pad "2" thru_hole circle
+		(at 9 3.1)
+		(size 4 4)
+		(drill 2.7)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "c44c44c4-44f4-44f4-44f4-44c444c444c4")
+	)
+	(embedded_fonts no)
+)

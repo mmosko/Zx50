@@ -26,6 +26,7 @@ waves/*.vcd
 Thumbs.db
 .vscode/
 node_modules/
+Zx50_BusProbe_Firmware/pico/__pycache__
 
 # ==============================================================================
 # OS/Environment Files
