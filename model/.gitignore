@@ -1,4 +1,5 @@
 syn/*
+!syn/*.sh
 !syn/*.svf
 !syn/*.fit
 !syn/.git*
