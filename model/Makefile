@@ -202,14 +202,19 @@ syn_nodma: $(NODMA_FILES)
 
 flash_dma: $(SYN_DIR)/$(DMA_TOP).svf
 	@echo "\n--- Flashing FULL DMA CPLD via Waveshare CH347 & OpenOCD ---"
-	openocd -f interface/ch347.cfg \
-	        -c "adapter speed 1000" \
-	        -c "jtag newtap atf1508 tap -irlen 3 -expected-id 0x0150803f" \
-	        -c "init; svf $(SYN_DIR)/$(DMA_TOP).svf; exit"
+	sudo openocd  -c "adapter driver ch347" \
+	  -c "ch347 vid_pid 0x1a86 0x55dd" \
+	  -c "adapter speed 1000" \
+	  -c "jtag newtap atf1508 tap -irlen 10 -expected-id 0x0150803f" \
+	  -c "init" \
+	  -c "svf $(SYN_DIR)/$(DMA_TOP).svf" \
+	  -c "shutdown"
 
 flash_nodma: $(SYN_DIR)/$(NODMA_TOP).svf
 	@echo "\n--- Flashing NoDMA CPLD via Waveshare CH347 & OpenOCD ---"
-	openocd -f interface/ch347.cfg \
-	        -c "adapter speed 1000" \
-	        -c "jtag newtap atf1508 tap -irlen 3 -expected-id 0x0150803f" \
-	        -c "init; svf $(SYN_DIR)/$(NODMA_TOP).svf; exit"
+	sudo openocd  -c "adapter driver ch347" \
+	  -c "ch347 vid_pid 0x1a86 0x55dd" \
+	  -c "adapter speed 1000" \
+	  -c "jtag newtap atf1508 tap -irlen 10 -expected-id 0x0150803f" \
+	  -c "init" \
+	  -c "svf $(SYN_DIR)/$(NODMA_TOP).svf" \
