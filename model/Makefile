@@ -178,7 +178,15 @@ syn_dma: $(DMA_FILES)
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(FLAGS) $(DMA_SRC)
 	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP)
 
-	@echo "\n--- 2. Converting JED to SVF ---"
+	@echo "\n--- 2. Guardrail Check: Validating Pin Assignments ---"
+	@if grep -q "Preassign = IGNORE" $(SYN_DIR)/$(DMA_TOP).fit; then \
+		echo "❌ FATAL ERROR: Fitter failed to keep pin assignments. CPLD pins are scrambled!"; \
+		exit 1; \
+	else \
+		echo "✅ SUCCESS: Fitter maintained Preassign = KEEP."; \
+	fi
+
+	@echo "\n--- 3. Converting JED to SVF ---"
 	$(JED2SVF) $(SYN_DIR)/$(DMA_TOP).jed $(SYN_DIR)/$(DMA_TOP).svf
 	@echo "--- DMA Synthesis Attempt Complete! ---\n"
 
@@ -192,7 +200,15 @@ syn_nodma: $(NODMA_FILES)
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(NODMA_TOP) $(NODMA_SRC)
 	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(NODMA_TOP)
 
-	@echo "\n--- 2. Converting JED to SVF ---"
+	@echo "\n--- 2. Guardrail Check: Validating Pin Assignments ---"
+	@if grep -q "Preassign = IGNORE" $(SYN_DIR)/$(NODMA_TOP).fit; then \
+		echo "❌ FATAL ERROR: Fitter failed to keep pin assignments. CPLD pins are scrambled!"; \
+		exit 1; \
+	else \
+		echo "✅ SUCCESS: Fitter maintained Preassign = KEEP."; \
+	fi
+
+	@echo "\n--- 3. Converting JED to SVF ---"
 	$(JED2SVF) $(SYN_DIR)/$(NODMA_TOP).jed $(SYN_DIR)/$(NODMA_TOP).svf
 	@echo "--- NoDMA Synthesis Complete! SVF ready for flashing. ---\n"
 

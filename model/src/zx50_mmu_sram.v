@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_mmu_sram (Optimized: Fitter-Safe Async Reset)
+ * MODULE: zx50_mmu_sram (Optimized: Fitter-Safe Async Reset & Direct Muxing)
  ***************************************************************************************/
 
 module zx50_mmu_sram (
@@ -12,7 +12,8 @@ module zx50_mmu_sram (
     input wire [7:0] z80_addr_hi,   
     
     input wire mmu_snoop_wr,      
-    input wire mmu_direct_wr,     
+    input wire mmu_direct_wr, 
+    
     input wire z80_mreq_n, 
 
     output wire [3:0] atl_addr,   
@@ -22,17 +23,16 @@ module zx50_mmu_sram (
     output wire active,           
     output wire z80_card_hit,     
     output wire is_busy,          
+ 
     output wire cpu_updating,     
 
     output wire is_rom_enabled    
 );
-
-    wire [15:0] decoded_page = (16'b1 << z80_addr_hi[7:4]); 
     
     reg [15:0] page_ownership;
-    reg        sync_we;           
+    reg        sync_we;
     reg        rom_enabled;
-    reg        is_booted; // 1-cycle initialization flag
+    reg        is_booted;
 
     assign is_rom_enabled = rom_enabled;
 
@@ -69,12 +69,14 @@ module zx50_mmu_sram (
     end
 
     assign cpu_updating = mmu_direct_wr;
-
     assign atl_addr = mmu_direct_wr ? z80_addr_hi[3:0] : z80_addr_hi[7:4];
     assign atl_we_n = !sync_we;
     assign atl_oe_n = mmu_direct_wr ? 1'b1 : 1'b0;
 
-    wire current_page_owned = |(page_ownership & decoded_page);
+    // FITTER OPTIMIZATION:
+    // Replaced the barrel shifter (16'b1 << addr) and reduction OR.
+    // Direct indexing creates a clean, low fan-in 16:1 multiplexer in the routing pool.
+    wire current_page_owned = page_ownership[z80_addr_hi[7:4]];
     
     // Do not assert active until the 1-cycle boot logic finishes!
     assign active = (is_booted && !z80_mreq_n && current_page_owned);
@@ -82,3 +84,4 @@ module zx50_mmu_sram (
     assign is_busy = mmu_direct_wr || !is_booted;
 
 endmodule
+

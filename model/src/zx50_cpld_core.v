@@ -254,23 +254,26 @@ module zx50_cpld_core (
         .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), 
         .sh_busy_n(sh_busy_n), 
+	.dma_hitting_rom(dma_hitting_rom),
         .dma_active(dma_is_active), .sh_c_dir(dma_internal_sh_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
         .dma_is_master(dma_is_master), .int_pending(dma_int_pending), .intack_clear(intack_clear)
     );
 
     // ==========================================
-    // 5. LOCAL MEMORY & LUT MULTIPLEXING
+    // 5. LOCAL MEMORY & LUT MULTIPLEXING (YOSYS DECOUPLED)
     // ==========================================
     assign atl_ce_n = dma_is_active ? 1'b1 : !(internal_z80_card_hit || mmu_busy);
 
-    wire dma_hitting_rom = (dma_phys_addr[19:15] == 5'b00000);
     wire z80_hitting_rom = (z80_addr[15] == 1'b0) && memory_cycle;
-    wire target_is_rom_space = dma_is_active ? dma_hitting_rom : z80_hitting_rom;
-    wire effective_use_rom = (latched_id == 4'h0) && mmu_is_rom_enabled && target_is_rom_space; 
+
+    // OPTIMIZATION: Decoupled Z80 and DMA condition trees to drastically reduce Logic Fan-In
+    wire is_card_0 = (latched_id == 4'h0);
+    wire dma_effective_rom = is_card_0 && mmu_is_rom_enabled && dma_hitting_rom;
+    wire z80_effective_rom = is_card_0 && mmu_is_rom_enabled && z80_hitting_rom;
+    wire effective_use_rom = dma_is_active ? dma_effective_rom : z80_effective_rom;
 
     assign atl_oe_n = (dma_is_active || effective_use_rom) ? 1'b1 : mmu_atl_oe_n;
 
-    // --- TRI-STATE LOGIC (ATL DATA BUS) ---
     wire atl_drive_en = dma_is_active | mmu_cpu_updating | effective_use_rom;
 
     `ifdef HW_REV_A11_BUG
@@ -282,13 +285,19 @@ module zx50_cpld_core (
         wire safe_to_access_ram = dma_is_active || (internal_z80_card_hit && !mmu_cpu_updating && memory_cycle);
         assign ram_ce0_n = (safe_to_access_ram && !effective_use_rom && active_a11 == 1'b0) ? 1'b0 : 1'b1;
         assign ram_ce1_n = (safe_to_access_ram && !effective_use_rom && active_a11 == 1'b1) ? 1'b0 : 1'b1;
-
-        wire [7:0] rom_atl_data  = dma_is_active ? dma_phys_addr[18:11] : {3'b000, z80_addr[15:11]};
         
-        wire [7:0] z80_atl_intent = mmu_cpu_updating ? l_data : {4'b0000, z80_addr[15:12]};
-                                                          
-        wire [7:0] ram_atl_data  = dma_is_active ? dma_phys_addr[19:12] : z80_atl_intent;
-        wire [7:0] final_atl_out = effective_use_rom ? rom_atl_data : ram_atl_data;
+        // --- YOSYS-FRIENDLY 2:1 MUX TREE ---
+        wire [7:0] dma_atl_val = dma_effective_rom ? dma_phys_addr[18:11] : dma_phys_addr[19:12];
+        
+        wire [7:0] z80_atl_val = z80_effective_rom ? {3'b000, z80_addr[15:11]} : 
+                                 mmu_cpu_updating  ? l_data : 
+                                                     {4'b0000, z80_addr[15:12]};
+                                                     
+        wire [7:0] final_atl_out = dma_is_active ? dma_atl_val : z80_atl_val;
+        
+        // Exactly ONE tri-state driver to keep Yosys happy!
+        assign atl_data = atl_drive_en ? final_atl_out : 8'hzz;
+
     `else
         // Clean Hardware
         assign l_addr = dma_is_active ? dma_phys_addr[11:0] : z80_addr[11:0];
@@ -298,12 +307,13 @@ module zx50_cpld_core (
         assign ram_ce0_n = (safe_to_access_ram && !effective_use_rom && bank_select == 1'b0) ? 1'b0 : 1'b1;
         assign ram_ce1_n = (safe_to_access_ram && !effective_use_rom && bank_select == 1'b1) ? 1'b0 : 1'b1;
 
-        wire [7:0] z80_atl_intent = mmu_cpu_updating ? l_data : {4'b0000, z80_addr[15:12]};
-
-        wire [7:0] final_atl_out = dma_is_active ? dma_phys_addr[19:12] : z80_atl_intent;
+        // --- YOSYS-FRIENDLY 2:1 MUX TREE ---
+        wire [7:0] final_atl_out = dma_is_active    ? dma_phys_addr[19:12] : 
+                                   mmu_cpu_updating ? l_data : 
+                                                      {4'b0000, z80_addr[15:12]};
+                                   
+        assign atl_data = atl_drive_en ? final_atl_out : 8'hzz;
     `endif
-
-    assign atl_data = atl_drive_en ? final_atl_out : 8'hzz;
 
     wire active_write = dma_is_active ? !dma_local_we_n : (z80_grant && !z80_wr_n);
     assign rom_ce_n  = (safe_to_access_ram && effective_use_rom && !active_write) ? 1'b0 : 1'b1;

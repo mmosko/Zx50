@@ -59,6 +59,7 @@ module zx50_dma (
     output wire sh_c_dir,
     output wire dma_dir_to_bus,
     output wire dma_is_master, 
+    output wire dma_hitting_rom,
     
     output reg  int_pending,
     input  wire intack_clear
@@ -169,11 +170,12 @@ module zx50_dma (
             
             if (is_master) begin
                 case (m_state)
-                    M_IDLE:   if (dma_go && !yielding && !yield_req) m_state <= M_START;
+                    // SIMPLIFIED: Only check the immediate bus request, not the historical yielding state
+                    M_IDLE:   if (dma_go && !yield_req) m_state <= M_START;
                     M_START:  m_state <= M_STROBE;
                     M_STROBE: m_state <= (byte_count == 8'h00) ? M_DONE : M_INC;
                     M_INC:    m_state <= M_WAIT;
-                    M_WAIT:   if (!yielding && !yield_req) m_state <= M_STROBE;
+                    M_WAIT:   if (!yield_req) m_state <= M_STROBE;
                     M_DONE:   begin
                         int_pending <= 1'b1;
                         m_state <= M_IDLE;
@@ -206,4 +208,5 @@ module zx50_dma (
     assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? int_sh_stb_n : 1'b1;
     assign dma_local_we_n = (dma_active && dir_from_bus == 1'b1) ? int_sh_stb_n : 1'b1;
 
+    assign dma_hitting_rom = (phys_addr_hi[7:3] == 5'b00000);
 endmodule

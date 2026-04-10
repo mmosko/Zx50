@@ -1,4 +1,4 @@
-Atmel ATF1508 Fitter Version 1918 ,running Sat Mar 21 01:54:22 2026
+Atmel ATF1508 Fitter Version 1918 ,running Thu Apr 09 17:23:04 2026
 
 
 
@@ -91,6 +91,19 @@ Info: zx50_cpld_core uses 90% of the logic resources in device TQFP100
  ... 
   If you wish to have more pins available for future logic change
   Atmel recommends using a larger device.
+ ## Warning : Grouping fail 
+---------------------------------------------------------
+ Fitter_Pass 3, Preassign = IGNORE, CASCADE_LOGIC : (OFF) 
+ ... 
+  If you wish to have more pins available for future logic change
+  Atmel recommends using a larger device.
+ ## Warning : Grouping fail 
+---------------------------------------------------------
+ Fitter_Pass 4, Preassign = IGNORE, LOGIC_DOUBLING : ON 
+ ... 
+  If you wish to have more pins available for future logic change
+  Atmel recommends using a larger device.
+ ## Warning : Grouping fail 
 
 Performing global Output Enable pin assignments ...
 
@@ -108,297 +121,55 @@ reset_n assigned to pin  89
 
 Performing input pin pre-assignments ...
 ------------------------------------
-duplex_in_1 assigned to pin  90
 mclk assigned to pin  87
 reset_n assigned to pin  89
-z80_wait_n.OE equation needs patching.
-1 control equation needs patching
 
 Attempt to place floating signals ...
 ------------------------------------
-duplex_in_3 is placed at pin 2 (MC 1)
-id00661 is placed at feedback node 601 (MC 1)
-FB_1323 is placed at foldback expander node 301 (MC 1)
-id00660 is placed at feedback node 602 (MC 2)
-FB_1322 is placed at foldback expander node 302 (MC 2)
-z80_addr_13 is placed at pin 1 (MC 3)
-id00659 is placed at feedback node 603 (MC 3)
-FB_1309 is placed at foldback expander node 303 (MC 3)
-id00656 is placed at feedback node 604 (MC 4)
-FB_1308 is placed at foldback expander node 304 (MC 4)
-ram_we_n is placed at pin 100 (MC 5)
-FB_1307 is placed at foldback expander node 305 (MC 5)
-atl_data_7 is placed at pin 99 (MC 6)
-FB_1306 is placed at foldback expander node 306 (MC 6)
-id00657 is placed at feedback node 607 (MC 7)
-FB_1305 is placed at foldback expander node 307 (MC 7)
-atl_data_6 is placed at pin 98 (MC 8)
-FB_1304 is placed at foldback expander node 308 (MC 8)
-atl_data_4 is placed at pin 97 (MC 9)
-SF1290 is placed at foldback expander node 309 (MC 9)
-id00655 is placed at feedback node 610 (MC 10)
-XXL_1194 is placed at foldback expander node 310 (MC 10)
-atl_data_5 is placed at pin 96 (MC 11)
-XXL_1120 is placed at foldback expander node 311 (MC 11)
-id00632 is placed at feedback node 612 (MC 12)
-id00155Q is placed at foldback expander node 312 (MC 12)
-atl_data_0 is placed at pin 94 (MC 13)
-atl_data_2 is placed at pin 93 (MC 14)
-XXL_1332 is placed at feedback node 615 (MC 15)
-id00506QN is placed at foldback expander node 315 (MC 15)
-atl_data_1 is placed at pin 92 (MC 16)
-atl_oe_n is placed at pin 14 (MC 17)
-FB_1327 is placed at foldback expander node 317 (MC 17)
-id00601 is placed at feedback node 618 (MC 18)
-FB_1325 is placed at foldback expander node 318 (MC 18)
-ram_ce0_n is placed at pin 13 (MC 19)
-FB_1324 is placed at foldback expander node 319 (MC 19)
-id00294Q is placed at feedback node 620 (MC 20)
-FB_2_FB_1323 is placed at foldback expander node 320 (MC 20)
-ram_ce1_n is placed at pin 12 (MC 21)
-FB_2_FB_1322 is placed at foldback expander node 321 (MC 21)
-atl_addr_3 is placed at pin 10 (MC 22)
-FB_1312 is placed at foldback expander node 322 (MC 22)
-id00619 is placed at feedback node 623 (MC 23)
-FB_2_XXL_1120 is placed at foldback expander node 323 (MC 23)
-atl_ce_n is placed at pin 9 (MC 24)
-FB_1310 is placed at foldback expander node 324 (MC 24)
-atl_we_n is placed at pin 8 (MC 25)
-FB_2_XXL_1194 is placed at foldback expander node 325 (MC 25)
-XXL_1135 is placed at feedback node 626 (MC 26)
-FB_2_id00506QN is placed at foldback expander node 326 (MC 26)
-sh_rw_n is placed at pin 7 (MC 27)
-id00531QN is placed at foldback expander node 327 (MC 27)
-id00658 is placed at feedback node 628 (MC 28)
-id00156Q is placed at foldback expander node 328 (MC 28)
-rom_ce_n is placed at pin 6 (MC 29)
-FB_2_id00155Q is placed at foldback expander node 329 (MC 29)
-atl_data_3 is placed at pin 5 (MC 30)
-id00003 is placed at feedback node 631 (MC 31)
-FB_1311 is placed at foldback expander node 331 (MC 31)
 TDI is placed at pin 4 (MC 32)
-id00600 is placed at feedback node 632 (MC 32)
-id00353QN is placed at foldback expander node 332 (MC 32)
-z80_addr_7 is placed at pin 25 (MC 33)
-id00612 is placed at feedback node 633 (MC 33)
-FB_3_FB_1325 is placed at foldback expander node 333 (MC 33)
-id00606 is placed at feedback node 634 (MC 34)
-FB_3_FB_1324 is placed at foldback expander node 334 (MC 34)
-z80_addr_6 is placed at pin 24 (MC 35)
-id00614 is placed at feedback node 635 (MC 35)
-XXL_1300 is placed at foldback expander node 335 (MC 35)
-id00609 is placed at feedback node 636 (MC 36)
-XXL_1298 is placed at foldback expander node 336 (MC 36)
-z80_addr_5 is placed at pin 23 (MC 37)
-id00618 is placed at feedback node 637 (MC 37)
-XXL_1297 is placed at foldback expander node 337 (MC 37)
-z80_addr_15 is placed at pin 22 (MC 38)
-id00611 is placed at feedback node 638 (MC 38)
-XXL_1296 is placed at foldback expander node 338 (MC 38)
-id00605 is placed at feedback node 639 (MC 39)
-XXL_1295 is placed at foldback expander node 339 (MC 39)
-z80_addr_11 is placed at pin 21 (MC 40)
-id00608 is placed at feedback node 640 (MC 40)
-XXL_1293 is placed at foldback expander node 340 (MC 40)
-z80_addr_4 is placed at pin 20 (MC 41)
-id00615 is placed at feedback node 641 (MC 41)
-XXL_1294 is placed at foldback expander node 341 (MC 41)
-id00604 is placed at feedback node 642 (MC 42)
-FB_3_id00353QN is placed at foldback expander node 342 (MC 42)
-l_data_2 is placed at pin 19 (MC 43)
-id00299Q is placed at foldback expander node 343 (MC 43)
-id00607 is placed at feedback node 644 (MC 44)
-l_data_1 is placed at pin 17 (MC 45)
-id00298Q is placed at foldback expander node 345 (MC 45)
-l_data_0 is placed at pin 16 (MC 46)
-id00297Q is placed at foldback expander node 346 (MC 46)
-id00610 is placed at feedback node 647 (MC 47)
 TMS is placed at pin 15 (MC 48)
-id00603 is placed at feedback node 648 (MC 48)
-z80_addr_10 is placed at pin 37 (MC 49)
-id00641 is placed at feedback node 649 (MC 49)
-FB_1319 is placed at foldback expander node 349 (MC 49)
-id00623 is placed at feedback node 650 (MC 50)
-FB_1318 is placed at foldback expander node 350 (MC 50)
-z80_addr_9 is placed at pin 36 (MC 51)
-id00621 is placed at feedback node 651 (MC 51)
-id00627 is placed at feedback node 652 (MC 52)
-FB_1316 is placed at foldback expander node 352 (MC 52)
-z80_addr_8 is placed at pin 35 (MC 53)
-id00626 is placed at feedback node 653 (MC 53)
-XXL_1291 is placed at foldback expander node 353 (MC 53)
-id00631 is placed at feedback node 654 (MC 54)
-FB_4_XXL_1120 is placed at foldback expander node 354 (MC 54)
-id00622 is placed at feedback node 655 (MC 55)
-id00207Q is placed at foldback expander node 355 (MC 55)
-z80_addr_14 is placed at pin 32 (MC 56)
-id00620 is placed at feedback node 656 (MC 56)
-XXL_1212 is placed at foldback expander node 356 (MC 56)
-z80_iei is placed at pin 31 (MC 57)
-id00629 is placed at feedback node 657 (MC 57)
-XXL_1220 is placed at foldback expander node 357 (MC 57)
-id00628 is placed at feedback node 658 (MC 58)
-XXL_1289 is placed at foldback expander node 358 (MC 58)
-z80_m1_n is placed at pin 30 (MC 59)
-id00642 is placed at feedback node 659 (MC 59)
-id00215Q is placed at foldback expander node 359 (MC 59)
-id00625 is placed at feedback node 660 (MC 60)
-FB_1317 is placed at foldback expander node 360 (MC 60)
-duplex_in_2 is placed at pin 29 (MC 61)
-id00630 is placed at feedback node 661 (MC 61)
-XXL_1242 is placed at foldback expander node 361 (MC 61)
-l_addr_6 is placed at pin 28 (MC 62)
-id00212Q is placed at foldback expander node 362 (MC 62)
-id00624 is placed at feedback node 663 (MC 63)
-l_addr_5 is placed at pin 27 (MC 64)
-id00010Q is placed at foldback expander node 364 (MC 64)
-z80_addr_12 is placed at pin 40 (MC 65)
-XXL_1329 is placed at feedback node 665 (MC 65)
-id00644 is placed at feedback node 666 (MC 66)
-FB_1320 is placed at foldback expander node 366 (MC 66)
-duplex_in_0 is placed at pin 41 (MC 67)
-id00649 is placed at feedback node 667 (MC 67)
-XXL_1301 is placed at foldback expander node 367 (MC 67)
-id00648 is placed at feedback node 668 (MC 68)
-XXL_1299 is placed at foldback expander node 368 (MC 68)
-z80_addr_3 is placed at pin 42 (MC 69)
-id00616 is placed at feedback node 669 (MC 69)
-XXL_1292 is placed at foldback expander node 369 (MC 69)
-z80_addr_0 is placed at pin 44 (MC 70)
-id00613 is placed at feedback node 670 (MC 70)
-FB_5_SF1290 is placed at foldback expander node 370 (MC 70)
-XXL_1330 is placed at feedback node 671 (MC 71)
-z80_addr_1 is placed at pin 45 (MC 72)
-id00646 is placed at feedback node 672 (MC 72)
-FB_5_XXL_1242 is placed at foldback expander node 372 (MC 72)
-z80_addr_2 is placed at pin 46 (MC 73)
-id00643 is placed at feedback node 673 (MC 73)
-XXL_1218 is placed at foldback expander node 373 (MC 73)
-XXL_1163 is placed at feedback node 674 (MC 74)
-FB_1321 is placed at foldback expander node 374 (MC 74)
-l_addr_11 is placed at pin 47 (MC 75)
-XXL_1209 is placed at foldback expander node 375 (MC 75)
-id00647 is placed at feedback node 676 (MC 76)
-FB_5_XXL_1289 is placed at foldback expander node 376 (MC 76)
-atl_addr_0 is placed at pin 48 (MC 77)
-FB_5_XXL_1194 is placed at foldback expander node 377 (MC 77)
-atl_addr_1 is placed at pin 49 (MC 78)
-FB_5_id00155Q is placed at foldback expander node 378 (MC 78)
-id00645 is placed at feedback node 679 (MC 79)
-atl_addr_2 is placed at pin 50 (MC 80)
-FB_5_id00010Q is placed at foldback expander node 380 (MC 80)
-z80_ieo is placed at pin 52 (MC 81)
-id00617 is placed at feedback node 682 (MC 82)
-FB_6_SF1290 is placed at foldback expander node 382 (MC 82)
-l_addr_7 is placed at pin 53 (MC 83)
-FB_6_id00299Q is placed at foldback expander node 383 (MC 83)
-Com_Ctrl_1115 is placed at feedback node 684 (MC 84)
-FB_1313 is placed at foldback expander node 384 (MC 84)
-l_addr_4 is placed at pin 54 (MC 85)
-FB_6_id00155Q is placed at foldback expander node 385 (MC 85)
-l_data_7 is placed at pin 55 (MC 86)
-id00049Q is placed at feedback node 687 (MC 87)
-l_data_4 is placed at pin 56 (MC 88)
-FB_1315 is placed at foldback expander node 388 (MC 88)
-sh_inc_n is placed at pin 57 (MC 89)
-FB_1314 is placed at foldback expander node 389 (MC 89)
-id00301QN is placed at feedback node 690 (MC 90)
-sh_done_n is placed at pin 58 (MC 91)
-XXL_1302 is placed at foldback expander node 391 (MC 91)
-XXL_1281 is placed at feedback node 692 (MC 92)
-l_data_5 is placed at pin 60 (MC 93)
-l_data_6 is placed at pin 61 (MC 94)
-id00640 is placed at feedback node 695 (MC 95)
 TCK is placed at pin 62 (MC 96)
-XXL_1331 is placed at feedback node 696 (MC 96)
-z80_data_oe_n is placed at pin 63 (MC 97)
-XXL_1233 is placed at feedback node 698 (MC 98)
-l_addr_8 is placed at pin 64 (MC 99)
-id00639 is placed at feedback node 700 (MC 100)
-XXL_1216 is placed at foldback expander node 400 (MC 100)
-l_addr_10 is placed at pin 65 (MC 101)
-sh_stb_n is placed at pin 67 (MC 102)
-id00634 is placed at feedback node 703 (MC 103)
-l_addr_9 is placed at pin 68 (MC 104)
-z80_int_n is placed at pin 69 (MC 105)
-id00633 is placed at feedback node 706 (MC 106)
-l_data_3 is placed at pin 70 (MC 107)
-XXL_1303 is placed at foldback expander node 407 (MC 107)
-id00636 is placed at feedback node 708 (MC 108)
-l_dir is placed at pin 71 (MC 109)
-ram_oe_n is placed at pin 72 (MC 110)
-id00635 is placed at feedback node 711 (MC 111)
 TDO is placed at pin 73 (MC 112)
-id00637 is placed at feedback node 712 (MC 112)
-id00638 is placed at feedback node 713 (MC 113)
-id00158QN is placed at feedback node 714 (MC 114)
-l_addr_3 is placed at pin 76 (MC 115)
-XXL_1121 is placed at feedback node 716 (MC 116)
-sh_en_n is placed at pin 77 (MC 117)
-z80_wait_n is placed at pin 78 (MC 118)
-XXL_1176 is placed at feedback node 719 (MC 119)
-sh_busy_n is placed at pin 79 (MC 120)
-l_addr_2 is placed at pin 80 (MC 121)
-z80_wait_n.OE is placed at feedback node 722 (MC 122)
-sh_c_dir is placed at pin 81 (MC 123)
-id00007Q is placed at feedback node 724 (MC 124)
-l_addr_1 is placed at pin 83 (MC 125)
-l_addr_0 is placed at pin 84 (MC 126)
-XXL_1328 is placed at feedback node 727 (MC 127)
-sh_data_oe_n is placed at pin 85 (MC 128)
 
-                                                                  s                             
-                                                   d              h                             
-                        a  a  a  a     a  a  a     u              _                    z        
-                        t  t  t  t     t  t  t     p              d                 s  8        
-                     r  l  l  l  l     l  l  l     l              a  l  l     s  l  h  0     l  
-                     a  _  _  _  _     _  _  _     e  r           t  _  _     h  _  _  _  s  _  
-                     m  d  d  d  d     d  d  d     x  e           a  a  a     _  a  b  w  h  a  
-                     _  a  a  a  a     a  a  a     _  s           _  d  d     c  d  u  a  _  d  
-                     w  t  t  t  t     t  t  t     i  e     m     o  d  d     _  d  s  i  e  d  
-                     e  a  a  a  a  G  a  a  a  V  n  t     c  G  e  r  r  V  d  r  y  t  n  r  
-                     _  _  _  _  _  N  _  _  _  C  _  _     l  N  _  _  _  C  i  _  _  _  _  _  
-                     n  7  6  4  5  D  0  2  1  C  1  n     k  D  n  0  1  C  r  2  n  n  n  3  
+                                                      r                                         
+                                                      e                                         
+                                                      s                                         
+                                                      e     m                                   
+                                    G           V     t     c  G           V                    
+                                    N           C     _     l  N           C                    
+                                    D           C     n     k  D           C                    
                  +------------------------------------------------------------------------------+
                  | 100 99 98 97 96 95 94 93 92 91 90 89 88 87 86 85 84 83 82 81 80 79 78 77 76  |
-      z80_addr_13| 1                                                                         75 |   
-      duplex_in_3| 2                                                                         74 |GND
+                 | 1                                                                         75 |   
+                 | 2                                                                         74 |GND
               VCC| 3                                                                         73 |TDO
-              TDI| 4                                                                         72 |ram_oe_n
-       atl_data_3| 5                                                                         71 |l_dir
-         rom_ce_n| 6                                                                         70 |l_data_3
-          sh_rw_n| 7                                                                         69 |z80_int_n
-         atl_we_n| 8                                                                         68 |l_addr_9
-         atl_ce_n| 9                                                                         67 |sh_stb_n
-       atl_addr_3| 10                                                                        66 |VCC
-              GND| 11                                                                        65 |l_addr_10
-        ram_ce1_n| 12                                ATF1508                                 64 |l_addr_8
-        ram_ce0_n| 13                             100-Lead TQFP                              63 |z80_data_oe_n
-         atl_oe_n| 14                                                                        62 |TCK
-              TMS| 15                                                                        61 |l_data_6
-         l_data_0| 16                                                                        60 |l_data_5
-         l_data_1| 17                                                                        59 |GND
-              VCC| 18                                                                        58 |sh_done_n
-         l_data_2| 19                                                                        57 |sh_inc_n
-       z80_addr_4| 20                                                                        56 |l_data_4
-      z80_addr_11| 21                                                                        55 |l_data_7
-      z80_addr_15| 22                                                                        54 |l_addr_4
-       z80_addr_5| 23                                                                        53 |l_addr_7
-       z80_addr_6| 24                                                                        52 |z80_ieo
-       z80_addr_7| 25                                                                        51 |VCC
+              TDI| 4                                                                         72 |   
+                 | 5                                                                         71 |   
+                 | 6                                                                         70 |   
+                 | 7                                                                         69 |   
+                 | 8                                                                         68 |   
+                 | 9                                                                         67 |   
+                 | 10                                                                        66 |VCC
+              GND| 11                                                                        65 |   
+                 | 12                                ATF1508                                 64 |   
+                 | 13                             100-Lead TQFP                              63 |   
+                 | 14                                                                        62 |TCK
+              TMS| 15                                                                        61 |   
+                 | 16                                                                        60 |   
+                 | 17                                                                        59 |GND
+              VCC| 18                                                                        58 |   
+                 | 19                                                                        57 |   
+                 | 20                                                                        56 |   
+                 | 21                                                                        55 |   
+                 | 22                                                                        54 |   
+                 | 23                                                                        53 |   
+                 | 24                                                                        52 |   
+                 | 25                                                                        51 |VCC
                  |  26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50  |
                  +------------------------------------------------------------------------------+
-                     G  l  l  d  z  z  z     V  z  z  z  G  V  z  d  z  G  z  z  z  l  a  a  a  
-                     N  _  _  u  8  8  8     C  8  8  8  N  C  8  u  8  N  8  8  8  _  t  t  t  
-                     D  a  a  p  0  0  0     C  0  0  0  D  C  0  p  0  D  0  0  0  a  l  l  l  
-                        d  d  l  _  _  _        _  _  _        _  l  _     _  _  _  d  _  _  _  
-                        d  d  e  m  i  a        a  a  a        a  e  a     a  a  a  d  a  a  a  
-                        r  r  x  1  e  d        d  d  d        d  x  d     d  d  d  r  d  d  d  
-                        _  _  _  _  i  d        d  d  d        d  _  d     d  d  d  _  d  d  d  
-                        5  6  i  n     r        r  r  r        r  i  r     r  r  r  1  r  r  r  
-                              n        _        _  _  _        _  n  _     _  _  _  1  _  _  _  
-                              _        1        8  9  1        1  _  3     0  1  2     0  1  2  
-                              2        4              0        2  0                             
+                     G                       V           G  V           G                       
+                     N                       C           N  C           N                       
+                     D                       C           D  C           D                       
 
 
 
@@ -413,1204 +184,1017 @@ NC = Unused I/O pins which must be unconnected on the board
 
 Universal-Interconnect-Multiplexer assignments
 ------------------------------------------------
-FanIn assignment for block A [38]
+FanIn assignment for block A [40]
 {
-XXL_1135,XXL_1176,XXL_1233,
-duplex_in_3,duplex_in_1,duplex_in_2,
-id00661,id00601,id00655,id00659,id00632,id00656,id00657,id00007Q,id00660,id00617,id00600,id00658,
-l_data_2,l_data_7,l_data_5,l_data_6,l_data_0,l_data_2,l_data_1,l_data_1,l_data_4,l_data_3,l_data_0,
-sh_data_oe_n,
-z80_addr_5,z80_addr_7,z80_addr_6,z80_addr_14,z80_addr_4,z80_addr_13,z80_addr_15,z80_addr_12,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block A
-l_data_2		(MC13	P)   : MUX 0		Ref (C43p)
-l_data_7		(MC19	P)   : MUX 1		Ref (F86p)
-id00661			(MC1	FB)  : MUX 2		Ref (A1fb)
-z80_addr_5		(MC32	P)   : MUX 3		Ref (C37p)
-l_data_5		(MC21	P)   : MUX 4		Ref (F93p)
-z80_addr_7		(MC30	P)   : MUX 5		Ref (C33p)
-id00601			(MC8	FB)  : MUX 6		Ref (B18fb)
-id00655			(MC6	FB)  : MUX 7		Ref (A10fb)
-l_data_6		(MC22	P)   : MUX 8		Ref (F94p)
-z80_addr_6		(MC31	P)   : MUX 9		Ref (C35p)
-sh_data_oe_n		(MC27	P)   : MUX 10		Ref (H128p)
-duplex_in_3		(MC28	P)   : MUX 11		Ref (A1p)
-l_data_0		(MC17	P)   : MUX 12		Ref (C46p)
-l_data_2		(MC12	FB)  : MUX 13		Ref (C43fb)
-l_data_1		(MC15	P)   : MUX 14		Ref (C45p)
-z80_addr_14		(MC35	P)   : MUX 15		Ref (D56p)
-z80_addr_4		(MC34	P)   : MUX 16		Ref (C41p)
-l_data_1		(MC14	FB)  : MUX 17		Ref (C45fb)
-id00659			(MC3	FB)  : MUX 18		Ref (A3fb)
-id00632			(MC7	FB)  : MUX 19		Ref (A12fb)
-id00656			(MC4	FB)  : MUX 20		Ref (A4fb)
-l_data_4		(MC20	P)   : MUX 21		Ref (F88p)
-duplex_in_1		(MC38	FB)  : MUX 22		Ref (OE2)
-XXL_1135		(MC9	FB)  : MUX 23		Ref (B26fb)
-id00657			(MC5	FB)  : MUX 24		Ref (A7fb)
-id00007Q		(MC26	FB)  : MUX 25		Ref (H124fb)
-XXL_1176		(MC25	FB)  : MUX 26		Ref (H119fb)
-l_data_3		(MC24	FB)  : MUX 27		Ref (G107fb)
-id00660			(MC2	FB)  : MUX 28		Ref (A2fb)
-z80_addr_13		(MC29	P)   : MUX 29		Ref (A3p)
-XXL_1233		(MC23	FB)  : MUX 30		Ref (G98fb)
-l_data_0		(MC16	FB)  : MUX 31		Ref (C46fb)
-id00617			(MC18	FB)  : MUX 32		Ref (F82fb)
-id00600			(MC11	FB)  : MUX 33		Ref (B32fb)
-z80_addr_15		(MC33	P)   : MUX 35		Ref (C38p)
-duplex_in_2		(MC36	P)   : MUX 36		Ref (D61p)
-id00658			(MC10	FB)  : MUX 37		Ref (B28fb)
-z80_addr_12		(MC37	P)   : MUX 39		Ref (E65p)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block B [39]
+FanIn assignment for block B [40]
 {
-Com_Ctrl_1115,
-XXL_1135,XXL_1330,XXL_1329,XXL_1332,XXL_1176,XXL_1233,XXL_1331,
-atl_we_n,
-duplex_in_3,duplex_in_0,duplex_in_1,duplex_in_2,
-id00656,id00661,id00659,id00657,id00660,id00658,id00601,id00600,id00619,id00007Q,
-l_data_3,l_data_0,l_data_1,l_data_2,l_data_3,
-reset_n,
-sh_rw_n,sh_data_oe_n,
-z80_addr_7,z80_addr_13,z80_addr_6,z80_addr_4,z80_addr_5,z80_addr_14,z80_addr_15,z80_addr_11,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block B
-Com_Ctrl_1115		(MC19	FB)  : MUX 0		Ref (F84fb)
-duplex_in_3		(MC27	P)   : MUX 1		Ref (A1p)
-id00656			(MC4	FB)  : MUX 2		Ref (A4fb)
-XXL_1135		(MC10	FB)  : MUX 3		Ref (B26fb)
-id00661			(MC1	FB)  : MUX 4		Ref (A1fb)
-z80_addr_7		(MC29	P)   : MUX 5		Ref (C33p)
-id00659			(MC3	FB)  : MUX 6		Ref (A3fb)
-z80_addr_13		(MC28	P)   : MUX 7		Ref (A3p)
-id00657			(MC5	FB)  : MUX 8		Ref (A7fb)
-z80_addr_6		(MC30	P)   : MUX 9		Ref (C35p)
-id00660			(MC2	FB)  : MUX 10		Ref (A2fb)
-duplex_in_0		(MC37	P)   : MUX 11		Ref (E67p)
-l_data_3		(MC23	P)   : MUX 12		Ref (G107p)
-l_data_0		(MC16	FB)  : MUX 13		Ref (C46fb)
-atl_we_n		(MC9	P)   : MUX 14		Ref (B25p)
-sh_rw_n			(MC11	FB)  : MUX 15		Ref (B27fb)
-z80_addr_4		(MC34	P)   : MUX 16		Ref (C41p)
-l_data_1		(MC15	FB)  : MUX 17		Ref (C45fb)
-XXL_1330		(MC18	FB)  : MUX 18		Ref (E71fb)
-z80_addr_5		(MC31	P)   : MUX 19		Ref (C37p)
-z80_addr_14		(MC35	P)   : MUX 21		Ref (D56p)
-XXL_1329		(MC17	FB)  : MUX 22		Ref (E65fb)
-XXL_1332		(MC6	FB)  : MUX 23		Ref (A15fb)
-reset_n			(MC39	FB)  : MUX 24		Ref (GCLR)
-z80_addr_15		(MC32	P)   : MUX 25		Ref (C38p)
-XXL_1176		(MC24	FB)  : MUX 26		Ref (H119fb)
-id00658			(MC12	FB)  : MUX 27		Ref (B28fb)
-id00601			(MC7	FB)  : MUX 28		Ref (B18fb)
-z80_addr_11		(MC33	P)   : MUX 29		Ref (C40p)
-XXL_1233		(MC21	FB)  : MUX 30		Ref (G98fb)
-l_data_2		(MC14	FB)  : MUX 31		Ref (C43fb)
-sh_data_oe_n		(MC26	P)   : MUX 32		Ref (H128p)
-XXL_1331		(MC20	FB)  : MUX 33		Ref (F96fb)
-duplex_in_1		(MC38	FB)  : MUX 34		Ref (OE2)
-l_data_3		(MC22	FB)  : MUX 35		Ref (G107fb)
-duplex_in_2		(MC36	P)   : MUX 36		Ref (D61p)
-id00600			(MC13	FB)  : MUX 37		Ref (B32fb)
-id00619			(MC8	FB)  : MUX 38		Ref (B23fb)
-id00007Q		(MC25	FB)  : MUX 39		Ref (H124fb)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block C [38]
+FanIn assignment for block C [40]
 {
-duplex_in_3,duplex_in_2,duplex_in_0,duplex_in_1,
-id00294Q,id00601,id00609,id00605,id00604,id00611,id00639,id00615,id00607,id00608,id00618,id00603,id00606,id00612,id00301QN,id00614,id00610,id00007Q,
-l_data_0,l_data_1,l_data_3,l_data_2,
-reset_n,
-sh_data_oe_n,
-z80_addr_4,z80_addr_5,z80_addr_7,z80_addr_6,z80_addr_9,z80_m1_n,z80_iei,z80_addr_11,z80_addr_10,z80_addr_8,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block C
-sh_data_oe_n		(MC23	P)   : MUX 0		Ref (H128p)
-duplex_in_3		(MC24	P)   : MUX 1		Ref (A1p)
-z80_addr_4		(MC29	P)   : MUX 2		Ref (C41p)
-z80_addr_5		(MC27	P)   : MUX 3		Ref (C37p)
-id00294Q		(MC2	FB)  : MUX 4		Ref (B20fb)
-z80_addr_7		(MC25	P)   : MUX 5		Ref (C33p)
-id00601			(MC1	FB)  : MUX 6		Ref (B18fb)
-l_data_0		(MC16	FB)  : MUX 7		Ref (C46fb)
-id00609			(MC6	FB)  : MUX 8		Ref (C36fb)
-z80_addr_6		(MC26	P)   : MUX 9		Ref (C35p)
-id00605			(MC9	FB)  : MUX 10		Ref (C39fb)
-id00604			(MC12	FB)  : MUX 11		Ref (C42fb)
-id00611			(MC8	FB)  : MUX 12		Ref (C38fb)
-z80_addr_9		(MC31	P)   : MUX 13		Ref (D51p)
-id00639			(MC20	FB)  : MUX 14		Ref (G100fb)
-id00615			(MC11	FB)  : MUX 15		Ref (C41fb)
-z80_m1_n		(MC34	P)   : MUX 16		Ref (D59p)
-l_data_1		(MC15	FB)  : MUX 17		Ref (C45fb)
-z80_iei			(MC33	P)   : MUX 18		Ref (D57p)
-id00607			(MC14	FB)  : MUX 19		Ref (C44fb)
-id00608			(MC10	FB)  : MUX 20		Ref (C40fb)
-z80_addr_11		(MC28	P)   : MUX 21		Ref (C40p)
-id00618			(MC7	FB)  : MUX 22		Ref (C37fb)
-z80_addr_10		(MC30	P)   : MUX 23		Ref (D49p)
-reset_n			(MC38	FB)  : MUX 24		Ref (GCLR)
-z80_addr_8		(MC32	P)   : MUX 25		Ref (D53p)
-duplex_in_2		(MC35	P)   : MUX 26		Ref (D61p)
-id00603			(MC18	FB)  : MUX 27		Ref (C48fb)
-id00606			(MC4	FB)  : MUX 28		Ref (C34fb)
-duplex_in_0		(MC36	P)   : MUX 29		Ref (E67p)
-l_data_3		(MC21	FB)  : MUX 31		Ref (G107fb)
-id00612			(MC3	FB)  : MUX 32		Ref (C33fb)
-id00301QN		(MC19	FB)  : MUX 33		Ref (F90fb)
-id00614			(MC5	FB)  : MUX 34		Ref (C35fb)
-l_data_2		(MC13	FB)  : MUX 35		Ref (C43fb)
-id00610			(MC17	FB)  : MUX 37		Ref (C47fb)
-duplex_in_1		(MC37	FB)  : MUX 38		Ref (OE2)
-id00007Q		(MC22	FB)  : MUX 39		Ref (H124fb)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block D [36]
+FanIn assignment for block D [40]
 {
-duplex_in_3,duplex_in_1,
-id00049Q,id00623,id00629,id00621,id00627,id00628,id00626,id00630,id00641,id00007Q,id00631,id00622,id00624,id00620,id00642,id00625,
-l_data_2,l_data_7,l_data_5,l_data_0,l_data_1,l_data_4,l_data_3,l_data_6,
-sh_data_oe_n,
-z80_addr_4,z80_addr_5,z80_addr_7,z80_addr_15,z80_addr_11,z80_addr_6,z80_addr_9,z80_addr_8,z80_addr_10,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block D
-l_data_2		(MC1	P)   : MUX 0		Ref (C43p)
-l_data_7		(MC18	P)   : MUX 1		Ref (F86p)
-z80_addr_4		(MC32	P)   : MUX 2		Ref (C41p)
-z80_addr_5		(MC29	P)   : MUX 3		Ref (C37p)
-l_data_5		(MC21	P)   : MUX 4		Ref (F93p)
-z80_addr_7		(MC27	P)   : MUX 5		Ref (C33p)
-z80_addr_15		(MC30	P)   : MUX 7		Ref (C38p)
-id00049Q		(MC19	FB)  : MUX 8		Ref (F87fb)
-id00623			(MC5	FB)  : MUX 10		Ref (D50fb)
-duplex_in_3		(MC26	P)   : MUX 11		Ref (A1p)
-l_data_0		(MC3	P)   : MUX 12		Ref (C46p)
-id00629			(MC12	FB)  : MUX 13		Ref (D57fb)
-l_data_1		(MC2	P)   : MUX 14		Ref (C45p)
-id00621			(MC6	FB)  : MUX 16		Ref (D51fb)
-l_data_4		(MC20	P)   : MUX 17		Ref (F88p)
-id00627			(MC7	FB)  : MUX 18		Ref (D52fb)
-id00628			(MC13	FB)  : MUX 19		Ref (D58fb)
-sh_data_oe_n		(MC25	P)   : MUX 20		Ref (H128p)
-z80_addr_11		(MC31	P)   : MUX 21		Ref (C40p)
-z80_addr_6		(MC28	P)   : MUX 23		Ref (C35p)
-id00626			(MC8	FB)  : MUX 24		Ref (D53fb)
-id00630			(MC16	FB)  : MUX 25		Ref (D61fb)
-id00641			(MC4	FB)  : MUX 26		Ref (D49fb)
-z80_addr_9		(MC34	P)   : MUX 27		Ref (D51p)
-l_data_3		(MC23	P)   : MUX 28		Ref (G107p)
-id00007Q		(MC24	FB)  : MUX 29		Ref (H124fb)
-id00631			(MC9	FB)  : MUX 30		Ref (D54fb)
-z80_addr_8		(MC35	P)   : MUX 31		Ref (D53p)
-id00622			(MC10	FB)  : MUX 32		Ref (D55fb)
-z80_addr_10		(MC33	P)   : MUX 33		Ref (D49p)
-l_data_6		(MC22	P)   : MUX 34		Ref (F94p)
-id00624			(MC17	FB)  : MUX 35		Ref (D63fb)
-id00620			(MC11	FB)  : MUX 36		Ref (D56fb)
-id00642			(MC14	FB)  : MUX 37		Ref (D59fb)
-duplex_in_1		(MC36	FB)  : MUX 38		Ref (OE2)
-id00625			(MC15	FB)  : MUX 39		Ref (D60fb)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block E [39]
+FanIn assignment for block E [40]
 {
-duplex_in_3,duplex_in_1,
-id00644,id00601,id00049Q,id00606,id00645,id00614,id00612,id00618,id00294Q,id00643,id00649,id00641,id00616,id00615,id00611,id00603,id00634,id00007Q,id00646,id00648,id00604,id00647,id00613,id00642,
-sh_data_oe_n,
-z80_addr_4,z80_addr_5,z80_addr_7,z80_addr_15,z80_addr_6,z80_addr_9,z80_addr_14,z80_addr_8,z80_addr_11,z80_addr_10,z80_addr_13,z80_addr_12,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block E
-sh_data_oe_n		(MC25	P)   : MUX 0		Ref (H128p)
-duplex_in_3		(MC26	P)   : MUX 1		Ref (A1p)
-z80_addr_4		(MC33	P)   : MUX 2		Ref (C41p)
-z80_addr_5		(MC30	P)   : MUX 3		Ref (C37p)
-id00644			(MC13	FB)  : MUX 4		Ref (E66fb)
-z80_addr_7		(MC28	P)   : MUX 5		Ref (C33p)
-id00601			(MC1	FB)  : MUX 6		Ref (B18fb)
-z80_addr_15		(MC31	P)   : MUX 7		Ref (C38p)
-id00049Q		(MC22	FB)  : MUX 8		Ref (F87fb)
-z80_addr_6		(MC29	P)   : MUX 9		Ref (C35p)
-id00606			(MC4	FB)  : MUX 10		Ref (C34fb)
-id00645			(MC21	FB)  : MUX 11		Ref (E79fb)
-id00614			(MC5	FB)  : MUX 12		Ref (C35fb)
-z80_addr_9		(MC35	P)   : MUX 13		Ref (D51p)
-id00612			(MC3	FB)  : MUX 14		Ref (C33fb)
-z80_addr_14		(MC37	P)   : MUX 15		Ref (D56p)
-id00618			(MC6	FB)  : MUX 16		Ref (C37fb)
-z80_addr_8		(MC36	P)   : MUX 17		Ref (D53p)
-id00294Q		(MC2	FB)  : MUX 18		Ref (B20fb)
-id00643			(MC19	FB)  : MUX 19		Ref (E73fb)
-id00649			(MC14	FB)  : MUX 20		Ref (E67fb)
-z80_addr_11		(MC32	P)   : MUX 21		Ref (C40p)
-id00641			(MC11	FB)  : MUX 22		Ref (D49fb)
-z80_addr_10		(MC34	P)   : MUX 23		Ref (D49p)
-id00616			(MC16	FB)  : MUX 24		Ref (E69fb)
-id00615			(MC8	FB)  : MUX 25		Ref (C41fb)
-id00611			(MC7	FB)  : MUX 26		Ref (C38fb)
-id00603			(MC10	FB)  : MUX 27		Ref (C48fb)
-id00634			(MC23	FB)  : MUX 28		Ref (G103fb)
-id00007Q		(MC24	FB)  : MUX 29		Ref (H124fb)
-id00646			(MC18	FB)  : MUX 30		Ref (E72fb)
-z80_addr_13		(MC27	P)   : MUX 31		Ref (A3p)
-id00648			(MC15	FB)  : MUX 32		Ref (E68fb)
-id00604			(MC9	FB)  : MUX 33		Ref (C42fb)
-duplex_in_1		(MC39	FB)  : MUX 34		Ref (OE2)
-id00647			(MC20	FB)  : MUX 35		Ref (E76fb)
-id00613			(MC17	FB)  : MUX 36		Ref (E70fb)
-id00642			(MC12	FB)  : MUX 37		Ref (D59fb)
-z80_addr_12		(MC38	P)   : MUX 39		Ref (E65p)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block F [39]
+FanIn assignment for block F [40]
 {
-XXL_1281,
-duplex_in_3,duplex_in_1,
-id00601,id00607,id00049Q,id00634,id00649,id00636,id00639,id00294Q,id00624,id00640,id00627,id00007Q,id00609,id00608,id00635,id00619,id00610,id00605,id00617,
-sh_inc_n,sh_done_n,sh_data_oe_n,
-z80_addr_5,z80_iei,z80_addr_7,z80_addr_6,z80_addr_11,z80_addr_10,z80_addr_4,z80_addr_13,z80_addr_14,z80_addr_9,z80_m1_n,z80_addr_8,z80_addr_15,z80_addr_12,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block F
-id00601			(MC1	FB)  : MUX 0		Ref (B18fb)
-duplex_in_3		(MC24	P)   : MUX 1		Ref (A1p)
-sh_inc_n		(MC14	P)   : MUX 2		Ref (F89p)
-z80_addr_5		(MC28	P)   : MUX 3		Ref (C37p)
-z80_iei			(MC36	P)   : MUX 4		Ref (D57p)
-z80_addr_7		(MC26	P)   : MUX 5		Ref (C33p)
-sh_done_n		(MC15	P)   : MUX 6		Ref (F91p)
-id00607			(MC7	FB)  : MUX 7		Ref (C44fb)
-id00049Q		(MC13	FB)  : MUX 8		Ref (F87fb)
-z80_addr_6		(MC27	P)   : MUX 9		Ref (C35p)
-id00634			(MC19	FB)  : MUX 10		Ref (G103fb)
-z80_addr_11		(MC30	P)   : MUX 11		Ref (C40p)
-id00649			(MC11	FB)  : MUX 12		Ref (E67fb)
-id00636			(MC20	FB)  : MUX 13		Ref (G108fb)
-id00639			(MC18	FB)  : MUX 14		Ref (G100fb)
-z80_addr_10		(MC32	P)   : MUX 15		Ref (D49p)
-z80_addr_4		(MC31	P)   : MUX 16		Ref (C41p)
-z80_addr_13		(MC25	P)   : MUX 17		Ref (A3p)
-id00294Q		(MC2	FB)  : MUX 18		Ref (B20fb)
-id00624			(MC10	FB)  : MUX 19		Ref (D63fb)
-sh_data_oe_n		(MC23	P)   : MUX 20		Ref (H128p)
-z80_addr_14		(MC35	P)   : MUX 21		Ref (D56p)
-duplex_in_1		(MC39	FB)  : MUX 22		Ref (OE2)
-id00640			(MC17	FB)  : MUX 23		Ref (F95fb)
-id00627			(MC9	FB)  : MUX 24		Ref (D52fb)
-id00007Q		(MC22	FB)  : MUX 25		Ref (H124fb)
-id00609			(MC4	FB)  : MUX 26		Ref (C36fb)
-z80_addr_9		(MC33	P)   : MUX 27		Ref (D51p)
-id00608			(MC6	FB)  : MUX 28		Ref (C40fb)
-id00635			(MC21	FB)  : MUX 29		Ref (G111fb)
-z80_m1_n		(MC37	P)   : MUX 30		Ref (D59p)
-z80_addr_8		(MC34	P)   : MUX 31		Ref (D53p)
-id00619			(MC3	FB)  : MUX 32		Ref (B23fb)
-id00610			(MC8	FB)  : MUX 33		Ref (C47fb)
-id00605			(MC5	FB)  : MUX 34		Ref (C39fb)
-z80_addr_15		(MC29	P)   : MUX 35		Ref (C38p)
-id00617			(MC12	FB)  : MUX 36		Ref (F82fb)
-XXL_1281		(MC16	FB)  : MUX 37		Ref (F92fb)
-z80_addr_12		(MC38	P)   : MUX 39		Ref (E65p)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block G [31]
+FanIn assignment for block G [40]
 {
-Com_Ctrl_1115,
-XXL_1121,XXL_1163,
-duplex_in_0,duplex_in_3,duplex_in_1,
-id00638,id00635,id00639,id00630,id00629,id00649,id00158QN,id00003,id00637,id00634,id00628,id00636,id00633,
-l_data_3,
-reset_n,
-sh_rw_n,sh_busy_n,sh_en_n,sh_data_oe_n,sh_rw_n,
-z80_addr_10,z80_iei,z80_m1_n,z80_addr_8,z80_addr_9,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block G
-sh_rw_n			(MC2	P)   : MUX 0		Ref (B27p)
-sh_busy_n		(MC21	P)   : MUX 1		Ref (H120p)
-id00638			(MC17	FB)  : MUX 2		Ref (H113fb)
-sh_en_n			(MC20	P)   : MUX 3		Ref (H117p)
-Com_Ctrl_1115		(MC9	FB)  : MUX 4		Ref (F84fb)
-z80_addr_10		(MC24	P)   : MUX 5		Ref (D49p)
-z80_iei			(MC27	P)   : MUX 6		Ref (D57p)
-id00635			(MC15	FB)  : MUX 7		Ref (G111fb)
-id00639			(MC10	FB)  : MUX 8		Ref (G100fb)
-sh_data_oe_n		(MC22	P)   : MUX 10		Ref (H128p)
-id00630			(MC6	FB)  : MUX 11		Ref (D61fb)
-z80_m1_n		(MC28	P)   : MUX 12		Ref (D59p)
-id00629			(MC4	FB)  : MUX 13		Ref (D57fb)
-reset_n			(MC31	FB)  : MUX 14		Ref (GCLR)
-duplex_in_0		(MC29	P)   : MUX 15		Ref (E67p)
-z80_addr_8		(MC26	P)   : MUX 17		Ref (D53p)
-id00649			(MC7	FB)  : MUX 20		Ref (E67fb)
-duplex_in_3		(MC23	P)   : MUX 21		Ref (A1p)
-sh_rw_n			(MC1	FB)  : MUX 23		Ref (B27fb)
-id00158QN		(MC18	FB)  : MUX 24		Ref (H114fb)
-id00003			(MC3	FB)  : MUX 25		Ref (B31fb)
-id00637			(MC16	FB)  : MUX 27		Ref (G112fb)
-id00634			(MC11	FB)  : MUX 28		Ref (G103fb)
-id00628			(MC5	FB)  : MUX 29		Ref (D58fb)
-z80_addr_9		(MC25	P)   : MUX 31		Ref (D51p)
-XXL_1121		(MC19	FB)  : MUX 32		Ref (H116fb)
-XXL_1163		(MC8	FB)  : MUX 33		Ref (E74fb)
-l_data_3		(MC13	FB)  : MUX 35		Ref (G107fb)
-id00636			(MC14	FB)  : MUX 37		Ref (G108fb)
-duplex_in_1		(MC30	FB)  : MUX 38		Ref (OE2)
-id00633			(MC12	FB)  : MUX 39		Ref (G106fb)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-FanIn assignment for block H [38]
+FanIn assignment for block H [40]
 {
-Com_Ctrl_1115,
-XXL_1332,XXL_1331,XXL_1330,XXL_1121,XXL_1329,XXL_1328,
-duplex_in_3,
-id00638,id00621,id00623,id00631,id00620,id00634,id00639,id00640,id00158QN,id00649,id00635,id00636,id00633,id00622,id00637,
-l_data_1,l_data_0,l_data_2,l_data_3,
-sh_data_oe_n,sh_stb_n,sh_rw_n,
-z80_addr_11,z80_iei,z80_addr_3,z80_addr_2,z80_addr_0,z80_addr_1,z80_wait_n.OE,z80_m1_n,
+--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,--,
 }
 Multiplexer assignment for block H
-sh_data_oe_n		(MC30	P)   : MUX 0		Ref (H128p)
-sh_stb_n		(MC18	P)   : MUX 1		Ref (G102p)
-id00638			(MC25	FB)  : MUX 2		Ref (H113fb)
-z80_addr_11		(MC32	P)   : MUX 3		Ref (C40p)
-id00621			(MC7	FB)  : MUX 4		Ref (D51fb)
-l_data_1		(MC4	FB)  : MUX 5		Ref (C45fb)
-z80_iei			(MC33	P)   : MUX 6		Ref (D57p)
-XXL_1332		(MC1	FB)  : MUX 7		Ref (A15fb)
-z80_addr_3		(MC35	P)   : MUX 9		Ref (E69p)
-id00623			(MC6	FB)  : MUX 10		Ref (D50fb)
-duplex_in_3		(MC31	P)   : MUX 11		Ref (A1p)
-id00631			(MC8	FB)  : MUX 12		Ref (D54fb)
-l_data_0		(MC5	FB)  : MUX 13		Ref (C46fb)
-z80_addr_2		(MC38	P)   : MUX 14		Ref (E73p)
-sh_rw_n			(MC2	FB)  : MUX 15		Ref (B27fb)
-Com_Ctrl_1115		(MC14	FB)  : MUX 16		Ref (F84fb)
-z80_addr_0		(MC36	P)   : MUX 17		Ref (E70p)
-id00620			(MC10	FB)  : MUX 18		Ref (D56fb)
-z80_addr_1		(MC37	P)   : MUX 19		Ref (E72p)
-id00634			(MC19	FB)  : MUX 20		Ref (G103fb)
-z80_wait_n.OE		(MC28	FB)  : MUX 21		Ref (H122fb)
-id00639			(MC17	FB)  : MUX 22		Ref (G100fb)
-id00640			(MC15	FB)  : MUX 23		Ref (F95fb)
-id00158QN		(MC26	FB)  : MUX 24		Ref (H114fb)
-XXL_1331		(MC16	FB)  : MUX 25		Ref (F96fb)
-id00649			(MC12	FB)  : MUX 26		Ref (E67fb)
-l_data_2		(MC3	FB)  : MUX 27		Ref (C43fb)
-XXL_1330		(MC13	FB)  : MUX 28		Ref (E71fb)
-id00635			(MC23	FB)  : MUX 29		Ref (G111fb)
-z80_m1_n		(MC34	P)   : MUX 30		Ref (D59p)
-id00636			(MC22	FB)  : MUX 31		Ref (G108fb)
-XXL_1121		(MC27	FB)  : MUX 32		Ref (H116fb)
-id00633			(MC20	FB)  : MUX 33		Ref (G106fb)
-id00622			(MC9	FB)  : MUX 34		Ref (D55fb)
-l_data_3		(MC21	FB)  : MUX 35		Ref (G107fb)
-XXL_1329		(MC11	FB)  : MUX 36		Ref (E65fb)
-id00637			(MC24	FB)  : MUX 37		Ref (G112fb)
-XXL_1328		(MC29	FB)  : MUX 39		Ref (H127fb)
+--			(MC0	FB)  : MUX 0		Ref (--)
+--			(MC0	FB)  : MUX 1		Ref (--)
+--			(MC0	FB)  : MUX 2		Ref (--)
+--			(MC0	FB)  : MUX 3		Ref (--)
+--			(MC0	FB)  : MUX 4		Ref (--)
+--			(MC0	FB)  : MUX 5		Ref (--)
+--			(MC0	FB)  : MUX 6		Ref (--)
+--			(MC0	FB)  : MUX 7		Ref (--)
+--			(MC0	FB)  : MUX 8		Ref (--)
+--			(MC0	FB)  : MUX 9		Ref (--)
+--			(MC0	FB)  : MUX 10		Ref (--)
+--			(MC0	FB)  : MUX 11		Ref (--)
+--			(MC0	FB)  : MUX 12		Ref (--)
+--			(MC0	FB)  : MUX 13		Ref (--)
+--			(MC0	FB)  : MUX 14		Ref (--)
+--			(MC0	FB)  : MUX 15		Ref (--)
+--			(MC0	FB)  : MUX 16		Ref (--)
+--			(MC0	FB)  : MUX 17		Ref (--)
+--			(MC0	FB)  : MUX 18		Ref (--)
+--			(MC0	FB)  : MUX 19		Ref (--)
+--			(MC0	FB)  : MUX 20		Ref (--)
+--			(MC0	FB)  : MUX 21		Ref (--)
+--			(MC0	FB)  : MUX 22		Ref (--)
+--			(MC0	FB)  : MUX 23		Ref (--)
+--			(MC0	FB)  : MUX 24		Ref (--)
+--			(MC0	FB)  : MUX 25		Ref (--)
+--			(MC0	FB)  : MUX 26		Ref (--)
+--			(MC0	FB)  : MUX 27		Ref (--)
+--			(MC0	FB)  : MUX 28		Ref (--)
+--			(MC0	FB)  : MUX 29		Ref (--)
+--			(MC0	FB)  : MUX 30		Ref (--)
+--			(MC0	FB)  : MUX 31		Ref (--)
+--			(MC0	FB)  : MUX 32		Ref (--)
+--			(MC0	FB)  : MUX 33		Ref (--)
+--			(MC0	FB)  : MUX 34		Ref (--)
+--			(MC0	FB)  : MUX 35		Ref (--)
+--			(MC0	FB)  : MUX 36		Ref (--)
+--			(MC0	FB)  : MUX 37		Ref (--)
+--			(MC0	FB)  : MUX 38		Ref (--)
+--			(MC0	FB)  : MUX 39		Ref (--)
 
-Creating JEDEC file zx50_cpld_core.jed ...
+Warning : JEDEC file not created
 
 TQFP100 programmed logic:
 -----------------------------------
-id00007Q = ((!z80_addr_1 & l_data_1.Q)
-	# (z80_addr_1 & !l_data_1.Q)
-	# XXL_1328
-	# (z80_addr_0 & !l_data_0.Q));
+!id00018QN = (duplex_in_3 & id00607.Q);
 
-!id00297Q = (z80_addr_10 & !z80_addr_9 & !z80_addr_8);
+id00007Q = (XXL_1313
+	# (z80_addr_0 & !l_data_0.Q)
+	# (!z80_addr_1 & l_data_1.Q)
+	# (z80_addr_1 & !l_data_1.Q));
 
-!id00298Q = (z80_addr_10 & z80_addr_9 & z80_addr_8);
+!id00269Q = (!z80_addr_10 & !z80_addr_9 & !z80_addr_8);
 
-!id00299Q = (!z80_addr_10 & !z80_addr_9 & !z80_addr_8);
+!id00267Q = (z80_addr_10 & !z80_addr_9 & !z80_addr_8);
+
+!id00268Q = (z80_addr_10 & z80_addr_9 & z80_addr_8);
 
 l_addr_11 = 0;
 
 id00003.D = duplex_in_3;
 
-id00601.D = 1;
-
-l_data_1.D = ((!reset_n & duplex_in_1)
-	# (reset_n & l_data_1.Q));
+id00589.D = 1;
 
 l_data_0.D = ((!reset_n & duplex_in_0)
 	# (reset_n & l_data_0.Q));
 
-l_data_3.D = ((!reset_n & duplex_in_3)
-	# (reset_n & l_data_3.Q));
-
 l_data_2.D = ((reset_n & l_data_2.Q)
 	# (!reset_n & duplex_in_2));
 
-l_data_5 = 0;
+l_data_1.D = ((!reset_n & duplex_in_1)
+	# (reset_n & l_data_1.Q));
+
+l_data_3.D = ((!reset_n & duplex_in_3)
+	# (reset_n & l_data_3.Q));
 
 l_data_4 = 0;
 
 l_data_6 = 1;
 
+l_data_5 = 0;
+
 sh_busy_n = 0;
 
 l_data_7 = 0;
-
-sh_en_n = 0;
 
 sh_done_n = 0;
 
 sh_inc_n = 0;
 
+sh_en_n = 0;
+
 z80_int_n = 0;
 
 z80_wait_n = 0;
 
-z80_ieo = (z80_iei & !id00639.Q);
+z80_ieo = (z80_iei & !id00627.Q);
 
-id00301QN = ((z80_addr_11 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8)
-	# (!z80_addr_11 & id00299Q));
+id00271QN = ((z80_addr_11 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8)
+	# (!z80_addr_11 & id00269Q));
 
-!id00353QN = (FB_1324 & FB_1325);
+!id00476QN = (id00588.Q & !id00631.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q);
 
-!sh_data_oe_n = (!id00633.Q & id00640.Q);
+id00323QN = ((!id00589.Q & reset_n & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q)
+	# (!id00589.Q & !reset_n & !duplex_in_3 & !duplex_in_2 & !duplex_in_1 & !duplex_in_0));
 
-!sh_stb_n = (!id00634.Q & id00635.Q & !id00636.Q);
+!id00470QN = (!duplex_in_2 & !z80_addr_15 & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q);
 
-!id00506QN = (FB_1322 & FB_1323);
+!sh_data_oe_n = (!id00621.Q & id00628.Q);
+
+!sh_stb_n = (!id00622.Q & id00623.Q & !id00624.Q);
 
 l_addr_10 = ((sh_data_oe_n & z80_addr_10)
-	# (!sh_data_oe_n & id00630.Q));
+	# (!sh_data_oe_n & id00618.Q));
 
 l_addr_0 = ((sh_data_oe_n & z80_addr_0)
-	# (!sh_data_oe_n & id00620.Q));
+	# (!sh_data_oe_n & id00608.Q));
 
 l_addr_1 = ((sh_data_oe_n & z80_addr_1)
-	# (!sh_data_oe_n & id00621.Q));
-
-l_addr_3 = ((sh_data_oe_n & z80_addr_3)
-	# (!sh_data_oe_n & id00623.Q));
-
-l_addr_2 = ((sh_data_oe_n & z80_addr_2)
-	# (!sh_data_oe_n & id00622.Q));
-
-l_addr_5 = ((sh_data_oe_n & z80_addr_5)
-	# (!sh_data_oe_n & id00625.Q));
+	# (!sh_data_oe_n & id00609.Q));
 
 l_addr_6 = ((sh_data_oe_n & z80_addr_6)
-	# (!sh_data_oe_n & id00626.Q));
+	# (!sh_data_oe_n & id00614.Q));
 
-l_addr_4 = ((sh_data_oe_n & z80_addr_4)
-	# (!sh_data_oe_n & id00624.Q));
+l_addr_2 = ((sh_data_oe_n & z80_addr_2)
+	# (!sh_data_oe_n & id00610.Q));
 
-l_addr_8 = ((sh_data_oe_n & z80_addr_8)
-	# (!sh_data_oe_n & id00628.Q));
-
-!l_dir = ((!id00637.Q & id00638.Q & sh_rw_n.PIN)
-	# (!id00637.Q & !id00638.Q & !duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q)
-	# (!id00637.Q & !id00638.Q & !duplex_in_0));
-
-l_addr_7 = ((sh_data_oe_n & z80_addr_7)
-	# (!sh_data_oe_n & id00627.Q));
+l_addr_3 = ((sh_data_oe_n & z80_addr_3)
+	# (!sh_data_oe_n & id00611.Q));
 
 l_addr_9 = ((sh_data_oe_n & z80_addr_9)
-	# (!sh_data_oe_n & id00629.Q));
+	# (!sh_data_oe_n & id00617.Q));
 
-id00639.D = ((id00639.Q & id00003.Q)
-	# (id00634.Q & !id00635.Q & id00636.Q & id00649.Q)
-	# (id00639.Q & !duplex_in_3)
-	# (id00639.Q & !z80_iei));
+l_addr_4 = ((sh_data_oe_n & z80_addr_4)
+	# (!sh_data_oe_n & id00612.Q));
 
-id00633.D = ((!sh_busy_n.PIN & id00633.Q)
-	# (!sh_busy_n.PIN & id00649.Q & !id00635.Q & XXL_1216)
-	# (!sh_busy_n.PIN & !id00649.Q & sh_en_n.PIN));
+l_addr_5 = ((sh_data_oe_n & z80_addr_5)
+	# (!sh_data_oe_n & id00613.Q));
+
+!l_dir = ((!id00625.Q & !id00626.Q & !duplex_in_0)
+	# (!id00625.Q & id00626.Q & sh_rw_n.PIN)
+	# (!id00625.Q & !id00626.Q & !duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q));
+
+l_addr_7 = ((sh_data_oe_n & z80_addr_7)
+	# (!sh_data_oe_n & id00615.Q));
+
+l_addr_8 = ((sh_data_oe_n & z80_addr_8)
+	# (!sh_data_oe_n & id00616.Q));
+
+id00627.D = ((id00627.Q & !duplex_in_3)
+	# (id00627.Q & !z80_iei)
+	# (id00627.Q & id00003.Q)
+	# (id00622.Q & !id00623.Q & id00624.Q & id00644.Q));
+
+id00621.D = ((!sh_busy_n.PIN & id00644.Q & !id00623.Q & !id00622.Q)
+	# (!sh_busy_n.PIN & id00644.Q & !id00623.Q & id00624.Q)
+	# (!sh_busy_n.PIN & !id00644.Q & sh_en_n.PIN)
+	# (!sh_busy_n.PIN & id00621.Q));
 
 !id00010Q = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
 
-!id00155Q = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q);
+!id00127Q = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q);
 
-id00294Q = ((!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n)
-	# !id00601.Q);
+id00264Q = ((!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n)
+	# !id00589.Q);
 
-!id00635.D = ((id00634.Q & !id00635.Q & id00636.Q)
-	# (!id00635.Q & !id00649.Q)
-	# (id00635.Q & id00636.Q & id00649.Q)
-	# (id00635.Q & id00649.Q & XXL_1163)
-	# (!id00634.Q & !id00635.Q & XXL_1303));
+id00622.D = ((!id00622.Q & id00644.Q & !id00624.Q & id00623.Q)
+	# (id00622.Q & !id00644.Q)
+	# (!id00622.Q & id00644.Q & !id00624.Q & id00628.Q & sh_busy_n.PIN));
 
 sh_c_dir = ((!sh_rw_n.Q & sh_data_oe_n)
-	# (!sh_rw_n.Q & XXL_1121));
+	# (!sh_rw_n.Q & XXL_1274));
 
-id00634.D = ((id00634.Q & !id00649.Q)
-	# (!id00634.Q & !id00636.Q & id00649.Q & sh_busy_n.PIN & !sh_data_oe_n)
-	# (!id00634.Q & !id00636.Q & id00649.Q & id00635.Q));
+!id00623.D = ((id00623.Q & id00644.Q & !id00639.Q & !id00640.Q & !id00641.Q & !id00642.Q & !id00643.Q & !id00638.Q & !id00636.Q & !id00637.Q)
+	# FB_1312
+	# (!id00623.Q & id00622.Q & id00624.Q)
+	# (!id00623.Q & !id00622.Q & !sh_busy_n.PIN)
+	# (!id00623.Q & !id00644.Q));
 
-id00636.D = ((id00636.Q & !id00649.Q)
-	# (!id00636.Q & id00635.Q & id00649.Q & XXL_1163)
-	# (id00636.Q & !id00634.Q & !id00635.Q & id00633.Q)
-	# (id00636.Q & !id00634.Q & !id00635.Q & !sh_busy_n.PIN));
+id00624.D = ((!id00624.Q & id00644.Q & id00623.Q & id00622.Q)
+	# (id00624.Q & !id00623.Q & !id00622.Q & !sh_busy_n.PIN)
+	# (id00624.Q & !id00644.Q)
+	# (!id00624.Q & id00644.Q & id00623.Q & !id00639.Q & !id00640.Q & !id00641.Q & !id00642.Q & !id00643.Q & !id00638.Q & !id00636.Q & !id00637.Q));
 
-id00049Q = ((!duplex_in_3 & XXL_1281)
-	# (XXL_1281 & !id00619.Q)
-	# (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q));
-
-!id00212Q = (id00623.Q & id00624.Q & id00625.Q & id00622.Q & id00620.Q & id00621.Q);
-
-!id00156Q = (!XXL_1329 & !XXL_1330 & !XXL_1331 & !XXL_1332);
+id00128Q = (XXL_1314
+	# (id00127Q & SF1280 & duplex_in_2)
+	# (id00127Q & SF1280 & SF1278 & SF1279 & !z80_addr_13 & !z80_addr_12 & !id00603.Q)
+	# (id00127Q & SF1280 & SF1278 & SF1279 & !z80_addr_15));
 
 atl_addr_0 = ((!duplex_in_3 & !duplex_in_1 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (z80_addr_12 & id00155Q));
+	# (z80_addr_12 & id00127Q));
 
-atl_addr_2 = ((!duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (z80_addr_14 & id00155Q));
-
-atl_addr_3 = ((z80_addr_15 & id00155Q)
+atl_addr_3 = ((z80_addr_15 & id00127Q)
 	# (!duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
 
 atl_addr_1 = ((!duplex_in_3 & !duplex_in_1 & z80_addr_9 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (z80_addr_13 & id00155Q));
+	# (z80_addr_13 & id00127Q));
 
-id00603.D = ((z80_addr_11 & id00601.Q & id00603.Q)
-	# (id00601.Q & id00603.Q & id00299Q)
-	# (!id00294Q & id00603.Q)
-	# (id00294Q & !z80_addr_11 & id00601.Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00294Q & id00353QN));
+atl_addr_2 = ((!duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
+	# (z80_addr_14 & id00127Q));
 
-atl_oe_n = XXL_1135;
+id00591.D = ((id00591.Q & !id00264Q)
+	# (id00589.Q & id00264Q & !z80_addr_11 & !duplex_in_3 & !duplex_in_1 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
+	# (id00264Q & id00323QN)
+	# (id00589.Q & id00591.Q & z80_addr_11)
+	# (id00589.Q & id00591.Q & id00269Q));
 
-!atl_we_n.D = ((!id00601.Q & !atl_we_n.Q)
-	# (id00601.Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
+!atl_oe_n = (sh_data_oe_n & id00127Q & id00470QN);
 
-id00606.D = ((id00294Q & id00353QN)
-	# (id00606.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00606.Q & XXL_1295));
+!atl_we_n.D = ((!id00589.Q & !atl_we_n.Q)
+	# (id00589.Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
 
-id00604.D = ((id00294Q & id00353QN)
-	# (id00604.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00604.Q & XXL_1293));
+id00594.D = ((id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
+	# (id00594.Q & id00589.Q & XXL_1285)
+	# (id00264Q & id00323QN)
+	# (!id00264Q & id00594.Q));
 
-id00605.D = ((id00294Q & id00353QN)
-	# (id00605.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00605.Q & XXL_1294));
+id00592.D = ((id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
+	# (id00592.Q & id00589.Q & XXL_1283)
+	# (id00264Q & id00323QN)
+	# (!id00264Q & id00592.Q));
 
-id00609.D = ((id00294Q & id00353QN)
-	# (id00609.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00609.Q & XXL_1297));
+id00593.D = ((id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
+	# (id00593.Q & id00589.Q & XXL_1284)
+	# (id00264Q & id00323QN)
+	# (!id00264Q & id00593.Q));
 
-id00607.D = ((id00601.Q & id00607.Q & id00297Q)
-	# (id00601.Q & id00607.Q & !id00301QN)
-	# (!id00294Q & id00607.Q)
-	# (id00294Q & id00601.Q & id00301QN & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00294Q & id00353QN));
+id00597.D = ((id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
+	# (id00597.Q & id00589.Q & XXL_1287)
+	# (id00264Q & id00323QN)
+	# (!id00264Q & id00597.Q));
 
-id00608.D = ((id00294Q & id00353QN)
-	# (id00608.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00608.Q & XXL_1296));
+id00595.D = ((id00595.Q & !id00264Q)
+	# (id00589.Q & id00271QN & id00264Q & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
+	# (id00264Q & id00323QN)
+	# (id00589.Q & id00595.Q & id00267Q)
+	# (id00589.Q & id00595.Q & !id00271QN));
 
-atl_data_0 = ((id00506QN & !XXL_1176)
-	# (sh_data_oe_n & FB_1322 & FB_1323 & z80_addr_12 & id00155Q)
-	# (sh_data_oe_n & FB_1322 & FB_1323 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_0.PIN & !id00007Q)
-	# (!sh_data_oe_n & FB_1322 & FB_1323 & id00632.Q));
+id00596.D = ((id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
+	# (id00596.Q & id00589.Q & XXL_1286)
+	# (id00264Q & id00323QN)
+	# (!id00264Q & id00596.Q));
 
-id00610.D = ((id00601.Q & id00610.Q & id00298Q)
-	# (id00601.Q & id00610.Q & !id00301QN)
-	# (!id00294Q & id00610.Q)
-	# (id00294Q & id00601.Q & id00301QN & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00294Q & id00353QN));
+atl_data_0 = (FB_1296
+	# (!sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00619.Q & !id00631.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q)
+	# (!sh_data_oe_n & id00620.Q & id00476QN)
+	# (sh_data_oe_n & id00470QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_0.PIN & !id00007Q));
 
-id00611.D = ((id00611.Q & !id00294Q)
-	# (id00601.Q & id00294Q & z80_addr_11 & !duplex_in_3 & !duplex_in_1 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00611.Q & id00601.Q & !z80_addr_11)
-	# (id00611.Q & id00601.Q & id00299Q));
+id00598.D = ((id00598.Q & !id00264Q)
+	# (id00589.Q & id00271QN & id00264Q & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
+	# (id00264Q & id00323QN)
+	# (id00589.Q & id00598.Q & id00268Q)
+	# (id00589.Q & id00598.Q & !id00271QN));
 
-atl_data_3 = ((sh_data_oe_n & FB_1322 & FB_1323 & z80_addr_15 & id00155Q)
-	# FB_1312
-	# (!sh_data_oe_n & id00506QN & id00656.Q)
-	# (!sh_data_oe_n & id00657.Q & FB_1322 & FB_1323));
+id00599.D = ((id00589.Q & !z80_addr_11 & id00599.Q)
+	# (id00589.Q & id00599.Q & id00269Q)
+	# (!id00264Q & id00599.Q)
+	# (id00264Q & id00589.Q & z80_addr_11 & !duplex_in_3 & !duplex_in_1 & !z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
 
-atl_data_1 = ((sh_data_oe_n & FB_1322 & FB_1323 & z80_addr_13 & id00155Q)
-	# FB_1306
-	# (!sh_data_oe_n & id00506QN & id00632.Q)
-	# (!sh_data_oe_n & id00655.Q & FB_1322 & FB_1323));
+atl_data_3 = (FB_1305
+	# (!sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00630.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q)
+	# (!sh_data_oe_n & id00631.Q)
+	# (sh_data_oe_n & id00470QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_3.PIN & !id00007Q));
 
-atl_data_2 = ((sh_data_oe_n & FB_1322 & FB_1323 & z80_addr_14 & id00155Q)
-	# FB_1309
-	# (!sh_data_oe_n & id00506QN & id00655.Q)
-	# (!sh_data_oe_n & id00656.Q & FB_1322 & FB_1323));
+atl_data_1 = (FB_1299
+	# (!sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00620.Q & !id00631.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q)
+	# (!sh_data_oe_n & id00629.Q & id00476QN)
+	# (sh_data_oe_n & id00470QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_1.PIN & !id00007Q));
 
-atl_data_6 = ((sh_data_oe_n & FB_1322 & FB_1323 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_6.PIN & !id00007Q)
-	# (!sh_data_oe_n & FB_1322 & FB_1323 & id00660.Q));
+atl_data_2 = (FB_1302
+	# (!sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00629.Q & !id00631.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q)
+	# (!sh_data_oe_n & id00630.Q & id00476QN)
+	# (sh_data_oe_n & id00470QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_2.PIN & !id00007Q));
 
-atl_data_4 = ((sh_data_oe_n & FB_1322 & FB_1323 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_4.PIN & !id00007Q)
-	# (!sh_data_oe_n & FB_1322 & FB_1323 & id00658.Q));
+atl_data_6 = ((sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_6.PIN & !id00007Q & id00470QN)
+	# (!sh_data_oe_n & id00634.Q));
 
-atl_data_5 = ((sh_data_oe_n & FB_1322 & FB_1323 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_5.PIN & !id00007Q)
-	# (!sh_data_oe_n & FB_1322 & FB_1323 & id00659.Q));
+atl_data_4 = ((sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_4.PIN & !id00007Q & id00470QN)
+	# (!sh_data_oe_n & id00632.Q));
 
-atl_data_7 = ((sh_data_oe_n & FB_1322 & FB_1323 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_7.PIN & !id00007Q)
-	# (!sh_data_oe_n & FB_1322 & FB_1323 & id00661.Q));
+atl_data_5 = ((sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_5.PIN & !id00007Q & id00470QN)
+	# (!sh_data_oe_n & id00633.Q));
 
-!id00207Q = (id00049Q & XXL_1120);
+atl_data_7 = ((sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_7.PIN & !id00007Q & id00470QN)
+	# (!sh_data_oe_n & id00635.Q));
 
-id00632.D = ((z80_addr_12 & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00632.Q & XXL_1194));
+id00027QN = ((id00018QN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00018QN & id00010Q & XXL_1122));
 
-id00619.D = ((!duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (!duplex_in_3 & id00619.Q));
+id00177Q = ((id00018QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00018QN & id00010Q & XXL_1122));
+
+id00607.D = ((!duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (!duplex_in_3 & id00607.Q));
+
+id00629.D = ((l_data_0.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00629.Q & XXL_1112));
+
+id00620.D = ((z80_addr_12 & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00620.Q & XXL_1184));
+
+!id00628.D = ((id00018QN & id00010Q & id00644.Q & id00622.Q & !id00623.Q & id00624.Q)
+	# (id00018QN & !id00628.Q)
+	# (id00018QN & id00010Q & !id00644.Q & !sh_done_n.PIN & sh_inc_n.PIN));
+
+id00632.D = ((l_data_3.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00632.Q & XXL_1112));
+
+id00630.D = ((l_data_1.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00630.Q & XXL_1112));
+
+id00631.D = ((l_data_2.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00631.Q & XXL_1112));
+
+id00635.D = ((l_data_6.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00635.Q & XXL_1112));
+
+id00633.D = ((l_data_4.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00633.Q & XXL_1112));
+
+id00634.D = ((l_data_5.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00634.Q & XXL_1112));
+
+id00644.D = ((z80_addr_14 & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00644.Q & XXL_1184));
 
 sh_rw_n.D = ((z80_addr_13 & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (sh_rw_n.Q & XXL_1194));
+	# (sh_rw_n.Q & XXL_1184));
 
-id00640.D = ((id00640.Q & id00049Q)
-	# (duplex_in_3 & id00619.Q)
-	# (id00640.Q & id00649.Q & !id00635.Q & !id00636.Q)
-	# FB_1315
-	# (id00640.Q & !id00649.Q & sh_done_n.PIN & sh_inc_n.PIN));
+id00130QN = ((!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q)
+	# !id00128Q);
 
-id00649.D = ((z80_addr_14 & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00649.Q & XXL_1194));
-
-id00657.D = ((l_data_2.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00657.Q & XXL_1120));
-
-id00655.D = ((l_data_0.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00655.Q & XXL_1120));
-
-id00656.D = ((l_data_1.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00656.Q & XXL_1120));
-
-id00660.D = ((l_data_5.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00660.Q & XXL_1120));
-
-id00658.D = ((l_data_3.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00658.Q & XXL_1120));
-
-id00659.D = ((l_data_4.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00659.Q & XXL_1120));
-
-id00661.D = ((l_data_6.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00661.Q & XXL_1120));
-
-id00158QN = ((!XXL_1329 & !XXL_1330 & !XXL_1331 & !XXL_1332)
-	# (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q));
-
-id00600.D = ((id00601.Q & z80_addr_11 & id00600.Q)
-	# (id00601.Q & id00600.Q & id00155Q)
-	# (id00353QN & !z80_addr_11 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00353QN & !id00601.Q));
-
-!id00531QN = (sh_data_oe_n & FB_1327);
-
-atl_ce_n = ((id00601.Q & id00155Q & id00156Q)
+atl_ce_n = ((id00589.Q & id00127Q & id00128Q)
 	# !sh_data_oe_n);
 
-id00614.D = ((id00614.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00614.Q & XXL_1300));
-
-id00612.D = ((id00612.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00612.Q & XXL_1298));
-
-id00613.D = ((id00613.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00613.Q & XXL_1299));
-
-id00617.D = ((id00617.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00617.Q & XXL_1302));
-
-id00615.D = ((id00615.Q & !id00294Q)
-	# (id00601.Q & !id00301QN & id00294Q & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00615.Q & id00601.Q & id00297Q)
-	# (id00615.Q & id00601.Q & id00301QN));
-
-id00616.D = ((id00616.Q & !id00294Q)
-	# (id00601.Q & id00294Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q)
-	# (id00601.Q & id00616.Q & XXL_1301));
-
-id00618.D = ((id00618.Q & !id00294Q)
-	# (id00601.Q & !id00301QN & id00294Q & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
-	# (id00618.Q & id00601.Q & id00298Q)
-	# (id00618.Q & id00601.Q & id00301QN));
-
-id00622.D = ((id00622.Q & id00010Q & XXL_1220)
-	# (id00049Q & XXL_1120 & !id00622.Q & id00010Q & id00620.Q & id00621.Q)
-	# (id00622.Q & id00207Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_2.PIN & !id00007Q));
-
-id00620.D = ((!id00049Q & id00620.Q)
-	# (id00620.Q & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00049Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & l_data_0.PIN)
-	# (id00049Q & !id00620.Q & id00010Q));
-
-id00621.D = ((id00049Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & l_data_1.PIN)
-	# (id00621.Q & !id00620.Q & id00010Q)
-	# (id00621.Q & !id00049Q)
-	# (id00621.Q & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (!id00621.Q & id00049Q & id00620.Q & id00010Q));
-
-id00641.D = ((id00049Q & l_data_7.PIN & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (!id00641.Q & id00049Q & id00010Q)
-	# (id00641.Q & XXL_1242));
-
-id00623.D = ((!id00623.Q & id00010Q & id00049Q & XXL_1120 & id00622.Q & id00620.Q & id00621.Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_3.PIN & !id00007Q)
-	# (id00623.Q & id00207Q)
-	# (id00623.Q & id00010Q & XXL_1212));
-
-id00624.D = ((!id00624.Q & id00049Q & XXL_1120 & id00010Q & id00623.Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00624.Q & id00010Q & !id00623.Q)
-	# (id00624.Q & id00010Q & XXL_1212)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_4.PIN & !id00007Q)
-	# (id00624.Q & id00207Q));
-
-id00644.D = ((!id00644.Q & id00010Q & id00049Q & !id00643.Q & !id00641.Q & !id00642.Q)
-	# (id00049Q & z80_addr_10 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00644.Q & id00010Q & XXL_1209)
-	# (id00644.Q & XXL_1242));
-
-id00642.D = ((id00642.Q & XXL_1242)
-	# (id00010Q & !id00642.Q & !id00641.Q & id00049Q)
-	# (id00049Q & z80_addr_8 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00010Q & id00642.Q & id00641.Q));
-
-id00643.D = ((!id00643.Q & id00010Q & id00049Q & !id00641.Q & !id00642.Q)
-	# (id00049Q & z80_addr_9 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00643.Q & id00010Q & XXL_1218)
-	# (id00643.Q & XXL_1242));
+id00512QN = ((!duplex_in_2 & id00127Q & !id00128Q)
+	# !sh_data_oe_n);
+
+id00601.D = ((id00589.Q & id00601.Q & XXL_1289)
+	# (!id00264Q & id00601.Q)
+	# (id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+
+id00588.D = ((!z80_addr_11 & id00323QN & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q)
+	# (!id00589.Q & id00323QN)
+	# (id00589.Q & id00588.Q & z80_addr_11)
+	# (id00589.Q & id00588.Q & id00127Q));
+
+id00600.D = ((id00589.Q & id00600.Q & XXL_1288)
+	# (!id00264Q & id00600.Q)
+	# (id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+
+id00604.D = ((id00589.Q & id00604.Q & XXL_1291)
+	# (!id00264Q & id00604.Q)
+	# (id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+
+id00602.D = ((id00589.Q & id00602.Q & XXL_1290)
+	# (!id00264Q & id00602.Q)
+	# (id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+
+id00603.D = ((id00589.Q & id00603.Q & id00267Q)
+	# (id00589.Q & id00271QN & id00603.Q)
+	# (!id00264Q & id00603.Q)
+	# (id00264Q & id00589.Q & !id00271QN & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
+
+id00605.D = ((id00589.Q & id00605.Q & XXL_1292)
+	# (!id00264Q & id00605.Q)
+	# (id00264Q & id00589.Q & sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+
+id00606.D = ((id00589.Q & id00606.Q & id00268Q)
+	# (id00589.Q & id00271QN & id00606.Q)
+	# (!id00264Q & id00606.Q)
+	# (id00264Q & id00589.Q & !id00271QN & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & z80_addr_9 & z80_addr_8 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & sh_data_oe_n & !id00007Q));
+
+!id00185Q = (id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00610.Q & id00608.Q & id00609.Q);
+
+id00610.D = ((!id00610.Q & id00010Q & id00177Q & id00608.Q & id00609.Q)
+	# (id00610.Q & !id00177Q)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_2.PIN & !id00007Q)
+	# (id00610.Q & id00010Q & XXL_1209));
+
+id00608.D = ((id00177Q & !id00608.Q & id00010Q)
+	# (!id00177Q & id00608.Q)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_0.PIN & !id00007Q));
+
+id00609.D = ((id00609.Q & id00010Q & !id00608.Q)
+	# (id00177Q & !id00609.Q & id00010Q & id00608.Q)
+	# (!id00177Q & id00609.Q)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_1.PIN & !id00007Q));
+
+id00613.D = ((id00177Q & !id00613.Q & id00010Q & id00608.Q & id00609.Q & id00610.Q & id00611.Q & id00612.Q)
+	# (id00613.Q & id00010Q & XXL_1293)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_5.PIN & !id00007Q)
+	# (!id00177Q & id00613.Q));
+
+id00611.D = ((id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_3.PIN & !id00007Q)
+	# (id00611.Q & !id00177Q)
+	# (id00611.Q & id00010Q & XXL_1201)
+	# (!id00611.Q & id00010Q & id00177Q & id00610.Q & id00608.Q & id00609.Q));
+
+id00612.D = ((id00612.Q & id00010Q & !id00611.Q)
+	# (id00612.Q & id00010Q & XXL_1201)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_4.PIN & !id00007Q)
+	# (!id00177Q & id00612.Q)
+	# (id00177Q & !id00612.Q & id00010Q & id00611.Q & id00610.Q & id00608.Q & id00609.Q));
+
+id00636.D = ((duplex_in_3 & id00636.Q & id00607.Q)
+	# (id00018QN & !id00636.Q & id00010Q & XXL_1122)
+	# (id00636.Q & id00010Q & !XXL_1122)
+	# (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & !z80_addr_15 & id00636.Q)
+	# (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & z80_addr_15 & id00018QN & l_data_7.PIN));
+
+id00614.D = ((id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_6.PIN & !id00007Q)
+	# (id00614.Q & !id00177Q)
+	# (!id00614.Q & id00010Q & id00177Q & id00611.Q & id00612.Q & id00613.Q & id00610.Q & id00608.Q & id00609.Q)
+	# (id00614.Q & id00010Q & XXL_1116));
+
+id00615.D = ((id00615.Q & id00010Q & !id00614.Q)
+	# (id00615.Q & id00010Q & XXL_1116)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_7.PIN & !id00007Q)
+	# (!id00177Q & id00615.Q)
+	# (id00177Q & !id00615.Q & id00010Q & id00614.Q & id00611.Q & id00612.Q & id00613.Q & id00610.Q & id00608.Q & id00609.Q));
 
-id00645.D = ((id00645.Q & id00010Q & XXL_1209)
-	# (id00645.Q & XXL_1242)
-	# (!id00645.Q & id00010Q & !id00644.Q & id00049Q & !id00643.Q & !id00641.Q & !id00642.Q)
-	# (id00049Q & z80_addr_11 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00645.Q & id00010Q & id00644.Q));
+id00639.D = ((id00639.Q & !id00027QN)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00639.Q & id00010Q & XXL_1200)
+	# (!id00639.Q & id00010Q & id00027QN & !id00638.Q & !id00636.Q & !id00637.Q));
 
-id00646.D = ((!id00646.Q & id00049Q & !id00644.Q & !id00645.Q & id00010Q & !id00643.Q & !id00641.Q & !id00642.Q)
-	# (id00049Q & z80_addr_12 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00646.Q & FB_1320 & FB_1321));
+id00637.D = ((id00637.Q & id00010Q & id00636.Q)
+	# (!id00027QN & id00637.Q)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_8 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00027QN & !id00637.Q & id00010Q & !id00636.Q));
 
-!ram_ce1_n = (id00531QN & !XXL_1176 & FB_1322 & FB_1323);
+id00638.D = ((id00638.Q & !id00027QN)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_9 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00638.Q & id00010Q & XXL_1207)
+	# (!id00638.Q & id00010Q & id00027QN & !id00636.Q & !id00637.Q));
 
-!ram_ce0_n = (id00531QN & XXL_1176 & FB_1322 & FB_1323);
+id00640.D = ((id00640.Q & id00010Q & id00639.Q)
+	# (id00640.Q & id00010Q & XXL_1200)
+	# (!id00027QN & id00640.Q)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00027QN & !id00640.Q & id00010Q & !id00639.Q & !id00638.Q & !id00636.Q & !id00637.Q));
 
-id00647.D = ((id00049Q & z80_addr_13 & !duplex_in_3 & !duplex_in_1 & z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (!id00647.Q & id00049Q & id00010Q & !id00646.Q & !id00644.Q & !id00645.Q & !id00643.Q & !id00641.Q & !id00642.Q)
-	# (id00647.Q & id00010Q & id00646.Q)
-	# (id00647.Q & FB_1320 & FB_1321));
+id00641.D = ((id00641.Q & !id00027QN)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_12 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00641.Q & id00010Q & XXL_1208)
+	# (!id00641.Q & id00010Q & id00027QN & !id00639.Q & !id00640.Q & !id00638.Q & !id00636.Q & !id00637.Q));
 
-!id00215Q = (id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00622.Q & id00620.Q & id00621.Q);
+!ram_ce0_n = ((id00512QN & sh_data_oe_n & !z80_addr_11 & id00470QN)
+	# (id00512QN & !sh_data_oe_n & !id00619.Q & id00476QN));
 
-!z80_data_oe_n = (!id00637.Q & !id00638.Q & sh_data_oe_n & id00158QN);
+!ram_ce1_n = ((id00512QN & sh_data_oe_n & z80_addr_11 & id00470QN)
+	# (id00512QN & !sh_data_oe_n & id00619.Q & id00476QN));
 
-id00627.D = ((id00627.Q & FB_1318 & FB_1319)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_7.PIN & !id00007Q)
-	# (!id00627.Q & id00010Q & id00626.Q & id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00627.Q & id00010Q & !id00626.Q));
+id00642.D = ((id00642.Q & id00010Q & id00641.Q)
+	# (id00642.Q & id00010Q & XXL_1208)
+	# (!id00027QN & id00642.Q)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_13 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00027QN & !id00642.Q & id00010Q & !id00641.Q & !id00639.Q & !id00640.Q & !id00638.Q & !id00636.Q & !id00637.Q));
 
-id00625.D = ((id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00010Q & id00212Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_5.PIN & !id00007Q)
-	# (id00625.Q & FB_1318 & FB_1319));
+!z80_data_oe_n = (!id00625.Q & !id00626.Q & sh_data_oe_n & id00130QN);
 
-id00626.D = ((!id00626.Q & id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00010Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & l_data_6.PIN & !id00007Q)
-	# (id00626.Q & FB_1318 & FB_1319));
+id00616.D = ((id00177Q & !duplex_in_3 & !duplex_in_1 & z80_addr_8 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00616.Q & FB_1307 & FB_1308)
+	# (id00177Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00010Q & id00185Q & id00610.Q & id00608.Q & id00609.Q));
 
-!ram_oe_n = ((!sh_data_oe_n & !sh_rw_n.Q & XXL_1121)
-	# (sh_data_oe_n & !duplex_in_0 & !id00637.Q & !id00638.Q & id00158QN));
+id00524QN = ((!sh_data_oe_n & sh_rw_n.Q & XXL_1274)
+	# (sh_data_oe_n & !duplex_in_1 & !id00625.Q & !id00626.Q & id00130QN));
 
-id00648.D = ((!duplex_in_3 & !duplex_in_1 & z80_addr_15 & z80_addr_14 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & id00049Q)
-	# (id00648.Q & XXL_1242)
-	# (!id00648.Q & id00010Q & id00049Q & !id00641.Q & !id00642.Q & !id00643.Q & !id00644.Q & !id00645.Q & !id00646.Q & !id00647.Q)
-	# (id00648.Q & id00010Q & XXL_1292));
+!ram_oe_n = ((sh_data_oe_n & !duplex_in_0 & !id00625.Q & !id00626.Q & id00130QN)
+	# (!sh_data_oe_n & !sh_rw_n.Q & XXL_1274));
 
-id00637.D = ((!id00637.Q & !id00638.Q & !sh_data_oe_n & !sh_en_n.PIN & !id00158QN)
-	# (!id00637.Q & id00638.Q & sh_en_n.PIN)
-	# (!id00637.Q & id00638.Q & sh_data_oe_n));
+id00626.D = ((id00625.Q & !id00626.Q)
+	# (!id00625.Q & id00626.Q));
 
-id00638.D = ((id00637.Q & !id00638.Q)
-	# (!id00637.Q & id00638.Q));
+id00625.D = ((!id00625.Q & id00626.Q & sh_data_oe_n)
+	# (!id00625.Q & !id00626.Q & !sh_en_n.PIN & !sh_data_oe_n & !id00130QN)
+	# (!id00625.Q & id00626.Q & sh_en_n.PIN));
 
-id00628.D = ((id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00010Q & id00215Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & z80_addr_8 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00628.Q & FB_1316 & FB_1317));
+id00643.D = ((id00027QN & !id00643.Q & id00010Q & !id00636.Q & !id00637.Q & !id00638.Q & !id00639.Q & !id00640.Q & !id00641.Q & !id00642.Q)
+	# (id00643.Q & id00010Q & XXL_1282)
+	# (id00027QN & !duplex_in_3 & !duplex_in_1 & z80_addr_14 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (!id00027QN & id00643.Q));
 
-rom_ce_n = ((FB_1322 & FB_1323)
-	# (sh_data_oe_n & FB_1327)
-	# XXL_1233);
+id00617.D = ((id00177Q & !duplex_in_3 & !duplex_in_1 & z80_addr_9 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (id00617.Q & FB_1307 & FB_1308)
+	# (!id00617.Q & id00177Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00010Q & id00610.Q & id00608.Q & id00609.Q));
 
-!ram_we_n = (XXL_1233 & FB_1322 & FB_1323);
+!rom_ce_n = ((id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00512QN & !id00524QN & sh_data_oe_n & !duplex_in_2 & !z80_addr_15)
+	# (id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & id00512QN & !id00524QN & !sh_data_oe_n & !id00631.Q & !id00632.Q & !id00633.Q & !id00634.Q & !id00635.Q));
 
-id00629.D = ((!id00629.Q & id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00010Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & z80_addr_9 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (id00629.Q & FB_1316 & FB_1317));
+!ram_we_n = ((id00524QN & sh_data_oe_n & id00470QN)
+	# (id00524QN & !sh_data_oe_n & id00476QN));
 
-id00630.D = ((id00630.Q & FB_1316 & FB_1317)
-	# (id00049Q & XXL_1120 & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
-	# (!id00630.Q & id00010Q & id00629.Q & id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00622.Q & id00620.Q & id00621.Q)
-	# (id00630.Q & id00010Q & !id00629.Q));
+id00618.D = ((id00177Q & !duplex_in_3 & !duplex_in_1 & z80_addr_10 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (!id00618.Q & id00177Q & id00010Q & id00617.Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00610.Q & id00608.Q & id00609.Q)
+	# (id00618.Q & id00010Q & !id00617.Q)
+	# (id00618.Q & FB_1307 & FB_1308));
 
-id00631.D = ((!duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & id00049Q & XXL_1120)
-	# (id00631.Q & id00207Q)
-	# (!id00631.Q & id00010Q & id00049Q & XXL_1120 & id00620.Q & id00621.Q & id00622.Q & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00629.Q & id00630.Q)
-	# (id00631.Q & id00010Q & XXL_1291));
+id00619.D = ((id00177Q & !id00619.Q & id00010Q & id00608.Q & id00609.Q & id00610.Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00617.Q & id00618.Q)
+	# (id00619.Q & id00010Q & XXL_1281)
+	# (id00177Q & !duplex_in_3 & !duplex_in_1 & z80_addr_11 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q)
+	# (!id00177Q & id00619.Q));
 
-Com_Ctrl_1115 = ((id00649.Q & !sh_data_oe_n & id00636.Q)
-	# (id00649.Q & !sh_data_oe_n & id00634.Q)
-	# (id00649.Q & !sh_data_oe_n & id00635.Q));
+!Com_Ctrl_1109 = (sh_data_oe_n & id00127Q & id00470QN);
 
-!XXL_1120 = (z80_addr_15 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
+!XXL_1112 = (z80_addr_15 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
 
-XXL_1121 = ((!id00649.Q & !sh_stb_n.PIN)
-	# (id00649.Q & !id00634.Q & id00635.Q & !id00636.Q));
+!XXL_1116 = (id00611.Q & id00612.Q & id00613.Q & id00610.Q & id00608.Q & id00609.Q);
 
-XXL_1135 = (!sh_data_oe_n
-	# (!duplex_in_2 & !z80_addr_15 & id00600.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q)
-	# (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & !id00007Q));
+XXL_1122 = ((!id00644.Q & id00628.Q & !sh_inc_n.PIN)
+	# (id00644.Q & id00623.Q & id00622.Q & !id00624.Q));
 
-XXL_1163 = ((!id00644.Q & !id00645.Q & !id00646.Q & !id00647.Q & !id00648.Q & !id00643.Q & !id00641.Q & !id00642.Q)
-	# id00634.Q);
+!XXL_1184 = (!z80_addr_15 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
 
-XXL_1176 = ((sh_data_oe_n & !z80_addr_11)
-	# (!sh_data_oe_n & !id00631.Q));
+!XXL_1200 = (!id00638.Q & !id00636.Q & !id00637.Q);
 
-!XXL_1194 = (!z80_addr_15 & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
+!XXL_1201 = (id00610.Q & id00608.Q & id00609.Q);
 
-!XXL_1209 = (!id00643.Q & !id00641.Q & !id00642.Q);
+!XXL_1202 = (!id00622.Q & !id00623.Q & !id00624.Q);
 
-!XXL_1212 = (id00622.Q & id00620.Q & id00621.Q);
+!XXL_1207 = (!id00636.Q & !id00637.Q);
 
-!XXL_1216 = (id00634.Q & !id00636.Q);
+!XXL_1208 = (!id00640.Q & !id00639.Q & !id00638.Q & !id00636.Q & !id00637.Q);
 
-!XXL_1218 = (!id00641.Q & !id00642.Q);
+!XXL_1209 = (id00608.Q & id00609.Q);
 
-!XXL_1220 = (id00620.Q & id00621.Q);
+XXL_1274 = ((id00644.Q & !id00622.Q & id00623.Q & !id00624.Q)
+	# (!id00644.Q & !sh_stb_n.PIN));
 
-XXL_1233 = ((!sh_data_oe_n & sh_rw_n.Q & XXL_1121)
-	# (sh_data_oe_n & !duplex_in_1 & !id00637.Q & !id00638.Q & id00158QN));
+SF1278 = ((z80_addr_13 & !z80_addr_12 & !id00601.Q)
+	# FB_1306
+	# (!z80_addr_13 & z80_addr_12 & !id00600.Q)
+	# (!z80_addr_13 & !z80_addr_12 & !id00599.Q)
+	# (z80_addr_13 & z80_addr_12 & !id00602.Q));
 
-!XXL_1242 = (id00049Q & XXL_1289);
+SF1279 = ((z80_addr_14 & z80_addr_13 & !z80_addr_12 & !id00597.Q)
+	# XXL_1315
+	# (!z80_addr_14 & z80_addr_13 & z80_addr_12 & !id00594.Q)
+	# (!z80_addr_14 & z80_addr_13 & !z80_addr_12 & !id00593.Q)
+	# z80_addr_15);
 
-XXL_1281 = ((!id00649.Q & id00640.Q & !sh_inc_n.PIN)
-	# (id00649.Q & id00635.Q & id00634.Q & !id00636.Q));
+!SF1280 = (!duplex_in_3 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
 
-!XXL_1289 = (!duplex_in_3 & !duplex_in_1 & !z80_addr_15 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
+!XXL_1281 = (id00617.Q & id00618.Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00610.Q & id00608.Q & id00609.Q);
 
-!SF1290 = (!duplex_in_3 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
+!XXL_1282 = (!id00641.Q & !id00642.Q & !id00640.Q & !id00639.Q & !id00638.Q & !id00636.Q & !id00637.Q);
 
-!XXL_1291 = (id00629.Q & id00630.Q & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00622.Q & id00620.Q & id00621.Q);
+!XXL_1283 = (!z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8);
 
-!XXL_1292 = (!id00646.Q & !id00647.Q & !id00644.Q & !id00645.Q & !id00643.Q & !id00641.Q & !id00642.Q);
+!XXL_1284 = (!z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8);
 
-!XXL_1293 = (!z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8);
+!XXL_1285 = (!z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8);
 
-!XXL_1294 = (!z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8);
+!XXL_1286 = (!z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8);
 
-!XXL_1295 = (!z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8);
+!XXL_1287 = (!z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8);
 
-!XXL_1296 = (!z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8);
+!XXL_1288 = (z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8);
 
-!XXL_1297 = (!z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8);
+!XXL_1289 = (z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8);
 
-!XXL_1298 = (z80_addr_11 & !z80_addr_10 & !z80_addr_9 & z80_addr_8);
+!XXL_1290 = (z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8);
 
-!XXL_1299 = (z80_addr_11 & !z80_addr_10 & z80_addr_9 & !z80_addr_8);
+!XXL_1291 = (z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8);
 
-!XXL_1300 = (z80_addr_11 & !z80_addr_10 & z80_addr_9 & z80_addr_8);
+!XXL_1292 = (z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8);
 
-!XXL_1301 = (z80_addr_11 & z80_addr_10 & !z80_addr_9 & z80_addr_8);
+!XXL_1293 = (id00611.Q & id00612.Q & id00610.Q & id00608.Q & id00609.Q);
 
-!XXL_1302 = (z80_addr_11 & z80_addr_10 & z80_addr_9 & !z80_addr_8);
+!FB_1294 = (sh_data_oe_n & id00470QN & z80_addr_12 & id00127Q);
 
-!XXL_1303 = (!id00633.Q & id00636.Q & sh_busy_n.PIN);
+!FB_1295 = (sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & !duplex_in_2 & !z80_addr_15 & z80_addr_11);
 
-!FB_1304 = (sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_1.PIN & !id00007Q & FB_1322 & FB_1323);
+!FB_1296 = (FB_1294 & FB_1295);
 
-!FB_1305 = (sh_data_oe_n & id00506QN & z80_addr_12);
+!FB_1297 = (sh_data_oe_n & id00470QN & z80_addr_13 & id00127Q);
 
-!FB_1306 = (FB_1304 & FB_1305);
+!FB_1298 = (sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & !duplex_in_2 & !z80_addr_15 & z80_addr_12);
 
-!FB_1307 = (sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_2.PIN & !id00007Q & FB_1322 & FB_1323);
+!FB_1299 = (FB_1297 & FB_1298);
 
-!FB_1308 = (sh_data_oe_n & id00506QN & z80_addr_13);
+!FB_1300 = (sh_data_oe_n & id00470QN & z80_addr_14 & id00127Q);
 
-!FB_1309 = (FB_1307 & FB_1308);
+!FB_1301 = (sh_data_oe_n & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & !duplex_in_2 & !z80_addr_15 & z80_addr_13);
 
-!FB_1310 = (sh_data_oe_n & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & !z80_addr_6 & z80_addr_5 & z80_addr_4 & l_data_3.PIN & !id00007Q & FB_1322 & FB_1323);
+!FB_1302 = (FB_1300 & FB_1301);
 
-!FB_1311 = (sh_data_oe_n & id00506QN & z80_addr_14);
+!FB_1303 = (sh_data_oe_n & id00470QN & z80_addr_15 & id00127Q);
 
-!FB_1312 = (FB_1310 & FB_1311);
+!FB_1304 = (sh_data_oe_n & !z80_addr_15 & id00588.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & !duplex_in_2 & z80_addr_14);
 
-!FB_1313 = (id00640.Q & id00649.Q & id00635.Q & id00636.Q);
+!FB_1305 = (FB_1303 & FB_1304);
 
-!FB_1314 = (id00640.Q & id00649.Q & !id00634.Q);
+!FB_1306 = (!z80_addr_14 & z80_addr_15);
 
-!FB_1315 = (FB_1313 & FB_1314);
+!FB_1307 = (id00177Q & id00611.Q & id00612.Q & id00613.Q & id00614.Q & id00615.Q & id00616.Q & id00610.Q & id00608.Q & id00609.Q);
 
-!FB_1316 = (id00049Q & XXL_1120 & id00623.Q & id00624.Q & id00625.Q & id00626.Q & id00627.Q & id00628.Q & id00622.Q & id00620.Q & id00621.Q);
+!FB_1308 = (id00177Q & !duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q);
 
-!FB_1317 = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & id00049Q & XXL_1120);
+!FB_1309 = (id00623.Q & id00644.Q & id00622.Q);
 
-!FB_1318 = (id00623.Q & id00624.Q & id00625.Q & id00622.Q & id00620.Q & id00621.Q & id00049Q & XXL_1120);
+!FB_1310 = (id00623.Q & id00644.Q & id00624.Q);
 
-!FB_1319 = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & id00049Q & XXL_1120);
+!FB_1311 = (!id00623.Q & !id00622.Q & !id00624.Q);
 
-!FB_1320 = (!id00644.Q & !id00645.Q & !id00643.Q & !id00641.Q & !id00642.Q & id00049Q & XXL_1289);
+!FB_1312 = (FB_1309 & FB_1310 & FB_1311);
 
-!FB_1321 = (!duplex_in_3 & !duplex_in_1 & !z80_addr_7 & z80_addr_6 & !z80_addr_5 & !z80_addr_4 & !id00007Q & id00049Q & XXL_1289);
-
-!FB_1322 = (!sh_data_oe_n & id00600.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q & !id00657.Q & !id00658.Q & !id00659.Q & !id00660.Q & !id00661.Q);
-
-!FB_1323 = (sh_data_oe_n & !duplex_in_2 & !z80_addr_15 & id00600.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q);
-
-!FB_1324 = (!duplex_in_3 & !duplex_in_2 & !duplex_in_1 & !duplex_in_0 & !reset_n & !id00601.Q);
-
-!FB_1325 = (reset_n & !id00601.Q & !l_data_0.Q & !l_data_1.Q & !l_data_2.Q & !l_data_3.Q);
-
-!FB_1327 = (!duplex_in_2 & id00155Q & !XXL_1329 & !XXL_1330 & !XXL_1331 & !XXL_1332);
-
-XXL_1328 = ((z80_addr_2 & !l_data_2.Q)
-	# (!z80_addr_3 & l_data_3.Q)
-	# (z80_addr_3 & !l_data_3.Q)
+XXL_1313 = ((z80_addr_3 & !l_data_3.Q)
 	# (!z80_addr_0 & l_data_0.Q)
-	# (!z80_addr_2 & l_data_2.Q));
+	# (!z80_addr_2 & l_data_2.Q)
+	# (z80_addr_2 & !l_data_2.Q)
+	# (!z80_addr_3 & l_data_3.Q));
 
-XXL_1329 = ((id00155Q & z80_addr_15 & z80_addr_14 & !z80_addr_13 & z80_addr_12 & SF1290 & !id00616.Q)
-	# (id00155Q & z80_addr_15 & z80_addr_14 & !z80_addr_13 & !z80_addr_12 & SF1290 & !id00615.Q)
-	# (id00155Q & z80_addr_15 & !z80_addr_14 & !z80_addr_13 & z80_addr_12 & SF1290 & !id00612.Q)
-	# (id00155Q & z80_addr_15 & !z80_addr_14 & !z80_addr_13 & !z80_addr_12 & SF1290 & !id00611.Q)
-	# (id00155Q & z80_addr_15 & z80_addr_14 & z80_addr_13 & z80_addr_12 & !id00618.Q & SF1290));
+XXL_1314 = ((id00127Q & SF1280 & !id00589.Q)
+	# (id00127Q & SF1278 & SF1279 & SF1280 & !z80_addr_13 & z80_addr_12 & !id00604.Q)
+	# (id00127Q & SF1278 & SF1279 & SF1280 & !z80_addr_14)
+	# (id00127Q & SF1278 & SF1279 & SF1280 & z80_addr_13 & !z80_addr_12 & !id00605.Q)
+	# (id00127Q & SF1278 & SF1279 & SF1280 & z80_addr_13 & z80_addr_12 & !id00606.Q));
 
-XXL_1330 = ((id00155Q & z80_addr_15 & !z80_addr_14 & z80_addr_13 & z80_addr_12 & SF1290 & !id00614.Q)
-	# (id00155Q & !z80_addr_15 & !z80_addr_14 & !z80_addr_13 & !z80_addr_12 & SF1290 & !id00603.Q)
-	# (id00155Q & !z80_addr_15 & !z80_addr_14 & !z80_addr_13 & z80_addr_12 & SF1290 & !id00604.Q)
-	# (id00155Q & !z80_addr_15 & !z80_addr_14 & z80_addr_13 & z80_addr_12 & SF1290 & !id00606.Q)
-	# (id00155Q & z80_addr_15 & !z80_addr_14 & z80_addr_13 & !z80_addr_12 & !id00613.Q & SF1290));
-
-XXL_1331 = ((id00155Q & !z80_addr_15 & z80_addr_14 & !z80_addr_13 & !z80_addr_12 & SF1290 & !id00607.Q)
-	# (id00155Q & !z80_addr_15 & z80_addr_14 & !z80_addr_13 & z80_addr_12 & SF1290 & !id00608.Q)
-	# (id00155Q & !z80_addr_15 & z80_addr_14 & z80_addr_13 & z80_addr_12 & SF1290 & !id00610.Q)
-	# (id00155Q & !z80_addr_15 & z80_addr_14 & z80_addr_13 & !z80_addr_12 & SF1290 & !id00609.Q)
-	# (id00155Q & !z80_addr_15 & !z80_addr_14 & z80_addr_13 & !z80_addr_12 & !id00605.Q & SF1290));
-
-XXL_1332 = ((id00155Q & SF1290 & !id00601.Q)
-	# (id00155Q & SF1290 & z80_addr_15 & z80_addr_14 & z80_addr_13 & !z80_addr_12 & !id00617.Q)
-	# (id00155Q & duplex_in_2 & SF1290));
+XXL_1315 = ((!z80_addr_14 & !z80_addr_13 & z80_addr_12 & !id00592.Q)
+	# (!z80_addr_14 & !z80_addr_13 & !z80_addr_12 & !id00591.Q)
+	# (z80_addr_14 & z80_addr_13 & z80_addr_12 & !id00598.Q)
+	# (z80_addr_14 & !z80_addr_13 & z80_addr_12 & !id00596.Q)
+	# (z80_addr_14 & !z80_addr_13 & !z80_addr_12 & !id00595.Q));
 
 id00003.C = mclk;
 
 id00003.AP = !reset_n;
 
-id00601.C = mclk;
+id00589.C = mclk;
 
-id00601.AR = !reset_n;
-
-l_data_1.C = mclk;
-
-l_data_1.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+id00589.AR = !reset_n;
 
 l_data_0.C = mclk;
 
-l_data_0.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
-
-l_data_3.C = mclk;
-
-l_data_3.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_0.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
 l_data_2.C = mclk;
 
-l_data_2.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_2.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-l_data_5.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_1.C = mclk;
 
-l_data_4.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_1.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-l_data_6.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_3.C = mclk;
 
-sh_busy_n.OE = (!sh_data_oe_n & id00158QN);
+l_data_3.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-l_data_7.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00639.Q);
+l_data_4.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-sh_en_n.OE = Com_Ctrl_1115;
+l_data_6.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-sh_done_n.OE = (id00634.Q & !id00635.Q & id00636.Q & id00649.Q & !sh_data_oe_n);
+l_data_5.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-sh_inc_n.OE = (id00635.Q & id00649.Q & !sh_data_oe_n & id00634.Q & !id00636.Q);
+sh_busy_n.OE = (!sh_data_oe_n & id00130QN);
 
-z80_int_n.OE = id00639.Q;
+l_data_7.OE = (!duplex_in_3 & z80_iei & !z80_m1_n & id00627.Q);
 
-!z80_wait_n.OE = ((!id00637.Q & !id00638.Q & sh_data_oe_n)
-	# !id00158QN);
+sh_done_n.OE = (id00622.Q & !id00623.Q & id00624.Q & id00644.Q & !sh_data_oe_n);
 
-sh_stb_n.OE = Com_Ctrl_1115;
+sh_inc_n.OE = (id00644.Q & !sh_data_oe_n & id00623.Q & id00622.Q & !id00624.Q);
 
-id00639.C = mclk;
+sh_en_n.OE = (id00644.Q & !sh_data_oe_n & XXL_1202);
 
-id00639.AR = !reset_n;
+z80_int_n.OE = id00627.Q;
 
-id00633.C = mclk;
+!z80_wait_n.OE = ((!id00625.Q & !id00626.Q & sh_data_oe_n)
+	# !id00130QN);
 
-id00633.AR = !reset_n;
+sh_stb_n.OE = (id00644.Q & !sh_data_oe_n & XXL_1202);
 
-id00635.C = mclk;
+id00627.C = mclk;
 
-id00635.AR = !reset_n;
-
-id00634.C = mclk;
-
-id00634.AR = !reset_n;
-
-id00636.C = mclk;
-
-id00636.AR = !reset_n;
-
-id00603.C = mclk;
-
-id00603.AR = !reset_n;
-
-atl_we_n.C = mclk;
-
-atl_we_n.AP = !reset_n;
-
-id00606.C = mclk;
-
-id00606.AR = !reset_n;
-
-id00604.C = mclk;
-
-id00604.AR = !reset_n;
-
-id00605.C = mclk;
-
-id00605.AR = !reset_n;
-
-id00609.C = mclk;
-
-id00609.AR = !reset_n;
-
-id00607.C = mclk;
-
-id00607.AR = !reset_n;
-
-id00608.C = mclk;
-
-id00608.AR = !reset_n;
-
-atl_data_0.OE = XXL_1135;
-
-id00610.C = mclk;
-
-id00610.AR = !reset_n;
-
-id00611.C = mclk;
-
-id00611.AR = !reset_n;
-
-atl_data_3.OE = XXL_1135;
-
-atl_data_1.OE = XXL_1135;
-
-atl_data_2.OE = XXL_1135;
-
-atl_data_6.OE = XXL_1135;
-
-atl_data_4.OE = XXL_1135;
-
-atl_data_5.OE = XXL_1135;
-
-atl_data_7.OE = XXL_1135;
-
-id00632.C = mclk;
-
-id00632.AR = !reset_n;
-
-id00619.C = mclk;
-
-id00619.AR = !reset_n;
-
-sh_rw_n.C = mclk;
-
-sh_rw_n.AR = !reset_n;
-
-sh_rw_n.OE = Com_Ctrl_1115;
-
-id00640.C = mclk;
-
-id00640.AR = !reset_n;
-
-id00649.C = mclk;
-
-id00649.AR = !reset_n;
-
-id00657.C = mclk;
-
-id00657.AR = !reset_n;
-
-id00655.C = mclk;
-
-id00655.AR = !reset_n;
-
-id00656.C = mclk;
-
-id00656.AR = !reset_n;
-
-id00660.C = mclk;
-
-id00660.AR = !reset_n;
-
-id00658.C = mclk;
-
-id00658.AR = !reset_n;
-
-id00659.C = mclk;
-
-id00659.AR = !reset_n;
-
-id00661.C = mclk;
-
-id00661.AR = !reset_n;
-
-id00600.C = mclk;
-
-id00600.AR = !reset_n;
-
-id00614.C = mclk;
-
-id00614.AR = !reset_n;
-
-id00612.C = mclk;
-
-id00612.AR = !reset_n;
-
-id00613.C = mclk;
-
-id00613.AR = !reset_n;
-
-id00617.C = mclk;
-
-id00617.AR = !reset_n;
-
-id00615.C = mclk;
-
-id00615.AR = !reset_n;
-
-id00616.C = mclk;
-
-id00616.AR = !reset_n;
-
-id00618.C = mclk;
-
-id00618.AR = !reset_n;
-
-id00622.C = mclk;
-
-id00622.AR = !reset_n;
-
-id00620.C = mclk;
-
-id00620.AR = !reset_n;
+id00627.AR = !reset_n;
 
 id00621.C = mclk;
 
 id00621.AR = !reset_n;
 
-id00641.C = mclk;
+id00622.C = mclk;
 
-id00641.AR = !reset_n;
+id00622.AR = !reset_n;
 
 id00623.C = mclk;
 
@@ -1620,61 +1204,81 @@ id00624.C = mclk;
 
 id00624.AR = !reset_n;
 
-id00644.C = mclk;
+id00591.C = mclk;
 
-id00644.AR = !reset_n;
+id00591.AR = !reset_n;
 
-id00642.C = mclk;
+atl_we_n.C = mclk;
 
-id00642.AR = !reset_n;
+atl_we_n.AP = !reset_n;
 
-id00643.C = mclk;
+id00594.C = mclk;
 
-id00643.AR = !reset_n;
+id00594.AR = !reset_n;
 
-id00645.C = mclk;
+id00592.C = mclk;
 
-id00645.AR = !reset_n;
+id00592.AR = !reset_n;
 
-id00646.C = mclk;
+id00593.C = mclk;
 
-id00646.AR = !reset_n;
+id00593.AR = !reset_n;
 
-id00647.C = mclk;
+id00597.C = mclk;
 
-id00647.AR = !reset_n;
+id00597.AR = !reset_n;
 
-id00627.C = mclk;
+id00595.C = mclk;
 
-id00627.AR = !reset_n;
+id00595.AR = !reset_n;
 
-id00625.C = mclk;
+id00596.C = mclk;
 
-id00625.AR = !reset_n;
+id00596.AR = !reset_n;
 
-id00626.C = mclk;
+atl_data_0.OE = Com_Ctrl_1109;
 
-id00626.AR = !reset_n;
+id00598.C = mclk;
 
-id00648.C = mclk;
+id00598.AR = !reset_n;
 
-id00648.AR = !reset_n;
+id00599.C = mclk;
 
-id00637.C = mclk;
+id00599.AR = !reset_n;
 
-id00637.AR = !reset_n;
+atl_data_3.OE = Com_Ctrl_1109;
 
-id00638.C = mclk;
+atl_data_1.OE = Com_Ctrl_1109;
 
-id00638.AR = !reset_n;
+atl_data_2.OE = Com_Ctrl_1109;
+
+atl_data_6.OE = Com_Ctrl_1109;
+
+atl_data_4.OE = Com_Ctrl_1109;
+
+atl_data_5.OE = Com_Ctrl_1109;
+
+atl_data_7.OE = Com_Ctrl_1109;
+
+id00607.C = mclk;
+
+id00607.AR = !reset_n;
+
+id00629.C = mclk;
+
+id00629.AR = !reset_n;
+
+id00620.C = mclk;
+
+id00620.AR = !reset_n;
 
 id00628.C = mclk;
 
 id00628.AR = !reset_n;
 
-id00629.C = mclk;
+id00632.C = mclk;
 
-id00629.AR = !reset_n;
+id00632.AR = !reset_n;
 
 id00630.C = mclk;
 
@@ -1684,242 +1288,157 @@ id00631.C = mclk;
 
 id00631.AR = !reset_n;
 
+id00635.C = mclk;
+
+id00635.AR = !reset_n;
+
+id00633.C = mclk;
+
+id00633.AR = !reset_n;
+
+id00634.C = mclk;
+
+id00634.AR = !reset_n;
+
+id00644.C = mclk;
+
+id00644.AR = !reset_n;
+
+sh_rw_n.C = mclk;
+
+sh_rw_n.AR = !reset_n;
+
+sh_rw_n.OE = (id00644.Q & !sh_data_oe_n & XXL_1202);
+
+id00601.C = mclk;
+
+id00601.AR = !reset_n;
+
+id00588.C = mclk;
+
+id00588.AR = !reset_n;
+
+id00600.C = mclk;
+
+id00600.AR = !reset_n;
+
+id00604.C = mclk;
+
+id00604.AR = !reset_n;
+
+id00602.C = mclk;
+
+id00602.AR = !reset_n;
+
+id00603.C = mclk;
+
+id00603.AR = !reset_n;
+
+id00605.C = mclk;
+
+id00605.AR = !reset_n;
+
+id00606.C = mclk;
+
+id00606.AR = !reset_n;
+
+id00610.C = mclk;
+
+id00610.AR = !reset_n;
+
+id00608.C = mclk;
+
+id00608.AR = !reset_n;
+
+id00609.C = mclk;
+
+id00609.AR = !reset_n;
+
+id00613.C = mclk;
+
+id00613.AR = !reset_n;
+
+id00611.C = mclk;
+
+id00611.AR = !reset_n;
+
+id00612.C = mclk;
+
+id00612.AR = !reset_n;
+
+id00636.C = mclk;
+
+id00636.AR = !reset_n;
+
+id00614.C = mclk;
+
+id00614.AR = !reset_n;
+
+id00615.C = mclk;
+
+id00615.AR = !reset_n;
+
+id00639.C = mclk;
+
+id00639.AR = !reset_n;
+
+id00637.C = mclk;
+
+id00637.AR = !reset_n;
+
+id00638.C = mclk;
+
+id00638.AR = !reset_n;
+
+id00640.C = mclk;
+
+id00640.AR = !reset_n;
+
+id00641.C = mclk;
+
+id00641.AR = !reset_n;
+
+id00642.C = mclk;
+
+id00642.AR = !reset_n;
+
+id00616.C = mclk;
+
+id00616.AR = !reset_n;
+
+id00626.C = mclk;
+
+id00626.AR = !reset_n;
+
+id00625.C = mclk;
+
+id00625.AR = !reset_n;
+
+id00643.C = mclk;
+
+id00643.AR = !reset_n;
+
+id00617.C = mclk;
+
+id00617.AR = !reset_n;
+
+id00618.C = mclk;
+
+id00618.AR = !reset_n;
+
+id00619.C = mclk;
+
+id00619.AR = !reset_n;
+
 
 TQFP100 Pin/Node Placement:
 ------------------------------------
-Pin 1  = z80_addr_13; /* MC 3 */
-Pin 2  = duplex_in_3; /* MC 1 */
 Pin 4  = TDI; /* MC 32 */
-Pin 5  = atl_data_3; /* MC 30 */
-Pin 6  = rom_ce_n; /* MC 29 */
-Pin 7  = sh_rw_n; /* MC 27 */
-Pin 8  = atl_we_n; /* MC 25 */
-Pin 9  = atl_ce_n; /* MC 24 */
-Pin 10 = atl_addr_3; /* MC 22 */ 
-Pin 12 = ram_ce1_n; /* MC 21 */ 
-Pin 13 = ram_ce0_n; /* MC 19 */ 
-Pin 14 = atl_oe_n; /* MC 17 */ 
 Pin 15 = TMS; /* MC 48 */ 
-Pin 16 = l_data_0; /* MC 46 */ 
-Pin 17 = l_data_1; /* MC 45 */ 
-Pin 19 = l_data_2; /* MC 43 */ 
-Pin 20 = z80_addr_4; /* MC 41 */ 
-Pin 21 = z80_addr_11; /* MC 40 */ 
-Pin 22 = z80_addr_15; /* MC 38 */ 
-Pin 23 = z80_addr_5; /* MC 37 */ 
-Pin 24 = z80_addr_6; /* MC 35 */ 
-Pin 25 = z80_addr_7; /* MC 33 */ 
-Pin 27 = l_addr_5; /* MC 64 */ 
-Pin 28 = l_addr_6; /* MC 62 */ 
-Pin 29 = duplex_in_2; /* MC 61 */ 
-Pin 30 = z80_m1_n; /* MC 59 */ 
-Pin 31 = z80_iei; /* MC 57 */ 
-Pin 32 = z80_addr_14; /* MC 56 */ 
-Pin 35 = z80_addr_8; /* MC 53 */ 
-Pin 36 = z80_addr_9; /* MC 51 */ 
-Pin 37 = z80_addr_10; /* MC 49 */ 
-Pin 40 = z80_addr_12; /* MC 65 */ 
-Pin 41 = duplex_in_0; /* MC 67 */ 
-Pin 42 = z80_addr_3; /* MC 69 */ 
-Pin 44 = z80_addr_0; /* MC 70 */ 
-Pin 45 = z80_addr_1; /* MC 72 */ 
-Pin 46 = z80_addr_2; /* MC 73 */ 
-Pin 47 = l_addr_11; /* MC 75 */ 
-Pin 48 = atl_addr_0; /* MC 77 */ 
-Pin 49 = atl_addr_1; /* MC 78 */ 
-Pin 50 = atl_addr_2; /* MC 80 */ 
-Pin 52 = z80_ieo; /* MC 81 */ 
-Pin 53 = l_addr_7; /* MC 83 */ 
-Pin 54 = l_addr_4; /* MC 85 */ 
-Pin 55 = l_data_7; /* MC 86 */ 
-Pin 56 = l_data_4; /* MC 88 */ 
-Pin 57 = sh_inc_n; /* MC 89 */ 
-Pin 58 = sh_done_n; /* MC 91 */ 
-Pin 60 = l_data_5; /* MC 93 */ 
-Pin 61 = l_data_6; /* MC 94 */ 
 Pin 62 = TCK; /* MC 96 */ 
-Pin 63 = z80_data_oe_n; /* MC 97 */ 
-Pin 64 = l_addr_8; /* MC 99 */ 
-Pin 65 = l_addr_10; /* MC 101 */ 
-Pin 67 = sh_stb_n; /* MC 102 */ 
-Pin 68 = l_addr_9; /* MC 104 */ 
-Pin 69 = z80_int_n; /* MC 105 */ 
-Pin 70 = l_data_3; /* MC 107 */ 
-Pin 71 = l_dir; /* MC 109 */ 
-Pin 72 = ram_oe_n; /* MC 110 */ 
 Pin 73 = TDO; /* MC 112 */ 
-Pin 76 = l_addr_3; /* MC 115 */ 
-Pin 77 = sh_en_n; /* MC 117 */ 
-Pin 78 = z80_wait_n; /* MC 118 */ 
-Pin 79 = sh_busy_n; /* MC 120 */ 
-Pin 80 = l_addr_2; /* MC 121 */ 
-Pin 81 = sh_c_dir; /* MC 123 */ 
-Pin 83 = l_addr_1; /* MC 125 */ 
-Pin 84 = l_addr_0; /* MC 126 */ 
-Pin 85 = sh_data_oe_n; /* MC 128 */ 
 Pin 87 = mclk;
 Pin 89 = reset_n;
-Pin 90 = duplex_in_1;
-Pin 92 = atl_data_1; /* MC 16 */ 
-Pin 93 = atl_data_2; /* MC 14 */ 
-Pin 94 = atl_data_0; /* MC 13 */ 
-Pin 96 = atl_data_5; /* MC 11 */ 
-Pin 97 = atl_data_4; /* MC  9 */
-Pin 98 = atl_data_6; /* MC  8 */
-Pin 99 = atl_data_7; /* MC  6 */
-Pin 100 = ram_we_n; /* MC  5 */
-PINNODE 301 = FB_1323; /* MC 1 Foldback */
-PINNODE 302 = FB_1322; /* MC 2 Foldback */
-PINNODE 303 = FB_1309; /* MC 3 Foldback */
-PINNODE 304 = FB_1308; /* MC 4 Foldback */
-PINNODE 305 = FB_1307; /* MC 5 Foldback */
-PINNODE 306 = FB_1306; /* MC 6 Foldback */
-PINNODE 307 = FB_1305; /* MC 7 Foldback */
-PINNODE 308 = FB_1304; /* MC 8 Foldback */
-PINNODE 309 = SF1290; /* MC 9 Foldback */
-PINNODE 310 = XXL_1194; /* MC 10 Foldback */
-PINNODE 311 = XXL_1120; /* MC 11 Foldback */
-PINNODE 312 = id00155Q; /* MC 12 Foldback */
-PINNODE 315 = id00506QN; /* MC 15 Foldback */
-PINNODE 317 = FB_1327; /* MC 17 Foldback */
-PINNODE 318 = FB_1325; /* MC 18 Foldback */
-PINNODE 319 = FB_1324; /* MC 19 Foldback */
-PINNODE 320 = FB_2_FB_1323; /* MC 20 Foldback */
-PINNODE 321 = FB_2_FB_1322; /* MC 21 Foldback */
-PINNODE 322 = FB_1312; /* MC 22 Foldback */
-PINNODE 323 = FB_2_XXL_1120; /* MC 23 Foldback */
-PINNODE 324 = FB_1310; /* MC 24 Foldback */
-PINNODE 325 = FB_2_XXL_1194; /* MC 25 Foldback */
-PINNODE 326 = FB_2_id00506QN; /* MC 26 Foldback */
-PINNODE 327 = id00531QN; /* MC 27 Foldback */
-PINNODE 328 = id00156Q; /* MC 28 Foldback */
-PINNODE 329 = FB_2_id00155Q; /* MC 29 Foldback */
-PINNODE 331 = FB_1311; /* MC 31 Foldback */
-PINNODE 332 = id00353QN; /* MC 32 Foldback */
-PINNODE 333 = FB_3_FB_1325; /* MC 33 Foldback */
-PINNODE 334 = FB_3_FB_1324; /* MC 34 Foldback */
-PINNODE 335 = XXL_1300; /* MC 35 Foldback */
-PINNODE 336 = XXL_1298; /* MC 36 Foldback */
-PINNODE 337 = XXL_1297; /* MC 37 Foldback */
-PINNODE 338 = XXL_1296; /* MC 38 Foldback */
-PINNODE 339 = XXL_1295; /* MC 39 Foldback */
-PINNODE 340 = XXL_1293; /* MC 40 Foldback */
-PINNODE 341 = XXL_1294; /* MC 41 Foldback */
-PINNODE 342 = FB_3_id00353QN; /* MC 42 Foldback */
-PINNODE 343 = id00299Q; /* MC 43 Foldback */
-PINNODE 345 = id00298Q; /* MC 45 Foldback */
-PINNODE 346 = id00297Q; /* MC 46 Foldback */
-PINNODE 349 = FB_1319; /* MC 49 Foldback */
-PINNODE 350 = FB_1318; /* MC 50 Foldback */
-PINNODE 352 = FB_1316; /* MC 52 Foldback */
-PINNODE 353 = XXL_1291; /* MC 53 Foldback */
-PINNODE 354 = FB_4_XXL_1120; /* MC 54 Foldback */
-PINNODE 355 = id00207Q; /* MC 55 Foldback */
-PINNODE 356 = XXL_1212; /* MC 56 Foldback */
-PINNODE 357 = XXL_1220; /* MC 57 Foldback */
-PINNODE 358 = XXL_1289; /* MC 58 Foldback */
-PINNODE 359 = id00215Q; /* MC 59 Foldback */
-PINNODE 360 = FB_1317; /* MC 60 Foldback */
-PINNODE 361 = XXL_1242; /* MC 61 Foldback */
-PINNODE 362 = id00212Q; /* MC 62 Foldback */
-PINNODE 364 = id00010Q; /* MC 64 Foldback */
-PINNODE 366 = FB_1320; /* MC 66 Foldback */
-PINNODE 367 = XXL_1301; /* MC 67 Foldback */
-PINNODE 368 = XXL_1299; /* MC 68 Foldback */
-PINNODE 369 = XXL_1292; /* MC 69 Foldback */
-PINNODE 370 = FB_5_SF1290; /* MC 70 Foldback */
-PINNODE 372 = FB_5_XXL_1242; /* MC 72 Foldback */
-PINNODE 373 = XXL_1218; /* MC 73 Foldback */
-PINNODE 374 = FB_1321; /* MC 74 Foldback */
-PINNODE 375 = XXL_1209; /* MC 75 Foldback */
-PINNODE 376 = FB_5_XXL_1289; /* MC 76 Foldback */
-PINNODE 377 = FB_5_XXL_1194; /* MC 77 Foldback */
-PINNODE 378 = FB_5_id00155Q; /* MC 78 Foldback */
-PINNODE 380 = FB_5_id00010Q; /* MC 80 Foldback */
-PINNODE 382 = FB_6_SF1290; /* MC 82 Foldback */
-PINNODE 383 = FB_6_id00299Q; /* MC 83 Foldback */
-PINNODE 384 = FB_1313; /* MC 84 Foldback */
-PINNODE 385 = FB_6_id00155Q; /* MC 85 Foldback */
-PINNODE 388 = FB_1315; /* MC 88 Foldback */
-PINNODE 389 = FB_1314; /* MC 89 Foldback */
-PINNODE 391 = XXL_1302; /* MC 91 Foldback */
-PINNODE 400 = XXL_1216; /* MC 100 Foldback */
-PINNODE 407 = XXL_1303; /* MC 107 Foldback */
-PINNODE 601 = id00661; /* MC 1 Feedback */
-PINNODE 602 = id00660; /* MC 2 Feedback */
-PINNODE 603 = id00659; /* MC 3 Feedback */
-PINNODE 604 = id00656; /* MC 4 Feedback */
-PINNODE 607 = id00657; /* MC 7 Feedback */
-PINNODE 610 = id00655; /* MC 10 Feedback */
-PINNODE 612 = id00632; /* MC 12 Feedback */
-PINNODE 615 = XXL_1332; /* MC 15 Feedback */
-PINNODE 618 = id00601; /* MC 18 Feedback */
-PINNODE 620 = id00294Q; /* MC 20 Feedback */
-PINNODE 623 = id00619; /* MC 23 Feedback */
-PINNODE 626 = XXL_1135; /* MC 26 Feedback */
-PINNODE 628 = id00658; /* MC 28 Feedback */
-PINNODE 631 = id00003; /* MC 31 Feedback */
-PINNODE 632 = id00600; /* MC 32 Feedback */
-PINNODE 633 = id00612; /* MC 33 Feedback */
-PINNODE 634 = id00606; /* MC 34 Feedback */
-PINNODE 635 = id00614; /* MC 35 Feedback */
-PINNODE 636 = id00609; /* MC 36 Feedback */
-PINNODE 637 = id00618; /* MC 37 Feedback */
-PINNODE 638 = id00611; /* MC 38 Feedback */
-PINNODE 639 = id00605; /* MC 39 Feedback */
-PINNODE 640 = id00608; /* MC 40 Feedback */
-PINNODE 641 = id00615; /* MC 41 Feedback */
-PINNODE 642 = id00604; /* MC 42 Feedback */
-PINNODE 644 = id00607; /* MC 44 Feedback */
-PINNODE 647 = id00610; /* MC 47 Feedback */
-PINNODE 648 = id00603; /* MC 48 Feedback */
-PINNODE 649 = id00641; /* MC 49 Feedback */
-PINNODE 650 = id00623; /* MC 50 Feedback */
-PINNODE 651 = id00621; /* MC 51 Feedback */
-PINNODE 652 = id00627; /* MC 52 Feedback */
-PINNODE 653 = id00626; /* MC 53 Feedback */
-PINNODE 654 = id00631; /* MC 54 Feedback */
-PINNODE 655 = id00622; /* MC 55 Feedback */
-PINNODE 656 = id00620; /* MC 56 Feedback */
-PINNODE 657 = id00629; /* MC 57 Feedback */
-PINNODE 658 = id00628; /* MC 58 Feedback */
-PINNODE 659 = id00642; /* MC 59 Feedback */
-PINNODE 660 = id00625; /* MC 60 Feedback */
-PINNODE 661 = id00630; /* MC 61 Feedback */
-PINNODE 663 = id00624; /* MC 63 Feedback */
-PINNODE 665 = XXL_1329; /* MC 65 Feedback */
-PINNODE 666 = id00644; /* MC 66 Feedback */
-PINNODE 667 = id00649; /* MC 67 Feedback */
-PINNODE 668 = id00648; /* MC 68 Feedback */
-PINNODE 669 = id00616; /* MC 69 Feedback */
-PINNODE 670 = id00613; /* MC 70 Feedback */
-PINNODE 671 = XXL_1330; /* MC 71 Feedback */
-PINNODE 672 = id00646; /* MC 72 Feedback */
-PINNODE 673 = id00643; /* MC 73 Feedback */
-PINNODE 674 = XXL_1163; /* MC 74 Feedback */
-PINNODE 676 = id00647; /* MC 76 Feedback */
-PINNODE 679 = id00645; /* MC 79 Feedback */
-PINNODE 682 = id00617; /* MC 82 Feedback */
-PINNODE 684 = Com_Ctrl_1115; /* MC 84 Feedback */
-PINNODE 687 = id00049Q; /* MC 87 Feedback */
-PINNODE 690 = id00301QN; /* MC 90 Feedback */
-PINNODE 692 = XXL_1281; /* MC 92 Feedback */
-PINNODE 695 = id00640; /* MC 95 Feedback */
-PINNODE 696 = XXL_1331; /* MC 96 Feedback */
-PINNODE 698 = XXL_1233; /* MC 98 Feedback */
-PINNODE 700 = id00639; /* MC 100 Feedback */
-PINNODE 703 = id00634; /* MC 103 Feedback */
-PINNODE 706 = id00633; /* MC 106 Feedback */
-PINNODE 708 = id00636; /* MC 108 Feedback */
-PINNODE 711 = id00635; /* MC 111 Feedback */
-PINNODE 712 = id00637; /* MC 112 Feedback */
-PINNODE 713 = id00638; /* MC 113 Feedback */
-PINNODE 714 = id00158QN; /* MC 114 Feedback */
-PINNODE 716 = XXL_1121; /* MC 116 Feedback */
-PINNODE 719 = XXL_1176; /* MC 119 Feedback */
-PINNODE 722 = z80_wait_n.OE; /* MC 122 Feedback */
-PINNODE 724 = id00007Q; /* MC 124 Feedback */
-PINNODE 727 = XXL_1328; /* MC 127 Feedback */
 
 ** Resource Usage **
 
@@ -1946,162 +1465,162 @@ SO Pin Options Field = Summary of Allocations.
 |__Slew [s,f]         ==  Output Slew/Drive rate, s = slow/low, f = fast/hi drive.
 
 
-MCell Pin# Oe   PinDrive      DCERP  FBDrive       DCERP  Foldback       CascadeOut     TotPT SO
-MC1   2    --   duplex_in_3   INPUT  id00661       Dg-g-  FB_1323        --             3     f- 
-MC2   0         --                   id00660       Dg-g-  FB_1322        --             3     f- 
-MC3   1    --   z80_addr_13   INPUT  id00659       Dg-g-  FB_1309        --             3     f- 
-MC4   0         --                   id00656       Dg-g-  FB_1308        --             3     f- 
-MC5   100  on   ram_we_n      C----  --                   FB_1307        --             2     f- 
-MC6   99   PT   atl_data_7    C----  --                   FB_1306        --             4     f- 
-MC7   0         --                   id00657       Dg-g-  FB_1305        --             3     f- 
-MC8   98   PT   atl_data_6    C----  --                   FB_1304        --             4     f- 
-MC9   97   PT   atl_data_4    C----  --                   SF1290         --             4     f- 
-MC10  0         --                   id00655       Dg-g-  XXL_1194       --             3     f- 
-MC11  96   PT   atl_data_5    C----  --                   XXL_1120       --             4     f- 
-MC12  0         --                   id00632       Dg-g-  id00155Q       --             3     f- 
-MC13  94   PT   atl_data_0    C----  --                   NA             --             5     f- 
-MC14  93   PT   atl_data_2    C----  --                   NA             --             5     f- 
-MC15  0         --                   XXL_1332      C----  id00506QN      --             4     f- 
-MC16  92   PT   atl_data_1    C----  --                   NA             --             5     f- 
-MC17  14   on   atl_oe_n      C----  --                   FB_1327        --             2     f- 
-MC18  0         --                   id00601       Dg-g-  FB_1325        --             1     f- 
-MC19  13   on   ram_ce0_n     C----  --                   FB_1324        --             2     f- 
-MC20  0         --                   id00294Q      C----  FB_2_FB_1323   --             3     f- 
-MC21  12   on   ram_ce1_n     C----  --                   FB_2_FB_1322   --             2     f- 
-MC22  10   on   atl_addr_3    C----  --                   FB_1312        --             3     f- 
-MC23  0         --                   id00619       Dg-g-  FB_2_XXL_1120  --             3     f- 
-MC24  9    on   atl_ce_n      C----  --                   FB_1310        --             3     f- 
-MC25  8    on   atl_we_n      Dg--p  --                   FB_2_XXL_1194  --             4     f- 
-MC26  0         --                   XXL_1135      C----  FB_2_id00506QN --             4     f- 
-MC27  7    PT   sh_rw_n       Dg-g-  --                   id00531QN      --             4     f- 
-MC28  0         --                   id00658       Dg-g-  id00156Q       --             3     f- 
-MC29  6    on   rom_ce_n      C----  --                   FB_2_id00155Q  --             4     f- 
-MC30  5    PT   atl_data_3    C----  --                   NA             --             5     f- 
-MC31  0         --                   id00003       Dg--p  FB_1311        --             3     f- 
-MC32  4    --   TDI           INPUT  id00600       Dg-g-  id00353QN      --             5     f- 
-MC33  25   --   z80_addr_7    INPUT  id00612       Dg-g-  FB_3_FB_1325   --             4     f- 
-MC34  0         --                   id00606       Dg-g-  FB_3_FB_1324   --             5     f- 
-MC35  24   --   z80_addr_6    INPUT  id00614       Dg-g-  XXL_1300       --             4     f- 
-MC36  0         --                   id00609       Dg-g-  XXL_1298       --             5     f- 
-MC37  23   --   z80_addr_5    INPUT  id00618       Dg-g-  XXL_1297       --             5     f- 
-MC38  22   --   z80_addr_15   INPUT  id00611       Dg-g-  XXL_1296       --             5     f- 
-MC39  0         --                   id00605       Dg-g-  XXL_1295       --             5     f- 
-MC40  21   --   z80_addr_11   INPUT  id00608       Dg-g-  XXL_1293       --             5     f- 
-MC41  20   --   z80_addr_4    INPUT  id00615       Dg-g-  XXL_1294       --             5     f- 
-MC42  0         --                   id00604       Dg-g-  FB_3_id00353QN --             5     f- 
-MC43  19   PT   l_data_2      Dg---  --                   id00299Q       --             4     f- 
-MC44  0         --                   id00607       Dg-g-  NA             --             5     f- 
-MC45  17   PT   l_data_1      Dg---  --                   id00298Q       --             4     f- 
-MC46  16   PT   l_data_0      Dg---  --                   id00297Q       --             4     f- 
-MC47  0         --                   id00610       Dg-g-  NA             --             5     f- 
-MC48  15   --   TMS           INPUT  id00603       Dg-g-  NA             --             5     f- 
-MC49  37   --   z80_addr_10   INPUT  id00641       Dg-g-  FB_1319        --             4     f- 
-MC50  0         --                   id00623       Dg-g-  FB_1318        --             5     f- 
-MC51  36   --   z80_addr_9    INPUT  id00621       Dg-g-  NA             --             5     f- 
-MC52  0         --                   id00627       Dg-g-  FB_1316        --             5     f- 
-MC53  35   --   z80_addr_8    INPUT  id00626       Dg-g-  XXL_1291       --             4     f- 
-MC54  33        --                   id00631       Dg-g-  FB_4_XXL_1120  --             5     f- 
-MC55  0         --                   id00622       Dg-g-  id00207Q       --             5     f- 
-MC56  32   --   z80_addr_14   INPUT  id00620       Dg-g-  XXL_1212       --             5     f- 
-MC57  31   --   z80_iei       INPUT  id00629       Dg-g-  XXL_1220       --             4     f- 
-MC58  0         --                   id00628       Dg-g-  XXL_1289       --             4     f- 
-MC59  30   --   z80_m1_n      INPUT  id00642       Dg-g-  id00215Q       --             5     f- 
-MC60  0         --                   id00625       Dg-g-  FB_1317        --             4     f- 
-MC61  29   --   duplex_in_2   INPUT  id00630       Dg-g-  XXL_1242       --             5     f- 
-MC62  28   on   l_addr_6      C----  --                   id00212Q       --             3     f- 
-MC63  0         --                   id00624       Dg-g-  NA             --             5     f- 
-MC64  27   on   l_addr_5      C----  --                   id00010Q       --             3     f- 
-MC65  40   --   z80_addr_12   INPUT  XXL_1329      C----  NA             --             5     f- 
-MC66  0         --                   id00644       Dg-g-  FB_1320        --             5     f- 
-MC67  41   --   duplex_in_0   INPUT  id00649       Dg-g-  XXL_1301       --             3     f- 
-MC68  0         --                   id00648       Dg-g-  XXL_1299       --             5     f- 
-MC69  42   --   z80_addr_3    INPUT  id00616       Dg-g-  XXL_1292       --             4     f- 
-MC70  44   --   z80_addr_0    INPUT  id00613       Dg-g-  FB_5_SF1290    --             4     f- 
-MC71  0         --                   XXL_1330      C----  NA             --             5     f- 
-MC72  45   --   z80_addr_1    INPUT  id00646       Dg-g-  FB_5_XXL_1242  --             4     f- 
-MC73  46   --   z80_addr_2    INPUT  id00643       Dg-g-  XXL_1218       --             5     f- 
-MC74  0         --                   XXL_1163      C----  FB_1321        --             3     f- 
-MC75  47   on   l_addr_11     C----  --                   XXL_1209       --             1     f- 
-MC76  0         --                   id00647       Dg-g-  FB_5_XXL_1289  --             5     f- 
-MC77  48   on   atl_addr_0    C----  --                   FB_5_XXL_1194  --             3     f- 
-MC78  49   on   atl_addr_1    C----  --                   FB_5_id00155Q  --             3     f- 
-MC79  0         --                   id00645       Dg-g-  NA             --             5     f- 
-MC80  50   on   atl_addr_2    C----  --                   FB_5_id00010Q  --             3     f- 
-MC81  52   on   z80_ieo       C----  --                   --             --             1     f- 
-MC82  0         --                   id00617       Dg-g-  FB_6_SF1290    --             4     f- 
-MC83  53   on   l_addr_7      C----  --                   FB_6_id00299Q  --             3     f- 
-MC84  0         --                   Com_Ctrl_1115 C----  FB_1313        --             4     f- 
-MC85  54   on   l_addr_4      C----  --                   FB_6_id00155Q  --             3     f- 
-MC86  55   PT   l_data_7      C----  --                   --             --             1     f- 
-MC87  0         --                   id00049Q      C----  --             --             3     f- 
-MC88  56   PT   l_data_4      C----  --                   FB_1315        --             2     f- 
-MC89  57   PT   sh_inc_n      C----  --                   FB_1314        --             2     f- 
-MC90  0         --                   id00301QN     C----  --             --             2     f- 
-MC91  58   PT   sh_done_n     C----  --                   XXL_1302       --             2     f- 
-MC92  0         --                   XXL_1281      C----  --             --             2     f- 
-MC93  60   PT   l_data_5      C----  --                   --             --             1     f- 
-MC94  61   PT   l_data_6      C----  --                   --             --             1     f- 
-MC95  0         --                   id00640       Dg-g-  NA             --             5     f- 
-MC96  62   --   TCK           INPUT  XXL_1331      C----  NA             --             5     f- 
-MC97  63   on   z80_data_oe_n C----  --                   --             --             1     f- 
-MC98  0         --                   XXL_1233      C----  --             --             2     f- 
-MC99  64   on   l_addr_8      C----  --                   --             --             2     f- 
-MC100 0         --                   id00639       Dg-g-  XXL_1216       --             5     f- 
-MC101 65   on   l_addr_10     C----  --                   --             --             2     f- 
-MC102 67   PT   sh_stb_n      C----  --                   --             --             2     f- 
-MC103 0         --                   id00634       Dg-g-  --             --             3     f- 
-MC104 68   on   l_addr_9      C----  --                   --             --             2     f- 
-MC105 69   PT   z80_int_n     C----  --                   --             --             1     f- 
-MC106 0         --                   id00633       Dg-g-  --             --             3     f- 
-MC107 70   PT   l_data_3      Dg---  --                   XXL_1303       --             4     f- 
-MC108 0         --                   id00636       Dg-g-  --             --             4     f- 
-MC109 71   on   l_dir         C----  --                   --             --             3     f- 
-MC110 72   on   ram_oe_n      C----  --                   --             --             2     f- 
-MC111 0         --                   id00635       Dg-g-  NA             --             5     f- 
-MC112 73   --   TDO           C----  id00637       Dg-g-  --             --             3     f- 
-MC113 75        --                   id00638       Dg-g-  --             --             2     f- 
-MC114 0         --                   id00158QN     C----  --             --             2     f- 
-MC115 76   on   l_addr_3      C----  --                   --             --             2     f- 
-MC116 0         --                   XXL_1121      C----  --             --             2     f- 
-MC117 77   PT   sh_en_n       C----  --                   --             --             1     f- 
-MC118 78   PT   z80_wait_n    C----  --                   --             --             1     f- 
-MC119 0         --                   XXL_1176      C----  --             --             2     f- 
-MC120 79   PT   sh_busy_n     C----  --                   --             --             1     f- 
-MC121 80   on   l_addr_2      C----  --                   --             --             2     f- 
-MC122 0         --                   z80_wait_n.OE C----  --             --             2     f- 
-MC123 81   on   sh_c_dir      C----  --                   --             --             2     f- 
-MC124 0         --                   id00007Q      C----  --             --             4     f- 
-MC125 83   on   l_addr_1      C----  --                   --             --             2     f- 
-MC126 84   on   l_addr_0      C----  --                   --             --             2     f- 
-MC127 0         --                   XXL_1328      C----  NA             --             5     f- 
-MC128 85   on   sh_data_oe_n  C----  --                   --             --             1     f- 
-MC0   90        duplex_in_1   INPUT  --                   --             --             0     f- 
-MC0   89        reset_n       INPUT  --                   --             --             0     f- 
-MC0   88        --                   --                   --             --             0     f- 
-MC0   87        mclk          INPUT  --                   --             --             0     f- 
+MCell Pin# Oe   PinDrive  DCERP  FBDrive  DCERP  Foldback  CascadeOut     TotPT SO
+MC1   2         --               --              --        --             0     f- 
+MC2   0         --               --              --        --             0     f- 
+MC3   1         --               --              --        --             0     f- 
+MC4   0         --               --              --        --             0     f- 
+MC5   100       --               --              --        --             0     f- 
+MC6   99        --               --              --        --             0     f- 
+MC7   0         --               --              --        --             0     f- 
+MC8   98        --               --              --        --             0     f- 
+MC9   97        --               --              --        --             0     f- 
+MC10  0         --               --              --        --             0     f- 
+MC11  96        --               --              --        --             0     f- 
+MC12  0         --               --              --        --             0     f- 
+MC13  94        --               --              --        --             0     f- 
+MC14  93        --               --              --        --             0     f- 
+MC15  0         --               --              --        --             0     f- 
+MC16  92        --               --              --        --             0     f- 
+MC17  14        --               --              --        --             0     f- 
+MC18  0         --               --              --        --             0     f- 
+MC19  13        --               --              --        --             0     f- 
+MC20  0         --               --              --        --             0     f- 
+MC21  12        --               --              --        --             0     f- 
+MC22  10        --               --              --        --             0     f- 
+MC23  0         --               --              --        --             0     f- 
+MC24  9         --               --              --        --             0     f- 
+MC25  8         --               --              --        --             0     f- 
+MC26  0         --               --              --        --             0     f- 
+MC27  7         --               --              --        --             0     f- 
+MC28  0         --               --              --        --             0     f- 
+MC29  6         --               --              --        --             0     f- 
+MC30  5         --               --              --        --             0     f- 
+MC31  0         --               --              --        --             0     f- 
+MC32  4         TDI       INPUT  --              --        --             0     f- 
+MC33  25        --               --              --        --             0     f- 
+MC34  0         --               --              --        --             0     f- 
+MC35  24        --               --              --        --             0     f- 
+MC36  0         --               --              --        --             0     f- 
+MC37  23        --               --              --        --             0     f- 
+MC38  22        --               --              --        --             0     f- 
+MC39  0         --               --              --        --             0     f- 
+MC40  21        --               --              --        --             0     f- 
+MC41  20        --               --              --        --             0     f- 
+MC42  0         --               --              --        --             0     f- 
+MC43  19        --               --              --        --             0     f- 
+MC44  0         --               --              --        --             0     f- 
+MC45  17        --               --              --        --             0     f- 
+MC46  16        --               --              --        --             0     f- 
+MC47  0         --               --              --        --             0     f- 
+MC48  15        TMS       INPUT  --              --        --             0     f- 
+MC49  37        --               --              --        --             0     f- 
+MC50  0         --               --              --        --             0     f- 
+MC51  36        --               --              --        --             0     f- 
+MC52  0         --               --              --        --             0     f- 
+MC53  35        --               --              --        --             0     f- 
+MC54  33        --               --              --        --             0     f- 
+MC55  0         --               --              --        --             0     f- 
+MC56  32        --               --              --        --             0     f- 
+MC57  31        --               --              --        --             0     f- 
+MC58  0         --               --              --        --             0     f- 
+MC59  30        --               --              --        --             0     f- 
+MC60  0         --               --              --        --             0     f- 
+MC61  29        --               --              --        --             0     f- 
+MC62  28        --               --              --        --             0     f- 
+MC63  0         --               --              --        --             0     f- 
+MC64  27        --               --              --        --             0     f- 
+MC65  40        --               --              --        --             0     f- 
+MC66  0         --               --              --        --             0     f- 
+MC67  41        --               --              --        --             0     f- 
+MC68  0         --               --              --        --             0     f- 
+MC69  42        --               --              --        --             0     f- 
+MC70  44        --               --              --        --             0     f- 
+MC71  0         --               --              --        --             0     f- 
+MC72  45        --               --              --        --             0     f- 
+MC73  46        --               --              --        --             0     f- 
+MC74  0         --               --              --        --             0     f- 
+MC75  47        --               --              --        --             0     f- 
+MC76  0         --               --              --        --             0     f- 
+MC77  48        --               --              --        --             0     f- 
+MC78  49        --               --              --        --             0     f- 
+MC79  0         --               --              --        --             0     f- 
+MC80  50        --               --              --        --             0     f- 
+MC81  52        --               --              --        --             0     f- 
+MC82  0         --               --              --        --             0     f- 
+MC83  53        --               --              --        --             0     f- 
+MC84  0         --               --              --        --             0     f- 
+MC85  54        --               --              --        --             0     f- 
+MC86  55        --               --              --        --             0     f- 
+MC87  0         --               --              --        --             0     f- 
+MC88  56        --               --              --        --             0     f- 
+MC89  57        --               --              --        --             0     f- 
+MC90  0         --               --              --        --             0     f- 
+MC91  58        --               --              --        --             0     f- 
+MC92  0         --               --              --        --             0     f- 
+MC93  60        --               --              --        --             0     f- 
+MC94  61        --               --              --        --             0     f- 
+MC95  0         --               --              --        --             0     f- 
+MC96  62        TCK       INPUT  --              --        --             0     f- 
+MC97  63        --               --              --        --             0     f- 
+MC98  0         --               --              --        --             0     f- 
+MC99  64        --               --              --        --             0     f- 
+MC100 0         --               --              --        --             0     f- 
+MC101 65        --               --              --        --             0     f- 
+MC102 67        --               --              --        --             0     f- 
+MC103 0         --               --              --        --             0     f- 
+MC104 68        --               --              --        --             0     f- 
+MC105 69        --               --              --        --             0     f- 
+MC106 0         --               --              --        --             0     f- 
+MC107 70        --               --              --        --             0     f- 
+MC108 0         --               --              --        --             0     f- 
+MC109 71        --               --              --        --             0     f- 
+MC110 72        --               --              --        --             0     f- 
+MC111 0         --               --              --        --             0     f- 
+MC112 73        TDO       C----  --              --        --             0     f- 
+MC113 75        --               --              --        --             0     f- 
+MC114 0         --               --              --        --             0     f- 
+MC115 76        --               --              --        --             0     f- 
+MC116 0         --               --              --        --             0     f- 
+MC117 77        --               --              --        --             0     f- 
+MC118 78        --               --              --        --             0     f- 
+MC119 0         --               --              --        --             0     f- 
+MC120 79        --               --              --        --             0     f- 
+MC121 80        --               --              --        --             0     f- 
+MC122 0         --               --              --        --             0     f- 
+MC123 81        --               --              --        --             0     f- 
+MC124 0         --               --              --        --             0     f- 
+MC125 83        --               --              --        --             0     f- 
+MC126 84        --               --              --        --             0     f- 
+MC127 0         --               --              --        --             0     f- 
+MC128 85        --               --              --        --             0     f- 
+MC0   90        --               --              --        --             0     f- 
+MC0   89        reset_n   INPUT  --              --        --             0     f- 
+MC0   88        --               --              --        --             0     f- 
+MC0   87        mclk      INPUT  --              --        --             0     f- 
 
 Logic Array Block			Macro Cells	I/O Pins	Foldbacks	TotalPT	FanIN		Cascades
-A: MC1	- MC16		16/16(100%)	10/16(62%)	13/16(81%)	58/80(72%)	38/40(95%)	0
-B: MC17	- MC32		16/16(100%)	10/16(62%)	15/16(93%)	51/80(63%)	39/40(97%)	0
-C: MC33	- MC48		16/16(100%)	10/16(62%)	13/16(81%)	75/80(93%)	38/40(95%)	0
-D: MC49	- MC64		16/16(100%)	9/16(56%)	14/16(87%)	71/80(88%)	36/40(90%)	0
-E: MC65	- MC80		16/16(100%)	10/16(62%)	13/16(81%)	63/80(78%)	39/40(97%)	0
-F: MC81	- MC96		16/16(100%)	10/16(62%)	7/16(43%)	41/80(51%)	39/40(97%)	0
-G: MC97	- MC112		17/16(106%)	10/16(62%)	2/16(12%)	44/80(55%)	31/40(77%)	0
-H: MC113- MC128		16/16(100%)	9/16(56%)	0/16(0%)	33/80(41%)	38/40(95%)	0
+A: MC1	- MC16		0/16(0%)	0/16(0%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+B: MC17	- MC32		0/16(0%)	1/16(6%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+C: MC33	- MC48		0/16(0%)	1/16(6%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+D: MC49	- MC64		0/16(0%)	0/16(0%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+E: MC65	- MC80		0/16(0%)	0/16(0%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+F: MC81	- MC96		0/16(0%)	1/16(6%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+G: MC97	- MC112		1/16(6%)	1/16(6%)	0/16(0%)	0/80(0%)	40/40(100%)	0
+H: MC113- MC128		0/16(0%)	0/16(0%)	0/16(0%)	0/80(0%)	40/40(100%)	0
 
-Total dedicated input used:	3/4 	(75%)
-Total I/O pins used		78/80 	(97%)
-Total Macro cells used 		129/128 	(100%)
-Total Flip-Flop used 		63/128 	(49%)
-Total Foldback logic used 	77/128 	(60%)
-Total Nodes+FB/MCells 		206/128 	(160%)
+Total dedicated input used:	2/4 	(50%)
+Total I/O pins used		4/80 	(5%)
+Total Macro cells used 		1/128 	(0%)
+Total Flip-Flop used 		0/128 	(0%)
+Total Foldback logic used 	0/128 	(0%)
+Total Nodes+FB/MCells 		1/128 	(0%)
 Total cascade used 		0
-Total input pins 			27
-Total output pins 		54
-Total Pts 				436
+Total input pins 			5
+Total output pins 		1
+Total Pts 				0
 Creating pla file zx50_cpld_core.tt3 with 0 inputs 0 outputs, 0 pins 0 nodes and 0 pterms...
 
-----------------  End fitter, Design FITS
-$Device TQFP100 fits; JTAG ON; Secure OFF
+----------------  End fitter
+$Device TQFP100 does not fit 
 FIT1508 completed in 0.00 seconds
