@@ -1,5 +1,4 @@
-/* 
- * File:   clock.h
+/* * File:   clock.h
  * Author: Marc Mosko
  * Description: Hardware clock generation for Z80 CLK and MCLK.
  */
@@ -12,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+extern uint8_t use_dual_clock; // Flag for x4 MCLK mode
 
 // ==========================================
 // Initialization

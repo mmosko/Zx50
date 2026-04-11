@@ -4631,55 +4631,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "zx50_symbols:DIP-32_Socket"
-			(exclude_from_sim no)
-			(in_bom no)
-			(on_board no)
-			(property "Reference" "MISC"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "zx50_symbols:IS61C256AL-12JLI"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -5257,6 +5208,16 @@
 	)
 	(bus_alias "MEM"
 		(members "L_A[0..10]" "~CE0~" "~CE1~" "~OE~" "~WE~" "~CE2~")
+	)
+	(text "NOTE: Pin 90 is INPUT only.\nNeed to rewire CE0_N to pin 99 \nand lose that LED."
+		(exclude_from_sim no)
+		(at 121.158 68.326 0)
+		(effects
+			(font
+				(size 3 3)
+			)
+		)
+		(uuid "9cc238e2-7d79-46d7-be8c-25a2abf7242c")
 	)
 	(junction
 		(at 102.87 97.79)
@@ -18143,88 +18104,6 @@
 			(project ""
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "U12")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "zx50_symbols:DIP-32_Socket")
-		(at 25.4 59.69 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "6b497086-23ab-48e2-bc16-1aa601593bd6")
-		(property "Reference" "MISC1"
-			(at 26.67 58.4199 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "~"
-			(at 26.67 60.9599 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "DIP-32 socket"
-			(at 25.4 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 25.4 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 25.4 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "123-AR32-HZL/01-TT-ND"
-			(at 25.4 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 25.4 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project ""
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
-					(reference "MISC1")
 					(unit 1)
 				)
 			)

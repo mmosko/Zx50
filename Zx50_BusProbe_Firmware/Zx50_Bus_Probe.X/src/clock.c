@@ -2,47 +2,127 @@
 #include "clock.h"
 #include "pins.h"
 
+/* * FLAG: use_dual_clock
+ * --------------------
+ * When set to 1, the bit-banged clock functions will generate a 4x MCLK 
+ * signal on RC1 alongside the standard ZCLK signal on RC2. 
+ * This is required for the Zx50 Memory Card's CPLD, which relies on 
+ * a continuous MCLK to run its internal state machines (MMU, DMA, Arbiter) 
+ * even when the Z80 bus is being stepped slowly.
+ */
+uint8_t use_dual_clock = 1; 
+
 void Z80_Clock_Init(void) {
-    // Initialize with PWM off and the clock pin driven LOW
-    CCP1CONbits.CCP1M = 0x00; // Disable PWM module
-    CLK_PIN_DIR = 0;          // Set RC2 as an output
-    CLK_PIN_LAT = 0;          // Idle low
+    // 1. Disable the hardware PWM modules so we have direct control over the pins
+    CCP1CONbits.CCP1M = 0x00; // Disable CCP1 (used for ZCLK on RC2)
+    CCP2CONbits.CCP2M = 0x00; // Disable CCP2 (used for MCLK on RC1)
+    
+    // 2. Initialize ZCLK (RC2) as an output and park it LOW
+    CLK_PIN_DIR = 0;          
+    CLK_PIN_LAT = 0;          
+    
+    // 3. Initialize MCLK (RC1) as an output and park it LOW
+    MCLK_PIN_DIR = 0;         
+    MCLK_PIN_LAT = 0;         
 }
 
 void Z80_Clock_Start_PWM(void) {
+    /*
+     * HARDWARE LIMITATION NOTE:
+     * The PIC18F4620 has two PWM modules (CCP1 and CCP2), but they both 
+     * share a single timebase (Timer2). Because of this, we cannot easily 
+     * use hardware PWM to generate MCLK at 4x the frequency of ZCLK.
+     * * This function currently only starts the ZCLK hardware PWM. 
+     * If free-running MCLK is required in the future, an external clock 
+     * divider or a tight assembly loop will be needed.
+     */
+    
     CLK_PIN_DIR = 0; 
+    
+    // Configure Timer2 for the desired ZCLK frequency
     PR2 = 7;
     CCPR1L = 4;           
     CCP1CONbits.DC1B = 0; 
     
-    // Enable CCP1 in PWM Mode (Takes over RC2)
+    // Enable CCP1 in PWM Mode (This takes physical control of the RC2 pin)
     CCP1CONbits.CCP1M = 0x0C; 
     
-    // Turn on Timer2
+    // Turn on Timer2 to start the clock output
     T2CON = 0x04; 
 }
 
 void Z80_Clock_Stop_PWM(void) {
     // Setting CCP1M to 0 disables the PWM module.
-    // Control of RC2 is instantly handed back to the LATC2 register!
+    // Physical control of the RC2 pin is instantly handed back to the LATC2 register.
     CCP1CONbits.CCP1M = 0x00; 
     
-    // Ensure the clock parks in a low, idle state
+    // Ensure both clocks park in a safe, known LOW state
     CLK_PIN_DIR = 0;
     CLK_PIN_LAT = 0;
-}
-
-void Z80_Clock_Pulse(void) {
-    // This ONLY works if Z80_Clock_Stop_PWM() was called first.
-    CLK_PIN_LAT = 1;
-    NOP(); // Add more NOPs if the Z80 needs a wider clock pulse
-    CLK_PIN_LAT = 0;
+    
+    MCLK_PIN_DIR = 0;
+    MCLK_PIN_LAT = 0;
 }
 
 void Z80_Clock_High(void) {
-    CLK_PIN_LAT = 1;
+    if (use_dual_clock) {
+        /*
+         * PHASE ALIGNMENT STRATEGY (T1/T3):
+         * The CPLD samples Z80 control signals on the rising edge of MCLK 
+         * (always @(posedge mclk)). To prevent race conditions, ZCLK must 
+         * transition *between* MCLK rising edges. 
+         * * We achieve this by toggling ZCLK immediately after MCLK falls.
+         */
+        
+        // --- MCLK Cycle 1 ---
+        MCLK_PIN_LAT = 1; NOP();
+        MCLK_PIN_LAT = 0; NOP();
+        
+        // --- ZCLK Rising Edge ---
+        // ZCLK goes HIGH. Because MCLK is currently LOW, ZCLK will be fully 
+        // stable by the time the next MCLK rising edge hits the CPLD.
+        CLK_PIN_LAT = 1;  
+        
+        // --- MCLK Cycle 2 ---
+        MCLK_PIN_LAT = 1; NOP();
+        MCLK_PIN_LAT = 0; NOP();
+    } else {
+        // Legacy single-clock mode
+        CLK_PIN_LAT = 1;
+    }
 }
 
 void Z80_Clock_Low(void) {
-    CLK_PIN_LAT = 0;
+    if (use_dual_clock) {
+        /*
+         * PHASE ALIGNMENT STRATEGY (T2/T4):
+         * Similar to the High phase, we generate 2 MCLK pulses, but we drop 
+         * ZCLK LOW in the middle to maintain the 4x frequency ratio and 
+         * proper edge trailing.
+         */
+         
+        // --- MCLK Cycle 3 ---
+        MCLK_PIN_LAT = 1; NOP();
+        MCLK_PIN_LAT = 0; NOP();
+        
+        // --- ZCLK Falling Edge ---
+        // ZCLK goes LOW. It is safely trailing the MCLK falling edge.
+        CLK_PIN_LAT = 0;  
+        
+        // --- MCLK Cycle 4 ---
+        MCLK_PIN_LAT = 1; NOP();
+        MCLK_PIN_LAT = 0; NOP();
+    } else {
+        // Legacy single-clock mode
+        CLK_PIN_LAT = 0;
+    }
+}
+
+void Z80_Clock_Pulse(void) {
+    /* * Convenience function to execute one complete Z80 T-State.
+     * In dual-clock mode, this will output 1 full ZCLK cycle and 
+     * 4 full MCLK cycles, properly interleaved.
+     */
+    Z80_Clock_High();
+    Z80_Clock_Low();
 }

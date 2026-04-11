@@ -39,10 +39,16 @@ void Z80_Mem_Write(uint16_t address, uint8_t data) {
     Z80_WR_LAT = 0;        
     
     #ifndef __DEBUG
-        // Insert extra wait states if requested
-        while (Z80_WAIT_VAL == 0) {
-            Z80_Clock_High();
-            Z80_Clock_Low(); 
+        uint16_t timeout = 1000;
+        
+        // Only wait if the PIC is NOT the one driving ~WAIT low 
+        // (DIR=1 means input, LAT=1 means driving high)
+        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
+            while (Z80_WAIT_VAL == 0 && timeout > 0) {
+                Z80_Clock_High();
+                Z80_Clock_Low(); 
+                timeout--;
+            }
         }
     #endif
 
@@ -98,12 +104,18 @@ uint8_t Z80_Mem_Read(uint16_t address) {
     Z80_Clock_Low();
 
     #ifndef __DEBUG
-        while (Z80_WAIT_VAL == 0) {
-            Z80_Clock_High();
-            Z80_Clock_Low(); 
+        uint16_t timeout = 1000;
+        
+        // Only wait if the PIC is NOT the one driving ~WAIT low 
+        // (DIR=1 means input, LAT=1 means driving high)
+        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
+            while (Z80_WAIT_VAL == 0 && timeout > 0) {
+                Z80_Clock_High();
+                Z80_Clock_Low(); 
+                timeout--;
+            }
         }
     #endif
-
     // ==========================================
     // --- T3 STATE ---
     // Memory Data is sampled on rising edge!
@@ -165,12 +177,18 @@ void Z80_IO_Write(uint16_t port_and_ah, uint8_t data) {
     Z80_Clock_Low();
 
     #ifndef __DEBUG
-        while (Z80_WAIT_VAL == 0) {
-            Z80_Clock_High();
-            Z80_Clock_Low(); 
+        uint16_t timeout = 1000;
+        
+        // Only wait if the PIC is NOT the one driving ~WAIT low 
+        // (DIR=1 means input, LAT=1 means driving high)
+        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
+            while (Z80_WAIT_VAL == 0 && timeout > 0) {
+                Z80_Clock_High();
+                Z80_Clock_Low(); 
+                timeout--;
+            }
         }
     #endif
-
     // ==========================================
     // --- T3 STATE ---
     // ~IORQ and ~WR rise on falling edge.
@@ -226,9 +244,16 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah) {
     Z80_Clock_Low();
 
     #ifndef __DEBUG
-        while (Z80_WAIT_VAL == 0) {
-            Z80_Clock_High();
-            Z80_Clock_Low(); 
+        uint16_t timeout = 1000;
+        
+        // Only wait if the PIC is NOT the one driving ~WAIT low 
+        // (DIR=1 means input, LAT=1 means driving high)
+        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
+            while (Z80_WAIT_VAL == 0 && timeout > 0) {
+                Z80_Clock_High();
+                Z80_Clock_Low(); 
+                timeout--;
+            }
         }
     #endif
 
@@ -287,4 +312,49 @@ void Z80_Bus_Snapshot(void) {
     UART_Write(data_bus);
     UART_Write(ctrl_porte);
     UART_Write(ctrl_portb);
+}
+
+void Z80_Boot_Sequence(void) {
+    // ==========================================
+    // CPLD SYNC BOOT SEQUENCE
+    // ==========================================
+    
+    // 1. Take control of the Control Bus to drive ~RESET
+    XCVR_DATA_OE_LAT = 1;  // Keep Data Bus HIGH-Z to prevent collisions
+    
+    // Pre-load safe HIGH states for memory control
+    Z80_MREQ_LAT = 1;
+    Z80_IORQ_LAT = 1;
+    Z80_RD_LAT   = 1;
+    Z80_WR_LAT   = 1;
+    Z80_M1_LAT   = 1;
+    Z80_RESET_LAT = 0;     // Drive ~RESET LOW
+    
+    // Make them all outputs
+    Z80_MREQ_DIR = 0;
+    Z80_IORQ_DIR = 0;
+    Z80_RD_DIR   = 0;
+    Z80_WR_DIR   = 0;
+    Z80_M1_DIR   = 0;
+    Z80_RESET_DIR = 0;
+
+    // Enable the Control Transceiver (B->A) to hit the backplane
+    XCVR_CTRL_DIR_LAT = 0; 
+    XCVR_CTRL_OE_LAT  = 0; 
+
+    // 2. Pump the clock while RESET is LOW on the backplane
+    for(int i = 0; i < 20; i++) {
+        Z80_Clock_Pulse();
+    }
+
+    // 3. Release RESET (Drive HIGH)
+    Z80_RESET_LAT = 1;
+
+    // 4. Pump the clock so the CPLD advances into M_IDLE and releases ~WAIT
+    for(int i = 0; i < 20; i++) {
+        Z80_Clock_Pulse();
+    }
+    
+    // 5. Explicitly enter Ghost Mode to release all transceivers
+    Ghost(1);
 }

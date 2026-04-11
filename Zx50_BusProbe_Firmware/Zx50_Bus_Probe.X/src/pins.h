@@ -63,6 +63,7 @@
 
 #define Z80_WAIT_DIR       TRISBbits.TRISB1
 #define Z80_WAIT_VAL       PORTBbits.RB1
+#define Z80_WAIT_LAT       LATBbits.LATB1
 
 // ==========================================
 // SPI & EXPANDER CONTROLS (U1, U13)

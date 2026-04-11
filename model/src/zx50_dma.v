@@ -143,8 +143,9 @@ module zx50_dma (
     // 4. CYCLE STEALING: HIERARCHICAL YIELD LOGIC
     // ==========================================
     wire yield_req = (sh_busy_n == 1'b0);
+
     wire safe_to_yield = is_master ?
-        (m_state == M_IDLE || m_state == M_WAIT || m_state == M_DONE) 
+        (m_state == M_IDLE || m_state == M_START || m_state == M_WAIT || m_state == M_DONE) 
         : (sh_en_n !== 1'b0);
 
     reg yielding;
@@ -170,7 +171,7 @@ module zx50_dma (
             if (is_master) begin
                 case (m_state)
                     M_IDLE:   if (dma_go && !yielding && !yield_req) m_state <= M_START;
-                    M_START:  m_state <= M_STROBE;
+                    M_START:  if (!yielding && !yield_req) m_state <= M_STROBE;
                     M_STROBE: m_state <= (byte_count == 8'h00) ? M_DONE : M_INC;
                     M_INC:    m_state <= M_WAIT;
                     M_WAIT:   if (!yielding && !yield_req) m_state <= M_STROBE;
@@ -192,11 +193,11 @@ module zx50_dma (
     wire generated_stb_n = !(m_state == M_STROBE);
     wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
     
-    assign sh_en_n   = (is_master && dma_active && m_state != M_IDLE) ? 1'b0 : 1'bz;
-    assign sh_rw_n   = (is_master && dma_active && m_state != M_IDLE) ? dir_from_bus : 1'bz;
-    assign sh_stb_n  = (is_master && dma_active && m_state != M_IDLE) ? generated_stb_n : 1'bz;
-    assign sh_inc_n  = (is_master && dma_active && m_state == M_INC) ? 1'b0 : 1'bz;
-    assign sh_done_n = (is_master && dma_active && m_state == M_DONE) ? 1'b0 : 1'bz;
+    assign sh_en_n   = (is_master && dma_go && m_state != M_IDLE) ? 1'b0 : 1'bz;
+    assign sh_rw_n   = (is_master && dma_go && m_state != M_IDLE) ? dir_from_bus : 1'bz;
+    assign sh_stb_n  = (is_master && dma_go && m_state != M_IDLE) ? generated_stb_n : 1'bz;
+    assign sh_inc_n  = (is_master && dma_go && m_state == M_INC) ? 1'b0 : 1'bz;
+    assign sh_done_n = (is_master && dma_go && m_state == M_DONE) ? 1'b0 : 1'bz;
     
     // Concatenate the static high bits and the fast 4K counter for the local address
     assign dma_phys_addr = {phys_addr_hi, phys_addr_lo};
