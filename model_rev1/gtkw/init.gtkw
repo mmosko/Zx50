@@ -1,0 +1,48 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Apr 12 22:43:02 2026
+[*]
+[dumpfile] "/media/psf/z80/Zx50/model_rev1/waves/init.vcd"
+[dumpfile_mtime] "Sun Apr 12 19:12:24 2026"
+[dumpfile_size] 16569
+[savefile] "/media/psf/z80/Zx50/model_rev1/gtkw/init.gtkw"
+[timestart] 0
+[size] 1512 864
+[pos] -1 -1
+*-17.836893 580000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] init_tb.
+[treeopen] init_tb.card0.
+[treeopen] init_tb.card1.
+[sst_width] 278
+[signals_width] 212
+[sst_expanded] 1
+[sst_vpaned_height] 249
+@200
+-Z80
+@28
+init_tb.z80.clk
+@22
+init_tb.z80.addr[15:0]
+init_tb.z80.data[7:0]
+@28
+init_tb.z80.mreq_n
+init_tb.z80.iorq_n
+init_tb.z80.rd_n
+init_tb.z80.wr_n
+init_tb.z80.reset_n
+@200
+-
+-CARD0
+@22
+init_tb.card0.cpld.page_ownership[15:0]
+@28
+init_tb.card0.cpld.rom_enabled
+@200
+-
+-CARD1
+@22
+init_tb.card1.cpld.page_ownership[15:0]
+@29
+init_tb.card1.cpld.rom_enabled
+[pattern_trace] 1
+[pattern_trace] 0

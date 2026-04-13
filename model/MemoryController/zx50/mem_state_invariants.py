@@ -59,14 +59,16 @@ def get_invariants(state: MemState, bp: BackplaneBus, sh: ShadowBus, loc: Memory
                 loc.l_a.eq(bp.z80_a[0:11]),
                 loc.atl_a.eq(bp.z80_a[12:16]),
 
-                # LUT Control (External SRAM drives ATL_D to decode physical page)
                 loc.atl_ce_n.eq(0),
                 loc.atl_oe_n.eq(0),
                 loc.atl_we_n.eq(1),
 
                 # Internal Memory Control
                 loc.oe_n.eq(1),
-                loc.we_n.eq(0)
+
+                # Pass the Z80 WR_N signal so combinatorial logic will
+                # stop when the Z80 stops, not when our state machine steps
+                loc.we_n.eq(bp.b_z80_wr_n)
             ]
 
         case MemState.Z80_IORQ_MMU_SET:
@@ -76,13 +78,15 @@ def get_invariants(state: MemState, bp: BackplaneBus, sh: ShadowBus, loc: Memory
                 bp.d_dir.eq(1),  # 1 = Z80 -> Card
 
                 # Z80 is writing to the LUT SRAM configuration
-                loc.atl_a.eq(bp.z80_a[0:4]),  # IO Port address selects the LUT slot
-                # (loc.l_d physically carries the Z80 data into the LUT data pins)
+                loc.atl_a.eq(bp.z80_a[8:12]),
 
-                # LUT Control (Write Mode)
+                # LUT Control
                 loc.atl_ce_n.eq(0),
-                loc.atl_oe_n.eq(1),  # Important: Let Z80 drive the data lines
-                loc.atl_we_n.eq(0)
+                loc.atl_oe_n.eq(1),
+
+                # Pass the Z80 WR_N signal so combinatorial logic will
+                # stop when the Z80 stops, not when our state machine steps
+                loc.atl_we_n.eq(bp.b_z80_wr_n)
             ]
 
         # =========================================================================

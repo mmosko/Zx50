@@ -28,11 +28,18 @@ class ZX50MemControl(Elaboratable):
         self.has_boot_rom = Signal()    # Holds the latched BOOT_EN_N pin
 
         # 16 bits representing ownership of the 16 logical 4K pages
-        self.page_ownership = Signal(16, "page_own")
+        self.page_ownership = Signal(16, name="page_own")
         self.rom_enabled = Signal()
+
+        # A11 bug means the L_a[11] (12th bit) is an internal signal
+        self.active_a11 = Signal()
 
     def elaborate(self, platform):
         m = Module()
+
+        # Determine the active A11 bit
+        # (This will eventually mux with self.dma_addr[11] when DMA is active)
+        m.d.comb += self.active_a11.eq(self.bp.z80_a[11])
 
         self.reset_capture(m)
 
@@ -85,15 +92,16 @@ class ZX50MemControl(Elaboratable):
                             # -------------------------------------------------
                             # PRIORITY 1: The Z80 Always Wins
                             # -------------------------------------------------
-                            with m.If(hit.z80_mem_hit & (self.bp.b_z80_rd_n == 0)):
-                                m.next = MemState.Z80_MREQ_RD.name
+                            with m.If(self.bp.reset_n == 1):
+                                with m.If(hit.z80_mem_hit & (self.bp.b_z80_rd_n == 0)):
+                                    m.next = MemState.Z80_MREQ_RD.name
 
-                            with m.Elif(hit.z80_mem_hit & (self.bp.b_z80_wr_n == 0)):
-                                m.next = MemState.Z80_MREQ_WR.name
+                                with m.Elif(hit.z80_mem_hit & (self.bp.b_z80_wr_n == 0)):
+                                    m.next = MemState.Z80_MREQ_WR.name
 
-                            with m.Elif(hit.mmu_direct_wr):  # UPDATED TRIGGER!
-                                m.next = MemState.Z80_IORQ_MMU_SET.name
-
+                                with m.Elif(hit.mmu_direct_wr):
+                                    m.next = MemState.Z80_IORQ_MMU_SET.name
+                                    
                             # -------------------------------------------------
                             # PRIORITY 2: DMA Requests (To be implemented)
                             # -------------------------------------------------
@@ -138,27 +146,24 @@ class ZX50MemControl(Elaboratable):
         # ==========================================
         # 2. Hit Detection & Distributed MMU Snooping
         # ==========================================
-        # Define the Snooping conditions based on the Verilog:
-        # Base port 0x30 mask matches any MMU configuration write on the backplane
         mmu_snoop_wr = (self.bp.b_z80_iorq_n == 0) & (self.bp.b_z80_wr_n == 0) & ((self.bp.z80_a[0:8] & 0xF0) == 0x30)
-
-        # Direct hit on THIS card's specific MMU port
         mmu_direct_wr = mmu_snoop_wr & (self.bp.z80_a[0:8] == (0x30 | self.card_addr))
 
-        # The logical page being configured is on A8-A11 (from the Z80 'B' register)
-        logical_page = self.bp.z80_a[8:12]
+        # FIX: The logical page depends on the bus cycle type!
+        # For OUT (C), r -> The target page is in the Z80 B register on A8-A11.
+        # For Mem Access -> The target page is the top 4 bits of the address (A12-A15).
+        logical_page = Mux(self.bp.b_z80_iorq_n == 0, self.bp.z80_a[8:12], self.bp.z80_a[12:16])
 
-        # Normal Memory Hit (Memory Request + We own the physical page)
-        # Note: In the real Verilog, active requires the page_ownership mask to match
+        # Normal Memory Hit
         current_page_owned = self.page_ownership.bit_select(logical_page, 1)
         z80_mem_hit = (self.bp.b_z80_mreq_n == 0) & current_page_owned
 
         return HitDetector(
-            mmu_snoop_wr = mmu_snoop_wr,
-            mmu_direct_wr = mmu_direct_wr,
-            logical_page = logical_page,
-            current_page_owned = current_page_owned,
-            z80_mem_hit = z80_mem_hit,
+            mmu_snoop_wr=mmu_snoop_wr,
+            mmu_direct_wr=mmu_direct_wr,
+            logical_page=logical_page,
+            current_page_owned=current_page_owned,
+            z80_mem_hit=z80_mem_hit,
         )
 
     def mmu_snooping(self, m: Module, hit: HitDetector):
@@ -172,7 +177,7 @@ class ZX50MemControl(Elaboratable):
 
                     # ROM Kill-Switch: If the CPU maps a page into the lower 32K (Pages 0-7),
                     # we permanently disable the Boot ROM. (A11 == 0).
-                    with m.If(self.bp.z80_a[11] == 0):
+                    with m.If(self.active_a11 == 0):
                         m.d.sync += self.rom_enabled.eq(0)
 
                 with m.Else():
@@ -196,22 +201,15 @@ class ZX50MemControl(Elaboratable):
         # and the ROM isn't intercepting the request.
         safe_to_access_ram = hit.z80_mem_hit & ~hit.mmu_direct_wr & ~effective_use_rom
 
-        # HW REV A11 BUG:
-        # A11 is physically missing from the RAM address bus and routed to the Chip Selects.
-        # We toggle the RAM chips based on A11 directly, instead of using the LUT bank select.
-        # (Note: We will multiplex this with self.dma_addr[11] when we implement the DMA states)
-        active_a11 = self.bp.z80_a[11]
-
         # Apply the Combinatorial Chip Selects
         m.d.comb += [
-            # ROM Chip Select (Active Low):
+            # ROM Chip Select:
             # Active if effective_use_rom AND it is a READ cycle.
-            # (Writes to ROM space are physically suppressed here to prevent EEPROM corruption!)
-            self.loc.rom_ce_n.eq(~(effective_use_rom & (self.bp.b_z80_wr_n == 1))),
+            # (the ROM does not have WRITE ability in hardware, must be programmed separately)
+            self.loc.rom_ce2_n.eq(~(effective_use_rom & (self.bp.b_z80_wr_n == 1))),
 
-            # RAM Chip Selects (Active Low) toggle on A11 due to the routing bug:
-            self.loc.ram_ce0_n.eq(~(safe_to_access_ram & (active_a11 == 0))),
-            self.loc.ram_ce1_n.eq(~(safe_to_access_ram & (active_a11 == 1)))
+            self.loc.ram_ce0_n.eq(~(safe_to_access_ram & (self.active_a11 == 0))),
+            self.loc.ram_ce1_n.eq(~(safe_to_access_ram & (self.active_a11 == 1)))
         ]
 
         # --- Drive the ATL Data Bus ---

@@ -10,7 +10,7 @@ class BackplaneBus:
     reset_n: Signal = field(default_factory=lambda: Signal(reset=1))
     boot_en_n: Signal = field(default_factory=lambda: Signal(reset=1))  # Pin 88
 
-    # Address Bus (Unbuffered, direct to CPLD)
+    # Address Bus (buffered, but always active and one-way, direct to CPLD)
     z80_a: Signal = field(default_factory=lambda: Signal(16))
 
     # Control Signals (Physically connected to the 'B_Z80' buffered nets!)
@@ -64,7 +64,7 @@ class MemoryBus:
     atl_we_n: Signal = field(default_factory=lambda: Signal(reset=1))
 
     # Internal Memory Addresses & Standard Controls
-    l_a: Signal = field(default_factory=lambda: Signal(11))  # [0:10]
+    l_a: Signal = field(default_factory=lambda: Signal(11))  # [0:10] strictly
     oe_n: Signal = field(default_factory=lambda: Signal(reset=1))
     we_n: Signal = field(default_factory=lambda: Signal(reset=1))
 
@@ -72,7 +72,7 @@ class MemoryBus:
     # Note: ram_ce0_n is physically tied to the TX LED circuit on Pin 99.
     ram_ce0_n: Signal = field(default_factory=lambda: Signal(reset=1))
     ram_ce1_n: Signal = field(default_factory=lambda: Signal(reset=1))
-    rom_ce_n: Signal = field(default_factory=lambda: Signal(reset=1))
+    rom_ce2_n: Signal = field(default_factory=lambda: Signal(reset=1))
 
     # Generic RX LED (Pin 100)
     led_rx: Signal = field(default_factory=lambda: Signal(reset=1))

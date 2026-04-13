@@ -18,9 +18,11 @@ if __name__ == "__main__":
         top.sh.sh_en_n, top.sh.sh_stb_n, top.sh.sh_inc_n, top.sh.sh_rw_n, top.sh.sh_done_n, top.sh.sh_busy_n,
 
         # --- Memory Bus ---
+        # --- Memory Bus ---
         top.loc.l_d, top.loc.atl_d, top.loc.atl_a, top.loc.atl_oe_n, top.loc.atl_ce_n, top.loc.atl_we_n,
-        top.loc.l_a, top.loc.oe_n, top.loc.we_n, top.loc.ram_ce0_n, top.loc.ram_ce1_n, top.loc.rom_ce_n, top.loc.led_rx,
-
+        top.loc.l_a, top.loc.oe_n, top.loc.we_n, top.loc.ram_ce0_n, top.loc.ram_ce1_n, top.loc.rom_ce2_n,
+        top.loc.led_rx,
+        
         # --- Internal Data Paths ---
         top.dma_addr
     ]
