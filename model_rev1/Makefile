@@ -151,13 +151,13 @@ ATF_FITTER = ~/git/atf15xx_yosys/run_fitter.sh
 JED2SVF    = PYTHONPATH=~/git/prjbureau python3 -m util.fuseconv --device $(DEVICE)
 
 # --- DMA Config ---
-DMA_TOP    = zx50_cpld_core
-DMA_SRC    = zx50_cpld_core.v zx50_bus_arbiter.v zx50_dma.v zx50_mmu_sram.v
+DMA_TOP    = zx50_mem_control
+DMA_SRC    = zx50_mem_control.v
 DMA_FILES  = $(addprefix $(SRC_DIR)/, $(DMA_SRC))
 
 # --- NoDMA Config ---
-NODMA_TOP  = zx50_cpld_nodma
-NODMA_SRC  = zx50_cpld_nodma.v zx50_mmu_sram.v
+NODMA_TOP  = zx50_mem_control
+NODMA_SRC  = zx50_mem_control.v
 NODMA_FILES = $(addprefix $(SRC_DIR)/, $(NODMA_SRC))
 
 # ==============================================================================
@@ -176,6 +176,7 @@ syn_dma: $(DMA_FILES)
 	done
 	
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(FLAGS) $(DMA_SRC)
+	exit 1
 	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP)
 
 	@echo "\n--- 2. Converting JED to SVF ---"
