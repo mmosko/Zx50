@@ -14,12 +14,12 @@ module zx50_mem_control (
     input  wire b_z80_wr_n,
     input  wire b_z80_m1_n,
     
-    output reg  wait_n,
-    output reg  int_n,
+    output wire wait_n, // Driven by Arbiter
+    output wire int_n,  // Driven by DMA (Interrupt Pending)
 
     // Transceiver & Local Bus
-    output reg  z80_d_oe_n,
-    output reg  d_dir,
+    output wire z80_d_oe_n, // Driven by Arbiter/DMA
+    output wire d_dir,      // Driven by Arbiter/DMA
     inout  wire [7:0] l_d,
     output wire [10:0] l_a,
     
@@ -34,7 +34,19 @@ module zx50_mem_control (
     output reg  [3:0] atl_a,
     output reg  atl_ce_n,
     output reg  atl_oe_n,
-    output reg  atl_we_n
+    output reg  atl_we_n,
+    
+    // Shadow Bus Arbiter Pins
+    inout  wire sh_en_n,      // Changed to inout for multidrop
+    inout  wire sh_rw_n,      // Changed to inout for multidrop
+    inout  wire sh_busy_n,    // Changed to inout for multidrop
+    output wire sh_data_oe_n,
+    
+    // --- NEW: Shadow Bus DMA Pins ---
+    inout  wire sh_inc_n,
+    inout  wire sh_stb_n,
+    inout  wire sh_done_n,
+    output wire sh_c_dir
 );
 
     // --- Internal State ---
@@ -43,35 +55,96 @@ module zx50_mem_control (
     reg        rom_enabled;
     reg [15:0] page_ownership;
 
-    // --- Continuous Assignments ---
-    assign l_a = z80_a[10:0];
-    
     // --- Hit Detection ---
     // Snoop: IORQ=0, WR=0, Port matches 0x3X
     wire mmu_snoop_wr  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:4] == 4'h3));
     wire mmu_direct_wr = mmu_snoop_wr && (z80_a[3:0] == card_addr);
+    
+    // DMA IO Decoding (Port 0x4X)
+    wire dma_io_write  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:0] == (8'h40 | card_addr)));
 
     // ROM is active if it's Card 0, ROM is enabled, accessing the lower 32K, during a memory cycle
     wire effective_use_rom = (card_addr == 4'h0) && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
-    
+
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
     wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
 
-    // --- Drive ATL Data Bus ---
-    // 1. If MMU Write -> Bridge Local Data into the ATL SRAM
-    // 2. If ROM Read  -> CPLD drives the linear physical address (restoring the missing A11)
-    // 3. Otherwise    -> Float the bus so the ATL SRAM can drive it during RAM reads
-    assign atl_d = mmu_direct_wr ? l_d : 
-                   (effective_use_rom ? {3'b000, z80_a[15:11]} : 8'hZZ);
+    // --- DMA Wires & INTACK ---
+    wire dma_is_active, dma_is_master, dma_dir_to_bus, dma_int_pending;
+    wire [19:0] dma_phys_addr;
+    wire dma_local_we_n, dma_local_oe_n;
+
+    wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
+    wire responding_to_intack = intack_cycle && dma_int_pending;
+
+    // --- Global Z80 Card Hit ---
+    wire active_bus_cycle = !b_z80_mreq_n || !b_z80_iorq_n;
+    wire z80_card_hit = ((ram_hit || effective_use_rom || mmu_direct_wr) && active_bus_cycle) || dma_io_write || responding_to_intack;
+
+    // --- Bus Arbiter Instantiation ---
+    wire arbiter_z80_data_oe_n, arbiter_l_dir;
     
-    // CPLD does not drive local data itself
-    assign l_d = 8'hZZ;
+    zx50_bus_arbiter arbiter (
+        .mclk(mclk), 
+        .reset_n(reset_n),
+        .sh_en_n(sh_en_n), 
+        .z80_card_hit(z80_card_hit),
+        .z80_wait_n(wait_n), 
+        .sh_busy_n(sh_busy_n),
+        .z80_rd_n(b_z80_rd_n), 
+        .sh_rw_n(sh_rw_n),
+        .z80_data_oe_n(arbiter_z80_data_oe_n), 
+        .sh_data_oe_n(sh_data_oe_n),
+        .l_dir(arbiter_l_dir)
+    );
+
+    // 1-stage edge detector for INTACK clear
+    reg iorq_sync;
+    always @(posedge zclk or negedge reset_n) begin // FIX: Use zclk for Z80 synchronization
+        if (!reset_n) iorq_sync <= 1'b1;
+        else iorq_sync <= b_z80_iorq_n;
+    end
+    wire iorq_rising = (!iorq_sync && b_z80_iorq_n);
+    wire intack_clear = iorq_rising && dma_int_pending;
+
+    zx50_dma dma (
+        .mclk(mclk), .reset_n(reset_n),
+        .z80_addr_hi(z80_a[15:8]), .z80_data_in(l_d),
+        .z80_iorq_n(b_z80_iorq_n), .dma_io_write(dma_io_write),
+        .dma_phys_addr(dma_phys_addr),
+        .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n),
+        .dma_active(dma_is_active), .sh_c_dir(sh_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
+        .dma_is_master(dma_is_master), .int_pending(dma_int_pending), .intack_clear(intack_clear)
+    );
+
+    assign int_n = dma_int_pending ? 1'b0 : 1'bz;
+
+    // --- Dynamic Routing (Cycle Stealing) ---
+    // If DMA is active, force Z80 transceiver closed. Otherwise let Arbiter decide.
+    assign z80_d_oe_n = dma_is_active ? 1'b1 : arbiter_z80_data_oe_n;
+    
+    // Force direction outward (Card -> Z80) during INTACK, since RD_n is high.
+    assign d_dir = (dma_is_active && dma_dir_to_bus) ? 1'b0 : 
+                   (responding_to_intack) ? 1'b0 : 
+                   arbiter_l_dir;
+
+    assign l_a = dma_is_active ? dma_phys_addr[10:0] : z80_a[10:0];
+    wire active_a11 = dma_is_active ? dma_phys_addr[11] : z80_a[11];
+
+    // Drive ATL Data Bus (Or route DMA Address High bits)
+    assign atl_d = mmu_direct_wr ? l_d : 
+                   (effective_use_rom && !dma_is_active ? {3'b000, z80_a[15:11]} : 
+                   (dma_is_active ? dma_phys_addr[19:12] : 8'hZZ));
+
+    // CPLD generally does not drive local data, UNLESS answering an Interrupt!
+    wire [7:0] interrupt_vector = 8'h40 | card_addr;
+    assign l_d = responding_to_intack ? interrupt_vector : 8'hZZ;
 
     // --- Combinatorial Pin Routing ---
     always @(*) begin
         // 1. Safe Defaults (Idle State)
-        z80_d_oe_n = 1'b1;
-        d_dir      = 1'b0;
         oe_n       = 1'b1;
         we_n       = 1'b1;
         ram_ce0_n  = 1'b1;
@@ -82,12 +155,32 @@ module zx50_mem_control (
         atl_we_n   = 1'b1;
         atl_a      = 4'h0;
 
-        if (mmu_direct_wr) begin
+        if (dma_is_active) begin
+            // ----------------------------------------------------------------
+            // DMA CYCLE STEALING OVERRIDE
+            // ----------------------------------------------------------------
+            atl_ce_n = 1'b1; // Bypass ATL, DMA provides full physical address
+            atl_oe_n = 1'b1;
+            
+            // Physical DMA should ALWAYS be able to hit the Boot ROM, regardless
+            // of whether the Z80 has logically unmapped it (rom_enabled)!
+            if (card_addr == 4'h0 && has_boot_rom && dma_phys_addr[19:15] == 5'h00) begin
+                rom_ce2_n = 1'b0;
+                oe_n = dma_local_oe_n;
+                we_n = 1'b1; // ROM is strictly read-only
+            end else begin
+                // Toggle RAM chips based on DMA's physical address
+                if (active_a11 == 1'b0) ram_ce0_n = 1'b0;
+                else                    ram_ce1_n = 1'b0;
+                
+                oe_n = dma_local_oe_n;
+                we_n = dma_local_we_n;
+            end
+
+        end else if (mmu_direct_wr) begin
             // ----------------------------------------------------------------
             // MMU WRITE ROUTING
             // ----------------------------------------------------------------
-            z80_d_oe_n = 1'b0;
-            d_dir      = 1'b1;           // 1 = Z80 -> Card
             atl_a      = z80_a[11:8];
             atl_ce_n   = 1'b0;
             atl_oe_n   = 1'b1;
@@ -105,18 +198,15 @@ module zx50_mem_control (
             oe_n      = b_z80_rd_n;
             we_n      = 1'b1; 
             
-            if (!b_z80_rd_n) begin
-                z80_d_oe_n = 1'b0;
-                d_dir      = 1'b0;       // 0 = Card -> Z80
-            end
-            
         end else if (ram_hit) begin
             // ----------------------------------------------------------------
             // NORMAL RAM ROUTING (Via ATL)
             // ----------------------------------------------------------------
+        
             atl_a     = z80_a[15:12];
             atl_ce_n  = 1'b0;
-            atl_oe_n  = 1'b0;            // Output Enable the ATL SRAM to get the phys page
+            atl_oe_n  = 1'b0;
+            // Output Enable the ATL SRAM to get the phys page
             atl_we_n  = 1'b1;
             
             // Toggle RAM chips based directly on the A11 bit
@@ -125,22 +215,12 @@ module zx50_mem_control (
             
             oe_n = b_z80_rd_n;
             we_n = b_z80_wr_n;
-            
-            if (!b_z80_rd_n) begin
-                z80_d_oe_n = 1'b0;
-                d_dir      = 1'b0;       // 0 = Card -> Z80
-            end else if (!b_z80_wr_n) begin
-                z80_d_oe_n = 1'b0;
-                d_dir      = 1'b1;       // 1 = Z80 -> Card
-            end
         end
     end
 
     // --- Synchronous Logic ---
-    always @(posedge mclk) begin
+    always @(posedge zclk) begin
         if (!reset_n) begin
-            wait_n <= 1'b1; 
-            int_n  <= 1'b1;
             card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
             has_boot_rom   <= ~boot_en_n;
             rom_enabled    <= ~boot_en_n;
@@ -150,15 +230,14 @@ module zx50_mem_control (
             
             // Distributed MMU Snooping
             if (mmu_snoop_wr) begin
+                
+                // ROM KILL-SWITCH FIX: If ANY card maps a page into the lower 32K 
+                // (Logical Pages 0-7), disable the boot ROM forever!
+                if (z80_a[11] == 1'b0) rom_enabled <= 1'b0; 
+                
                 if (mmu_direct_wr) begin
                     // Claim the page
                     page_ownership[z80_a[11:8]] <= 1'b1;
-                    
-                    // ROM KILL-SWITCH
-                    // If the CPU maps a page into the lower 32K (Logical Pages 0-7), 
-                    // disable the boot ROM forever so the new RAM page can show through!
-                    if (z80_a[11] == 1'b0) rom_enabled <= 1'b0; 
-                    
                 end else begin
                     // Another card claimed it! Drop ownership.
                     page_ownership[z80_a[11:8]] <= 1'b0;

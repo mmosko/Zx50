@@ -18,7 +18,16 @@ module zx50_mem_card #(
     input  wire        z80_m1_n,
 
     output wire        wait_n,
-    output wire        int_n
+    output wire        int_n,
+
+    // --- Shadow Bus Arbitration & DMA Pins ---
+    inout  wire [7:0]  sh_data, 
+    inout  wire        sh_en_n,      
+    inout  wire        sh_rw_n,      
+    inout  wire        sh_busy_n,    
+    inout  wire        sh_inc_n,     
+    inout  wire        sh_stb_n,     
+    inout  wire        sh_done_n
 );
 
     // ==========================================
@@ -31,6 +40,8 @@ module zx50_mem_card #(
     wire [3:0]  atl_a;      // ATL Address Input (Logical Page)
     
     wire z80_d_oe_n, d_dir;
+    wire sh_c_dir, sh_data_oe_n; // Internal traces for Shadow Transceiver
+    
     wire oe_n, we_n;
     wire atl_ce_n, atl_oe_n, atl_we_n;
     wire ram_ce0_n, ram_ce1_n, rom_ce2_n;
@@ -41,11 +52,10 @@ module zx50_mem_card #(
     wire b_z80_wr_n   = (!reset_n) ? CARD_ID[0] : z80_wr_n;
     wire b_z80_m1_n   = (!reset_n) ? 1'bz : z80_m1_n;
 
-
     // ==========================================
-    // U1: 74ABT245 Data Bus Transceiver
+    // U1: 74ABT245 Data Bus Transceiver (Z80)
     // ==========================================
-    ic_74abt245 transceiver (
+    ic_74abt245 z80_transceiver (
         .a(z80_d), 
         .b(l_d), 
         .dir(d_dir),        // 1 = Z80 to Card, 0 = Card to Z80
@@ -53,7 +63,17 @@ module zx50_mem_card #(
     );
 
     // ==========================================
-    // U2: CPLD (Memory Controller)
+    // U2: 74ABT245 Data Bus Transceiver (Shadow)
+    // ==========================================
+    ic_74abt245 sh_transceiver (
+        .a(l_d), 
+        .b(sh_data), 
+        .dir(sh_c_dir),     // 1 = Card to Shadow, 0 = Shadow to Card
+        .oe_n(sh_data_oe_n)
+    );
+
+    // ==========================================
+    // U3: CPLD (Memory Controller)
     // ==========================================
     zx50_mem_control cpld (
         .mclk(mclk), .zclk(zclk),
@@ -71,11 +91,21 @@ module zx50_mem_card #(
         .ram_ce0_n(ram_ce0_n), .ram_ce1_n(ram_ce1_n), .rom_ce2_n(rom_ce2_n),
         
         .atl_d(atl_d), .atl_a(atl_a),
-        .atl_ce_n(atl_ce_n), .atl_oe_n(atl_oe_n), .atl_we_n(atl_we_n)
+        .atl_ce_n(atl_ce_n), .atl_oe_n(atl_oe_n), .atl_we_n(atl_we_n),
+
+        // --- Shadow Bus Arbiter & DMA Routing ---
+        .sh_en_n(sh_en_n),
+        .sh_rw_n(sh_rw_n),
+        .sh_busy_n(sh_busy_n),
+        .sh_data_oe_n(sh_data_oe_n),
+        .sh_inc_n(sh_inc_n),
+        .sh_stb_n(sh_stb_n),
+        .sh_done_n(sh_done_n),
+        .sh_c_dir(sh_c_dir)
     );
 
     // ==========================================
-    // U3: IS61C256AL (Address Translation SRAM)
+    // U4: IS61C256AL (Address Translation SRAM)
     // ==========================================
     // 32K chip, but we only use the bottom 16 bytes. Ground the upper 11 address lines.
     wire [14:0] atl_phys_a = {11'b0, atl_a};
@@ -86,7 +116,7 @@ module zx50_mem_card #(
     );
 
     // ==========================================
-    // U4, U5, U6: Primary Memory Chips
+    // U5, U6, U7: Primary Memory Chips
     // ==========================================
     // HW REV A11 BUG: 19-bit physical address is formed by appending Local A0-A10 to ATL D0-D7.
     wire [18:0] phys_addr = {atl_d, l_a};

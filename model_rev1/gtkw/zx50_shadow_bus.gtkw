@@ -1,0 +1,101 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Wed Apr 22 04:13:29 2026
+[*]
+[dumpfile] "/media/psf/z80/Zx50/model_rev1/waves/zx50_shadow_bus.vcd"
+[dumpfile_mtime] "Wed Apr 22 04:12:55 2026"
+[dumpfile_size] 186492
+[savefile] "/media/psf/z80/Zx50/model_rev1/gtkw/zx50_shadow_bus.gtkw"
+[timestart] 8907000
+[size] 1512 870
+[pos] -1 -1
+*-19.035585 9906440 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] zx50_shadow_bus_tb.
+[treeopen] zx50_shadow_bus_tb.card0.
+[treeopen] zx50_shadow_bus_tb.card1.
+[sst_width] 40
+[signals_width] 167
+[sst_expanded] 0
+[sst_vpaned_height] 435
+@28
+zx50_shadow_bus_tb.mclk
+zx50_shadow_bus_tb.zclk
+zx50_shadow_bus_tb.reset_n
+@200
+-
+-Z80
+@22
+zx50_shadow_bus_tb.z80_addr[15:0]
+zx50_shadow_bus_tb.z80_data[7:0]
+@28
+zx50_shadow_bus_tb.z80_mreq_n
+zx50_shadow_bus_tb.z80_iorq_n
+zx50_shadow_bus_tb.z80_rd_n
+zx50_shadow_bus_tb.z80_wr_n
+zx50_shadow_bus_tb.z80_m1_n
+zx50_shadow_bus_tb.z80_int_n
+@200
+-
+-SHADOW
+@28
+zx50_shadow_bus_tb.sh_en_n
+zx50_shadow_bus_tb.sh_stb_n
+zx50_shadow_bus_tb.sh_inc_n
+zx50_shadow_bus_tb.sh_rw_n
+@22
+zx50_shadow_bus_tb.sh_data[7:0]
+@200
+-
+-CARD0
+@22
+zx50_shadow_bus_tb.card0.atl_d[7:0]
+zx50_shadow_bus_tb.card0.l_a[10:0]
+zx50_shadow_bus_tb.card0.l_d[7:0]
+@28
+zx50_shadow_bus_tb.card0.ram_ce0_n
+zx50_shadow_bus_tb.card0.ram_ce1_n
+zx50_shadow_bus_tb.card0.rom_ce2_n
+zx50_shadow_bus_tb.card0.oe_n
+zx50_shadow_bus_tb.card0.we_n
+zx50_shadow_bus_tb.card0.sh_c_dir
+zx50_shadow_bus_tb.card0.sh_data_oe_n
+@22
+zx50_shadow_bus_tb.card0.sh_data[7:0]
+@28
+zx50_shadow_bus_tb.card0.z80_d_oe_n
+@200
+-
+-CARD1
+@22
+zx50_shadow_bus_tb.card1.atl_d[7:0]
+zx50_shadow_bus_tb.card1.l_a[10:0]
+zx50_shadow_bus_tb.card1.l_d[7:0]
+@28
+zx50_shadow_bus_tb.card1.ram_ce0_n
+zx50_shadow_bus_tb.card1.ram_ce1_n
+zx50_shadow_bus_tb.card1.rom_ce2_n
+zx50_shadow_bus_tb.card1.oe_n
+zx50_shadow_bus_tb.card1.we_n
+zx50_shadow_bus_tb.card1.sh_c_dir
+zx50_shadow_bus_tb.card1.sh_data_oe_n
+@22
+zx50_shadow_bus_tb.card1.sh_data[7:0]
+@28
+zx50_shadow_bus_tb.card1.z80_d_oe_n
+@200
+-
+-Z80
+@29
+zx50_shadow_bus_tb.zclk
+@22
+zx50_shadow_bus_tb.z80_addr[15:0]
+zx50_shadow_bus_tb.z80_data[7:0]
+@28
+zx50_shadow_bus_tb.z80_iorq_n
+zx50_shadow_bus_tb.z80_mreq_n
+zx50_shadow_bus_tb.z80_rd_n
+zx50_shadow_bus_tb.z80_wr_n
+zx50_shadow_bus_tb.z80_m1_n
+zx50_shadow_bus_tb.z80_int_n
+[pattern_trace] 1
+[pattern_trace] 0

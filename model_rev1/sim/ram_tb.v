@@ -12,13 +12,19 @@ module ram_tb;
     wire z80_mreq_n, z80_iorq_n, z80_rd_n, z80_wr_n, z80_m1_n;
     wire wait_n, int_n, reset_n;
 
+    wire [7:0]  sh_data;
+    wire sh_en_n, sh_rw_n, sh_busy_n, sh_data_oe_n;
+
     // -- Backplane --
     zx50_backplane backplane (
         .z80_reset_n(reset_n),
         .z80_addr(z80_a), .z80_data(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),
         .z80_rd_n(z80_rd_n), .z80_wr_n(z80_wr_n), .z80_m1_n(z80_m1_n),
-        .z80_wait_n(wait_n), .z80_int_n(int_n)
+        .z80_wait_n(wait_n), .z80_int_n(int_n),
+        .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n),
+        .sh_busy_n(sh_busy_n)
     );
 
     // --- The Z80 CPU (BFM) ---
@@ -37,7 +43,10 @@ module ram_tb;
         .z80_a(z80_a), .z80_d(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),
         .z80_rd_n(z80_rd_n), .z80_wr_n(z80_wr_n), .z80_m1_n(z80_m1_n),
-        .wait_n(wait_n), .int_n(int_n)
+        .wait_n(wait_n), .int_n(int_n),
+        .sh_data(sh_data),
+        .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
+        .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
     // --- Test Sequence ---
