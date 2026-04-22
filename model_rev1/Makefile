@@ -152,7 +152,7 @@ JED2SVF    = PYTHONPATH=~/git/prjbureau python3 -m util.fuseconv --device $(DEVI
 
 # --- DMA Config ---
 DMA_TOP    = zx50_mem_control
-DMA_SRC    = zx50_mem_control.v
+DMA_SRC    = zx50_bus_arbiter.v zx50_dma.v zx50_mem_control.v
 DMA_FILES  = $(addprefix $(SRC_DIR)/, $(DMA_SRC))
 
 # --- NoDMA Config ---
