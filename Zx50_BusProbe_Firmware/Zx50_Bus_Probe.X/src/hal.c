@@ -38,32 +38,48 @@ void GPIO_Init(void) {
     // Enable internal weak pull-ups on PORTB to prevent WAIT/INT hangs
     INTCON2bits.RBPU = 0;
 
-    // 1. Disable all analog inputs to safely read digital logic levels
-    ADCON1 = 0x0F; // All pins set to Digital I/O
-    CMCON  = 0x07; // Disable Comparators
+    // 1. Disable all analog inputs
+    ADCON1 = 0x0F; 
+    CMCON  = 0x07; 
 
-    // 2. Pre-load the output latches BEFORE enabling the pins!
-    // Set all ~OE (Output Enable) pins to HIGH (1) so transceivers boot up DISABLED.
-    XCVR_CTRL_OE_LAT = 1; // U7 ~OE disabled
-    XCVR_DATA_OE_LAT = 1; // U6 ~OE disabled
+    // ---------------------------------------------------------
+    // STEP 2: PRE-LOAD LATCHES WITH SAFE IDLE STATES
+    // ---------------------------------------------------------
+    // Set all ~OE pins HIGH (1) so transceivers boot up DISABLED
+    XCVR_CTRL_OE_LAT = 1; 
+    XCVR_DATA_OE_LAT = 1; 
     
-    // Pre-load PORTB and PORTE so active-low Z80 control lines boot HIGH (Inactive)
-    LATB = 0xFF; 
-    LATE = 0xFF;
+    // Set transceivers to safely listen (A->B)
+    XCVR_CTRL_DIR_LAT = 1; 
+    XCVR_DATA_DIR_LAT = 1;
 
-    // 3. Configure Pin Directions (0 = Driven Output, 1 = Tri-stated Input)
-    // Transceiver Control Pins must be driven outputs
+    // Pre-load Z80 control lines HIGH (Inactive)
+    Z80_MREQ_LAT = 1;
+    Z80_IORQ_LAT = 1;
+    Z80_RD_LAT   = 1;
+    Z80_WR_LAT   = 1;
+    Z80_M1_LAT   = 1;
+    
+    // Hold the Z80 and CPLD in RESET (Active LOW)
+    Z80_RESET_LAT = 0; 
+
+    // ---------------------------------------------------------
+    // STEP 3: CONFIGURE PIN DIRECTIONS
+    // ---------------------------------------------------------
+    // Transceiver controls must be outputs
     XCVR_CTRL_OE_DIR  = 0;
     XCVR_CTRL_DIR_DIR = 0;
     XCVR_DATA_OE_DIR  = 0;
     XCVR_DATA_DIR_DIR = 0;
 
-    // All Z80 connections default to Ghost Mode (Inputs)
+    // Default Z80 bus to Ghost Mode (Inputs)
     TRISB = 0xFF; 
-    TRISC = 0xFF; // UART/SPI will override their specific pins later
+    TRISC = 0xFF; 
     TRISD = 0xFF; 
     TRISE = 0xFF; 
     
+    // EXCEPT: We must actively drive the RESET line!
+    Z80_RESET_DIR = 0; 
 }
 
 void UART_Init(void) {

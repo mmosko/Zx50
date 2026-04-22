@@ -8,7 +8,7 @@ from bus import BusController
 from pic18_link import PIC18Link
 
 # --- CONFIGURATION ---
-APP_VERSION = "RevA-0.1.1"
+APP_VERSION = "RevA-0.2.0"
 USE_WIFI = True  # Set to False to drop back to purely USB Serial
 TCP_PORT = 5050  # Port for the laptop host script to connect to
 
@@ -209,13 +209,55 @@ class Zx50Console:
     def default(self, args, is_tcp):
         self._send_response("ERR UNKNOWN_COMMAND. Type 'help' for a list of commands.", is_tcp)
 
-    def do_help(self, args, is_tcp):
-        resp = "Available Subsystems:\n"
-        resp += "  pic   - Commands for the PIC18F4620 Z80 Controller\n"
-        resp += "  bus   - Commands for the Multiplexer routing\n"
-        resp += "  idn?  - Get device identity\n"
-        resp += "Type 'pic help' or 'bus help' for subsystem commands."
-        self._send_response(resp, is_tcp)
+        # ... inside Zx50Console class in main.py ...
+
+        def do_help(self, args, is_tcp):
+            resp = "Available Subsystems:\n"
+            resp += "  pic   - Commands for the PIC18F4620 Z80 Controller\n"
+            resp += "  bus   - Commands for the Multiplexer routing\n"
+            resp += "  z80   - Run custom scripts (e.g. 'z80 run' or 'z80 run myscript')\n"
+            resp += "  idn?  - Get device identity\n"
+            resp += "Type 'pic help' or 'bus help' for subsystem commands."
+            self._send_response(resp, is_tcp)
+
+        def do_z80(self, args, is_tcp):
+            """Dynamically loads and runs a python script stored on the Pico."""
+            if not args or args[0].upper() != "RUN":
+                self._send_response("ERR SYNTAX_Z80_RUN. Usage: 'z80 run <script_name>'", is_tcp)
+                return
+
+            # Default to z80_program.py if no name is provided
+            script_name = args[1] if len(args) > 1 else "z80_program"
+
+            # Strip .py if the user accidentally typed it
+            if script_name.endswith('.py'):
+                script_name = script_name[:-3]
+
+            try:
+                # FORCE RELOAD: Remove the module from memory if it was previously loaded.
+                # This allows you to `mpremote cp` a new version and run it without rebooting!
+                if script_name in sys.modules:
+                    del sys.modules[script_name]
+
+                # Dynamically import the script
+                z80_script = __import__(script_name)
+
+                # Ensure the script has a run() function
+                if hasattr(z80_script, 'run'):
+                    self._send_response(f"OK RUNNING {script_name}.py...", is_tcp)
+
+                    # Execute the script, passing the hardware controllers to it
+                    result = z80_script.run(self.pic, self.bus)
+
+                    self._send_response(f"OK DONE. Result: {result}", is_tcp)
+                else:
+                    self._send_response(f"ERR NO_RUN_FUNCTION_IN_{script_name}.py", is_tcp)
+
+            except ImportError:
+                self._send_response(f"ERR FILE_NOT_FOUND: {script_name}.py", is_tcp)
+            except Exception as e:
+                # Catch crashes in the custom script so the CLI doesn't die
+                self._send_response(f"ERR SCRIPT_EXCEPTION: {e}", is_tcp)
 
     def do_idn(self, args, is_tcp):
         self._send_response("OK Zx50_PROBE_REVA", is_tcp)

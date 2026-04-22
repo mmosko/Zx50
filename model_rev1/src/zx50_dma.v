@@ -202,9 +202,15 @@ module zx50_dma (
     // Concatenate the static high bits and the fast 4K counter for the local address
     assign dma_phys_addr = {phys_addr_hi, phys_addr_lo};
     
-    // THE FIX: Output Enable and Write Enable are now tightly bound to the Strobe pulse
-    // to prevent local data bus collisions with the Z80 OUT commands.
-    assign dma_local_oe_n = (dma_active && dir_from_bus == 1'b0) ? int_sh_stb_n : 1'b1;
-    assign dma_local_we_n = (dma_active && dir_from_bus == 1'b1) ? int_sh_stb_n : 1'b1;
-
+    // ==========================================
+    // LOCAL MEMORY CONTROL
+    // ==========================================
+    wire active_transfer = (is_master && dma_go && m_state != M_IDLE) || (!is_master && dma_go);
+    
+    // OE stays continuously LOW for the entire transfer to guarantee massive Data Hold Time!
+    assign dma_local_oe_n = (active_transfer && !dir_from_bus) ? 1'b0 : 1'b1;
+    
+    // WE pulses LOW exactly with the strobe
+    assign dma_local_we_n = (active_transfer && dir_from_bus) ? 
+                            (is_master ? generated_stb_n : sh_stb_n) : 1'b1;
 endmodule

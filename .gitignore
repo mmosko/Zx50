@@ -4,6 +4,8 @@ z80pack/
 
 .venv
 
+__pycache__
+
 # --- Icarus Verilog / Simulation Outputs ---
 *.vvp
 *.vcd

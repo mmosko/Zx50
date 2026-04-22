@@ -1,0 +1,45 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Apr 12 23:47:14 2026
+[*]
+[dumpfile] "/media/psf/z80/Zx50/model_rev1/waves/rom.vcd"
+[dumpfile_mtime] "Sun Apr 12 23:14:50 2026"
+[dumpfile_size] 49415826
+[savefile] "/media/psf/z80/Zx50/model_rev1/gtkw/rom.gtkw"
+[timestart] 0
+[size] 1512 870
+[pos] -27 -24
+*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] rom_tb.
+[treeopen] rom_tb.card0.
+[sst_width] 278
+[signals_width] 308
+[sst_expanded] 1
+[sst_vpaned_height] 251
+@200
+-Z80
+@22
+rom_tb.z80.addr[15:0]
+rom_tb.z80.data[7:0]
+@28
+rom_tb.z80.mreq_n
+rom_tb.z80.iorq_n
+rom_tb.z80.rd_n
+rom_tb.z80.wr_n
+rom_tb.z80.reset_n
+@200
+-
+-CARD0
+@22
+rom_tb.card0.atl_a[3:0]
+rom_tb.card0.atl_d[7:0]
+@28
+rom_tb.card0.atl_ce_n
+rom_tb.card0.atl_oe_n
+rom_tb.card0.atl_we_n
+@22
+rom_tb.card0.l_a[10:0]
+rom_tb.card0.l_d[7:0]
+rom_tb.card0.phys_addr[18:0]
+[pattern_trace] 1
+[pattern_trace] 0

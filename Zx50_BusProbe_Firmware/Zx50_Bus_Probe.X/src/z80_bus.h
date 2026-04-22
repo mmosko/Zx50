@@ -20,6 +20,8 @@ void Z80_IO_Write(uint16_t port_and_ah, uint8_t data);
 uint8_t Z80_IO_Read(uint16_t port_and_ah);
 void Z80_Bus_Snapshot(void);
         
+void Z80_Boot_Sequence(void);
+
 #ifdef	__cplusplus
 }
 #endif

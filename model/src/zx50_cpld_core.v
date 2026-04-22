@@ -93,7 +93,7 @@
 //PIN: 99 = ram_ce0_n;
 //PIN: 92 = ram_ce1_n;
 //PIN: 98 = rom_ce_n;
-//PIN: 93 = ram_oe_n;
+//PIN: 93 = mem_oe_n;
 //PIN: 94 = ram_we_n;
 `else
 // ==========================================
@@ -210,11 +210,10 @@ module zx50_cpld_core (
     // ==========================================
     wire arbiter_hit  = internal_z80_card_hit || responding_to_intack;
     wire arbiter_rd_n = responding_to_intack ? 1'b0 : z80_rd_n;
-    wire safe_sh_en_n = dma_is_active ? sh_en_n : 1'b1;
 
     zx50_bus_arbiter arbiter_unit (
         .mclk(mclk), .reset_n(reset_n),
-        .sh_en_n(safe_sh_en_n), 
+        .sh_en_n(sh_en_n), 
         .z80_card_hit(arbiter_hit), 
         .z80_wait_n(arbiter_wait_n), .sh_busy_n(arbiter_sh_busy_n), 
         .z80_rd_n(arbiter_rd_n), .sh_rw_n(sh_rw_n),
@@ -242,6 +241,7 @@ module zx50_cpld_core (
     );
 
     wire dma_internal_sh_c_dir; 
+    wire combined_sh_busy_n = sh_busy_n & arbiter_sh_busy_n;
 
     zx50_dma dma_unit (
         .mclk(mclk), .reset_n(reset_n), 
@@ -253,7 +253,7 @@ module zx50_cpld_core (
         .dma_local_we_n(dma_local_we_n), .dma_local_oe_n(dma_local_oe_n),
         .sh_en_n(sh_en_n), .sh_rw_n(sh_rw_n), .sh_inc_n(sh_inc_n),
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), 
-        .sh_busy_n(sh_busy_n), 
+        .sh_busy_n(combined_sh_busy_n), 
         .dma_active(dma_is_active), .sh_c_dir(dma_internal_sh_c_dir), .dma_dir_to_bus(dma_dir_to_bus),
         .dma_is_master(dma_is_master), .int_pending(dma_int_pending), .intack_clear(intack_clear)
     );
@@ -317,10 +317,16 @@ module zx50_cpld_core (
     // 6. CYCLE STEALING: INTERCEPT & OVERRIDE LOGIC
     // ==========================================
     assign z80_wait_n = ((arbiter_hit && dma_is_active) || arbiter_wait_n == 1'b0) ? 1'b0 : 1'bz;
-    assign sh_c_dir = dma_is_active ? (!dma_local_oe_n) : dma_internal_sh_c_dir;
-    assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n;
+    //assign sh_c_dir = dma_is_active ? (!dma_local_oe_n) : dma_internal_sh_c_dir;
+   assign sh_c_dir = dma_is_master ? 1'b0 : 1'b1;
+
+    // assign sh_data_oe_n  = dma_is_active ? 1'b0 : arbiter_sh_data_oe_n;
+    assign sh_data_oe_n = arbiter_sh_data_oe_n;
+
     assign z80_data_oe_n = internal_z80_data_oe_n;
-    assign sh_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;
-    assign l_dir = internal_l_dir;
+    // assign sh_busy_n = (arbiter_hit && dma_is_active) ? 1'b0 : 1'bz;
+    assign sh_busy_n = ((arbiter_hit && dma_is_active) || arbiter_sh_busy_n == 1'b0) ? 1'b0 : 1'bz;
+    // assign l_dir = internal_l_dir;
+    assign l_dir = (dma_is_active && dma_dir_to_bus) ? 1'b0 : internal_l_dir;
 
 endmodule
