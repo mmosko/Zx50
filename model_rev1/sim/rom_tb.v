@@ -83,7 +83,7 @@ module rom_tb;
 
             if (read_val != expected) begin
                 $display("FAIL: Bad ROM value at %h, read %h expected %h", i, read_val, expected); 
-                $finish(1); 
+                $fatal(1); 
             end
         end
 

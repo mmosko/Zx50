@@ -81,13 +81,13 @@ module ram_tb;
         $display("\n[%0t] Reading back from 0x8123...", $time);
         z80.mem_read(16'h8123, read_val);
         if (read_val === 8'hAA) $display("SUCCESS: RAM0 Read 0xAA");
-        else begin $display("FAIL: RAM0 Expected 0xAA, got %h", read_val); $finish(1); end
+        else begin $display("FAIL: RAM0 Expected 0xAA, got %h", read_val); $fatal(1); end
 
         // 5. Read back and verify RAM1
         $display("[%0t] Reading back from 0x8A45...", $time);
         z80.mem_read(16'h8A45, read_val);
         if (read_val === 8'hBB) $display("SUCCESS: RAM1 Read 0xBB");
-        else begin $display("FAIL: RAM1 Expected 0xBB, got %h", read_val); $finish(1); end
+        else begin $display("FAIL: RAM1 Expected 0xBB, got %h", read_val); $fatal(1); end
 
         $display("\n--- Test Complete ---");
         $finish;

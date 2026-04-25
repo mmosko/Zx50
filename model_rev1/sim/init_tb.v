@@ -97,7 +97,7 @@ module init_tb;
         end
         else begin
             $display("FAIL: Card0 Expected Card ID A, got %h", card0.cpld.card_addr);
-            $finish(1);
+            $fatal(1);
         end
         
         
@@ -106,7 +106,7 @@ module init_tb;
         end
         else begin
             $display("FAIL: Card0 Expected Pages 00FF, got %h", card0.cpld.page_ownership);
-            $finish(1);
+            $fatal(1);
         end
 
         // ==== Verify Card 1
@@ -115,7 +115,7 @@ module init_tb;
         end
         else begin
             $display("FAIL: Card1 Expected Card ID 6, got %h", card1.cpld.card_addr);
-            $finish(1);
+            $fatal(1);
         end
 
         if (card1.cpld.page_ownership === 16'h0000) begin
@@ -123,7 +123,7 @@ module init_tb;
         end
         else begin
             $display("FAIL: Card1 Expected Pages 0000, got %h", card1.cpld.page_ownership);
-            $finish(1);
+            $fatal(1);
         end
 
         $finish;

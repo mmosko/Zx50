@@ -156,17 +156,17 @@ module zx50_mem_control (
 
     // --- Hit Detection ---
     // Snoop: IORQ=0, WR=0, Port matches 0x3X
-    wire mmu_snoop_wr  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:4] == 4'h3));
-    wire mmu_direct_wr = mmu_snoop_wr && (z80_a[3:0] == card_addr);
+    (* keep = 1 *) wire mmu_snoop_wr  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:4] == 4'h3));
+    (* keep = 1 *) wire mmu_direct_wr = mmu_snoop_wr && (z80_a[3:0] == card_addr);
     
     // DMA IO Decoding (Port 0x4X)
-    wire dma_io_write  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:0] == (8'h40 | card_addr)));
+    (* keep = 1 *) wire dma_io_write  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:0] == (8'h40 | card_addr)));
 
     // ROM is active if it's Card 0, ROM is enabled, accessing the lower 32K, during a memory cycle
-    wire effective_use_rom = (card_addr == 4'h0) && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
+    (* keep = 1 *) wire effective_use_rom = (card_addr == 4'h0) && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
 
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
-    wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
+    (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
 
     // --- DMA Wires & INTACK ---
     wire dma_is_active, dma_is_master, dma_dir_to_bus, dma_int_pending;
@@ -174,10 +174,10 @@ module zx50_mem_control (
     wire dma_local_we_n, dma_local_oe_n;
 
     wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
-    wire responding_to_intack = intack_cycle && dma_int_pending;
+    (* keep = 1 *) wire responding_to_intack = intack_cycle && dma_int_pending;
 
     // --- Global Z80 Card Hit ---
-    wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || responding_to_intack;
+    (* keep = 1 *) wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || responding_to_intack;
 
     // --- Bus Arbiter Instantiation ---
     wire arbiter_z80_data_oe_n, arbiter_l_dir;
@@ -342,7 +342,7 @@ module zx50_mem_control (
                 init_done <= 1'b1;
                 if (has_boot_rom) page_ownership <= 16'h00FF; // Auto-claim lower 32K
             end
-            
+
             // Distributed MMU Snooping
             if (mmu_snoop_wr) begin
                 
