@@ -152,6 +152,7 @@ module zx50_mem_control (
     reg        has_boot_rom;
     reg        rom_enabled;
     reg [15:0] page_ownership;
+    reg        init_done;
 
     // --- Hit Detection ---
     // Snoop: IORQ=0, WR=0, Port matches 0x3X
@@ -176,8 +177,7 @@ module zx50_mem_control (
     wire responding_to_intack = intack_cycle && dma_int_pending;
 
     // --- Global Z80 Card Hit ---
-    wire active_bus_cycle = !b_z80_mreq_n || !b_z80_iorq_n;
-    wire z80_card_hit = ((ram_hit || effective_use_rom || mmu_direct_wr) && active_bus_cycle) || dma_io_write || responding_to_intack;
+    wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || responding_to_intack;
 
     // --- Bus Arbiter Instantiation ---
     wire arbiter_z80_data_oe_n, arbiter_l_dir;
@@ -324,17 +324,24 @@ module zx50_mem_control (
     end
 
     // --- Synchronous Logic ---
-// --- Synchronous Logic ---
     always @(posedge zclk) begin
         if (!reset_n) begin
             card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
             
-            // DYNAMIC BOOT INFERENCE: If the DIP switches read ID 0, enable the ROM.
+            // DYNAMIC BOOT INFERENCE: 
             has_boot_rom   <= ({b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n} == 4'h0);
             rom_enabled    <= ({b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n} == 4'h0);
-            page_ownership <= ({b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n} == 4'h0) ? 16'h00FF : 16'h0000;
             
+            // SIMPLIFIED RESET: Just clear it. We will assign the default ROM pages on the very next clock cycle.
+            page_ownership <= 16'h0000;
+            init_done      <= 1'b0;
+
         end else begin
+            if (!init_done) begin
+                // Execute exactly once after reset goes high
+                init_done <= 1'b1;
+                if (has_boot_rom) page_ownership <= 16'h00FF; // Auto-claim lower 32K
+            end
             
             // Distributed MMU Snooping
             if (mmu_snoop_wr) begin
