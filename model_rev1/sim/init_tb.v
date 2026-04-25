@@ -48,7 +48,7 @@ module init_tb;
 
     // --- The Device Under Test ---
     zx50_mem_card #(
-        .CARD_ID(4'hA)
+        .CARD_ID(4'h0)
     ) card0 (
         .mclk(mclk),
         .zclk(zclk),
@@ -92,11 +92,11 @@ module init_tb;
         z80.boot_sequence();
 
         // Verify CPLD latched state
-        if (card0.cpld.card_addr === 4'hA) begin
+        if (card0.cpld.card_addr === 4'h0) begin
             $display("SUCCESS: Card0 Card ID latched correctly.");
         end
         else begin
-            $display("FAIL: Card0 Expected Card ID A, got %h", card0.cpld.card_addr);
+            $display("FAIL: Card0 Expected Card ID 0, got %h", card0.cpld.card_addr);
             $fatal(1);
         end
         

@@ -174,11 +174,13 @@ module zx50_mem_control (
     wire dma_local_we_n, dma_local_oe_n;
 
     wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
-    (* keep = 1 *) wire responding_to_intack = intack_cycle && dma_int_pending;
-
+    // Split the intack flag into two separate macrocells to bypass routing congestion!
+    (* keep = 1 *) wire respond_intack_lo = intack_cycle && dma_int_pending;
+    (* keep = 1 *) wire respond_intack_hi = intack_cycle && dma_int_pending;
+    
     // --- Global Z80 Card Hit ---
-    (* keep = 1 *) wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || responding_to_intack;
-
+    (* keep = 1 *) wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || respond_intack_lo;
+    
     // --- Bus Arbiter Instantiation ---
     wire arbiter_z80_data_oe_n, arbiter_l_dir;
     
@@ -225,7 +227,7 @@ module zx50_mem_control (
     
     // Force direction outward (Card -> Z80) during INTACK, since RD_n is high.
     assign d_dir = (dma_is_active && dma_dir_to_bus) ? 1'b0 : 
-                   (responding_to_intack) ? 1'b0 : 
+                   (respond_intack_hi) ? 1'b0 : 
                    arbiter_l_dir;
 
     assign l_a = dma_is_active ? dma_phys_addr[10:0] : z80_a[10:0];
@@ -242,10 +244,13 @@ module zx50_mem_control (
     // The external ATL SRAM is ONLY allowed to output data when the CPLD is NOT driving the bus.
     // AND we must be doing a standard RAM read (ram_hit)
     assign atl_oe_n = !(ram_hit && !cpld_driving_atl);
-
+    
     // CPLD generally does not drive local data, UNLESS answering an Interrupt!
     wire [7:0] interrupt_vector = 8'h40 | card_addr;
-    assign l_d = responding_to_intack ? interrupt_vector : 8'hZZ;
+
+    // SPLIT ASSIGNMENT: Lower nibble driven by _lo flag, upper by _hi flag
+    assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : 4'hZ;
+    assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : 4'hZ;    
 
     // --- Combinatorial Pin Routing ---
     always @(*) begin
@@ -329,8 +334,8 @@ module zx50_mem_control (
             card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
             
             // DYNAMIC BOOT INFERENCE: 
-            has_boot_rom   <= ({b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n} == 4'h0);
-            rom_enabled    <= ({b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n} == 4'h0);
+            has_boot_rom   <= (card_addr == 4'h0);
+            rom_enabled    <= has_boot_rom;
             
             // SIMPLIFIED RESET: Just clear it. We will assign the default ROM pages on the very next clock cycle.
             page_ownership <= 16'h0000;
