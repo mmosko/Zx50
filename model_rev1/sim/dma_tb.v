@@ -40,7 +40,7 @@ module dma_tb;
     );
 
     // --- The Device Under Test ---
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b1)) card0 ( // Boot_EN=1 to simplify RAM testing
+    zx50_mem_card #(.CARD_ID(4'h0)) card0 ( 
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),
@@ -62,7 +62,7 @@ module dma_tb;
 
         // 1. Map Logical Page 8 to Physical Page 0x10
         $display("\n[%0t] Mapping Logical Page 8 to Physical Page 0x10...", $time);
-        z80.mmu_map_page(4'h0, 4'h8, 8'h10);
+        z80.mmu_map_page(4'h1, 4'h8, 8'h10);
         clk_gen.wait_zclk(5);
 
         // 2. Pre-fill some Z80 data at 0x8100

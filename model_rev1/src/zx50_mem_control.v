@@ -131,7 +131,7 @@ module zx50_mem_control (
     inout  wire [7:0] atl_d,
     output reg  [3:0] atl_a,
     output reg  atl_ce_n,
-    output reg  atl_oe_n,
+    output wire  atl_oe_n,
     output reg  atl_we_n,
     
     // Shadow Bus Arbiter Pins
@@ -232,9 +232,16 @@ module zx50_mem_control (
     wire active_a11 = dma_is_active ? dma_phys_addr[11] : z80_a[11];
 
     // Drive ATL Data Bus (Or route DMA Address High bits)
-    assign atl_d = mmu_direct_wr ? l_d : 
+    wire cpld_driving_atl = mmu_direct_wr || (effective_use_rom && !dma_is_active) || dma_is_active;
+    
+    assign atl_d = cpld_driving_atl ? 
+                   (mmu_direct_wr ? l_d : 
                    (effective_use_rom && !dma_is_active ? {3'b000, z80_a[15:11]} : 
-                   (dma_is_active ? dma_phys_addr[19:12] : 8'hZZ));
+                   dma_phys_addr[19:12])) : 8'hZZ;
+
+    // The external ATL SRAM is ONLY allowed to output data when the CPLD is NOT driving the bus.
+    // AND we must be doing a standard RAM read (ram_hit)
+    assign atl_oe_n = !(ram_hit && !cpld_driving_atl);
 
     // CPLD generally does not drive local data, UNLESS answering an Interrupt!
     wire [7:0] interrupt_vector = 8'h40 | card_addr;
@@ -249,7 +256,7 @@ module zx50_mem_control (
         ram_ce1_n  = 1'b1;
         rom_ce2_n  = 1'b1;
         atl_ce_n   = 1'b1;
-        atl_oe_n   = 1'b1;
+        // atl_oe_n   = 1'b1;
         atl_we_n   = 1'b1;
         atl_a      = 4'h0;
 
@@ -258,7 +265,7 @@ module zx50_mem_control (
             // DMA CYCLE STEALING OVERRIDE
             // ----------------------------------------------------------------
             atl_ce_n = 1'b1; // Bypass ATL, DMA provides full physical address
-            atl_oe_n = 1'b1;
+            // atl_oe_n = 1'b1;
             
             // Physical DMA should ALWAYS be able to hit the Boot ROM, regardless
             // of whether the Z80 has logically unmapped it (rom_enabled)!
@@ -281,7 +288,7 @@ module zx50_mem_control (
             // ----------------------------------------------------------------
             atl_a      = z80_a[11:8];
             atl_ce_n   = 1'b0;
-            atl_oe_n   = 1'b1;
+            // atl_oe_n   = 1'b1;
             atl_we_n   = b_z80_wr_n;
             
         end else if (effective_use_rom) begin
@@ -289,7 +296,7 @@ module zx50_mem_control (
             // ROM READ ROUTING (ATL Bypass)
             // ----------------------------------------------------------------
             atl_ce_n  = 1'b1;
-            atl_oe_n  = 1'b1;
+            // atl_oe_n  = 1'b1;
             atl_we_n  = 1'b1;
             
             rom_ce2_n = 1'b0;
@@ -303,7 +310,7 @@ module zx50_mem_control (
         
             atl_a     = z80_a[15:12];
             atl_ce_n  = 1'b0;
-            atl_oe_n  = 1'b0;
+            // atl_oe_n  = 1'b0;
             // Output Enable the ATL SRAM to get the phys page
             atl_we_n  = 1'b1;
             

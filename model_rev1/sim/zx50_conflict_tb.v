@@ -67,7 +67,7 @@ module zx50_conflict_tb;
     // ==========================================
     // Card A (ID 0, Boot Card)
     // ==========================================
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b0)) card_a (
+    zx50_mem_card #(.CARD_ID(4'h0)) card_a (
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),
@@ -80,7 +80,7 @@ module zx50_conflict_tb;
     // ==========================================
     // Card B (ID 1, RAM Card)
     // ==========================================
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) card_b (
+    zx50_mem_card #(.CARD_ID(4'h1)) card_b (
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),

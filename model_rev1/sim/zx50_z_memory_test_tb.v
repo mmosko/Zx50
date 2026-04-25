@@ -77,7 +77,7 @@ module zx50_z_memory_test_tb;
     // ==========================================
     // Device Under Test (Memory Card)
     // ==========================================
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) UUT (
+    zx50_mem_card #(.CARD_ID(4'h1)) UUT (
         .mclk(mclk),      // Memory Card runs on the fast master clock! 
         .zclk(zclk),      // NEW: Memory Card needs ZCLK for backplane synchronization
         .reset_n(reset_n), 

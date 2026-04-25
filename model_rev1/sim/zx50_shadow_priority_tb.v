@@ -68,7 +68,7 @@ module zx50_shadow_priority_tb;
         .wait_n(shared_wait_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b1)) card0 ( // MASTER (Source for DMA)
+    zx50_mem_card #(.CARD_ID(4'h1)) card1 ( // MASTER (Source for DMA)
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
@@ -79,7 +79,7 @@ module zx50_shadow_priority_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) card1 ( // SLAVE (Destination for DMA)
+    zx50_mem_card #(.CARD_ID(4'h2)) card2 ( // SLAVE (Destination for DMA)
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
@@ -151,9 +151,9 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === SYSTEM POWER ON ===", $time);
         z80.boot_sequence();
 
-        // Map Base Memory Pages: Card 0 -> Logical Bank 0, Card 1 -> Logical Bank 1
-        z80.mmu_map_page(4'h0, 4'h0, 8'h00);
-        z80.mmu_map_page(4'h1, 4'h1, 8'h01);
+        // Map Base Memory Pages: Card 1 -> Logical Bank 0, Card 2 -> Logical Bank 1
+        z80.mmu_map_page(4'h1, 4'h0, 8'h00);
+        z80.mmu_map_page(4'h2, 4'h1, 8'h01);
 
         // =========================================================
         // TEST 1: Z80 MREQ TO SLAVE (Card 1)
@@ -163,9 +163,9 @@ module zx50_shadow_priority_tb;
         // Seed the Source (Card 0) with a known pattern
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hA0);
         
-        // Arm DMA Transfer (16 Bytes from Card 0 to Card 1)
-        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave (Dest)
-        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master (Source)
+        // Arm DMA Transfer (16 Bytes from Card 1 to Card 2)
+        program_dma_node(4'h2, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave (Dest)
+        program_dma_node(4'h1, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master (Source)
 
         $display("[%0t] Z80 forcefully reading Slave memory (0x1008) while DMA runs...", $time);
         start_time = $time;
@@ -193,8 +193,8 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 2: Z80 MREQ to MASTER during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hB0);
         
-        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
-        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
+        program_dma_node(4'h2, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
+        program_dma_node(4'h1, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
 
         $display("[%0t] Z80 forcefully reading Master memory (0x0008) while DMA runs...", $time);
         start_time = $time;
@@ -220,8 +220,8 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 3: Z80 IORQ to SLAVE during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hC0);
         
-        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
-        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
+        program_dma_node(4'h2, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
+        program_dma_node(4'h1, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
 
         $display("[%0t] Z80 forcefully reading Slave MMU IO Port (0x0131)...", $time);
         start_time = $time;
@@ -247,8 +247,8 @@ module zx50_shadow_priority_tb;
         $display("\n[%0t] === TEST 4: Z80 IORQ to MASTER during DMA ===", $time);
         for (i = 0; i < 16; i = i + 1) z80.mem_write(16'h0000 + i, i + 8'hD0);
         
-        program_dma_node(4'h1, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
-        program_dma_node(4'h0, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
+        program_dma_node(4'h2, 1'b0, 1'b1, 20'h01000, 8'h0F); // Slave
+        program_dma_node(4'h1, 1'b1, 1'b0, 20'h00000, 8'h0F); // Master
 
         $display("[%0t] Z80 forcefully reading Master MMU IO Port (0x0030)...", $time);
         start_time = $time;

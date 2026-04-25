@@ -67,7 +67,7 @@ module zx50_shadow_concurrent_tb;
         .wait_n(shared_wait_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b1)) card0 ( // MASTER (Source for DMA)
+    zx50_mem_card #(.CARD_ID(4'h0)) card0 ( // MASTER (Source for DMA)
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
@@ -78,7 +78,7 @@ module zx50_shadow_concurrent_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) card1 ( // SLAVE (Destination for DMA)
+    zx50_mem_card #(.CARD_ID(4'h1)) card1 ( // SLAVE (Destination for DMA)
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
@@ -89,7 +89,7 @@ module zx50_shadow_concurrent_tb;
         .sh_stb_n(sh_stb_n), .sh_done_n(sh_done_n), .sh_busy_n(sh_busy_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h2), .BOOT_EN(1'b1)) card2 ( // INDEPENDENT Z80 TARGET
+    zx50_mem_card #(.CARD_ID(4'h2)) card2 ( // INDEPENDENT Z80 TARGET
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),

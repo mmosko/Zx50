@@ -64,7 +64,7 @@ module zx50_shadow_bus_tb;
     );
 
     // Card 0 (ID 0x0) - Will be the MASTER (Source)
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b0)) card0 (
+    zx50_mem_card #(.CARD_ID(4'h0)) card0 (
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),
@@ -76,7 +76,7 @@ module zx50_shadow_bus_tb;
     );
 
     // Card 1 (ID 0x1) - Will be the SLAVE (Destination)
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) card1 (
+    zx50_mem_card #(.CARD_ID(4'h1)) card1 (
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_addr), .z80_d(z80_data),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n), .z80_wr_n(z80_wr_n), .z80_rd_n(z80_rd_n),

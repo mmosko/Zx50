@@ -1,8 +1,7 @@
 `timescale 1ns/1ps
 
 module zx50_mem_card #(
-    parameter [3:0] CARD_ID = 4'h0,
-    parameter       BOOT_EN = 1'b1
+    parameter [3:0] CARD_ID = 4'h0
 )(
     input  wire        mclk,
     input  wire        zclk,
@@ -77,7 +76,7 @@ module zx50_mem_card #(
     // ==========================================
     zx50_mem_control cpld (
         .mclk(mclk), .zclk(zclk),
-        .reset_n(reset_n), .boot_en_n(BOOT_EN),
+        .reset_n(reset_n),
         
         .z80_a(z80_a),
         .b_z80_mreq_n(b_z80_mreq_n), .b_z80_iorq_n(b_z80_iorq_n),

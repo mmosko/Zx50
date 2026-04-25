@@ -31,7 +31,7 @@ module mmu_tb;
     );
 
     // --- The Devices Under Test ---
-    zx50_mem_card #(.CARD_ID(4'h0), .BOOT_EN(1'b0)) card0 (
+    zx50_mem_card #(.CARD_ID(4'h0)) card0 (
         .mclk(mclk), .zclk(zclk),
         .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),
@@ -40,7 +40,7 @@ module mmu_tb;
         .wait_n(wait_n), .int_n(int_n)
     );
 
-    zx50_mem_card #(.CARD_ID(4'h1), .BOOT_EN(1'b1)) card1 (
+    zx50_mem_card #(.CARD_ID(4'h1)) card1 (
         .mclk(mclk), .zclk(zclk), 
         .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),

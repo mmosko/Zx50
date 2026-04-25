@@ -48,8 +48,7 @@ module init_tb;
 
     // --- The Device Under Test ---
     zx50_mem_card #(
-        .CARD_ID(4'hA),
-        .BOOT_EN(1'b0) // 0 = Has ROM
+        .CARD_ID(4'hA)
     ) card0 (
         .mclk(mclk),
         .zclk(zclk),
@@ -66,8 +65,7 @@ module init_tb;
     );
 
     zx50_mem_card #(
-        .CARD_ID(4'h6),
-        .BOOT_EN(1'b1) // 0 = Has ROM
+        .CARD_ID(4'h6)
     ) card1 (
         .mclk(mclk),
         .zclk(zclk),
