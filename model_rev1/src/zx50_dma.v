@@ -98,8 +98,8 @@ module zx50_dma (
 
     reg [2:0] m_state;
 
-    wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
-    wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
+    (* keep = 1 *) wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
+    (* keep = 1 *) wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
 
     // ==========================================
     // 3. CONFIGURATION REGISTER LATCHING
@@ -144,7 +144,7 @@ module zx50_dma (
     // ==========================================
     wire yield_req = (sh_busy_n == 1'b0);
 
-    wire safe_to_yield = is_master ?
+    (* keep = 1 *) wire safe_to_yield = is_master ?
         (m_state == M_IDLE || m_state == M_START || m_state == M_WAIT || m_state == M_DONE) 
         : (sh_en_n !== 1'b0);
 

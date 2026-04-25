@@ -152,7 +152,7 @@ JED2SVF    = PYTHONPATH=~/git/prjbureau python3 -m util.fuseconv --device $(DEVI
 
 # --- DMA Config ---
 DMA_TOP    = zx50_mem_control
-DMA_SRC    = zx50_bus_arbiter.v zx50_dma.v zx50_mem_control.v
+DMA_SRC    = zx50_mem_control.v zx50_bus_arbiter.v zx50_dma.v
 DMA_FILES  = $(addprefix $(SRC_DIR)/, $(DMA_SRC))
 
 # --- NoDMA Config ---
@@ -176,7 +176,6 @@ syn_dma: $(DMA_FILES)
 	done
 	
 	cd $(SYN_DIR) && $(ATF_YOSYS) $(DMA_TOP) $(FLAGS) $(DMA_SRC)
-	exit 1
 	cd $(SYN_DIR) && $(ATF_FITTER) -d $(DEVICE) -p $(PACKAGE) -t $(DMA_TOP)
 
 	@echo "\n--- 2. Converting JED to SVF ---"
