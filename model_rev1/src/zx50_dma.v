@@ -130,10 +130,31 @@ module zx50_dma (
         end else if (arm_req && z80_iorq_n) begin
             transfer_armed <= 1'b1;
             arm_req        <= 1'b0;
+
         end else if (local_inc) begin
-            // OPTIMIZATION: Only the 12-bit register participates in the math!
-            phys_addr_lo <= phys_addr_lo + 1'b1;
-            byte_count   <= byte_count - 1'b1;
+            // ----------------------------------------------------------------
+            // CPLD FITTER OPTIMIZATION: MANUAL COUNTER SPLITTING
+            // By manually breaking the counters into 4-bit and 6-bit chunks, we 
+            // prevent Quartus from inferring rigid LPM carry-chains that cannot 
+            // reach the locked physical I/O pins on the package edges.
+            // ----------------------------------------------------------------
+            
+            // Increment lower 6 bits (A5-A0)
+            phys_addr_lo[5:0] <= phys_addr_lo[5:0] + 1'b1;
+            
+            // Carry into upper 6 bits (A11-A6) only when lower rolls over
+            if (phys_addr_lo[5:0] == 6'h3F) begin
+                phys_addr_lo[11:6] <= phys_addr_lo[11:6] + 1'b1;
+            end
+
+            // Decrement lower 4 bits
+            byte_count[3:0] <= byte_count[3:0] - 1'b1;
+            
+            // Borrow from upper 4 bits only when lower underflows
+            if (byte_count[3:0] == 4'h0) begin
+                byte_count[7:4] <= byte_count[7:4] - 1'b1;
+            end
+            
         end else if (local_done) begin
             transfer_armed <= 1'b0;
         end
@@ -205,7 +226,7 @@ module zx50_dma (
     // ==========================================
     // LOCAL MEMORY CONTROL
     // ==========================================
-    wire active_transfer = (is_master && dma_go && m_state != M_IDLE) || (!is_master && dma_go);
+    (* keep = 1 *) wire active_transfer = (is_master && dma_go && m_state != M_IDLE) || (!is_master && dma_go);
     
     // OE stays continuously LOW for the entire transfer to guarantee massive Data Hold Time!
     assign dma_local_oe_n = (active_transfer && !dir_from_bus) ? 1'b0 : 1'b1;
