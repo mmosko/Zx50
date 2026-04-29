@@ -130,7 +130,7 @@ module zx50_dma (
         end else if (arm_req && z80_iorq_n) begin
             transfer_armed <= 1'b1;
             arm_req        <= 1'b0;
-
+            
         end else if (local_inc) begin
             // ----------------------------------------------------------------
             // CPLD FITTER OPTIMIZATION: MANUAL COUNTER SPLITTING
@@ -212,7 +212,7 @@ module zx50_dma (
     assign sh_c_dir  = !dir_from_bus;
     
     wire generated_stb_n = !(m_state == M_STROBE);
-    wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
+    (* keep = 1 *) wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
     
     assign sh_en_n   = (is_master && dma_go && m_state != M_IDLE) ? 1'b0 : 1'bz;
     assign sh_rw_n   = (is_master && dma_go && m_state != M_IDLE) ? dir_from_bus : 1'bz;
@@ -235,3 +235,4 @@ module zx50_dma (
     assign dma_local_we_n = (active_transfer && dir_from_bus) ? 
                             (is_master ? generated_stb_n : sh_stb_n) : 1'b1;
 endmodule
+
