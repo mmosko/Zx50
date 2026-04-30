@@ -22689,7 +22689,7 @@
 		(uuid "28db6bf3-54b6-48b8-bdec-e04735bd25da")
 	)
 	(label "RX_CLK_FLT_N"
-		(at 128.27 210.82 0)
+		(at 128.27 208.28 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -22749,7 +22749,7 @@
 		(uuid "2df589e9-5689-4457-8b9a-dc6374138019")
 	)
 	(label "RX_CLK_FLT_P"
-		(at 128.27 208.28 0)
+		(at 128.27 210.82 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -24089,7 +24089,7 @@
 		(uuid "b3a67f22-60eb-4e4e-8884-de18cc0af456")
 	)
 	(label "RX_CLK_P"
-		(at 153.67 208.28 0)
+		(at 153.67 210.82 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -24179,7 +24179,7 @@
 		(uuid "b9c123e5-62a5-4f49-b795-8f6a027135b7")
 	)
 	(label "RX_CLK_N"
-		(at 153.67 210.82 0)
+		(at 153.67 208.28 0)
 		(effects
 			(font
 				(size 1.27 1.27)

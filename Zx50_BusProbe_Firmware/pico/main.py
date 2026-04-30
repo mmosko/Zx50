@@ -226,7 +226,7 @@ class Zx50Console:
                 self._send_response("ERR SYNTAX_Z80_RUN. Usage: 'z80 run <script_name>'", is_tcp)
                 return
 
-            # Default to z80_program.py if no name is provided
+            # Default to z80_test.py if no name is provided
             script_name = args[1] if len(args) > 1 else "z80_program"
 
             # Strip .py if the user accidentally typed it

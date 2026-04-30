@@ -235,11 +235,16 @@ module zx50_mem_control (
 
     // Drive ATL Data Bus (Or route DMA Address High bits)
     wire cpld_driving_atl = mmu_direct_wr || (effective_use_rom && !dma_is_active) || dma_is_active;
-    
-    assign atl_d = cpld_driving_atl ? 
+
+    assign atl_d = cpld_driving_atl ?
+                   // CPLD owns the bus, drive the payload
                    (mmu_direct_wr ? l_d : 
                    (effective_use_rom && !dma_is_active ? {3'b000, z80_a[15:11]} : 
-                   dma_phys_addr[19:12])) : 8'hZZ;
+                   dma_phys_addr[19:12])) : 
+                   
+                   // CPLD does NOT own the bus. Safety Interlock:  If the ATL SRAM is not
+                   // driving the ATL_D bus, we park it to 0.
+                   (atl_oe_n ? 8'h00 : 8'hZZ);
 
     // The external ATL SRAM is ONLY allowed to output data when the CPLD is NOT driving the bus.
     // AND we must be doing a standard RAM read (ram_hit)
@@ -248,9 +253,16 @@ module zx50_mem_control (
     // CPLD generally does not drive local data, UNLESS answering an Interrupt!
     wire [7:0] interrupt_vector = 8'h40 | card_addr;
 
+    // SAFETY INTERLOCK: 
+    // True only if Z80 Buffer is OFF, Shadow Buffer is OFF, and Memory is OFF
+    wire l_d_idle = (z80_d_oe_n && sh_data_oe_n && oe_n);
+
     // SPLIT ASSIGNMENT: Lower nibble driven by _lo flag, upper by _hi flag
-    assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : 4'hZ;
-    assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : 4'hZ;    
+    assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : 
+                      (l_d_idle ? 4'h0 : 4'hZ); // User parking logic
+
+    assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : 
+                      (l_d_idle ? 4'h0 : 4'hZ); // User parking logic
 
     // --- Combinatorial Pin Routing ---
     always @(*) begin
@@ -261,6 +273,7 @@ module zx50_mem_control (
         ram_ce1_n  = 1'b1;
         rom_ce2_n  = 1'b1;
         atl_ce_n   = 1'b1;
+        // atl_oe_n is driven separately
         // atl_oe_n   = 1'b1;
         atl_we_n   = 1'b1;
         atl_a      = 4'h0;
