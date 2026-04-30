@@ -212,7 +212,7 @@ module zx50_dma (
     assign sh_c_dir  = !dir_from_bus;
     
     wire generated_stb_n = !(m_state == M_STROBE);
-    (* keep = 1 *) wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
+    // (* keep = 1 *) wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
     
     assign sh_en_n   = (is_master && dma_go && m_state != M_IDLE) ? 1'b0 : 1'bz;
     assign sh_rw_n   = (is_master && dma_go && m_state != M_IDLE) ? dir_from_bus : 1'bz;
