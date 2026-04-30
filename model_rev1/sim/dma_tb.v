@@ -40,7 +40,7 @@ module dma_tb;
     );
 
     // --- The Device Under Test ---
-    zx50_mem_card #(.CARD_ID(4'h0)) card0 ( 
+    zx50_mem_card #(.CARD_ID(2'h0)) card0 ( 
         .mclk(mclk), .zclk(zclk), .reset_n(reset_n),
         .z80_a(z80_a), .z80_d(z80_d),
         .z80_mreq_n(z80_mreq_n), .z80_iorq_n(z80_iorq_n),

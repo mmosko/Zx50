@@ -148,7 +148,7 @@ module zx50_mem_control (
 );
 
     // --- Internal State ---
-    reg [3:0]  card_addr;
+    reg [1:0]  card_addr;
     reg        has_boot_rom;
     reg        rom_enabled;
     reg [15:0] page_ownership;
@@ -158,40 +158,40 @@ module zx50_mem_control (
     // Snoop: IORQ=0, WR=0, Port matches 0x3X
 	 
 	 // CPLD generally does not drive local data, UNLESS answering an Interrupt!
-    wire [7:0] interrupt_vector = 8'h40 | card_addr;
+    wire [7:0] interrupt_vector = {6'h40, card_addr};
 
 
-    (* keep = 1 *) wire is_card_0 = (card_addr == 4'h0);
-	 (* keep = 1 *) wire card_addr_hit = z80_a[3:0] == card_addr;
-	 (* keep = 1 *) wire is_mmu_port = z80_a[7:4] == 4'h3;
-	 (* keep = 1 *) wire is_dma_port = z80_a[7:4] == 4'h4;
+    wire is_card_0 = (card_addr == 2'h0);
+	 wire card_addr_hit = z80_a[3:0] == {2'h0, card_addr};
+	 wire is_mmu_port = z80_a[7:4] == 4'h3;
+	 wire is_dma_port = z80_a[7:4] == 4'h4;
 	 
     (* keep = 1 *) wire iorq_wr_hit = (!b_z80_iorq_n && !b_z80_wr_n);
-    (* keep = 1 *) wire mmu_snoop_wr  = (iorq_wr_hit && is_mmu_port);
-    (* keep = 1 *) wire mmu_direct_wr = mmu_snoop_wr && card_addr_hit;
+    wire mmu_snoop_wr  = (iorq_wr_hit && is_mmu_port);
+    wire mmu_direct_wr = mmu_snoop_wr && card_addr_hit;
     
     // DMA IO Decoding (Port 0x4X)
-    (* keep = 1 *) wire dma_io_write  = (iorq_wr_hit && is_dma_port && card_addr_hit);
+    wire dma_io_write  = (iorq_wr_hit && is_dma_port && card_addr_hit);
 
     // ROM is active if it's Card 0, ROM is enabled, accessing the lower 32K, during a memory cycle
-    (* keep = 1 *) wire effective_use_rom = is_card_0 && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
+    wire effective_use_rom = is_card_0 && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
 
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
-    (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
+    wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
 
     // --- DMA Wires & INTACK ---
     wire dma_is_active, dma_is_master, dma_dir_to_bus, dma_int_pending;
     wire [19:0] dma_phys_addr;
     wire dma_local_we_n, dma_local_oe_n;
 
-    wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
+    (* keep = 1 *) wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
     // Split the intack flag into two separate macrocells to bypass routing congestion!
-	 (* keep = 1 *) wire intack_value = intack_cycle && dma_int_pending;
-    (* keep = 1 *) wire respond_intack_lo = intack_value;
-    (* keep = 1 *) wire respond_intack_hi = intack_value;
+	 wire intack_value = intack_cycle && dma_int_pending;
+    // wire respond_intack_lo = intack_value;
+    // wire respond_intack_hi = intack_value;
     
     // --- Global Z80 Card Hit ---
-    (* keep = 1 *) wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || respond_intack_lo;
+    wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || intack_value;
     
     // --- Bus Arbiter Instantiation ---
     wire arbiter_z80_data_oe_n, arbiter_l_dir;
@@ -217,7 +217,7 @@ module zx50_mem_control (
         else iorq_sync <= b_z80_iorq_n;
     end
     wire iorq_rising = (!iorq_sync && b_z80_iorq_n);
-    wire intack_clear = iorq_rising && dma_int_pending;
+    (* keep = 1 *) wire intack_clear = iorq_rising && dma_int_pending;
 
     zx50_dma dma (
         .mclk(mclk), .reset_n(reset_n),
@@ -239,7 +239,7 @@ module zx50_mem_control (
     
     // Force direction outward (Card -> Z80) during INTACK, since RD_n is high.
     assign d_dir = (dma_is_active && dma_dir_to_bus) ? 1'b0 : 
-                   (respond_intack_hi) ? 1'b0 : 
+                   (intack_value) ? 1'b0 : 
                    arbiter_l_dir;
 
     assign l_a = dma_is_active ? dma_phys_addr[10:0] : z80_a[10:0];
@@ -248,16 +248,16 @@ module zx50_mem_control (
     // Drive ATL Data Bus (Or route DMA Address High bits)
 	 (* keep = 1 *) wire use_rom_no_dma = effective_use_rom && !dma_is_active;
 	 
-    (* keep = 1 *) wire cpld_driving_atl = mmu_direct_wr || use_rom_no_dma || dma_is_active;
-	 (* keep = 1 *) wire local_atl_oe_n = !(ram_hit && !cpld_driving_atl);
+    wire cpld_driving_atl = mmu_direct_wr || use_rom_no_dma || dma_is_active;
+	 wire local_atl_oe_n = !(ram_hit && !cpld_driving_atl);
 	 
     // If the CPLD owns the bus, this is the value it output to atl_d
- 	 (* keep = 1 *)  wire [7:0] local_atl_d = (mmu_direct_wr ? l_d : 
+ 	  wire [7:0] local_atl_d = (mmu_direct_wr ? l_d : 
                    (use_rom_no_dma ? {3'b000, z80_a[15:11]} : 
                    dma_phys_addr[19:12]));
 						 
 	 // If the CPLD is not driving atl_d, should it tristate or park it?
-	 (* keep = 1 *)  wire [7:0] idle_atl_d = (local_atl_oe_n ? 8'h00 : 8'hZZ);
+	  wire [7:0] idle_atl_d = (local_atl_oe_n ? 8'h00 : 8'hZZ);
 	 
     assign atl_d = cpld_driving_atl ? local_atl_d : idle_atl_d;
 
@@ -267,12 +267,12 @@ module zx50_mem_control (
     
     // SAFETY INTERLOCK: 
     // True only if Z80 Buffer is OFF, Shadow Buffer is OFF, and Memory is OFF
-    (* keep = 1 *) wire l_d_idle = (z80_d_oe_n && sh_data_oe_n && oe_n);
+    wire l_d_idle = (z80_d_oe_n && sh_data_oe_n && oe_n);
 
 	 
     // SPLIT ASSIGNMENT: Lower nibble driven by _lo flag, upper by _hi flag
-    assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : (l_d_idle ? 4'h0 : 4'hZ);
-    assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : (l_d_idle ? 4'h0 : 4'hZ);
+    assign l_d[3:0] = intack_value ? interrupt_vector[3:0] : (l_d_idle ? 4'h0 : 4'hZ);
+    assign l_d[7:4] = intack_value ? interrupt_vector[7:4] : (l_d_idle ? 4'h0 : 4'hZ);
 
     // --- Combinatorial Pin Routing ---
     always @(*) begin
@@ -354,7 +354,8 @@ module zx50_mem_control (
     // --- Synchronous Logic ---
     always @(posedge zclk) begin
         if (!reset_n) begin
-            card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
+            //card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
+            card_addr      <= {b_z80_rd_n, b_z80_wr_n};
             
             // DYNAMIC BOOT INFERENCE: 
             has_boot_rom   <= is_card_0;

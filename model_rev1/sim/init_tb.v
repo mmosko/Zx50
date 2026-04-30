@@ -65,7 +65,7 @@ module init_tb;
     );
 
     zx50_mem_card #(
-        .CARD_ID(4'h6)
+        .CARD_ID(4'h3)
     ) card1 (
         .mclk(mclk),
         .zclk(zclk),
@@ -92,7 +92,7 @@ module init_tb;
         z80.boot_sequence();
 
         // Verify CPLD latched state
-        if (card0.cpld.card_addr === 4'h0) begin
+        if (card0.cpld.card_addr === 2'h0) begin
             $display("SUCCESS: Card0 Card ID latched correctly.");
         end
         else begin
@@ -110,7 +110,7 @@ module init_tb;
         end
 
         // ==== Verify Card 1
-        if (card1.cpld.card_addr === 4'h6) begin
+        if (card1.cpld.card_addr === 2'h3) begin
             $display("SUCCESS: Card1 ID latched correctly.");
         end
         else begin

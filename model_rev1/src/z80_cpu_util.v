@@ -193,7 +193,7 @@ module z80_cpu_util (
         end
     endtask
 
-    task mmu_map_page(input [3:0] card_id, input [3:0] logical_window, input [7:0] physical_page);
+    task mmu_map_page(input [1:0] card_id, input [3:0] logical_window, input [7:0] physical_page);
         reg [15:0] io_addr;
         begin
             io_addr = (logical_window << 8) | 8'h30 | card_id;
@@ -201,7 +201,7 @@ module z80_cpu_util (
         end
     endtask
 
-    task init_mmu(input [3:0] card_id);
+    task init_mmu(input [1:0] card_id);
         integer i;
         begin
             for (i = 0; i < 16; i = i + 1) begin

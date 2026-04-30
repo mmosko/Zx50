@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 module zx50_mem_card #(
-    parameter [3:0] CARD_ID = 4'h0
+    parameter [1:0] CARD_ID = 2'h0
 )(
     input  wire        mclk,
     input  wire        zclk,
@@ -45,8 +45,8 @@ module zx50_mem_card #(
     wire atl_ce_n, atl_oe_n, atl_we_n;
     wire ram_ce0_n, ram_ce1_n, rom_ce2_n;
     
-    wire b_z80_mreq_n = (!reset_n) ? CARD_ID[3] : z80_mreq_n;
-    wire b_z80_iorq_n = (!reset_n) ? CARD_ID[2] : z80_iorq_n;
+    //wire b_z80_mreq_n = (!reset_n) ? CARD_ID[3] : z80_mreq_n;
+    //wire b_z80_iorq_n = (!reset_n) ? CARD_ID[2] : z80_iorq_n;
     wire b_z80_rd_n   = (!reset_n) ? CARD_ID[1] : z80_rd_n;
     wire b_z80_wr_n   = (!reset_n) ? CARD_ID[0] : z80_wr_n;
     wire b_z80_m1_n   = (!reset_n) ? 1'bz : z80_m1_n;
