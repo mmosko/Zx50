@@ -156,14 +156,16 @@ module zx50_mem_control (
 
     // --- Hit Detection ---
     // Snoop: IORQ=0, WR=0, Port matches 0x3X
-    (* keep = 1 *) wire mmu_snoop_wr  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:4] == 4'h3));
+    wire is_card_0 = (card_addr == 4'h0);
+    wire iorq_wr_hit = (!b_z80_iorq_n && !b_z80_wr_n);
+    (* keep = 1 *) wire mmu_snoop_wr  = (iorq_wr_hit && (z80_a[7:4] == 4'h3));
     (* keep = 1 *) wire mmu_direct_wr = mmu_snoop_wr && (z80_a[3:0] == card_addr);
     
     // DMA IO Decoding (Port 0x4X)
-    (* keep = 1 *) wire dma_io_write  = (!b_z80_iorq_n && !b_z80_wr_n && (z80_a[7:0] == (8'h40 | card_addr)));
+    (* keep = 1 *) wire dma_io_write  = (iorq_wr_hit && (z80_a[7:0] == (8'h40 | card_addr)));
 
     // ROM is active if it's Card 0, ROM is enabled, accessing the lower 32K, during a memory cycle
-    (* keep = 1 *) wire effective_use_rom = (card_addr == 4'h0) && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
+    (* keep = 1 *) wire effective_use_rom = is_card_0 && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
 
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
     (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
@@ -287,7 +289,7 @@ module zx50_mem_control (
             
             // Physical DMA should ALWAYS be able to hit the Boot ROM, regardless
             // of whether the Z80 has logically unmapped it (rom_enabled)!
-            if (card_addr == 4'h0 && has_boot_rom && dma_phys_addr[19:15] == 5'h00) begin
+            if (is_card_0 && has_boot_rom && dma_phys_addr[19:15] == 5'h00) begin
                 rom_ce2_n = 1'b0;
                 oe_n = dma_local_oe_n;
                 we_n = 1'b1; // ROM is strictly read-only
@@ -347,18 +349,20 @@ module zx50_mem_control (
             card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
             
             // DYNAMIC BOOT INFERENCE: 
-            has_boot_rom   <= (card_addr == 4'h0);
+            has_boot_rom   <= is_card_0;
             rom_enabled    <= has_boot_rom;
             
             // SIMPLIFIED RESET: Just clear it. We will assign the default ROM pages on the very next clock cycle.
-            page_ownership <= 16'h0000;
+            // page_ownership <= 16'h0000;
             init_done      <= 1'b0;
 
         end else begin
             if (!init_done) begin
                 // Execute exactly once after reset goes high
                 init_done <= 1'b1;
-                if (has_boot_rom) page_ownership <= 16'h00FF; // Auto-claim lower 32K
+                page_ownership[15:8] <= 8'h00; // Claim upper 32K by default (Unmapped, but safe for RAM)
+                page_ownership[7:0] <= (has_boot_rom) ? 8'hFF : 8'h00; // Auto-claim lower 32K if we have a boot ROM, otherwise claim nothing
+                // if (has_boot_rom) page_ownership <= 16'h00FF : 16'h0000; // Auto-claim lower 32K
             end
 
             // Distributed MMU Snooping
