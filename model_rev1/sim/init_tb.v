@@ -65,7 +65,7 @@ module init_tb;
     );
 
     zx50_mem_card #(
-        .CARD_ID(4'h6)
+        .CARD_ID(4'h3)
     ) card1 (
         .mclk(mclk),
         .zclk(zclk),
@@ -110,11 +110,11 @@ module init_tb;
         end
 
         // ==== Verify Card 1
-        if (card1.cpld.card_addr === 4'h6) begin
+        if (card1.cpld.card_addr === 4'h3) begin
             $display("SUCCESS: Card1 ID latched correctly.");
         end
         else begin
-            $display("FAIL: Card1 Expected Card ID 6, got %h", card1.cpld.card_addr);
+            $display("FAIL: Card1 Expected Card ID 3, got %h", card1.cpld.card_addr);
             $fatal(1);
         end
 

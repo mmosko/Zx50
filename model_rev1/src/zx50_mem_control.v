@@ -147,24 +147,24 @@ module zx50_mem_control (
     output wire sh_c_dir
 );
 
-    // --- Internal State ---
-    reg [3:0]  card_addr;
+// --- Internal State ---
+    reg [1:0]  card_addr; 
     reg        has_boot_rom;
     reg        rom_enabled;
     reg [15:0] page_ownership;
     reg        init_done;
 
     // --- Hit Detection ---
-    // Snoop: IORQ=0, WR=0, Port matches 0x3X
-	 
-	 // CPLD generally does not drive local data, UNLESS answering an Interrupt!
-    wire [7:0] interrupt_vector = 8'h40 | card_addr;
+    // Updated Vector: Uses bitwise OR to set the 0x40 base correctly
+    wire [7:0] interrupt_vector = 8'h40 | {6'b0, card_addr};
 
-
-    (* keep = 1 *) wire is_card_0 = (card_addr == 4'h0);
-	 (* keep = 1 *) wire card_addr_hit = z80_a[3:0] == card_addr;
-	 (* keep = 1 *) wire is_mmu_port = z80_a[7:4] == 4'h3;
-	 (* keep = 1 *) wire is_dma_port = z80_a[7:4] == 4'h4;
+    // Updated Hit logic for 2-bit ID
+    (* keep = 1 *) wire is_card_0     = (card_addr == 2'h0);
+    // Matches 0x30-0x33 for MMU and 0x40-0x43 for DMA
+    (* keep = 1 *)wire card_addr_hit = (z80_a[3:2] == 2'b00) && (z80_a[1:0] == card_addr);
+    
+	(* keep = 1 *) wire is_mmu_port = z80_a[7:4] == 4'h3;
+	(* keep = 1 *) wire is_dma_port = z80_a[7:4] == 4'h4;
 	 
     (* keep = 1 *) wire iorq_wr_hit = (!b_z80_iorq_n && !b_z80_wr_n);
     (* keep = 1 *) wire mmu_snoop_wr  = (iorq_wr_hit && is_mmu_port);
@@ -353,14 +353,14 @@ module zx50_mem_control (
 
     // --- Synchronous Logic ---
     always @(posedge zclk) begin
-        if (!reset_n) begin
-            card_addr      <= {b_z80_mreq_n, b_z80_iorq_n, b_z80_rd_n, b_z80_wr_n};
+if (!reset_n) begin
+            // Sample only 2 bits for card ID (using RD and WR as strap pins)
+            card_addr      <= {b_z80_rd_n, b_z80_wr_n};
             
-            // DYNAMIC BOOT INFERENCE: 
-            has_boot_rom   <= is_card_0;
-            rom_enabled    <= is_card_0;
+            // FIX: Sample pins directly to avoid reset race condition
+            has_boot_rom   <= ({b_z80_rd_n, b_z80_wr_n} == 2'h0);
+            rom_enabled    <= ({b_z80_rd_n, b_z80_wr_n} == 2'h0);
             
-            // SIMPLIFIED RESET: Just clear it. We will assign the default ROM pages on the very next clock cycle.
             page_ownership <= 16'h0000;
             init_done      <= 1'b0;
 
