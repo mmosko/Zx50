@@ -98,8 +98,8 @@ module zx50_dma (
 
     reg [2:0] m_state;
 
-    (* keep = 1 *) wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
-    (* keep = 1 *) wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
+    wire local_inc  = is_master ? (m_state == M_INC)  : (!is_master && dma_go && !sh_inc_n);
+    wire local_done = is_master ? (m_state == M_DONE) : (!is_master && dma_go && !sh_done_n);
 
     // ==========================================
     // 3. CONFIGURATION REGISTER LATCHING
@@ -132,6 +132,12 @@ module zx50_dma (
             arm_req        <= 1'b0;
             
         end else if (local_inc) begin
+		  
+		      // Let the CPLD's native hardware carry-chain (Parallel Expanders) handle the math!
+            phys_addr_lo <= phys_addr_lo + 1'b1;
+            byte_count   <= byte_count - 1'b1;
+				
+				/*
             // ----------------------------------------------------------------
             // CPLD FITTER OPTIMIZATION: MANUAL COUNTER SPLITTING
             // By manually breaking the counters into 4-bit and 6-bit chunks, we 
@@ -154,7 +160,8 @@ module zx50_dma (
             if (byte_count[3:0] == 4'h0) begin
                 byte_count[7:4] <= byte_count[7:4] - 1'b1;
             end
-            
+            */
+				
         end else if (local_done) begin
             transfer_armed <= 1'b0;
         end
@@ -212,7 +219,7 @@ module zx50_dma (
     assign sh_c_dir  = !dir_from_bus;
     
     wire generated_stb_n = !(m_state == M_STROBE);
-    // (* keep = 1 *) wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
+    // wire int_sh_stb_n    = is_master ? generated_stb_n : sh_stb_n;
     
     assign sh_en_n   = (is_master && dma_go && m_state != M_IDLE) ? 1'b0 : 1'bz;
     assign sh_rw_n   = (is_master && dma_go && m_state != M_IDLE) ? dir_from_bus : 1'bz;
@@ -226,7 +233,7 @@ module zx50_dma (
     // ==========================================
     // LOCAL MEMORY CONTROL
     // ==========================================
-    (* keep = 1 *) wire active_transfer = (is_master && dma_go && m_state != M_IDLE) || (!is_master && dma_go);
+    wire active_transfer = (is_master && dma_go && m_state != M_IDLE) || (!is_master && dma_go);
     
     // OE stays continuously LOW for the entire transfer to guarantee massive Data Hold Time!
     assign dma_local_oe_n = (active_transfer && !dir_from_bus) ? 1'b0 : 1'b1;

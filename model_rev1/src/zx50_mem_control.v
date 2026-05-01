@@ -158,29 +158,26 @@ module zx50_mem_control (
     wire [3:0] logical_index = z80_a[15:12];
 
     // --- Hit Detection ---
-    // Updated Vector: Uses bitwise OR to set the 0x40 base correctly
-    wire [7:0] interrupt_vector = 8'h40 | {6'b0, card_addr};
-
     // Updated Hit logic for 2-bit ID
-    (* keep = 1 *) wire is_card_0     = (card_addr == 2'h0);
+    wire is_card_0     = (card_addr == 2'h0);
     // Matches 0x30-0x33 for MMU and 0x40-0x43 for DMA
-    (* keep = 1 *)wire card_addr_hit = (z80_a[3:2] == 2'b00) && (z80_a[1:0] == card_addr);
+    wire card_addr_hit = (z80_a[3:2] == 2'b00) && (z80_a[1:0] == card_addr);
     
-	(* keep = 1 *) wire is_mmu_port = z80_a[7:4] == 4'h3;
-	(* keep = 1 *) wire is_dma_port = z80_a[7:4] == 4'h4;
+	wire is_mmu_port = z80_a[7:4] == 4'h3;
+   wire is_dma_port = z80_a[7:4] == 4'h4;
 	 
-    (* keep = 1 *) wire iorq_wr_hit = (!b_z80_iorq_n && !b_z80_wr_n);
-    (* keep = 1 *) wire mmu_snoop_wr  = (iorq_wr_hit && is_mmu_port);
-    (* keep = 1 *) wire mmu_direct_wr = mmu_snoop_wr && card_addr_hit;
+    wire iorq_wr_hit = (!b_z80_iorq_n && !b_z80_wr_n);
+    wire mmu_snoop_wr  = (iorq_wr_hit && is_mmu_port);
+    wire mmu_direct_wr = mmu_snoop_wr && card_addr_hit;
     
     // DMA IO Decoding (Port 0x4X)
-    (* keep = 1 *) wire dma_io_write  = (iorq_wr_hit && is_dma_port && card_addr_hit);
+    wire dma_io_write  = (iorq_wr_hit && is_dma_port && card_addr_hit);
 
     // ROM is active if it's Card 0, ROM is enabled, accessing the lower 32K, during a memory cycle
     (* keep = 1 *) wire effective_use_rom = is_card_0 && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
 
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
-    (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[logical_index] && !effective_use_rom;
+    wire ram_hit = !b_z80_mreq_n && page_ownership[logical_index] && !effective_use_rom;
 
     // --- DMA Wires & INTACK ---
     wire dma_is_active, dma_is_master, dma_dir_to_bus, dma_int_pending;
@@ -189,12 +186,12 @@ module zx50_mem_control (
 
     wire intack_cycle = !b_z80_m1_n && !b_z80_iorq_n;
     // Split the intack flag into two separate macrocells to bypass routing congestion!
-	 (* keep = 1 *) wire intack_value = intack_cycle && dma_int_pending;
-    (* keep = 1 *) wire respond_intack_lo = intack_value;
-    (* keep = 1 *) wire respond_intack_hi = intack_value;
+	 wire intack_value = intack_cycle && dma_int_pending;
+    wire respond_intack_lo = intack_value;
+    wire respond_intack_hi = intack_value;
     
     // --- Global Z80 Card Hit ---
-    (* keep = 1 *) wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || respond_intack_lo;
+    wire z80_card_hit = ram_hit || effective_use_rom || mmu_direct_wr || dma_io_write || respond_intack_lo;
     
     // --- Bus Arbiter Instantiation ---
     wire arbiter_z80_data_oe_n, arbiter_l_dir;
@@ -249,18 +246,18 @@ module zx50_mem_control (
     wire active_a11 = dma_is_active ? dma_phys_addr[11] : z80_a[11];
 
     // Drive ATL Data Bus (Or route DMA Address High bits)
-	 (* keep = 1 *) wire use_rom_no_dma = effective_use_rom && !dma_is_active;
+	 wire use_rom_no_dma = effective_use_rom && !dma_is_active;
 	 
-    (* keep = 1 *) wire cpld_driving_atl = mmu_direct_wr || use_rom_no_dma || dma_is_active;
-	 (* keep = 1 *) wire local_atl_oe_n = !(ram_hit && !cpld_driving_atl);
+    wire cpld_driving_atl = mmu_direct_wr || use_rom_no_dma || dma_is_active;
+	 wire local_atl_oe_n = !(ram_hit && !cpld_driving_atl);
 	 
     // If the CPLD owns the bus, this is the value it output to atl_d
- 	 (* keep = 1 *)  wire [7:0] local_atl_d = (mmu_direct_wr ? l_d : 
+ 	  wire [7:0] local_atl_d = (mmu_direct_wr ? l_d : 
                    (use_rom_no_dma ? {3'b000, z80_a[15:11]} : 
                    dma_phys_addr[19:12]));
 						 
 	 // If the CPLD is not driving atl_d, should it tristate or park it?
-	 (* keep = 1 *)  wire [7:0] idle_atl_d = (local_atl_oe_n ? 8'h00 : 8'hZZ);
+	  wire [7:0] idle_atl_d = (local_atl_oe_n ? 8'h00 : 8'hZZ);
 	 
     assign atl_d = cpld_driving_atl ? local_atl_d : idle_atl_d;
 
@@ -270,13 +267,18 @@ module zx50_mem_control (
     
     // SAFETY INTERLOCK: 
     // True only if Z80 Buffer is OFF, Shadow Buffer is OFF, and Memory is OFF
-    (* keep = 1 *) wire l_d_idle = (z80_d_oe_n && sh_data_oe_n && oe_n);
+    wire l_d_idle = (z80_d_oe_n && sh_data_oe_n && oe_n);
 
 	 
+	     // Updated Vector: Uses bitwise OR to set the 0x40 base correctly
+    wire [7:0] interrupt_vector = 8'h40 | {6'b0, card_addr};
+	 
     // SPLIT ASSIGNMENT: Lower nibble driven by _lo flag, upper by _hi flag
-    assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : (l_d_idle ? 4'h0 : 4'hZ);
-    assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : (l_d_idle ? 4'h0 : 4'hZ);
+    //assign l_d[3:0] = respond_intack_lo ? interrupt_vector[3:0] : (l_d_idle ? 4'h0 : 4'hZ);
+    //assign l_d[7:4] = respond_intack_hi ? interrupt_vector[7:4] : (l_d_idle ? 4'h0 : 4'hZ);
 
+	 assign l_d = intack_value ? interrupt_vector : (l_d_idle ? 8'h0 : 8'hZ);
+	 
     // --- Combinatorial Pin Routing ---
     always @(*) begin
         // 1. Safe Defaults (Idle State)
@@ -376,9 +378,9 @@ if (!reset_n) begin
             if (mmu_snoop_wr) begin
                 
                 // ROM KILL-SWITCH FIX: If ANY card maps a page into the lower 32K 
-                // (Logical Pages 0-7), disable the boot ROM forever!
-                if (z80_a[11] == 1'b0) rom_enabled <= 1'b0; 
-                
+                // Disable ROM only if we are mapping into the 0x0000-0x7FFF range (Indices 0-7)
+                if (logical_index[3] == 1'b0) rom_enabled <= 1'b0;
+
 					 page_ownership[logical_index] <= mmu_direct_wr;
 					  
                 //if (mmu_direct_wr) begin
