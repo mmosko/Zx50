@@ -22419,7 +22419,7 @@
 		(uuid "0eae65bb-92ea-4fd9-ab7b-4ea79818e6e7")
 	)
 	(label "TX_DAT_P"
-		(at 153.67 261.62 0)
+		(at 154.94 254 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -22769,7 +22769,7 @@
 		(uuid "2e3f646a-65b2-4d88-b3ad-094004fa5ed7")
 	)
 	(label "TX_CLK_N"
-		(at 153.67 254 0)
+		(at 154.94 264.16 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -22789,7 +22789,7 @@
 		(uuid "2e792ae7-88f2-4938-91bf-b491b0938c68")
 	)
 	(label "TX_CLK_P"
-		(at 153.67 248.92 0)
+		(at 154.94 261.62 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -23169,7 +23169,7 @@
 		(uuid "50cac7ae-1857-4ef8-b334-e28aa9aa3050")
 	)
 	(label "RX_DAT_P"
-		(at 153.67 236.22 0)
+		(at 153.67 238.76 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -23229,7 +23229,7 @@
 		(uuid "54a9ff76-7475-4e75-85e9-52df41166b48")
 	)
 	(label "TX_DAT_N"
-		(at 153.67 264.16 0)
+		(at 154.94 248.92 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -23238,8 +23238,8 @@
 		)
 		(uuid "568af0dc-be1c-4ea8-bf66-e48ab2659a9b")
 	)
-	(label "TX_DAT_FLT_P"
-		(at 128.27 261.62 0)
+	(label "TX_DAT_FLT_N"
+		(at 130.81 248.92 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -23439,7 +23439,7 @@
 		(uuid "721e1675-bf08-41c8-8306-aa6bc36cf054")
 	)
 	(label "RX_DAT_FLT_N"
-		(at 127 238.76 0)
+		(at 127 236.22 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -23849,7 +23849,7 @@
 		(uuid "9e794d04-e7eb-4deb-97dc-9c1f963041ae")
 	)
 	(label "RX_DAT_N"
-		(at 153.67 238.76 0)
+		(at 153.67 236.22 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -24219,7 +24219,7 @@
 		(uuid "bc250ce6-90cf-4437-aa12-32257675fb3f")
 	)
 	(label "TX_CLK_FLT_P"
-		(at 128.27 248.92 0)
+		(at 130.81 261.62 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -24259,7 +24259,7 @@
 		(uuid "be1c07e8-e987-40c5-b6b3-e34beb684bcb")
 	)
 	(label "RX_DAT_FLT_P"
-		(at 127 236.22 0)
+		(at 127 238.76 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -24318,8 +24318,8 @@
 		)
 		(uuid "c2c22966-94d3-4575-a4d5-4ca87fa88323")
 	)
-	(label "TX_DAT_FLT_N"
-		(at 128.27 264.16 0)
+	(label "TX_DAT_FLT_P"
+		(at 130.81 254 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -24779,7 +24779,7 @@
 		(uuid "f66abb1a-307d-4b25-b380-f2c6bd88e804")
 	)
 	(label "TX_CLK_FLT_N"
-		(at 128.27 254 0)
+		(at 130.81 264.16 0)
 		(effects
 			(font
 				(size 0.8 0.8)
@@ -25215,6 +25215,94 @@
 			(project "Zx50_MemoryCard_RevB"
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "U13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 330.2 99.06 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "02ce2d8c-2e5e-4b0b-b8ab-92aaef117f7a")
+		(property "Reference" "R14"
+			(at 329.438 92.71 0)
+			(effects
+				(font
+					(size 1.016 1.016)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 328.93 90.424 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 330.2 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 330.2 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 330.2 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MFG_PN" "0402W8F1002T5E"
+			(at 330.2 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25744"
+			(at 330.2 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ffb9e10e-4bf4-4389-b1e7-a1cc4f40561d")
+		)
+		(pin "2"
+			(uuid "d3f20177-870d-4938-8289-cedf08f3db15")
+		)
+		(instances
+			(project "Zx50_MemoryCard_RevB"
+				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
+					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -27017,94 +27105,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Small")
-		(at 340.36 99.06 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2c11b646-31c9-4e21-8aaf-5fdf84d1f52d")
-		(property "Reference" "R17"
-			(at 339.598 92.71 0)
-			(effects
-				(font
-					(size 1.016 1.016)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 339.09 90.424 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
-			(at 340.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 340.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, small symbol"
-			(at 340.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MFG_PN" "0805W8F1002T5E"
-			(at 340.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C17414"
-			(at 340.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "95175f1f-ff31-48e4-b08f-0ef494847b6d")
-		)
-		(pin "2"
-			(uuid "e2a8d0be-3a94-40c0-85e7-3ad941dc4736")
-		)
-		(instances
-			(project "Zx50_MemoryCard_RevB"
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
-					(reference "R17")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 285.75 153.67 0)
 		(unit 1)
@@ -28088,94 +28088,6 @@
 	)
 	(symbol
 		(lib_id "Device:R_Small")
-		(at 330.2 99.06 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "3e7c1e1e-25c4-45a3-b32e-17828b4ff7bf")
-		(property "Reference" "R14"
-			(at 329.438 92.71 0)
-			(effects
-				(font
-					(size 1.016 1.016)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 328.93 90.424 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
-			(at 330.2 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 330.2 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, small symbol"
-			(at 330.2 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MFG_PN" "0805W8F1002T5E"
-			(at 330.2 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C17414"
-			(at 330.2 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "dc3ce147-a41f-425c-a42b-718924c67477")
-		)
-		(pin "2"
-			(uuid "c407cb6f-3cda-407d-b634-8231ac128f2f")
-		)
-		(instances
-			(project "Zx50_MemoryCard_RevB"
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
-					(reference "R14")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Small")
 		(at 132.08 109.22 90)
 		(mirror x)
 		(unit 1)
@@ -28517,6 +28429,94 @@
 			(project "Zx50_MemoryCard_RevB"
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "#PWR039")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 340.36 99.06 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4938cb0f-0168-44a5-85ed-ea5c23b37fa8")
+		(property "Reference" "R17"
+			(at 339.598 92.71 0)
+			(effects
+				(font
+					(size 1.016 1.016)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 339.09 90.424 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 340.36 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 340.36 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 340.36 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MFG_PN" "0402W8F1002T5E"
+			(at 340.36 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25744"
+			(at 340.36 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b0e54891-5559-4e07-b6e8-a807f63717f8")
+		)
+		(pin "2"
+			(uuid "dc371a74-3a67-481c-a604-1d25189f0ab3")
+		)
+		(instances
+			(project "Zx50_MemoryCard_RevB"
+				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
+					(reference "R17")
 					(unit 1)
 				)
 			)
@@ -32102,7 +32102,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
 			(at 325.12 99.06 0)
 			(effects
 				(font
@@ -32129,7 +32129,7 @@
 				(hide yes)
 			)
 		)
-		(property "MFG_PN" "0805W8F1002T5E"
+		(property "MFG_PN" "0402W8F1002T5E"
 			(at 325.12 99.06 0)
 			(effects
 				(font
@@ -32138,7 +32138,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C17414"
+		(property "LCSC" "C25744"
 			(at 325.12 99.06 0)
 			(effects
 				(font
@@ -33190,94 +33190,6 @@
 			(project ""
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "U12")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Small")
-		(at 335.28 99.06 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c5bf7441-c7df-4d1a-94b9-f9c07a2fa8f4")
-		(property "Reference" "R15"
-			(at 334.518 92.71 0)
-			(effects
-				(font
-					(size 1.016 1.016)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 334.01 90.424 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
-			(at 335.28 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 335.28 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, small symbol"
-			(at 335.28 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MFG_PN" "0805W8F1002T5E"
-			(at 335.28 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C17414"
-			(at 335.28 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "26da037a-e051-4e6b-99d6-ad173a3a5442")
-		)
-		(pin "2"
-			(uuid "ae33a199-2d19-4719-8fe5-265d10ec790f")
-		)
-		(instances
-			(project "Zx50_MemoryCard_RevB"
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
-					(reference "R15")
 					(unit 1)
 				)
 			)
@@ -34980,6 +34892,94 @@
 			(project "Zx50_MemoryCard_RevB"
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "C37")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 335.28 99.06 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f9765d5d-2bf0-4704-8b41-2949d9cd7ddc")
+		(property "Reference" "R15"
+			(at 334.518 92.71 0)
+			(effects
+				(font
+					(size 1.016 1.016)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 334.01 90.424 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 335.28 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 335.28 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 335.28 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MFG_PN" "0402W8F1002T5E"
+			(at 335.28 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25744"
+			(at 335.28 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "15ab82a8-85e1-429e-b8a4-7c8eb622f225")
+		)
+		(pin "2"
+			(uuid "4a969f6f-c978-40fb-8856-f9b955ca8e47")
+		)
+		(instances
+			(project "Zx50_MemoryCard_RevB"
+				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
+					(reference "R15")
 					(unit 1)
 				)
 			)

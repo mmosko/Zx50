@@ -60,7 +60,7 @@
         {
           "gap": 0.2032,
           "via_gap": 0.0,
-          "width": 0.203708
+          "width": 0.220472
         }
       ],
       "drc_exclusions": [],
@@ -195,7 +195,7 @@
         0.0,
         0.15,
         0.2,
-        0.203708,
+        0.220472,
         0.25,
         0.4,
         0.5,
@@ -512,13 +512,23 @@
         "clearance": 0.2,
         "name": "CLOCK",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
+        "priority": 2,
         "schematic_color": "rgba(0, 0, 0, 0.000)"
+      },
+      {
+        "clearance": 0.2032,
+        "diff_pair_gap": 0.2032,
+        "diff_pair_width": 0.220472,
+        "name": "DIFF_PAIR",
+        "pcb_color": "rgb(0, 255, 255)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.220472
       },
       {
         "name": "PWR-GND",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 2,
+        "priority": 3,
         "schematic_color": "rgb(0, 0, 194)",
         "track_width": 0.2,
         "via_diameter": 0.8,
@@ -527,14 +537,14 @@
       {
         "name": "PWR-SMALL",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
+        "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.4
       },
       {
         "name": "PWR-Vdd",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 3,
+        "priority": 4,
         "schematic_color": "rgb(255, 0, 0)",
         "track_width": 0.5,
         "via_diameter": 0.8,
@@ -562,6 +572,10 @@
       {
         "netclass": "CLOCK",
         "pattern": "/MCLK"
+      },
+      {
+        "netclass": "DIFF_PAIR",
+        "pattern": "*/?X_*_*_?"
       }
     ]
   },

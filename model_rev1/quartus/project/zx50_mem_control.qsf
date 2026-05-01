@@ -169,6 +169,7 @@ set_location_assignment PIN_99 -to ram_ce0_n
 set_location_assignment PIN_92 -to ram_ce1_n
 set_location_assignment PIN_98 -to rom_ce2_n
 
+set_location_assignment PIN_100 -to hb_led_n
 
 
 set_global_assignment -name SYNTHESIS_SEED 3000
