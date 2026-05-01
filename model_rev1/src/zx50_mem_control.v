@@ -147,12 +147,15 @@ module zx50_mem_control (
     output wire sh_c_dir
 );
 
-// --- Internal State ---
+    // --- Internal State ---
     reg [1:0]  card_addr; 
     reg        has_boot_rom;
     reg        rom_enabled;
     reg [15:0] page_ownership;
     reg        init_done;
+
+    // Use A[15:12] globally as the logical page index
+    wire [3:0] logical_index = z80_a[15:12];
 
     // --- Hit Detection ---
     // Updated Vector: Uses bitwise OR to set the 0x40 base correctly
@@ -177,7 +180,7 @@ module zx50_mem_control (
     (* keep = 1 *) wire effective_use_rom = is_card_0 && rom_enabled && (z80_a[15] == 1'b0) && !b_z80_mreq_n;
 
     // RAM is active if it's a memory cycle, we own the logical page (A15-A12), and the ROM isn't overriding it
-    (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[z80_a[15:12]] && !effective_use_rom;
+    (* keep = 1 *) wire ram_hit = !b_z80_mreq_n && page_ownership[logical_index] && !effective_use_rom;
 
     // --- DMA Wires & INTACK ---
     wire dma_is_active, dma_is_master, dma_dir_to_bus, dma_int_pending;
@@ -286,12 +289,14 @@ module zx50_mem_control (
         // atl_oe_n is driven separately
         // atl_oe_n   = 1'b1;
         atl_we_n   = 1'b1;
-        atl_a      = 4'h0;
+        // atl_a      = 4'h0;
+        atl_a      = logical_index; // Hard-wired to [15:12] for all modes!
 
         if (dma_is_active) begin
             // ----------------------------------------------------------------
             // DMA CYCLE STEALING OVERRIDE
             // ----------------------------------------------------------------
+            atl_a = 4'h0; // DMA still forces base page
             atl_ce_n = 1'b1; // Bypass ATL, DMA provides full physical address
             // atl_oe_n = 1'b1;
             
@@ -314,9 +319,7 @@ module zx50_mem_control (
             // ----------------------------------------------------------------
             // MMU WRITE ROUTING
             // ----------------------------------------------------------------
-            atl_a      = z80_a[11:8];
             atl_ce_n   = 1'b0;
-            // atl_oe_n   = 1'b1;
             atl_we_n   = b_z80_wr_n;
             
         end else if (effective_use_rom) begin
@@ -324,7 +327,6 @@ module zx50_mem_control (
             // ROM READ ROUTING (ATL Bypass)
             // ----------------------------------------------------------------
             atl_ce_n  = 1'b1;
-            // atl_oe_n  = 1'b1;
             atl_we_n  = 1'b1;
             
             rom_ce2_n = 1'b0;
@@ -335,10 +337,7 @@ module zx50_mem_control (
             // ----------------------------------------------------------------
             // NORMAL RAM ROUTING (Via ATL)
             // ----------------------------------------------------------------
-        
-            atl_a     = z80_a[15:12];
             atl_ce_n  = 1'b0;
-            // atl_oe_n  = 1'b0;
             // Output Enable the ATL SRAM to get the phys page
             atl_we_n  = 1'b1;
             
@@ -380,14 +379,14 @@ if (!reset_n) begin
                 // (Logical Pages 0-7), disable the boot ROM forever!
                 if (z80_a[11] == 1'b0) rom_enabled <= 1'b0; 
                 
-					 page_ownership[z80_a[11:8]] <= mmu_direct_wr;
+					 page_ownership[logical_index] <= mmu_direct_wr;
 					  
                 //if (mmu_direct_wr) begin
                 //    // Claim the page
-                //    page_ownership[z80_a[11:8]] <= 1'b1;
+                //    page_ownership[logical_index] <= 1'b1;
                 //end else begin
                 //    // Another card claimed it! Drop ownership.
-                //    page_ownership[z80_a[11:8]] <= 1'b0;
+                //    page_ownership[logical_index] <= 1'b0;
                 //end
             end
             

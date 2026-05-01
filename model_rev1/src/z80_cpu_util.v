@@ -193,14 +193,24 @@ module z80_cpu_util (
         end
     endtask
 
+// ==========================================
+    // MMU CONFIGURATION UTILITY
+    // ==========================================
+    // card_id: 0-3 (now using 2-bit ID)
+    // logical_window: 0-15 (Maps to Z80 A[15:12])
+    // physical_page: 0-255 (The 4KB page on the SRAM)
     task mmu_map_page(input [3:0] card_id, input [3:0] logical_window, input [7:0] physical_page);
         reg [15:0] io_addr;
         begin
-            io_addr = (logical_window << 8) | 8'h30 | card_id;
+            // NEW MAPPING: 
+            // logical_window shifted to bits 15:12 (Upper nibble of B register)
+            // card_id combined with 0x30 base into bits 7:0 (C register)
+            io_addr = (logical_window << 12) | (8'h30 | card_id);
+            
             io_write(io_addr, physical_page);
         end
     endtask
-
+    
     task init_mmu(input [3:0] card_id);
         integer i;
         begin

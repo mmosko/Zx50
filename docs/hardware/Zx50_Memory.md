@@ -10,9 +10,9 @@ Each Zx50 memory card contains 1MB of physical SRAM, which is divided into **256
 The core job of the CPLD on each memory card is to act as an Address Translation Latch (ATL). When the Z80 accesses memory, the CPLD intercepts the top 4 bits of the address bus and translates them into an 8-bit physical page address using an external SRAM Look-Up Table (LUT).
 
 ```text
-Address Translation:
-Z80 A[15:12] (4 bits)  => MMU Translation LUT => Physical SRAM P[19:12] (8 bits)
-Z80 A[11:0]  (12 bits) => Passed straight through to SRAM
+B Register (A[15:8]) => 0x(Index)0   (e.g., 0x80 to map to 0x8000)
+C Register (A[7:0])  => 0x30 | CardID
+Data Register        => Physical Page (0x00 to 0xFF)
 ```
 
 ### Boot Behavior & Card IDs
