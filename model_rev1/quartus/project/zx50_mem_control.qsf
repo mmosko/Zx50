@@ -172,4 +172,11 @@ set_location_assignment PIN_98 -to rom_ce2_n
 set_location_assignment PIN_100 -to hb_led_n
 
 
-set_global_assignment -name SYNTHESIS_SEED 3000
+set_global_assignment -name SYNTHESIS_SEED 71866
+set_global_assignment -name AUTO_PARALLEL_EXPANDERS OFF
+set_global_assignment -name AUTO_RESOURCE_SHARING ON
+set_global_assignment -name OPTIMIZE_IOC_REGISTER_PLACEMENT_FOR_TIMING NORMAL
+set_global_assignment -name ALM_REGISTER_PACKING_EFFORT HIGH
+set_global_assignment -name DISABLE_REGISTER_MERGING_ACROSS_HIERARCHIES AUTO
+set_global_assignment -name SAVE_DISK_SPACE OFF
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
