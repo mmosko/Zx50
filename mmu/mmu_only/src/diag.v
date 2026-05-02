@@ -51,6 +51,14 @@ module diag (
     output wire hb_led_n
 );
 
+// ==========================================
+    // 1. COMPREHENSIVE LOGIC ANCHOR
+    // ==========================================
+    // We XOR every "unused" input pin together. This prevents Quartus from
+    // identifying them as "Unused" and driving them to GND, which causes 
+    // the 200mA contention with buffer U3.
+    wire logic_anchor = ^z80_a ^ b_z80_mreq_n ^ b_z80_iorq_n ^ b_z80_rd_n ^ b_z80_wr_n ^ b_z80_m1_n;
+
     // ==========================================
     // 1. HEARTBEAT COUNTER
     // ==========================================
@@ -63,8 +71,10 @@ module diag (
             hb_counter <= hb_counter + 1'b1;
     end
 
-    // Pin 100 is the Cathode; driving LOW turns the LED ON.
-    assign hb_led_n = hb_counter[21]; 
+    // 2. Tie the result to your heartbeat LED
+    // This forces the compiler to keep z80_a as real input pins
+    // because they now "affect" an output (the LED).
+    assign hb_led_n = hb_counter[21] ^ logic_anchor;
 
     // ==========================================
     // 2. SAFETY IDLE DEFAULTS (Zombie Mode)
@@ -85,8 +95,8 @@ module diag (
     assign sh_busy_n    = 1'bz;
 
     // Force bidirectional buses to high-impedance
-    assign l_d   = 8'hZZ;
-    assign atl_d = 8'hZZ;
+    assign l_d   = 8'h00;
+    assign atl_d = 8'h00;
     assign atl_oe_n = 1'b1;         // Explicitly disable ATL SRAM output
 
     // ==========================================
