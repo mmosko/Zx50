@@ -8,6 +8,7 @@
       <itemPath>src/z80_bus.h</itemPath>
       <itemPath>src/clock.h</itemPath>
       <itemPath>src/pins.h</itemPath>
+      <itemPath>src/command_queue.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -24,6 +25,7 @@
       <itemPath>src/main.c</itemPath>
       <itemPath>src/z80_bus.c</itemPath>
       <itemPath>src/clock.c</itemPath>
+      <itemPath>src/command_queue.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ImportantFiles"
                    displayName="Important Files"

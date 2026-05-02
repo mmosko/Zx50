@@ -78,6 +78,9 @@ void GPIO_Init(void) {
     TRISD = 0xFF; 
     TRISE = 0xFF; 
     
+    // Disable PSP mode (parallel slave mode)
+    TRISEbits.PSPMODE = 0;
+            
     // EXCEPT: We must actively drive the RESET line!
     Z80_RESET_DIR = 0; 
 }
@@ -147,6 +150,16 @@ uint8_t UART_Read(void) {
 #else
     while (!PIR1bits.RCIF); 
     return RCREG;            
+#endif
+}
+
+uint8_t UART_Data_Available(void) {
+#ifdef __DEBUG
+    // In the simulator, data is always "available" from the mock array
+    return 1; 
+#else
+    // REAL HARDWARE: Returns 1 if the RX FIFO has unread data, 0 if empty
+    return PIR1bits.RCIF; 
 #endif
 }
 

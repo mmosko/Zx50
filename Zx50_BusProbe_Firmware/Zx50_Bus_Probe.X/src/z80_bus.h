@@ -13,13 +13,20 @@
 extern "C" {
 #endif
 
+typedef enum {
+    CYCLE_T1 = 1,
+    CYCLE_T2,
+    CYCLE_T3,
+    CYCLE_T4
+} t_cycle_t;
+
 // Add semicolons to finish the prototypes
-void Z80_Mem_Write(uint16_t address, uint8_t data);
-uint8_t Z80_Mem_Read(uint16_t address);
-void Z80_IO_Write(uint16_t port_and_ah, uint8_t data);
-uint8_t Z80_IO_Read(uint16_t port_and_ah);
+void Z80_Mem_Write(uint16_t address, uint8_t data, t_cycle_t cycle);
+uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t cycle);
+void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t cycle);
+uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t cycle);
+
 void Z80_Bus_Snapshot(void);
-        
 void Z80_Boot_Sequence(void);
 
 #ifdef	__cplusplus

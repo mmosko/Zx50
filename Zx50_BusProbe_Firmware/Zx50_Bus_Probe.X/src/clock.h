@@ -20,6 +20,13 @@ extern uint8_t use_dual_clock; // Flag for x4 MCLK mode
 void Z80_Clock_Init(void);
 
 // ==========================================
+// Auto-Stepping Mode (Timer0 Driven)
+// ==========================================
+void Z80_Clock_Start_Auto(void);
+void Z80_Clock_Stop_Auto(void);
+void Z80_Clock_Service(void);
+
+// ==========================================
 // Free-Running Mode (Hardware PWM)
 // ==========================================
 void Z80_Clock_Start_PWM(void);
@@ -28,6 +35,8 @@ void Z80_Clock_Stop_PWM(void);
 // ==========================================
 // Bit-Banged Mode (Manual T-States)
 // ==========================================
+
+// Pulse the clock once
 void Z80_Clock_Pulse(void);
 void Z80_Clock_High(void);
 void Z80_Clock_Low(void);

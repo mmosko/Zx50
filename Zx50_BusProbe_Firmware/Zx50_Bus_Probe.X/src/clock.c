@@ -1,6 +1,7 @@
 #include <xc.h>
 #include "clock.h"
 #include "pins.h"
+#include "command_queue.h"
 
 /* * FLAG: use_dual_clock
  * --------------------
@@ -11,6 +12,9 @@
  * even when the Z80 bus is being stepped slowly.
  */
 uint8_t use_dual_clock = 1; 
+
+// Flag to track if auto-clocking is running
+static uint8_t auto_clock_enabled = 0;
 
 void Z80_Clock_Init(void) {
     // 1. Disable the hardware PWM modules so we have direct control over the pins
@@ -118,11 +122,60 @@ void Z80_Clock_Low(void) {
     }
 }
 
+/* Convenience function to execute one complete Z80 T-State.
+ * In dual-clock mode, this will output 1 full ZCLK cycle and 
+ * 4 full MCLK cycles, properly interleaved.
+ * 
+ * This runs MCLK at about 110 KHz with a 4-cycle and about 45 Khz
+ * between cycles (i.e. ZCLK is about 45 KHz).  It is not a regular
+ * clock, there's a gap.
+ */
 void Z80_Clock_Pulse(void) {
-    /* * Convenience function to execute one complete Z80 T-State.
-     * In dual-clock mode, this will output 1 full ZCLK cycle and 
-     * 4 full MCLK cycles, properly interleaved.
-     */
     Z80_Clock_High();
     Z80_Clock_Low();
+}
+
+// ===================================
+// Uses timer interrupt for 1KHz clock
+// ===================================
+
+void Z80_Clock_Start_Auto(void) {
+    T0CON = 0x02;          // 16-bit mode, Prescaler 1:8, Timer OFF
+    TMR0H = 0xFC;          // Write High byte first!
+    TMR0L = 0x18;          // Write Low byte
+    
+    INTCONbits.TMR0IF = 0; // Clear the interrupt flag
+    INTCONbits.TMR0IE = 1; // ENABLE Timer0 Interrupt
+    INTCONbits.PEIE   = 1; // Enable Peripheral Interrupts
+    INTCONbits.GIE    = 1; // ENABLE Global Interrupts
+    
+    auto_clock_enabled = 1;
+    T0CONbits.TMR0ON = 1;  // Turn the timer ON
+}
+
+void Z80_Clock_Stop_Auto(void) {
+    T0CONbits.TMR0ON = 0;  // Turn the timer OFF
+    INTCONbits.TMR0IE = 0; // Disable the interrupt
+    auto_clock_enabled = 0;
+}
+
+// ==========================================
+// THE HIGH-PRIORITY INTERRUPT VECTOR
+// ==========================================
+void __interrupt() System_ISR(void) {
+    
+    // Check if Timer0 caused the interrupt
+    if (INTCONbits.TMR0IE && INTCONbits.TMR0IF) {
+        // 1. Clear the hardware flag immediately
+        INTCONbits.TMR0IF = 0; 
+        
+        // 2. Reload the timer for the next 1kHz tick
+        TMR0H = 0xFC;
+        TMR0L = 0x18;
+        
+        // 3. Fire the clock pulse
+        if (auto_clock_enabled) {
+            CQ_Dispatch_Cycle();
+        }
+    }
 }
