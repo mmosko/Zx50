@@ -75,6 +75,11 @@ void main(void) {
             
             CQ_Clear(pending_cmd);
             pending_cmd = 0;
+            continue;
+        }
+        
+        if (!UART_Data_Available()) {
+            continue;
         }
         
         // Ensure UART_Read() is non-blocking here, or check UART_Data_Available()
