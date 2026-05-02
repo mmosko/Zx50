@@ -1,0 +1,62 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Apr 12 23:44:20 2026
+[*]
+[dumpfile] "/media/psf/z80/Zx50/model_rev1/waves/mmu.vcd"
+[dumpfile_mtime] "Sun Apr 12 23:14:48 2026"
+[dumpfile_size] 44813
+[savefile] "/media/psf/z80/Zx50/model_rev1/gtkw/mmu.gtkw"
+[timestart] 0
+[size] 1512 870
+[pos] -1 -1
+*-20.194834 7347300 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] mmu_tb.
+[treeopen] mmu_tb.card1.
+[sst_width] 40
+[signals_width] 197
+[sst_expanded] 0
+[sst_vpaned_height] 251
+@200
+-Z80
+@28
+mmu_tb.z80.clk
+@22
+mmu_tb.z80.addr[15:0]
+mmu_tb.z80.data[7:0]
+@28
+mmu_tb.z80.mreq_n
+mmu_tb.z80.iorq_n
+mmu_tb.z80.rd_n
+mmu_tb.z80.wr_n
+mmu_tb.z80.reset_n
+@200
+-
+-CARD0
+@22
+mmu_tb.card0.atl_a[3:0]
+mmu_tb.card0.atl_d[7:0]
+@28
+mmu_tb.card0.atl_ce_n
+mmu_tb.card0.atl_oe_n
+@29
+mmu_tb.card0.atl_we_n
+@22
+mmu_tb.card0.l_a[10:0]
+mmu_tb.card0.l_d[7:0]
+mmu_tb.card0.phys_addr[18:0]
+@200
+-
+-CARD1
+@22
+mmu_tb.card1.atl_a[3:0]
+mmu_tb.card1.atl_d[7:0]
+@28
+mmu_tb.card1.atl_ce_n
+mmu_tb.card1.atl_oe_n
+mmu_tb.card1.atl_we_n
+@22
+mmu_tb.card1.l_a[10:0]
+mmu_tb.card1.l_d[7:0]
+mmu_tb.card1.phys_addr[18:0]
+[pattern_trace] 1
+[pattern_trace] 0
