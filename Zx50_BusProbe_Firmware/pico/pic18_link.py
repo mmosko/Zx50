@@ -10,8 +10,11 @@ CMD_LDIR = 0x05
 CMD_SNAPSHOT = 0x07
 CMD_GHOST = 0x08
 CMD_STEP = 0x11
+CMD_CLK_AUTO_START = 0x12
+CMD_CLK_AUTO_STOP = 0x13
 
 SYNC_BYTE = 0x5A
+SYNC_NACK = 0x5B
 
 
 class PIC18Link:
@@ -31,6 +34,8 @@ class PIC18Link:
             "STEP": self._do_step,
             "LDIR": self._do_ldir,
             "SNAPSHOT": self._do_snapshot,
+            "CLK_START": self._do_clk_start,
+            "CLK_STOP": self._do_clk_stop,
             "HELP": self._do_help,
             "?": self._do_help
         }
@@ -53,9 +58,11 @@ class PIC18Link:
         t0 = time.ticks_ms()
         while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
             if self.uart.any():
-                ack = self.uart.read(1)[0]
-                if ack == SYNC_BYTE:
+                resp = self.uart.read(1)[0]
+                if resp == SYNC_BYTE:
                     return True
+                elif resp == SYNC_NACK:
+                    return "NACK"
         return False
 
     # ==========================================
@@ -68,12 +75,15 @@ class PIC18Link:
 
     def _mem_read(self, address):
         self._send_packet(CMD_LD, address)
-        if self._wait_for_ack():
+        res = self._wait_for_ack()
+        if res is True:
             t0 = time.ticks_ms()
-            while time.ticks_diff(time.ticks_ms(), t0) < 10:
+            # Bumped timeout to 100ms
+            while time.ticks_diff(time.ticks_ms(), t0) < 100:
                 if self.uart.any():
                     return self.uart.read(1)[0]
-        return None
+            return "TIMEOUT"
+        return res
 
     def _mem_write(self, address, data):
         self._send_packet(CMD_STORE, address, param=data)
@@ -86,30 +96,45 @@ class PIC18Link:
 
     def _io_read(self, port):
         self._send_packet(CMD_IN, port)
-        if self._wait_for_ack():
+        res = self._wait_for_ack()
+        if res is True:
             t0 = time.ticks_ms()
-            while time.ticks_diff(time.ticks_ms(), t0) < 10:
+            # Bumped timeout to 100ms
+            while time.ticks_diff(time.ticks_ms(), t0) < 100:
                 if self.uart.any():
                     return self.uart.read(1)[0]
-        return None
+            return "TIMEOUT"
+        return res
 
     def _io_write(self, port, data):
         self._send_packet(CMD_OUT, port, param=data)
         return self._wait_for_ack()
 
-    def _step_clock(self):
-        self._send_packet(CMD_STEP)
-        return self._wait_for_ack()
+    def _step_clock(self, count):
+        self._send_packet(CMD_STEP, param=count)
+        # Scale timeout based on count since the PIC blocks during stepping
+        return self._wait_for_ack(timeout_ms=100 + (count * 2))
 
     def _bus_snapshot(self):
         self._send_packet(CMD_SNAPSHOT)
-        data = bytearray()
-        t0 = time.ticks_ms()
-        while time.ticks_diff(time.ticks_ms(), t0) < 50:
-            if self.uart.any():
-                data.extend(self.uart.read(self.uart.any()))
-                t0 = time.ticks_ms()
-        return data if data else None
+        res = self._wait_for_ack()
+        if res is True:
+            data = bytearray()
+            t0 = time.ticks_ms()
+            while time.ticks_diff(time.ticks_ms(), t0) < 50:
+                if self.uart.any():
+                    data.extend(self.uart.read(self.uart.any()))
+                    t0 = time.ticks_ms()
+            return data if data else "TIMEOUT"
+        return res
+
+    def _start_clock(self):
+        self._send_packet(CMD_CLK_AUTO_START)
+        return self._wait_for_ack()
+
+    def _stop_clock(self):
+        self._send_packet(CMD_CLK_AUTO_STOP)
+        return self._wait_for_ack()
 
     # ==========================================
     # DISPATCH HANDLERS
@@ -124,14 +149,17 @@ class PIC18Link:
             "  pic ldir <addr> <hex>    - Write block of data\n"
             "  pic snapshot             - Capture full bus state\n"
             "  pic ghost <1|0>          - Enable/Disable bus driving\n"
-            "  pic step                 - Single-step the clock"
+            "  pic step [count]         - Single-step the clock (Decimal)\n"
+            "  pic clk_start            - Start 1kHz background clock\n"
+            "  pic clk_stop             - Stop background clock"
         )
 
     def _do_ghost(self, args):
         if len(args) == 2:
             enable = args[1] == "1"
-            if self._set_ghost_mode(enable):
-                return f"OK GHOST {'ENABLE' if enable else 'DISABLE'}"
+            res = self._set_ghost_mode(enable)
+            if res is True: return f"OK GHOST {'ENABLE' if enable else 'DISABLE'}"
+            if res == "NACK": return "ERR PIC_NACK"
             return "ERR PIC_TIMEOUT"
         return "ERR SYNTAX_PIC_GHOST_1|0"
 
@@ -139,9 +167,9 @@ class PIC18Link:
         if len(args) == 2:
             try:
                 addr = int(args[1], 16)
-                val = self._mem_read(addr)
-                if val is not None:
-                    return f"OK {val:02X}"
+                res = self._mem_read(addr)
+                if isinstance(res, int): return f"OK {res:02X}"
+                if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ADDRESS_MUST_BE_HEX"
@@ -152,8 +180,9 @@ class PIC18Link:
             try:
                 addr = int(args[1], 16)
                 data = int(args[2], 16)
-                if self._mem_write(addr, data):
-                    return "OK"
+                res = self._mem_write(addr, data)
+                if res is True: return "OK"
+                if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ARGS_MUST_BE_HEX"
@@ -169,8 +198,9 @@ class PIC18Link:
                 data_bytes = bytes.fromhex(data_hex)
                 if len(data_bytes) > 255:
                     return "ERR LDIR_MAX_255_BYTES"
-                if self._mem_ldir(addr, data_bytes):
-                    return "OK"
+                res = self._mem_ldir(addr, data_bytes)
+                if res is True: return "OK"
+                if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ARGS_MUST_BE_HEX"
@@ -180,9 +210,9 @@ class PIC18Link:
         if len(args) == 2:
             try:
                 port = int(args[1], 16)
-                val = self._io_read(port)
-                if val is not None:
-                    return f"OK {val:02X}"
+                res = self._io_read(port)
+                if isinstance(res, int): return f"OK {res:02X}"
+                if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR PORT_MUST_BE_HEX"
@@ -193,23 +223,45 @@ class PIC18Link:
             try:
                 port = int(args[1], 16)
                 data = int(args[2], 16)
-                if self._io_write(port, data):
-                    return "OK"
+                res = self._io_write(port, data)
+                if res is True: return "OK"
+                if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ARGS_MUST_BE_HEX"
         return "ERR SYNTAX_PIC_OUT_<HEX_PORT>_<HEX_DATA>"
 
     def _do_step(self, args):
-        if self._step_clock():
-            return "OK"
+        count = 1
+        if len(args) == 2:
+            try:
+                count = int(args[1])
+            except ValueError:
+                return "ERR COUNT_MUST_BE_INT"
+
+        res = self._step_clock(count)
+        if res is True: return "OK"
+        if res == "NACK": return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
 
     def _do_snapshot(self, args):
-        data = self._bus_snapshot()
-        if data is not None:
-            hex_str = "".join([f"{b:02X}" for b in data])
+        res = self._bus_snapshot()
+        if isinstance(res, bytearray):
+            hex_str = "".join([f"{b:02X}" for b in res])
             return f"OK {hex_str}"
+        if res == "NACK": return "ERR PIC_NACK"
+        return "ERR PIC_TIMEOUT"
+
+    def _do_clk_start(self, args):
+        res = self._start_clock()
+        if res is True: return "OK"
+        if res == "NACK": return "ERR PIC_NACK"
+        return "ERR PIC_TIMEOUT"
+
+    def _do_clk_stop(self, args):
+        res = self._stop_clock()
+        if res is True: return "OK"
+        if res == "NACK": return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
 
     # ==========================================

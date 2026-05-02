@@ -46,6 +46,7 @@ void Ghost(uint8_t param);
 // ==========================================
 void UART_Write(uint8_t data);
 uint8_t UART_Read(void);
+uint8_t UART_Data_Available(void);
 
 uint8_t SPI_Transfer(uint8_t data);
 void Expander_Write(uint8_t hw_addr, uint8_t reg_addr, uint8_t data);

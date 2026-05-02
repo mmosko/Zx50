@@ -4,277 +4,295 @@
 #include "clock.h"
 #include "z80_bus.h"
 
-void Z80_Mem_Write(uint16_t address, uint8_t data) {
-    // 1. Set Transceivers to B->A (PIC driving Z80 Bus)
-    XCVR_DATA_DIR_LAT = 0; // U6 DIR = 0 (B to A)
-    XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
-    XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
-    XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
-    
-    Z80_DATA_DIR = 0x00;   // Set PORTD as Output
-    Z80_MREQ_DIR = 0;      // Make ~MREQ an output
-    Z80_WR_DIR   = 0;      // Make ~WR an output
+void Z80_Mem_Write(uint16_t address, uint8_t data, t_cycle_t t_cycle) { 
+    switch(t_cycle) {
+        case CYCLE_T1: {
+            // 1. Set Transceivers to B->A (PIC driving Z80 Bus)
+            XCVR_DATA_DIR_LAT = 0; // U6 DIR = 0 (B to A)
+            XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
+            XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
+            XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
 
-    // Set Address via SPI (Done before clocking so it's stable)
-    Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
-    Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
+            Z80_DATA_DIR = 0x00;   // Set PORTD as Output
+            Z80_MREQ_DIR = 0;      // Make ~MREQ an output
+            Z80_WR_DIR   = 0;      // Make ~WR an output
 
-    // ==========================================
-    // --- T1 STATE ---
-    // Address is out on rising edge. 
-    // ~MREQ and Data fall/output on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_MREQ_LAT = 0;      
-    Z80_DATA_LAT = data;   
+            // Set Address via SPI (Done before clocking so it's stable)
+            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
+            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
 
-    // ==========================================
-    // --- T2 STATE ---
-    // ~WR falls on falling edge. 
-    // WAIT is sampled.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_WR_LAT = 0;        
-    
-    #ifndef __DEBUG
-        uint16_t timeout = 1000;
-        
-        // Only wait if the PIC is NOT the one driving ~WAIT low 
-        // (DIR=1 means input, LAT=1 means driving high)
-        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
-            while (Z80_WAIT_VAL == 0 && timeout > 0) {
-                Z80_Clock_High();
-                Z80_Clock_Low(); 
-                timeout--;
-            }
+            // ==========================================
+            // --- T1 STATE ---
+            // Address is out on rising edge. 
+            // ~MREQ and Data fall/output on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_MREQ_LAT = 0;      
+            Z80_DATA_LAT = data;   
+            break;
         }
-    #endif
+        
+        case CYCLE_T2: {
+            // ==========================================
+            // --- T2 STATE ---
+            // ~WR falls on falling edge. 
+            // WAIT is sampled.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_WR_LAT = 0;        
+            break;
+        }
+        
+        case CYCLE_T3: {
+            // ==========================================
+            // --- T3 STATE ---
+            // ~MREQ and ~WR rise on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_MREQ_LAT = 1;      
+            Z80_WR_LAT   = 1;      
 
-    // ==========================================
-    // --- T3 STATE ---
-    // ~MREQ and ~WR rise on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_MREQ_LAT = 1;      
-    Z80_WR_LAT   = 1;      
+            // Float PORTD and isolate the Transceivers (Return to Ghost Mode)
+            Z80_DATA_DIR = 0xFF;   
+            Z80_MREQ_DIR = 1;      
+            Z80_WR_DIR   = 1;      
 
-    // Float PORTD and isolate the Transceivers (Return to Ghost Mode)
-    Z80_DATA_DIR = 0xFF;   
-    Z80_MREQ_DIR = 1;      
-    Z80_WR_DIR   = 1;      
-    
-    XCVR_DATA_OE_LAT = 1;  
-    XCVR_CTRL_OE_LAT = 1;  
+            XCVR_DATA_OE_LAT = 1;  
+            XCVR_CTRL_OE_LAT = 1; 
+            break;
+        }
+        
+        case CYCLE_T4:
+            // no T4 cycle for this operation
+            break;
+    }
 }
 
-uint8_t Z80_Mem_Read(uint16_t address) {
-    uint8_t data;
-
-    // 1. Set Data Transceiver A->B (Listen), Control B->A (Drive)
-    XCVR_DATA_DIR_LAT = 1; // U6 DIR = 1 (A to B)
-    XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
-    XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
-    XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
+uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t t_cycle) {
+    // the value one would see from the pull-ups
+    uint8_t data = 0xFF;
     
-    Z80_DATA_DIR = 0xFF;   // Set PORTD as Input
-    Z80_MREQ_DIR = 0;      // Make ~MREQ an output
-    Z80_RD_DIR   = 0;      // Make ~RD an output
+    switch(t_cycle) {
+        case CYCLE_T1: {
+            // 1. Set Data Transceiver A->B (Listen), Control B->A (Drive)
+            XCVR_DATA_DIR_LAT = 1; // U6 DIR = 1 (A to B)
+            XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
+            XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
+            XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
 
-    Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
-    Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
+            Z80_DATA_DIR = 0xFF;   // Set PORTD as Input
+            Z80_MREQ_DIR = 0;      // Make ~MREQ an output
+            Z80_RD_DIR   = 0;      // Make ~RD an output
 
-    // ==========================================
-    // --- T1 STATE ---
-    // Address out on rising edge. 
-    // ~MREQ and ~RD fall on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_MREQ_LAT = 0;      
-    Z80_RD_LAT   = 0;      
+            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
+            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
 
-    // ==========================================
-    // --- T2 STATE ---
-    // WAIT is sampled.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-
-    #ifndef __DEBUG
-        uint16_t timeout = 1000;
-        
-        // Only wait if the PIC is NOT the one driving ~WAIT low 
-        // (DIR=1 means input, LAT=1 means driving high)
-        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
-            while (Z80_WAIT_VAL == 0 && timeout > 0) {
-                Z80_Clock_High();
-                Z80_Clock_Low(); 
-                timeout--;
-            }
+            // ==========================================
+            // --- T1 STATE ---
+            // Address out on rising edge. 
+            // ~MREQ and ~RD fall on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_MREQ_LAT = 0;      
+            Z80_RD_LAT   = 0;
+            break;
         }
-    #endif
-    // ==========================================
-    // --- T3 STATE ---
-    // Memory Data is sampled on rising edge!
-    // ~MREQ and ~RD rise on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    data = Z80_DATA_VAL;   // Sample while clock is HIGH
-    Z80_Clock_Low();
+        case CYCLE_T2: {
+            // ==========================================
+            // --- T2 STATE ---
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            break;
+        }
+        
+        case CYCLE_T3: {
+            // ==========================================
+            // --- T3 STATE ---
+            // Memory Data is sampled on rising edge!
+            // ~MREQ and ~RD rise on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
 
-    Z80_MREQ_LAT = 1;      
-    Z80_RD_LAT   = 1;      
+            // sample on falling edge, but before we take RD high
+            data = Z80_DATA_VAL;   
+            
+            Z80_MREQ_LAT = 1;      
+            Z80_RD_LAT   = 1;      
 
-    // Return to Ghost Mode
-    Z80_MREQ_DIR = 1;      
-    Z80_RD_DIR   = 1;      
-    
-    XCVR_DATA_OE_LAT = 1;  
-    XCVR_CTRL_OE_LAT = 1;  
+            // Return to Ghost Mode
+            Z80_MREQ_DIR = 1;      
+            Z80_RD_DIR   = 1;      
 
+            XCVR_DATA_OE_LAT = 1;  
+            XCVR_CTRL_OE_LAT = 1;  
+            break;
+        }
+        
+        case CYCLE_T4:
+            // no T4 cycle for this operation
+            break;
+    }
+                 
     return data;
 }
 
-void Z80_IO_Write(uint16_t port_and_ah, uint8_t data) {
-    XCVR_DATA_DIR_LAT = 0; // B to A
-    XCVR_CTRL_DIR_LAT = 0; // B to A
-    XCVR_DATA_OE_LAT  = 0; // Enable
-    XCVR_CTRL_OE_LAT  = 0; // Enable
-    
-    Z80_DATA_DIR = 0x00;   // Output
-    Z80_IORQ_DIR = 0;      // Make ~IORQ an output
-    Z80_WR_DIR   = 0;      // Make ~WR an output
-
-    Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
-    Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
-
-    // ==========================================
-    // --- T1 STATE ---
-    // Data placed on bus after falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_DATA_LAT = data;   
-
-    // ==========================================
-    // --- T2 STATE ---
-    // ~IORQ and ~WR fall on falling edge of T2.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_IORQ_LAT = 0; 
-    Z80_WR_LAT   = 0; 
-
-    // ==========================================
-    // --- AUTOMATIC WAIT STATE (TW) ---
-    // Z80 automatically inserts a Wait state for I/O.
-    // External WAIT is sampled on falling edge of TW.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-
-    #ifndef __DEBUG
-        uint16_t timeout = 1000;
-        
-        // Only wait if the PIC is NOT the one driving ~WAIT low 
-        // (DIR=1 means input, LAT=1 means driving high)
-        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
-            while (Z80_WAIT_VAL == 0 && timeout > 0) {
-                Z80_Clock_High();
-                Z80_Clock_Low(); 
-                timeout--;
-            }
-        }
-    #endif
-    // ==========================================
-    // --- T3 STATE ---
-    // ~IORQ and ~WR rise on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-
-    Z80_IORQ_LAT = 1;
-    Z80_WR_LAT   = 1;
-
-    // Return to Ghost Mode
-    Z80_DATA_DIR = 0xFF;   
-    Z80_IORQ_DIR = 1;      
-    Z80_WR_DIR   = 1;      
-    XCVR_DATA_OE_LAT = 1;  
-    XCVR_CTRL_OE_LAT = 1;  
+static void Z80_Toggle_Wait() {
+    if (Z80_WAIT_DIR == 1) {
+        // set as output and drive 0
+        Z80_WAIT_LAT = 0;
+        Z80_WAIT_DIR = 0;
+    } else {
+        // back to input and de-assert
+        Z80_WAIT_LAT = 1;
+        Z80_WAIT_DIR = 1;
+    }
 }
 
-uint8_t Z80_IO_Read(uint16_t port_and_ah) {
-    uint8_t data;
+void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t t_cycle) {
+    switch(t_cycle) {
+        case CYCLE_T1: {
+            XCVR_DATA_DIR_LAT = 0; // B to A
+            XCVR_CTRL_DIR_LAT = 0; // B to A
+            XCVR_DATA_OE_LAT  = 0; // Enable
+            XCVR_CTRL_OE_LAT  = 0; // Enable
 
-    XCVR_DATA_DIR_LAT = 1; // A to B
-    XCVR_CTRL_DIR_LAT = 0; // B to A
-    XCVR_DATA_OE_LAT  = 0; // Enable
-    XCVR_CTRL_OE_LAT  = 0; // Enable
-    
-    Z80_DATA_DIR = 0xFF;   // Input
-    Z80_IORQ_DIR = 0;      // Make ~IORQ an output
-    Z80_RD_DIR   = 0;      // Make ~RD an output
+            Z80_DATA_DIR = 0x00;   // Output
+            Z80_IORQ_DIR = 0;      // Make ~IORQ an output
+            Z80_WR_DIR   = 0;      // Make ~WR an output
 
-    Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
-    Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
+            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
+            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
 
-    // ==========================================
-    // --- T1 STATE ---
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-
-    // ==========================================
-    // --- T2 STATE ---
-    // ~IORQ and ~RD fall on falling edge of T2. 
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-    Z80_IORQ_LAT = 0; 
-    Z80_RD_LAT   = 0; 
-
-    // ==========================================
-    // --- AUTOMATIC WAIT STATE (TW) ---
-    // ==========================================
-    Z80_Clock_High();
-    Z80_Clock_Low();
-
-    #ifndef __DEBUG
-        uint16_t timeout = 1000;
-        
-        // Only wait if the PIC is NOT the one driving ~WAIT low 
-        // (DIR=1 means input, LAT=1 means driving high)
-        if (Z80_WAIT_DIR == 1 || Z80_WAIT_LAT == 1) {
-            while (Z80_WAIT_VAL == 0 && timeout > 0) {
-                Z80_Clock_High();
-                Z80_Clock_Low(); 
-                timeout--;
-            }
+            // ==========================================
+            // --- T1 STATE ---
+            // Data placed on bus after falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_DATA_LAT = data;   
+            break;
         }
-    #endif
+        case CYCLE_T2: {
+            // ==========================================
+            // --- T2 STATE ---
+            // ~IORQ and ~WR fall on falling edge of T2.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_IORQ_LAT = 0; 
+            Z80_WR_LAT   = 0;
 
-    // ==========================================
-    // --- T3 STATE ---
-    // I/O Data is valid at falling edge of T3.
-    // ~IORQ and ~RD rise on falling edge.
-    // ==========================================
-    Z80_Clock_High();
-    data = Z80_DATA_VAL;   // Sample data right before clock falls
-    Z80_Clock_Low();
+            // IOREQ always adds a wait state, so toggle the WAIT latch
+            // when it is 1, it causes the T-state machine to add a wait state
+            // in T2, so we will get called again
+            Z80_Toggle_Wait();
+            break;
+        }
+        case CYCLE_T3: {
+            // ==========================================
+            // --- T3 STATE ---
+            // ~IORQ and ~WR rise on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
 
-    Z80_IORQ_LAT = 1;
-    Z80_RD_LAT   = 1;
+            Z80_IORQ_LAT = 1;
+            Z80_WR_LAT   = 1;
 
-    // Return to Ghost Mode
-    Z80_IORQ_DIR = 1;      
-    Z80_RD_DIR   = 1;      
-    XCVR_DATA_OE_LAT = 1;  
-    XCVR_CTRL_OE_LAT = 1;  
+            // Return to Ghost Mode
+            Z80_DATA_DIR = 0xFF;   
+            Z80_IORQ_DIR = 1;      
+            Z80_WR_DIR   = 1;      
+            XCVR_DATA_OE_LAT = 1;  
+            XCVR_CTRL_OE_LAT = 1;  
+            break;
+        }
+        
+        case CYCLE_T4:
+            // no T4 cycle for this operation
+            break;
+    }
+       
+}
 
+uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t t_cycle) {
+    // default value is what pullup resistors would give
+    uint8_t data = 0xFF;
+
+    switch(t_cycle) {
+        case CYCLE_T1: {
+            XCVR_DATA_DIR_LAT = 1; // A to B
+            XCVR_CTRL_DIR_LAT = 0; // B to A
+            XCVR_DATA_OE_LAT  = 0; // Enable
+            XCVR_CTRL_OE_LAT  = 0; // Enable
+
+            Z80_DATA_DIR = 0xFF;   // Input
+            Z80_IORQ_DIR = 0;      // Make ~IORQ an output
+            Z80_RD_DIR   = 0;      // Make ~RD an output
+
+            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
+            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
+
+            // ==========================================
+            // --- T1 STATE ---
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            break;
+        }
+        
+        case CYCLE_T2: {
+            // ==========================================
+            // --- T2 STATE ---
+            // ~IORQ and ~RD fall on falling edge of T2. 
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+            Z80_IORQ_LAT = 0; 
+            Z80_RD_LAT   = 0; 
+            
+            // IOREQ always adds a wait state, so toggle the WAIT latch
+            // when it is 1, it causes the T-state machine to add a wait state
+            // in T2, so we will get called again
+            Z80_Toggle_Wait();
+
+            break;
+        }
+       
+        case CYCLE_T3: {
+            // ==========================================
+            // --- T3 STATE ---
+            // I/O Data is valid at falling edge of T3.
+            // ~IORQ and ~RD rise on falling edge.
+            // ==========================================
+            Z80_Clock_High();
+            Z80_Clock_Low();
+
+            // sample on falling edge, but before we take RD high
+            data = Z80_DATA_VAL;   
+
+            Z80_IORQ_LAT = 1;
+            Z80_RD_LAT   = 1;
+
+            // Return to Ghost Mode
+            Z80_IORQ_DIR = 1;      
+            Z80_RD_DIR   = 1;      
+            XCVR_DATA_OE_LAT = 1;  
+            XCVR_CTRL_OE_LAT = 1; 
+            break;
+        }
+        
+        case CYCLE_T4:
+            // no T4 cycle for this operation
+            break;
+    }
+    
     return data;
 }
 

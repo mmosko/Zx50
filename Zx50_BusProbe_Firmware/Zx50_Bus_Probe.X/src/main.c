@@ -24,86 +24,30 @@
 #include <xc.h>
 #include "hal.h"        // Adds UART_Read, System_Init, etc.
 #include "z80_bus.h"
+#include "clock.h"      // Included so we can pump the clock
+#include "pins.h"
+#include "command_queue.h"       // Included so we can release RESET
 
-
+// ==========================================
 // Packet Opcodes
-#define CMD_LD       0x01
-#define CMD_STORE    0x02
-#define CMD_IN       0x03
-#define CMD_OUT      0x04
-#define CMD_LDIR     0x05
-#define CMD_SNAPSHOT 0x07  // Read state of the entire bus
-#define CMD_GHOST    0x08  // 1 = Ghost (Release Bus), 0 = Unghost (Drive Bus)
-#define CMD_STEP     0x11  // Clock control
+// ==========================================
+#define CMD_LD             0x01
+#define CMD_STORE          0x02
+#define CMD_IN             0x03
+#define CMD_OUT            0x04
+#define CMD_LDIR           0x05
+#define CMD_SNAPSHOT       0x07  // Read state of the entire bus
+#define CMD_GHOST          0x08  // 1 = Ghost (Release Bus), 0 = Unghost (Drive Bus)
+#define CMD_STEP           0x11  // Clock control
+#define CMD_CLK_AUTO_START 0x12  // Start 1kHz background clock
+#define CMD_CLK_AUTO_STOP  0x13  // Stop 1kHz background clock
 
-/*
- * File:   main.c
- * Author: Marc Mosko
- */
-
-#pragma config OSC = INTIO67    
-#pragma config FCMEN = OFF      
-#pragma config IESO = OFF       
-#pragma config PWRT = ON        
-#pragma config BOREN = SBORDIS  
-#pragma config BORV = 3         
-#pragma config WDT = OFF        
-#pragma config MCLRE = ON       
-#pragma config PBADEN = OFF     
-#pragma config LVP = OFF        
-#pragma config XINST = OFF      
-
-#define _XTAL_FREQ 32000000 
-
-#include <xc.h>
-#include "hal.h"
-#include "z80_bus.h"
-#include "clock.h"   // Included so we can pump the clock
-#include "pins.h"    // Included so we can release RESET
-
-#define CMD_LD       0x01
-#define CMD_STORE    0x02
-#define CMD_IN       0x03
-#define CMD_OUT      0x04
-#define CMD_LDIR     0x05
-#define CMD_SNAPSHOT 0x07  
-#define CMD_GHOST    0x08  
-#define CMD_STEP     0x11  
-
-/*
- * File:   main.c
- * Author: Marc Mosko
- */
-
-#pragma config OSC = INTIO67    
-#pragma config FCMEN = OFF      
-#pragma config IESO = OFF       
-#pragma config PWRT = ON        
-#pragma config BOREN = SBORDIS  
-#pragma config BORV = 3         
-#pragma config WDT = OFF        
-#pragma config MCLRE = ON       
-#pragma config PBADEN = OFF     
-#pragma config LVP = OFF        
-#pragma config XINST = OFF      
-
-#define _XTAL_FREQ 32000000 
-
-#include <xc.h>
-#include "hal.h"
-#include "z80_bus.h"
-#include "clock.h"   
-
-#define CMD_LD       0x01
-#define CMD_STORE    0x02
-#define CMD_IN       0x03
-#define CMD_OUT      0x04
-#define CMD_LDIR     0x05
-#define CMD_SNAPSHOT 0x07  
-#define CMD_GHOST    0x08  
-#define CMD_STEP     0x11  
+#define CMD_ACK            0x5A
+#define CMD_NACK           0x5B
 
 void main(void) {
+    cmd_t *pending_cmd = 0;
+    
     // Initialize pins safely to High-Z
     System_Init(); 
 
@@ -113,9 +57,32 @@ void main(void) {
     uint8_t sync, opcode, addr_h, addr_l, param;
 
     while(1) {
+        
+        if (pending_cmd != NULL && pending_cmd->status == STAT_DONE) {
+            switch(pending_cmd->op) {
+                case OP_IDLE:
+                case OP_MEM_WRITE:
+                case OP_IO_WRITE:
+                    // no further action needed for these
+                    break;
+                case OP_MEM_READ:
+                    UART_Write(pending_cmd->data_out);
+                    break;
+                case OP_IO_READ:
+                    UART_Write(pending_cmd->data_out);
+                    break;
+            }
+            
+            CQ_Clear(pending_cmd);
+            pending_cmd = 0;
+        }
+        
+        // Ensure UART_Read() is non-blocking here, or check UART_Data_Available()
+        // before calling UART_Read() so we don't stall the Z80_Clock_Service().
         sync = UART_Read();
-        if (sync != 0x5A) continue; 
+        if (sync != CMD_ACK) continue; 
 
+        // If we get a sync byte, read the rest of the 5-byte packet
         opcode = UART_Read();
         addr_h = UART_Read();
         addr_l = UART_Read();
@@ -125,30 +92,45 @@ void main(void) {
 
         switch(opcode) {
             case CMD_LD: {
-                uint8_t read_val = Z80_Mem_Read(address);
-                UART_Write(0x5A);     
-                UART_Write(read_val); 
+                if (pending_cmd != 0) {
+                    UART_Write(CMD_NACK); 
+                } else {
+                    pending_cmd = CQ_Enqueue(OP_MEM_READ, address, 0);
+                    UART_Write(CMD_ACK);     
+                }
+                
                 break;
             }
             case CMD_STORE: {
-                Z80_Mem_Write(address, param);
-                UART_Write(0x5A);     
+                if (pending_cmd != 0) {
+                    UART_Write(CMD_NACK); 
+                } else {
+                    pending_cmd = CQ_Enqueue(OP_MEM_WRITE, address, param);
+                    UART_Write(CMD_ACK);     
+                }
                 break;
             }
             case CMD_IN: {
-                uint8_t in_val = Z80_IO_Read(address);
-                UART_Write(0x5A);     
-                UART_Write(in_val);   
+                if (pending_cmd != 0) {
+                    UART_Write(CMD_NACK); 
+                } else {
+                    pending_cmd = CQ_Enqueue(OP_IO_READ, address, 0);
+                    UART_Write(CMD_ACK);     
+                }
                 break;
             }
             case CMD_OUT: {
-                Z80_IO_Write(address, param);
-                UART_Write(0x5A);     
+                if (pending_cmd != 0) {
+                    UART_Write(CMD_NACK); 
+                } else {
+                    pending_cmd = CQ_Enqueue(OP_IO_WRITE, address, param);
+                    UART_Write(CMD_ACK);     
+                }
                 break;
             }
             case CMD_GHOST: {
                 Ghost(param);
-                UART_Write(0x5A);       
+                UART_Write(CMD_ACK);       
                 break;
             }
             case CMD_SNAPSHOT: {
@@ -156,18 +138,35 @@ void main(void) {
                 break;
             }
             case CMD_LDIR: {
-                for(uint8_t i=0; i<param; i++) {
-                    uint8_t data_byte = UART_Read();
-                    Z80_Mem_Write(address + i, data_byte);
-                }
-                UART_Write(0x5A);     
+                // not supported under async setup yet
+                UART_Write(CMD_NACK);     
                 break;
             }
             case CMD_STEP: {
-                Z80_Clock_Pulse(); 
-                UART_Write(0x5A);     
+                // always step at least once, even if user did not provide count
+                if (param == 0) {
+                    param = 1;
+                }
+                
+                for (int i = 0; i < param; i++) {
+                    // step clock and dispatch commands
+                    CQ_Dispatch_Cycle(); 
+                }
+                UART_Write(CMD_ACK);     
                 break;
             }
+            case CMD_CLK_AUTO_START: {
+                Z80_Clock_Start_Auto();
+                UART_Write(CMD_ACK);     
+                break;
+            }
+            case CMD_CLK_AUTO_STOP: {
+                Z80_Clock_Stop_Auto();
+                UART_Write(CMD_ACK);     
+                break;
+            }
+            default:
+                break;
         }
     }
 }
