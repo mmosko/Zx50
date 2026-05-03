@@ -15,11 +15,16 @@ module init_tb;
     wire [15:0] z80_a;
     wire [7:0]  z80_d;
     wire z80_mreq_n, z80_iorq_n, z80_rd_n, z80_wr_n, z80_m1_n;
+    wire z80_iei;
     wire wait_n, int_n, reset_n;
+
+    // --- Shadow Bus ---
+    wire sh_en_n, sh_rw_n, sh_inc_n, sh_stb_n, sh_done_n;
+    wire [15:0] sh_addr;
+    wire [7:0] sh_data;
 
     // -- Backplane --
     zx50_backplane backplane (
-        .z80_reset_n(reset_n),
         .z80_addr(z80_a),
         .z80_data(z80_d),
         .z80_mreq_n(z80_mreq_n),
@@ -28,7 +33,16 @@ module init_tb;
         .z80_wr_n(z80_wr_n),
         .z80_m1_n(z80_m1_n),
         .z80_wait_n(wait_n),
-        .z80_int_n(int_n)
+        .z80_int_n(int_n),
+        .z80_reset_n(reset_n),
+        .sh_addr(sh_addr), 
+        .sh_data(sh_data),
+        .sh_en_n(sh_en_n), 
+        .sh_rw_n(sh_rw_n), 
+        .sh_inc_n(sh_inc_n), 
+        .sh_stb_n(sh_stb_n),
+        .sh_done_n(sh_done_n),
+        .sh_busy_n(sh_busy_n)
     );
 
     // --- The Z80 CPU (BFM) ---
@@ -45,7 +59,6 @@ module init_tb;
         .wait_n(wait_n)
     );
 
-
     // --- The Device Under Test ---
     zx50_mem_card #(
         .CARD_ID(4'h0)
@@ -55,10 +68,10 @@ module init_tb;
         .reset_n(reset_n),
         .z80_a(z80_a),
         .z80_d(z80_d),
-        .z80_mreq_n(mreq_n),
-        .z80_iorq_n(iorq_n),
-        .z80_rd_n(rd_n),
-        .z80_wr_n(wr_n),
+        .z80_mreq_n(z80_mreq_n),
+        .z80_iorq_n(z80_iorq_n),
+        .z80_rd_n(z80_rd_n),
+        .z80_wr_n(z80_wr_n),
         .z80_m1_n(z80_m1_n),
         .wait_n(wait_n),
         .int_n(int_n)
@@ -72,10 +85,10 @@ module init_tb;
         .reset_n(reset_n),
         .z80_a(z80_a),
         .z80_d(z80_d),
-        .z80_mreq_n(mreq_n),
-        .z80_iorq_n(iorq_n),
-        .z80_rd_n(rd_n),
-        .z80_wr_n(wr_n),
+        .z80_mreq_n(z80_mreq_n),
+        .z80_iorq_n(z80_iorq_n),
+        .z80_rd_n(z80_rd_n),
+        .z80_wr_n(z80_wr_n),
         .z80_m1_n(z80_m1_n),
         .wait_n(wait_n),
         .int_n(int_n)

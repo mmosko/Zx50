@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Apr 12 22:43:02 2026
+[*] Sat May  2 22:28:13 2026
 [*]
-[dumpfile] "/media/psf/z80/Zx50/model_rev1/waves/init.vcd"
-[dumpfile_mtime] "Sun Apr 12 19:12:24 2026"
-[dumpfile_size] 16569
-[savefile] "/media/psf/z80/Zx50/model_rev1/gtkw/init.gtkw"
+[dumpfile] "/media/psf/z80/Zx50/mmu/mmu_only/waves/init.vcd"
+[dumpfile_mtime] "Sat May  2 22:28:03 2026"
+[dumpfile_size] 20392
+[savefile] "/media/psf/z80/Zx50/mmu/mmu_only/gtkw/init.gtkw"
 [timestart] 0
-[size] 1512 864
-[pos] -1 -1
-*-17.836893 580000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1512 870
+[pos] -27 -24
+*-17.836893 928000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] init_tb.
 [treeopen] init_tb.card0.
 [treeopen] init_tb.card1.
 [sst_width] 278
 [signals_width] 212
 [sst_expanded] 1
-[sst_vpaned_height] 249
+[sst_vpaned_height] 251
 @200
 -Z80
 @28
@@ -42,7 +42,41 @@ init_tb.card0.cpld.rom_enabled
 -CARD1
 @22
 init_tb.card1.cpld.page_ownership[15:0]
-@29
+@28
 init_tb.card1.cpld.rom_enabled
+@200
+-
+-CARD0 CPLD
+@22
+init_tb.card0.cpld.atl_a[3:0]
+init_tb.card0.cpld.atl_d[7:0]
+@28
+init_tb.card0.cpld.atl_oe_n
+init_tb.card0.cpld.atl_we_n
+init_tb.card0.cpld.z80_d_oe_n
+@22
+init_tb.card0.cpld.l_a[10:0]
+init_tb.card0.cpld.l_d[7:0]
+@28
+init_tb.card0.cpld.ram_hit
+init_tb.card0.cpld.is_card_0
+init_tb.card0.cpld.rom_enabled
+init_tb.card0.cpld.b_z80_mreq_n
+@29
+init_tb.card0.cpld.effective_use_rom
+@28
+init_tb.card0.cpld.mmu_direct_wr
+init_tb.card0.cpld.z80_card_hit
+init_tb.card0.cpld.oe_n
+init_tb.card0.cpld.ram_ce0_n
+init_tb.card0.cpld.ram_ce1_n
+init_tb.card0.cpld.rom_ce2_n
+init_tb.card0.cpld.sh_data_oe_n
+init_tb.card0.cpld.sh_c_dir
+init_tb.card0.cpld.sh_busy_n
+init_tb.card0.cpld.sh_en_n
+init_tb.card0.cpld.sh_inc_n
+init_tb.card0.cpld.sh_rw_n
+init_tb.card0.cpld.sh_stb_n
 [pattern_trace] 1
 [pattern_trace] 0
