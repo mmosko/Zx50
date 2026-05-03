@@ -121,11 +121,15 @@ module zx50_mmu_only (
     assign sh_en_n      = 1'bz;      
     assign sh_rw_n      = 1'bz;      
     assign sh_busy_n    = 1'bz;    
-    assign sh_data_oe_n = 1'b1;
     assign sh_inc_n     = 1'bz;
     assign sh_stb_n     = 1'bz;
     assign sh_done_n    = 1'bz;
+
+    // drive to CPLD
     assign sh_c_dir     = 1'b1;
+
+    // disable shadow to l_d
+    assign sh_data_oe_n = 1'b1;
 
     // ==========================================
     // 5. COMBINATORIAL MEMORY CONTROL
