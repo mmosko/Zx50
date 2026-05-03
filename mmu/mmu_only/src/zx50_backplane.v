@@ -48,7 +48,8 @@ module zx50_backplane (
     pullup(z80_wait_n);
     pullup(z80_int_n);
     pullup(z80_reset_n);
-
+    pullup(z80_iei);
+    
     // --- Shadow Bus Control Line Pull-ups ---
     pullup(sh_en_n);
     pullup(sh_rw_n);
