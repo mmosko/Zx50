@@ -144,7 +144,7 @@ module zx50_mmu_only (
         if (mmu_direct_wr) begin
             atl_ce_n = 1'b0;
             atl_we_n = b_z80_wr_n;
-            
+
         end else if (effective_use_rom) begin
             rom_ce2_n = 1'b0;
             oe_n      = b_z80_rd_n;

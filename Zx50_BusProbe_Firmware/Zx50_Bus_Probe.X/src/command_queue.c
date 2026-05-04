@@ -163,7 +163,8 @@ void CQ_Dispatch_Cycle(void) {
         cmd->status = STAT_PROCESSING;
     }
 
-    if (cmd->status == STAT_PROCESSING) {
+    // Run through all the clock cycles fast for a single command
+    while (cmd->status == STAT_PROCESSING) {
         CQ_ProcessCommand(cmd);
     }
 }
