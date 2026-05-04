@@ -8,7 +8,7 @@ from bus import BusController
 from pic18_link import PIC18Link
 
 # --- CONFIGURATION ---
-APP_VERSION = "RevA-0.3.1"
+APP_VERSION = "RevA-0.3.2"
 USE_WIFI = True  # Set to False to drop back to purely USB Serial
 TCP_PORT = 5050  # Port for the laptop host script to connect to
 
