@@ -54,87 +54,95 @@ class PIC18Link:
         packet = bytearray([SYNC_BYTE, opcode, addr_h, addr_l, param])
         self.uart.write(packet)
 
-    def _wait_for_ack(self, timeout_ms=50):
+    def _wait_for_ack_and_data(self, timeout_ms=100, expect_data=False):
+        """
+        Waits for the PIC's deferred ACK, and optionally the payload byte.
+        Returns: True (ACK only), Int (Data Payload), "NACK", or False (Timeout)
+        """
         t0 = time.ticks_ms()
         while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
             if self.uart.any():
                 resp = self.uart.read(1)[0]
-                if resp == SYNC_BYTE:
-                    return True
-                elif resp == SYNC_NACK:
+
+                if resp == SYNC_NACK:
                     return "NACK"
-        return False
+
+                if resp == SYNC_BYTE:
+                    # ACK Received! If this is a WRITE or IO command, we are done.
+                    if not expect_data:
+                        return True
+
+                    # If this is a READ command, the data byte is right behind it!
+                    # Give it a tiny 2ms window to finish arriving at 115200 baud.
+                    t1 = time.ticks_ms()
+                    while time.ticks_diff(time.ticks_ms(), t1) < 5:
+                        if self.uart.any():
+                            return self.uart.read(1)[0]
+                    return "TIMEOUT"  # Got ACK, but the data payload never arrived!
+
+        return False  # Absolute timeout waiting for ACK
 
     # ==========================================
     # PRIVATE Z80 COMMANDS
     # ==========================================
-    def _set_ghost_mode(self, enable):
-        param = 1 if enable else 0
-        self._send_packet(CMD_GHOST, param=param)
-        return self._wait_for_ack()
-
     def _mem_read(self, address):
         self._send_packet(CMD_LD, address)
-        res = self._wait_for_ack()
-        if res is True:
-            t0 = time.ticks_ms()
-            # Bumped timeout to 100ms
-            while time.ticks_diff(time.ticks_ms(), t0) < 100:
-                if self.uart.any():
-                    return self.uart.read(1)[0]
-            return "TIMEOUT"
-        return res
+        # We expect a data byte attached to the ACK
+        res = self._wait_for_ack_and_data(expect_data=True)
+        return "TIMEOUT" if res is False else res
+
+    def _io_read(self, port):
+        self._send_packet(CMD_IN, port)
+        # We expect a data byte attached to the ACK
+        res = self._wait_for_ack_and_data(expect_data=True)
+        return "TIMEOUT" if res is False else res
 
     def _mem_write(self, address, data):
         self._send_packet(CMD_STORE, address, param=data)
-        return self._wait_for_ack()
+        # Write only expects an ACK
+        return self._wait_for_ack_and_data(expect_data=False)
+
+    def _io_write(self, port, data):
+        self._send_packet(CMD_OUT, port, param=data)
+        # Write only expects an ACK
+        return self._wait_for_ack_and_data(expect_data=False)
+
+    def _set_ghost_mode(self, enable):
+        param = 1 if enable else 0
+        self._send_packet(CMD_GHOST, param=param)
+        # Ghost mode still sends an immediate ACK, so this works perfectly
+        return self._wait_for_ack_and_data(expect_data=False)
 
     def _mem_ldir(self, address, data_bytes):
         self._send_packet(CMD_LDIR, address, param=len(data_bytes))
         self.uart.write(data_bytes)
-        return self._wait_for_ack(timeout_ms=150)
-
-    def _io_read(self, port):
-        self._send_packet(CMD_IN, port)
-        res = self._wait_for_ack()
-        if res is True:
-            t0 = time.ticks_ms()
-            # Bumped timeout to 100ms
-            while time.ticks_diff(time.ticks_ms(), t0) < 100:
-                if self.uart.any():
-                    return self.uart.read(1)[0]
-            return "TIMEOUT"
-        return res
-
-    def _io_write(self, port, data):
-        self._send_packet(CMD_OUT, port, param=data)
-        return self._wait_for_ack()
+        return self._wait_for_ack_and_data(expect_data=False)
 
     def _step_clock(self, count):
         self._send_packet(CMD_STEP, param=count)
         # Scale timeout based on count since the PIC blocks during stepping
-        return self._wait_for_ack(timeout_ms=100 + (count * 2))
+        return self._wait_for_ack_and_data(timeout_ms=100 + (count * 2), expect_data=False)
 
-    def _bus_snapshot(self):
-        self._send_packet(CMD_SNAPSHOT)
-        res = self._wait_for_ack()
-        if res is True:
-            data = bytearray()
-            t0 = time.ticks_ms()
-            while time.ticks_diff(time.ticks_ms(), t0) < 50:
-                if self.uart.any():
-                    data.extend(self.uart.read(self.uart.any()))
-                    t0 = time.ticks_ms()
-            return data if data else "TIMEOUT"
-        return res
+    # def _bus_snapshot(self):
+    #     self._send_packet(CMD_SNAPSHOT)
+    #     res = self._wait_for_ack()
+    #     if res is True:
+    #         data = bytearray()
+    #         t0 = time.ticks_ms()
+    #         while time.ticks_diff(time.ticks_ms(), t0) < 50:
+    #             if self.uart.any():
+    #                 data.extend(self.uart.read(self.uart.any()))
+    #                 t0 = time.ticks_ms()
+    #         return data if data else "TIMEOUT"
+    #     return res
 
     def _start_clock(self):
         self._send_packet(CMD_CLK_AUTO_START)
-        return self._wait_for_ack()
+        return self._wait_for_ack_and_data(expect_data=False)
 
     def _stop_clock(self):
         self._send_packet(CMD_CLK_AUTO_STOP)
-        return self._wait_for_ack()
+        return self._wait_for_ack_and_data(expect_data=False)
 
     # ==========================================
     # DISPATCH HANDLERS

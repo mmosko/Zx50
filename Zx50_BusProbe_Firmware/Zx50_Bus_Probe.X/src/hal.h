@@ -50,7 +50,21 @@ void HAL_Control_Inactive();
 // Peripheral Prototypes
 // ==========================================
 void UART_Write(uint8_t data);
-uint8_t UART_Read(void);
+
+/**
+ * @brief Reads a single byte from the UART hardware FIFO with strict safety guarantees.
+ * * This function implements three critical safety mechanisms to prevent the PIC 
+ * from deadlocking if the high-speed (1 Mbps) serial link drops bytes:
+ * * 1. OERR Recovery: If the PIC is busy in an ISR and the hardware FIFO overflows, 
+ * the UART hardware physically shuts down. This detects the error and resurrects it.
+ * 2. Temporal Framing (Timeout): The Pico transmits 5-byte packets contiguously (zero gap). 
+ * If the PIC accidentally locks onto a false 'SYNC' byte from a broken packet, 
+ * it will wait forever for bytes that aren't coming. The timeout breaks this deadlock.
+ * 3. FERR Recovery: Detects and discards electrically corrupted bytes (missing stop bit).
+ * * @param output Pointer to store the successfully read byte.
+ * @return int 0 on SUCCESS, 1 on ERROR (Overrun, Framing, or Timeout).
+ */
+int UART_Read(uint8_t *output);
 uint8_t UART_Data_Available(void);
 
 uint8_t SPI_Transfer(uint8_t data);

@@ -4,7 +4,8 @@
 #include "clock.h"
 #include "z80_bus.h"
 
-static void Z80_Write_Address(uint16_t address) {
+static inline
+void Z80_Write_Address(uint16_t address) {
     Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
     Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
 }
@@ -135,7 +136,8 @@ uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t t_cycle) {
     return data;
 }
 
-static void Z80_Toggle_Wait() {
+static inline
+void Z80_Toggle_Wait() {
     if (Z80_WAIT_DIR == 1) {
         // set as output and drive 0
         Z80_WAIT_LAT = 0;

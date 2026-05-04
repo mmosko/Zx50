@@ -35,17 +35,19 @@ void CQ_Clear(cmd_t *cmd) {
 }
 
 
-static void CQ_AdvanceHead() {
+static inline
+void CQ_AdvanceHead() {
     head = (head + 1) % QUEUE_SIZE;
 }
 
-static void CQ_AdvanceTState() {
+static inline
+void CQ_AdvanceTState() {
     switch (current_t_state) {
         case CYCLE_T1:
             current_t_state = CYCLE_T2;
             break;
         case CYCLE_T2:           
-            #ifndef __DEBUG
+            #ifndef IN_SIMULATOR
             // We are reading WAIT and it is asserted
             if (Z80_WAIT_DIR == 1 && Z80_WAIT_VAL == 0) {
                 break;
@@ -72,7 +74,8 @@ static void CQ_AdvanceTState() {
     }
 }
 
-static void CQ_ProcessCommand(cmd_t *cmd) {
+static inline
+void CQ_ProcessCommand(cmd_t *cmd) {
     // 3. The T-State Dispatcher (State Machine)
     switch(cmd->op) {
         case OP_IDLE:

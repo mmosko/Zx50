@@ -2,7 +2,7 @@
 #include "hal.h"
 #include "pins.h"
 
-#ifdef __DEBUG
+#ifdef IN_SIMULATOR
 #include "test_vectors.h"
 #endif
 
@@ -27,7 +27,7 @@ void Clock_Init(void) {
     OSCCON = 0x70;          // IRCF = 111 (8 MHz), SCS = 00 (Primary oscillator)
     OSCTUNEbits.PLLEN = 1;  // Enable 4x PLL -> 32 MHz System Clock
     
-#ifndef __DEBUG
+#ifndef IN_SIMULATOR
     // The simulator does not model analog oscillator stabilization.
     // We only wait for the IOFS flag on real silicon.
     while(!OSCCONbits.IOFS); 
@@ -165,8 +165,8 @@ void UART_Write(uint8_t data) {
     TXREG = data;            
 }
 
-uint8_t UART_Read(void) {
-#ifdef __DEBUG
+int UART_Read(uint8_t *output) {
+#ifdef USE_SIMULATOR
     // Select your test vector here!
     static const uint8_t* current_test = TV_STORE_AND_READ;
     static uint16_t test_size = sizeof(TV_STORE_AND_READ);
@@ -179,25 +179,70 @@ uint8_t UART_Read(void) {
         __builtin_software_breakpoint();
         return 0x00;
     }
+    return 0;
 #else
-    while (!PIR1bits.RCIF); 
-    return RCREG;            
+    // TEMPORAL FRAMING TIMEOUT
+    // At 32 MHz, one instruction cycle is 125ns. 
+    // A loop of 4000 iterations * ~4 instructions per loop = ~2 milliseconds.
+    // At 1 Mbps, a byte takes 10us. If we wait 2ms, the sender has definitely stopped.
+    uint16_t timeout = 4000; 
+
+    // Wait for the Receive Interrupt Flag (Data available in RCREG)
+    while (!PIR1bits.RCIF) {
+        
+        // SAFETY MECHANISM 1: Overrun Error (OERR) Lockup Protection
+        // Happens if the Pico sends data while the PIC is stuck inside the Timer0 ISR.
+        if (RCSTAbits.OERR) {
+            RCSTAbits.CREN = 0; // Disable receiver (flushes the corrupted hardware FIFO)
+            asm("nop");         // Micro-delay for hardware to settle
+            RCSTAbits.CREN = 1; // Re-enable receiver to listen for the next packet
+            return 1;           // 1 = ERROR
+        }
+        
+        // SAFETY MECHANISM 2: False SYNC Deadlock Breaker
+        // If we read a false 0x5A from a broken packet, the system will infinitely 
+        // wait for the rest of the payload. This timeout guarantees we give up 
+        // and return a NACK to the Pico so the state machine can reset.
+        if (--timeout == 0) {
+            return 1;           // 1 = ERROR
+        }
+    } 
+
+    // SAFETY MECHANISM 3: Framing Error (FERR) Protection
+    // Happens if baud rates are mismatched or the line suffers electrical noise.
+    if (RCSTAbits.FERR) {
+        volatile uint8_t dummy = RCREG; // Reading RCREG clears the FERR bit in hardware
+        return 1;                       // 1 = ERROR
+    }
+
+    // Pass the safely validated byte out to the caller
+    *output = RCREG; 
+    return 0;        // 0 = SUCCESS
 #endif
 }
 
 uint8_t UART_Data_Available(void) {
-#ifdef __DEBUG
+#ifdef IN_SIMULATOR
     // In the simulator, data is always "available" from the mock array
     return 1; 
 #else
-    // REAL HARDWARE: Returns 1 if the RX FIFO has unread data, 0 if empty
+    // 1. Check for the deadly Overrun Error FIRST
+    if (RCSTAbits.OERR) {
+        RCSTAbits.CREN = 0; // Disable receiver (flushes the corrupted FIFO)
+        asm("nop");         // Micro-delay
+        RCSTAbits.CREN = 1; // Re-enable receiver
+        
+        return 0; // We just flushed the buffer, so no valid data is available
+    }
+
+    // 2. REAL HARDWARE: Returns 1 if the RX FIFO has valid unread data
     return PIR1bits.RCIF; 
 #endif
 }
 
 uint8_t SPI_Transfer(uint8_t data) {
     SSPBUF = data;           
-#ifdef __DEBUG
+#ifdef IN_SIMULATOR
     // MOCK: Give the simulator a few cycles to pretend the transfer happened
     for(volatile int i = 0; i < 10; i++); 
 #else

@@ -45,6 +45,44 @@
 #define CMD_ACK            0x5A
 #define CMD_NACK           0x5B
 
+
+/*
+ * RETURN
+ *   0 : OK
+ *   1 : ERROR (NACK)
+ *   -1 : NO-OP (continue)
+ */
+static inline
+int read_uart(uint8_t packet[4]) {
+    // =========================================
+    // ENTER CRITICAL SECTION
+    // =========================================
+    INTCONbits.GIE = 0; 
+
+    uint8_t sync_byte;
+    // If UART_Read returns non-zero (error), or isn't SYNC, bail out immediately.
+    if (UART_Read(&sync_byte) != 0 || sync_byte != 0x5A) {
+        INTCONbits.GIE = 1; // EXIT CRITICAL SECTION
+        return -1; 
+    }
+
+    uint8_t rx_err = 0;
+    // SYNC confirmed. Grab the remaining 4 bytes as fast as possible.
+    for(int i = 0; i < 4; i++) {
+        if (UART_Read(&packet[i]) != 0) {
+            rx_err = 1;
+            break;
+        }
+    }
+
+    // =========================================
+    // EXIT CRITICAL SECTION
+    // =========================================
+    INTCONbits.GIE = 1; 
+
+    return rx_err;
+}
+
 void main(void) {
     cmd_t *pending_cmd = 0;
     
@@ -59,6 +97,7 @@ void main(void) {
     while(1) {
         
         if (pending_cmd != NULL && pending_cmd->status == STAT_DONE) {
+            UART_Write(CMD_ACK);     
             switch(pending_cmd->op) {
                 case OP_IDLE:
                 case OP_MEM_WRITE:
@@ -82,17 +121,22 @@ void main(void) {
             continue;
         }
         
-        // Ensure UART_Read() is non-blocking here, or check UART_Data_Available()
-        // before calling UART_Read() so we don't stall the Z80_Clock_Service().
-        sync = UART_Read();
-        if (sync != CMD_ACK) continue; 
-
-        // If we get a sync byte, read the rest of the 5-byte packet
-        opcode = UART_Read();
-        addr_h = UART_Read();
-        addr_l = UART_Read();
-        param  = UART_Read(); 
-
+        uint8_t packet[4];
+        int rx_err = read_uart(packet);
+        
+        if (rx_err < 0) {
+            continue;
+        } else if (rx_err > 0) {
+            UART_Write(CMD_NACK);
+            continue;
+        }
+        
+        // rx_err is 0, have a good read
+        opcode = packet[0];
+        addr_h = packet[1];
+        addr_l = packet[2];
+        param  = packet[3];
+       
         uint16_t address = (((uint16_t) addr_h) << 8) | addr_l;
 
         switch(opcode) {
@@ -101,7 +145,6 @@ void main(void) {
                     UART_Write(CMD_NACK); 
                 } else {
                     pending_cmd = CQ_Enqueue(OP_MEM_READ, address, 0);
-                    UART_Write(CMD_ACK);     
                 }
                 
                 break;
@@ -111,7 +154,6 @@ void main(void) {
                     UART_Write(CMD_NACK); 
                 } else {
                     pending_cmd = CQ_Enqueue(OP_MEM_WRITE, address, param);
-                    UART_Write(CMD_ACK);     
                 }
                 break;
             }
@@ -120,7 +162,6 @@ void main(void) {
                     UART_Write(CMD_NACK); 
                 } else {
                     pending_cmd = CQ_Enqueue(OP_IO_READ, address, 0);
-                    UART_Write(CMD_ACK);     
                 }
                 break;
             }
@@ -129,7 +170,6 @@ void main(void) {
                     UART_Write(CMD_NACK); 
                 } else {
                     pending_cmd = CQ_Enqueue(OP_IO_WRITE, address, param);
-                    UART_Write(CMD_ACK);     
                 }
                 break;
             }
