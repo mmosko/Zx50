@@ -224,7 +224,7 @@ class Zx50Console:
             self._send_response("ERR SYNTAX_Z80_RUN. Usage: 'z80 run <script_name>'", is_tcp)
             return
 
-        # Default to z80_test.py if no name is provided
+        # Default to z80_program.py if no name is provided
         script_name = args[1] if len(args) > 1 else "z80_program"
 
         # Strip .py if the user accidentally typed it
@@ -245,9 +245,22 @@ class Zx50Console:
                 self._send_response(f"OK RUNNING {script_name}.py...", is_tcp)
 
                 # Execute the script, passing the hardware controllers to it
-                result = z80_script.run(self.pic, self.bus)
+                try:
+                    # Create a sender function that captures the current context (is_tcp)
+                    output_func = lambda msg: self._send_response(msg, is_tcp)
+                    
+                    try:
+                        # Try calling the new version of run() with the output function
+                        result = z80_script.run(self.pic, self.bus, output_func)
+                    except TypeError:
+                        # Fallback for older scripts that don't accept an output function
+                        self._send_response("WARN: Script does not support output redirection. Using legacy mode.", is_tcp)
+                        result = z80_script.run(self.pic, self.bus)
 
-                self._send_response(f"OK DONE. Result: {result}", is_tcp)
+                    self._send_response(f"OK DONE. Result: {result}", is_tcp)
+                except Exception as e:
+                    self._send_response(f"ERR RUNNING {script_name}: {e}", is_tcp)
+                    return
             else:
                 self._send_response(f"ERR NO_RUN_FUNCTION_IN_{script_name}.py", is_tcp)
 

@@ -5527,7 +5527,7 @@
 	)
 	(bus_alias "CTRL"
 		(members "D_DIR" "~Z80_D_OE" "~SH_D_OE" "~SH_C_OE" "SH_C_DIR" "RESET" "~BOOT_EN"
-			"CARD_A[0..3]"
+			"CARD_A[0..2]"
 		)
 	)
 	(bus_alias "SH_C"
@@ -5836,12 +5836,6 @@
 		(uuid "b8cd18ad-4e0d-4d2c-8589-c60ea9b9ab11")
 	)
 	(junction
-		(at 48.26 34.29)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "bb36d80f-f4d7-4c01-a53b-5a2a917b5745")
-	)
-	(junction
 		(at 157.48 62.23)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5852,12 +5846,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "c0102454-32a5-468b-b824-2d01a16eba5e")
-	)
-	(junction
-		(at 265.43 27.94)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "cb07a3ea-831b-44a1-b837-9e61970b4cc7")
 	)
 	(junction
 		(at 20.32 36.83)
@@ -6333,15 +6321,6 @@
 			(type default)
 		)
 		(uuid "36b7c180-69c4-44f9-8813-5eb97e144e0e")
-	)
-	(bus_entry
-		(at 59.69 36.83)
-		(size -2.54 -2.54)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "38a4d2bf-e03f-4174-a5bb-689a8c08a83a")
 	)
 	(bus_entry
 		(at 72.39 104.14)
@@ -7957,16 +7936,6 @@
 	)
 	(wire
 		(pts
-			(xy 273.05 25.4) (xy 273.05 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "15da167f-7b68-4df5-9df5-918b93d48995")
-	)
-	(wire
-		(pts
 			(xy 208.28 54.61) (xy 201.93 54.61)
 		)
 		(stroke
@@ -8004,16 +7973,6 @@
 			(type default)
 		)
 		(uuid "186dffa6-8429-4a40-9f94-ca9926b379da")
-	)
-	(wire
-		(pts
-			(xy 48.26 34.29) (xy 57.15 34.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "199d559d-b69a-4a61-9f20-21ab2f86e607")
 	)
 	(bus
 		(pts
@@ -8434,6 +8393,16 @@
 			(type default)
 		)
 		(uuid "29e93ec5-67fe-40cf-b7db-bbb874e17ae3")
+	)
+	(bus
+		(pts
+			(xy 177.8 109.22) (xy 180.34 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "29eeb205-1706-48ab-8683-24f98ded5fbe")
 	)
 	(bus
 		(pts
@@ -8994,16 +8963,6 @@
 			(type default)
 		)
 		(uuid "43a780ef-df46-4d4b-92bf-590bb10328c2")
-	)
-	(wire
-		(pts
-			(xy 48.26 30.48) (xy 48.26 34.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "44147968-2f38-4109-8998-0210b4d02bf9")
 	)
 	(bus
 		(pts
@@ -10817,16 +10776,6 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 34.29) (xy 48.26 34.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a2bc749d-f611-4c16-be6c-2a1a91c2efb3")
-	)
-	(wire
-		(pts
 			(xy 45.72 96.52) (xy 45.72 101.6)
 		)
 		(stroke
@@ -11264,16 +11213,6 @@
 			(type default)
 		)
 		(uuid "b92d5491-2d78-4c1a-8373-85410ecdfdca")
-	)
-	(bus
-		(pts
-			(xy 59.69 39.37) (xy 59.69 36.83)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b935d022-ba71-4b5a-b1e8-76f14f7f898e")
 	)
 	(bus
 		(pts
@@ -11857,6 +11796,16 @@
 	)
 	(wire
 		(pts
+			(xy 35.56 34.29) (xy 48.26 34.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da16600e-d25b-44e5-8a8a-2f85a27acd8a")
+	)
+	(wire
+		(pts
 			(xy 151.13 54.61) (xy 151.13 55.88)
 		)
 		(stroke
@@ -11947,13 +11896,23 @@
 	)
 	(bus
 		(pts
-			(xy 59.69 36.83) (xy 59.69 33.02)
+			(xy 59.69 33.02) (xy 59.69 39.37)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "df027212-5b62-4c14-8315-c0885b51f0e5")
+	)
+	(wire
+		(pts
+			(xy 48.26 30.48) (xy 48.26 34.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "df944a02-47ce-4b10-99aa-05a08e66cf6d")
 	)
 	(wire
 		(pts
@@ -11964,16 +11923,6 @@
 			(type default)
 		)
 		(uuid "dfa9fc52-3dc4-4961-9026-06fdae766bf2")
-	)
-	(bus
-		(pts
-			(xy 177.8 109.22) (xy 182.372 109.22)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e062a722-8630-436f-8fac-4b0139551f7d")
 	)
 	(wire
 		(pts
@@ -12484,16 +12433,6 @@
 			(type default)
 		)
 		(uuid "fceded77-1fa8-4b10-b66d-67cc9939a40c")
-	)
-	(wire
-		(pts
-			(xy 273.05 27.94) (xy 265.43 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fd3bc0bd-0894-4281-a754-4bdbe98c86a8")
 	)
 	(wire
 		(pts
@@ -13074,16 +13013,6 @@
 			(justify left bottom)
 		)
 		(uuid "4f612439-ea34-4f77-93a9-b143b29fbc72")
-	)
-	(label "CARD_A3"
-		(at 57.15 34.29 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "508270cf-96bd-4d2a-bbe3-47a442cd714b")
 	)
 	(label "A3"
 		(at 45.72 100.33 90)
@@ -20524,73 +20453,6 @@
 			(project ""
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5"
 					(reference "C6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Conn_01x01_Pin")
-		(at 273.05 20.32 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "d43ee438-430b-4642-89da-c5342620b881")
-		(property "Reference" "J7"
-			(at 274.32 19.6849 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "GND"
-			(at 274.32 22.2249 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical"
-			(at 273.05 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 273.05 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x01, script generated"
-			(at 273.05 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "22ca062a-5a45-4174-b157-d663292d683c")
-		)
-		(instances
-			(project "Zx50_MemoryCard_RevB"
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5"
-					(reference "J7")
 					(unit 1)
 				)
 			)

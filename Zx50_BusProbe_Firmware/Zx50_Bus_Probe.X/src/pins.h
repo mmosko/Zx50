@@ -104,5 +104,6 @@
 // ==========================================
 #define SHADOW_BUSY_DIR    TRISBbits.TRISB2
 #define SHADOW_BUSY_VAL    PORTBbits.RB2
+#define SHADOW_BUSY_LAT    PORTBbits.LATB2
 
 #endif	/* PINS_H */

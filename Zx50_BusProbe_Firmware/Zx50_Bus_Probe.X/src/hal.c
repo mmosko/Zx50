@@ -112,10 +112,41 @@ void SPI_Init(void) {
     SSPCON1 = 0x20;         // SSPEN=1 (Enable), Master Fosc/4, CKP=0 (idle low)
 }
 
+/*
 void Expander_Init(void) {
     // Broadcast a write to address 0x00 to set the HAEN (Hardware Address Enable) bit.
     Expander_Write(0x00, REG_IOCON, 0x08);
 
+    // Now they respect their hardware pins. Ensure both are in INPUT mode.
+    Expander_Set_Input(U1_ADDR, REG_IODIRA);
+    Expander_Set_Input(U1_ADDR, REG_IODIRB);
+    
+    Expander_Set_Input(U13_ADDR, REG_IODIRA);
+    Expander_Set_Input(U13_ADDR, REG_IODIRB);
+}
+*/
+
+void Expander_Init(void) {
+    // 1. HARDWARE RESET
+    // Actively drive the Reset pin as an output
+    EXP_RESET_DIR = 0;  
+    
+    // Yank the Expander reset lines LOW
+    EXP_RESET_LAT = 0;  
+    
+    // Hold them in reset for a moment (use whatever delay function you have)
+    // Even a simple loop of NOPs is fine if you don't have delays configured
+    for(volatile int i=0; i<1000; i++); 
+    
+    // Drive the Reset line solidly HIGH (5V) and KEEP IT THERE
+    EXP_RESET_LAT = 1;  
+    for(volatile int i=0; i<1000; i++); // Wait for the chips to boot
+
+    // 2. CONFIGURE HAEN
+    // Broadcast a write to address 0x00 to set the HAEN bit.
+    Expander_Write(0x00, REG_IOCON, 0x08);
+
+    // 3. PARK AS INPUTS
     // Now they respect their hardware pins. Ensure both are in INPUT mode.
     Expander_Write(U1_ADDR, REG_IODIRA, 0xFF);
     Expander_Write(U1_ADDR, REG_IODIRB, 0xFF);
@@ -123,6 +154,7 @@ void Expander_Init(void) {
     Expander_Write(U13_ADDR, REG_IODIRA, 0xFF);
     Expander_Write(U13_ADDR, REG_IODIRB, 0xFF);
 }
+
 
 // ==========================================
 // HARDWARE PRIMITIVES
@@ -175,6 +207,15 @@ uint8_t SPI_Transfer(uint8_t data) {
     return SSPBUF;           
 }
 
+void Expander_Set_Input(uint8_t hw_addr, uint8_t reg_addr) {
+    Expander_Write(hw_addr, reg_addr, 0xFF);
+}
+
+void Expander_Set_Output(uint8_t hw_addr, uint8_t reg_addr) {
+    Expander_Write(hw_addr, reg_addr, 0x00);
+}
+
+
 void Expander_Write(uint8_t hw_addr, uint8_t reg_addr, uint8_t data) {
     SPI_CS_LAT = 0;      // Pull ~CS low 
     
@@ -198,6 +239,16 @@ uint8_t Expander_Read(uint8_t hw_addr, uint8_t reg_addr) {
     return data;
 }
 
+// Note: We don't drive the specific control lines low here, 
+// we just configure them as outputs so Mem_Write can use them.
+// They should idle HIGH.
+void HAL_Control_Inactive() {
+    Z80_MREQ_LAT = 1;
+    Z80_WR_LAT   = 1;
+    Z80_RD_LAT   = 1;
+    Z80_IORQ_LAT = 1;
+}
+
 // param = 1 to ghost mode, 0, to unghost
 void Ghost(uint8_t param) {
     if (param == 1) {
@@ -210,24 +261,30 @@ void Ghost(uint8_t param) {
 
         XCVR_DATA_OE_LAT = 1; // Disable U6
         XCVR_CTRL_OE_LAT = 1; // Disable U7
+        
+        // Set Address bus to input
+        Expander_Set_Input(U1_ADDR, REG_IODIRA);
+        Expander_Set_Input(U1_ADDR, REG_IODIRB);
+
     } else {
         // UNGHOST MODE: Take control of the bus
-        Z80_DATA_DIR = 0x00; // Set PIC Data Bus to Output
-        
-        // Note: We don't drive the specific control lines low here, 
-        // we just configure them as outputs so Mem_Write can use them.
-        // They should idle HIGH.
-        Z80_MREQ_LAT = 1;
-        Z80_WR_LAT   = 1;
-        Z80_RD_LAT   = 1;
-        Z80_IORQ_LAT = 1;
-        
+                
+        // Set Address bus to output
+        Expander_Set_Output(U1_ADDR, REG_IODIRA);
+        Expander_Set_Output(U1_ADDR, REG_IODIRB);
+
+        HAL_Control_Inactive();
+
         Z80_MREQ_DIR = 0; // Drive ~MREQ
         Z80_WR_DIR   = 0; // Drive ~WR
         Z80_RD_DIR   = 0; // Drive ~RD
         Z80_IORQ_DIR = 0; // Drive ~IORQ
-
+            
         XCVR_DATA_OE_LAT = 0; // Enable U6
         XCVR_CTRL_OE_LAT = 0; // Enable U7
+        
+        // Safe default is DATA is INPUT.  Only set to OUTPUT during a WRITE
+        Z80_DATA_DIR = 0xFF; 
+
     }
 }

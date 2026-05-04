@@ -4,23 +4,24 @@
 #include "clock.h"
 #include "z80_bus.h"
 
+static void Z80_Write_Address(uint16_t address) {
+    Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
+    Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
+}
+
+
 void Z80_Mem_Write(uint16_t address, uint8_t data, t_cycle_t t_cycle) { 
     switch(t_cycle) {
         case CYCLE_T1: {
             // 1. Set Transceivers to B->A (PIC driving Z80 Bus)
             XCVR_DATA_DIR_LAT = 0; // U6 DIR = 0 (B to A)
-            XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
             XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
-            XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
 
             Z80_DATA_DIR = 0x00;   // Set PORTD as Output
-            Z80_MREQ_DIR = 0;      // Make ~MREQ an output
-            Z80_WR_DIR   = 0;      // Make ~WR an output
-
+           
             // Set Address via SPI (Done before clocking so it's stable)
-            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
-            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
-
+            Z80_Write_Address(address);
+            
             // ==========================================
             // --- T1 STATE ---
             // Address is out on rising edge. 
@@ -52,16 +53,19 @@ void Z80_Mem_Write(uint16_t address, uint8_t data, t_cycle_t t_cycle) {
             // ==========================================
             Z80_Clock_High();
             Z80_Clock_Low();
-            Z80_MREQ_LAT = 1;      
+            
+            // De-assert WR_N
             Z80_WR_LAT   = 1;      
+
+            // Wait for WE_N to physically rise at the SRAM chip
+            asm("nop"); asm("nop"); asm("nop"); asm("nop");
+            
+            // Now release MREQ_N
+            Z80_MREQ_LAT = 1;    
 
             // Float PORTD and isolate the Transceivers (Return to Ghost Mode)
             Z80_DATA_DIR = 0xFF;   
-            Z80_MREQ_DIR = 1;      
-            Z80_WR_DIR   = 1;      
-
             XCVR_DATA_OE_LAT = 1;  
-            XCVR_CTRL_OE_LAT = 1; 
             break;
         }
         
@@ -79,16 +83,10 @@ uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t t_cycle) {
         case CYCLE_T1: {
             // 1. Set Data Transceiver A->B (Listen), Control B->A (Drive)
             XCVR_DATA_DIR_LAT = 1; // U6 DIR = 1 (A to B)
-            XCVR_CTRL_DIR_LAT = 0; // U7 DIR = 0 (B to A)
             XCVR_DATA_OE_LAT  = 0; // U6 ~OE = 0 (Enabled)
-            XCVR_CTRL_OE_LAT  = 0; // U7 ~OE = 0 (Enabled)
 
             Z80_DATA_DIR = 0xFF;   // Set PORTD as Input
-            Z80_MREQ_DIR = 0;      // Make ~MREQ an output
-            Z80_RD_DIR   = 0;      // Make ~RD an output
-
-            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(address >> 8));
-            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(address & 0xFF));
+            Z80_Write_Address(address);
 
             // ==========================================
             // --- T1 STATE ---
@@ -125,12 +123,7 @@ uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t t_cycle) {
             Z80_MREQ_LAT = 1;      
             Z80_RD_LAT   = 1;      
 
-            // Return to Ghost Mode
-            Z80_MREQ_DIR = 1;      
-            Z80_RD_DIR   = 1;      
-
             XCVR_DATA_OE_LAT = 1;  
-            XCVR_CTRL_OE_LAT = 1;  
             break;
         }
         
@@ -158,16 +151,10 @@ void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t t_cycle) {
     switch(t_cycle) {
         case CYCLE_T1: {
             XCVR_DATA_DIR_LAT = 0; // B to A
-            XCVR_CTRL_DIR_LAT = 0; // B to A
             XCVR_DATA_OE_LAT  = 0; // Enable
-            XCVR_CTRL_OE_LAT  = 0; // Enable
 
             Z80_DATA_DIR = 0x00;   // Output
-            Z80_IORQ_DIR = 0;      // Make ~IORQ an output
-            Z80_WR_DIR   = 0;      // Make ~WR an output
-
-            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
-            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
+            Z80_Write_Address(port_and_ah);
 
             // ==========================================
             // --- T1 STATE ---
@@ -202,15 +189,17 @@ void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t t_cycle) {
             Z80_Clock_High();
             Z80_Clock_Low();
 
-            Z80_IORQ_LAT = 1;
             Z80_WR_LAT   = 1;
+            
+            // Wait for WE_N to physically rise at the SRAM chip
+            asm("nop"); asm("nop"); asm("nop"); asm("nop");
+            
+            Z80_IORQ_LAT = 1;
+
 
             // Return to Ghost Mode
             Z80_DATA_DIR = 0xFF;   
-            Z80_IORQ_DIR = 1;      
-            Z80_WR_DIR   = 1;      
             XCVR_DATA_OE_LAT = 1;  
-            XCVR_CTRL_OE_LAT = 1;  
             break;
         }
         
@@ -228,16 +217,10 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t t_cycle) {
     switch(t_cycle) {
         case CYCLE_T1: {
             XCVR_DATA_DIR_LAT = 1; // A to B
-            XCVR_CTRL_DIR_LAT = 0; // B to A
             XCVR_DATA_OE_LAT  = 0; // Enable
-            XCVR_CTRL_OE_LAT  = 0; // Enable
 
             Z80_DATA_DIR = 0xFF;   // Input
-            Z80_IORQ_DIR = 0;      // Make ~IORQ an output
-            Z80_RD_DIR   = 0;      // Make ~RD an output
-
-            Expander_Write(U1_ADDR, REG_GPIOA, (uint8_t)(port_and_ah >> 8));
-            Expander_Write(U1_ADDR, REG_GPIOB, (uint8_t)(port_and_ah & 0xFF));
+            Z80_Write_Address(port_and_ah);
 
             // ==========================================
             // --- T1 STATE ---
@@ -280,11 +263,7 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t t_cycle) {
             Z80_IORQ_LAT = 1;
             Z80_RD_LAT   = 1;
 
-            // Return to Ghost Mode
-            Z80_IORQ_DIR = 1;      
-            Z80_RD_DIR   = 1;      
             XCVR_DATA_OE_LAT = 1;  
-            XCVR_CTRL_OE_LAT = 1; 
             break;
         }
         
@@ -298,8 +277,8 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t t_cycle) {
 
 void Z80_Bus_Snapshot(void) {
     // 1. Ensure Expanders are in INPUT mode to prevent driving the bus
-    Expander_Write(U1_ADDR, REG_IODIRA, 0xFF);
-    Expander_Write(U1_ADDR, REG_IODIRB, 0xFF);
+    Expander_Set_Input(U1_ADDR, REG_IODIRA);
+    Expander_Set_Input(U1_ADDR, REG_IODIRB);
     
     // 2. Set Transceivers to A->B (Listen-Only: Backplane -> PIC)
     XCVR_DATA_DIR_LAT = 1; // A->B, Data

@@ -41,6 +41,11 @@ void Z80_Clock_Init(void);
 // ==========================================
 void Ghost(uint8_t param);
 
+/*
+ * Set RD WR, MREQ, IORQ all inactive
+ */
+void HAL_Control_Inactive();
+
 // ==========================================
 // Peripheral Prototypes
 // ==========================================
@@ -49,6 +54,10 @@ uint8_t UART_Read(void);
 uint8_t UART_Data_Available(void);
 
 uint8_t SPI_Transfer(uint8_t data);
+
+void Expander_Set_Input(uint8_t hw_addr, uint8_t reg_addr);
+void Expander_Set_Output(uint8_t hw_addr, uint8_t reg_addr);
+
 void Expander_Write(uint8_t hw_addr, uint8_t reg_addr, uint8_t data);
 uint8_t Expander_Read(uint8_t hw_addr, uint8_t reg_addr);
 
