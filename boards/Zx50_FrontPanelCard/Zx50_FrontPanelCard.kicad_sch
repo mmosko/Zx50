@@ -15822,7 +15822,7 @@
 				)
 			)
 		)
-		(property "Value" "Front Panel 2"
+		(property "Value" "Displays"
 			(at 229.87 43.18 0)
 			(effects
 				(font
@@ -17287,7 +17287,7 @@
 				)
 			)
 		)
-		(property "Value" "Front Panel"
+		(property "Value" "Switchs"
 			(at 266.7 43.18 0)
 			(effects
 				(font

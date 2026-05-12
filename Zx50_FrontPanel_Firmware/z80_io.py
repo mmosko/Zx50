@@ -1,8 +1,13 @@
 import pins
 import time
+import collections
 
 # Define the specific I/O port address the Pico responds to
 PICO_PORT_ADDRESS = 0x50
+
+# Create a FIFO buffer to hold data from the Z80
+# Maxlen ensures it doesn't grow indefinitely if the display can't keep up
+fifo = collections.deque((), 256)
 
 
 def handle_z80_write_irq(pin):
@@ -29,8 +34,8 @@ def handle_z80_write_irq(pin):
         data_byte = pins.read_shared_bus()
         pins.OE_U4_DATA.value(1)
 
-        # TODO: Push data_byte to an internal FIFO buffer for the LCD/Displays
-        # buffer.append(data_byte)
+        # Push data_byte to an internal FIFO buffer for the LCD/Displays
+        fifo.append(data_byte)
 
         # Read the Upper Address (U3) to check the OTIR B-Register counter
         pins.OE_U3_ADDR_H.value(0)

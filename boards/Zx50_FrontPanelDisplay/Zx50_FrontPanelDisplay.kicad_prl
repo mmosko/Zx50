@@ -32,7 +32,6 @@
       "vias",
       "footprint_text",
       "footprint_anchors",
-      "ratsnest",
       "grid",
       "footprints_front",
       "footprints_back",
@@ -117,15 +116,15 @@
   },
   "schematic": {
     "selection_filter": {
-      "graphics": false,
-      "images": false,
-      "labels": false,
+      "graphics": true,
+      "images": true,
+      "labels": true,
       "lockedItems": false,
-      "otherItems": false,
-      "pins": false,
+      "otherItems": true,
+      "pins": true,
       "symbols": true,
-      "text": false,
-      "wires": false
+      "text": true,
+      "wires": true
     }
   }
 }

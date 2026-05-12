@@ -8304,6 +8304,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "652-4116R-1LF-330"
+			(at 90.17 177.8 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "11"
 			(uuid "ab4d3303-73ea-4555-8674-a2f114c26fdc")
 		)
@@ -9388,7 +9397,7 @@
 				)
 			)
 		)
-		(property "Value" "Front Panel 2"
+		(property "Value" "Displays"
 			(at 44.45 35.56 0)
 			(effects
 				(font
@@ -10144,6 +10153,15 @@
 			)
 		)
 		(property "Description" "6 resistor network, star topology, bussed resistors, small symbol"
+			(at 233.68 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "652-4607X-1LF-10K"
 			(at 233.68 52.07 0)
 			(effects
 				(font
@@ -10935,7 +10953,7 @@
 				)
 			)
 		)
-		(property "Value" "Front Panel"
+		(property "Value" "Switches"
 			(at 196.85 52.07 0)
 			(effects
 				(font

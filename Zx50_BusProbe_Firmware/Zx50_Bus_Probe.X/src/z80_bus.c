@@ -121,8 +121,9 @@ uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t t_cycle) {
             // sample on falling edge, but before we take RD high
             data = Z80_DATA_VAL;   
             
+            Z80_RD_LAT   = 1;  
+            asm("nop");
             Z80_MREQ_LAT = 1;      
-            Z80_RD_LAT   = 1;      
 
             XCVR_DATA_OE_LAT = 1;  
             break;
@@ -262,8 +263,9 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t t_cycle) {
             // sample on falling edge, but before we take RD high
             data = Z80_DATA_VAL;   
 
-            Z80_IORQ_LAT = 1;
             Z80_RD_LAT   = 1;
+            asm("nop");
+            Z80_IORQ_LAT = 1;
 
             XCVR_DATA_OE_LAT = 1;  
             break;

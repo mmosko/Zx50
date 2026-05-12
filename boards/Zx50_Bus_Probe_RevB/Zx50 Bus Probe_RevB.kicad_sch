@@ -5974,55 +5974,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Jumper:Jumper_1"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board no)
-			(property "Reference" "U"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "MCU_Module:RaspberryPi_Pico"
 			(pin_names
 				(offset 0.762)
@@ -31506,7 +31457,7 @@
 		)
 		(uuid "873b4b34-e7f6-4f65-a554-fa202def5e8c")
 	)
-	(label "{PIC, CLOCK}"
+	(label "{PIC}"
 		(at 350.52 100.33 90)
 		(effects
 			(font
@@ -33707,7 +33658,7 @@
 		(at 384.81 30.48 270)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -33755,15 +33706,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5339-ND"
-			(at 384.81 30.48 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 384.81 30.48 90)
 			(effects
@@ -33801,6 +33743,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 384.81 30.48 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5339-ND"
 			(at 384.81 30.48 90)
 			(effects
 				(font
@@ -33928,6 +33879,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 213.36 248.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
+			(at 213.36 248.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "12"
 			(uuid "8ba1eb9e-e74a-4408-95c0-a39aa78462cf")
 		)
@@ -33991,7 +33960,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "0a169319-4d1e-45a9-9bca-c1a482ba9098")
@@ -34032,15 +34001,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 344.17 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 344.17 140.97 0)
 			(effects
 				(font
@@ -34181,7 +34141,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "0ea83c39-9421-43ac-9713-2affd0758cc7")
@@ -34222,15 +34182,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 154.94 330.2 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 154.94 330.2 0)
 			(effects
 				(font
@@ -34766,7 +34717,7 @@
 		(at 381 92.71 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "1eec2a31-8b9f-4ffa-a1ec-2d68e2ba821b")
@@ -34807,15 +34758,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 381 92.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 381 92.71 0)
 			(effects
 				(font
@@ -35021,7 +34963,7 @@
 		(at 68.58 66.04 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "2844b156-0591-4608-afc0-401e72b87bd0")
@@ -35143,7 +35085,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "2aaba4e6-9b5d-48bf-af2f-11bf41e8bd38")
@@ -35190,15 +35132,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5299-ND"
-			(at 467.36 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 467.36 113.03 0)
 			(effects
@@ -35236,6 +35169,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 467.36 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5299-ND"
 			(at 467.36 113.03 0)
 			(effects
 				(font
@@ -35302,130 +35244,12 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 492.76 162.56 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "2b82565b-6a63-4b1a-bc77-2827d54f5400")
-		(property "Reference" "J84"
-			(at 494.03 161.2899 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 494.03 163.8299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 492.76 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J84")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:LED")
 		(at 373.38 81.28 90)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "2b875e76-68ae-412e-b36d-d8d481449979")
@@ -35483,15 +35307,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5016-ND"
-			(at 373.38 81.28 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 373.38 81.28 90)
 			(effects
@@ -35529,6 +35344,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 373.38 81.28 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5016-ND"
 			(at 373.38 81.28 90)
 			(effects
 				(font
@@ -36084,7 +35908,7 @@
 		(at 264.16 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "358deb51-26b5-4dfa-b097-13ddd4015fa7")
@@ -36125,15 +35949,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 264.16 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 264.16 172.72 0)
 			(effects
 				(font
@@ -36208,7 +36023,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "36032074-6940-4f30-82f2-b9cdcaf65793")
@@ -36255,15 +36070,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5299-ND"
-			(at 467.36 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 467.36 85.09 0)
 			(effects
@@ -36301,6 +36107,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 467.36 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5299-ND"
 			(at 467.36 85.09 0)
 			(effects
 				(font
@@ -36371,7 +36186,7 @@
 		(at 402.59 298.45 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "37e9286a-efd8-454f-9277-35d517848ce9")
@@ -36412,15 +36227,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 402.59 298.45 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 402.59 298.45 0)
 			(effects
 				(font
@@ -36560,7 +36366,7 @@
 		(at 86.36 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "3864c5ab-f607-44b5-a996-66721dacb8ab")
@@ -36609,15 +36415,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 86.36 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 86.36 143.51 90)
 			(effects
@@ -36655,6 +36452,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 86.36 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5316-ND"
 			(at 86.36 143.51 90)
 			(effects
 				(font
@@ -36817,7 +36623,7 @@
 		(at 148.59 307.34 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "39f27db2-4241-4445-8bd1-c4921fad6fb3")
@@ -36858,15 +36664,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 148.59 307.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 148.59 307.34 0)
 			(effects
 				(font
@@ -37002,124 +36799,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 490.22 146.05 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "3b4b96f9-85c9-4c19-829b-7e99515d8cf5")
-		(property "Reference" "J80"
-			(at 491.49 144.7799 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 491.49 147.3199 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 490.22 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project ""
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J80")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "zx50_symbols:SN74CBT3251DR")
 		(at 406.4 313.69 0)
 		(mirror y)
@@ -37204,6 +36883,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 406.4 313.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 406.4 313.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
 			(at 406.4 313.69 0)
 			(effects
 				(font
@@ -37325,15 +37022,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-15879-1-ND"
-			(at 279.4 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 279.4 185.42 90)
 			(effects
@@ -37371,6 +37059,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 279.4 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 279.4 185.42 90)
 			(effects
 				(font
@@ -37453,7 +37150,7 @@
 		(at 116.84 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "3c3faf27-3af3-4345-a9ad-4fd4a137d510")
@@ -37502,15 +37199,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 116.84 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 116.84 143.51 90)
 			(effects
@@ -37548,6 +37236,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 116.84 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5316-ND"
 			(at 116.84 143.51 90)
 			(effects
 				(font
@@ -37630,15 +37327,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "	 296-3970-5-ND"
-			(at 360.68 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 360.68 185.42 90)
 			(effects
@@ -37676,6 +37364,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 360.68 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 360.68 185.42 90)
 			(effects
 				(font
@@ -38023,7 +37720,7 @@
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "4155d80d-ab23-4fbe-ad21-576ccb537761")
@@ -38081,15 +37778,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5016-ND"
-			(at 381 81.28 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 381 81.28 90)
 			(effects
@@ -38127,6 +37815,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 381 81.28 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5016-ND"
 			(at 381 81.28 90)
 			(effects
 				(font
@@ -38221,7 +37918,7 @@
 		(at 280.67 320.04 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "440d5c58-fd6f-422f-b1b0-d16f0ed2d91f")
@@ -38280,15 +37977,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "2057-PH2RA-80-UA-ND"
-			(at 280.67 320.04 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 280.67 320.04 90)
 			(effects
@@ -38326,6 +38014,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 280.67 320.04 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "2057-PH2RA-80-UA-ND"
 			(at 280.67 320.04 90)
 			(effects
 				(font
@@ -38674,6 +38371,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "MCP23S17-E/SO-ND"
+			(at 374.65 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "MCP23S17-E/SO"
+			(at 374.65 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "10"
 			(uuid "99d835ee-17e4-4317-8c7d-2c669396603e")
 		)
@@ -38905,7 +38620,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "4876de89-23a4-4f20-bf82-d9364165ad60")
@@ -38955,15 +38670,6 @@
 			)
 		)
 		(property "LCSC" ""
-			(at 214.63 309.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 214.63 309.88 0)
 			(effects
 				(font
@@ -39027,123 +38733,6 @@
 			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "C21")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 492.76 170.18 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(uuid "4bcb909b-ce24-4a9f-8426-f68a5e853881")
-		(property "Reference" "J86"
-			(at 488.696 170.434 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 494.03 171.4499 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 492.76 170.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J86")
 					(unit 1)
 				)
 			)
@@ -39233,6 +38822,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 213.36 368.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 213.36 368.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
 			(at 213.36 368.3 0)
 			(effects
 				(font
@@ -39550,15 +39157,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-24352-1-ND"
-			(at 173.99 257.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 173.99 257.81 0)
 			(effects
@@ -39596,6 +39194,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 173.99 257.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-24352-1-ND"
 			(at 173.99 257.81 0)
 			(effects
 				(font
@@ -39842,6 +39449,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "MCP23S17-E/SO-ND"
+			(at 293.37 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "MCP23S17-E/SO"
+			(at 293.37 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "10"
 			(uuid "9d31b0e3-3060-491e-bf3b-a856e7e15dad")
 		)
@@ -39940,7 +39565,7 @@
 		(at 497.84 210.82 0)
 		(unit 1)
 		(exclude_from_sim yes)
-		(in_bom yes)
+		(in_bom no)
 		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -39982,15 +39607,6 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x09, script generated"
-			(at 497.84 210.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "S5751-09-ND"
 			(at 497.84 210.82 0)
 			(effects
 				(font
@@ -40044,6 +39660,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "S5751-09-ND"
+			(at 497.84 210.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "a713547d-25df-4c6b-b5b2-a06ba36fa380")
 		)
@@ -40085,7 +39710,7 @@
 		(at 101.6 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "573eba0e-cdbd-4375-b2c9-435784c90d22")
@@ -40134,15 +39759,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 101.6 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 101.6 143.51 90)
 			(effects
@@ -40180,6 +39796,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 101.6 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5316-ND"
 			(at 101.6 143.51 90)
 			(effects
 				(font
@@ -40207,128 +39832,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 492.76 168.91 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(uuid "57a35d4e-61ce-4bc6-a80c-5bbadb89de69")
-		(property "Reference" "J85"
-			(at 494.03 167.6399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 481.33 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 492.76 168.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J85")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R_Small")
 		(at 107.95 60.96 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "57a52817-f4f2-4153-8a90-4c8260434263")
@@ -40369,15 +39877,6 @@
 			)
 		)
 		(property "Description" "Resistor, small symbol"
-			(at 107.95 60.96 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 107.95 60.96 0)
 			(effects
 				(font
@@ -40451,7 +39950,7 @@
 		(at 208.28 266.7 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "5b3b583f-b4cc-493d-a846-47627f28db1b")
@@ -40492,15 +39991,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 208.28 266.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 208.28 266.7 0)
 			(effects
 				(font
@@ -40625,15 +40115,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-15879-1-ND"
-			(at 234.95 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 234.95 185.42 90)
 			(effects
@@ -40671,6 +40152,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 234.95 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 234.95 185.42 90)
 			(effects
 				(font
@@ -41033,6 +40523,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 213.36 281.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
+			(at 213.36 281.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "12"
 			(uuid "2fc8192c-193a-41da-ac83-170c166b92af")
 		)
@@ -41161,7 +40669,7 @@
 		(at 207.01 320.04 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "611c2704-2691-406a-a312-37c080109b1c")
@@ -41202,15 +40710,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 207.01 320.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 207.01 320.04 0)
 			(effects
 				(font
@@ -41284,7 +40783,7 @@
 		(at 132.08 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "63fa8b40-b27f-4b2f-8ade-46993e84df99")
@@ -41333,15 +40832,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 132.08 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 132.08 143.51 90)
 			(effects
@@ -41379,6 +40869,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 132.08 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5316-ND"
 			(at 132.08 143.51 90)
 			(effects
 				(font
@@ -41526,15 +41025,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-4754-1-ND"
-			(at 148.59 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 148.59 96.52 0)
 			(effects
@@ -41572,6 +41062,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 148.59 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-4754-1-ND"
 			(at 148.59 96.52 0)
 			(effects
 				(font
@@ -42049,7 +41548,7 @@
 		(at 58.42 22.86 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "70b612c3-5fb4-4a32-844f-4af8a1eade90")
@@ -42290,7 +41789,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "78f82f3a-7c33-456f-8e76-21f5f11f4d42")
@@ -42331,15 +41830,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 322.58 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 322.58 68.58 0)
 			(effects
 				(font
@@ -42479,7 +41969,7 @@
 		(at 205.74 233.68 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "7a11a03d-6a99-45de-8b1a-0c2801327b02")
@@ -42520,15 +42010,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 205.74 233.68 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 205.74 233.68 0)
 			(effects
 				(font
@@ -42602,7 +42083,7 @@
 		(at 130.81 341.63 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "7a778f57-179f-4e56-bcf5-275fc0fc1db3")
@@ -42651,15 +42132,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "541-CPF149R900FKRE6CT-ND"
-			(at 130.81 341.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 130.81 341.63 0)
 			(effects
@@ -42697,6 +42169,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 130.81 341.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "541-CPF149R900FKRE6CT-ND"
 			(at 130.81 341.63 0)
 			(effects
 				(font
@@ -42908,15 +42389,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-15879-1-ND"
-			(at 205.74 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 205.74 185.42 90)
 			(effects
@@ -42954,6 +42426,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 205.74 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 205.74 185.42 90)
 			(effects
 				(font
@@ -43036,7 +42517,7 @@
 		(at 168.91 229.87 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "802f352c-7e87-42f7-a8dc-649dd0abb17b")
@@ -43077,15 +42558,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 168.91 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 168.91 229.87 0)
 			(effects
 				(font
@@ -43305,6 +42777,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 351.79 336.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 351.79 336.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
 			(at 351.79 336.55 0)
 			(effects
 				(font
@@ -43639,7 +43129,7 @@
 		(at 191.77 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "8abf4805-d4f5-4ce8-891d-33b09d9b8acb")
@@ -43680,15 +43170,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 191.77 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 191.77 172.72 0)
 			(effects
 				(font
@@ -43829,7 +43310,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "92913ea5-2c11-4bbf-b2b2-c4d38348f2ae")
@@ -43876,15 +43357,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5307-ND"
-			(at 467.36 44.45 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 467.36 44.45 0)
 			(effects
@@ -43922,6 +43394,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 467.36 44.45 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5307-ND"
 			(at 467.36 44.45 0)
 			(effects
 				(font
@@ -44128,6 +43609,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 351.79 247.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
+			(at 351.79 247.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "12"
 			(uuid "387c815e-2bb5-49f1-ab39-693da1ebf83f")
 		)
@@ -44256,7 +43755,7 @@
 		(at 347.98 321.31 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "9739322f-bed7-4ad9-85d8-1bd8c9589394")
@@ -44297,15 +43796,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 347.98 321.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 347.98 321.31 0)
 			(effects
 				(font
@@ -44525,6 +44015,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 351.79 280.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 351.79 280.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
 			(at 351.79 280.67 0)
 			(effects
 				(font
@@ -44794,7 +44302,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "a118e33a-a592-456f-86c8-9d043de7ede2")
@@ -44843,15 +44351,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "ARF1060-ND"
-			(at 124.46 337.82 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 124.46 337.82 0)
 			(effects
@@ -44889,6 +44388,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 124.46 337.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "ARF1060-ND"
 			(at 124.46 337.82 0)
 			(effects
 				(font
@@ -44907,124 +44415,6 @@
 			(project "Zx50 Bus Probe_RevB"
 				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
 					(reference "J3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 490.22 153.67 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a28ee4a9-261d-4cba-8349-a58411143978")
-		(property "Reference" "J82"
-			(at 491.49 152.3999 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 491.49 154.9399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 490.22 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J82")
 					(unit 1)
 				)
 			)
@@ -45232,7 +44622,7 @@
 		(at 224.79 309.88 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "a4ade996-d416-462f-a642-49fdbd881b11")
@@ -45273,15 +44663,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 224.79 309.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 224.79 309.88 0)
 			(effects
 				(font
@@ -45605,15 +44986,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-12407-5-ND"
-			(at 151.13 312.42 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 151.13 312.42 0)
 			(effects
@@ -45651,6 +45023,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 151.13 312.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-12407-5-ND"
 			(at 151.13 312.42 0)
 			(effects
 				(font
@@ -45693,129 +45074,11 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 491.49 157.48 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "aa777b90-165c-4dee-835c-cf08e92aabca")
-		(property "Reference" "J83"
-			(at 492.76 156.2099 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 492.76 158.7499 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 491.49 157.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J83")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:C_Small")
 		(at 347.98 232.41 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "abdbfb3d-e30a-4d02-98de-dee258bd6a58")
@@ -45856,15 +45119,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 347.98 232.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 347.98 232.41 0)
 			(effects
 				(font
@@ -45938,7 +45192,7 @@
 		(at 294.64 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "ac066bc3-6cc3-4825-acec-c064d3ac2859")
@@ -45979,15 +45233,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 294.64 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 294.64 172.72 0)
 			(effects
 				(font
@@ -46061,7 +45306,7 @@
 		(at 124.46 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "ace98cef-3e36-4c72-8310-940c38c53c37")
@@ -46110,15 +45355,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 124.46 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 124.46 143.51 90)
 			(effects
@@ -46164,6 +45400,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "732-5316-ND"
+			(at 124.46 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "d4b216ba-368f-4d98-b810-036545f376b5")
 		)
@@ -46188,7 +45433,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "ae16fd0c-0b51-4128-9f70-7665a2ea682a")
@@ -46237,15 +45482,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "SC1634"
-			(at 59.69 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 59.69 104.14 0)
 			(effects
@@ -46283,6 +45519,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 59.69 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "SC1634"
 			(at 59.69 104.14 0)
 			(effects
 				(font
@@ -46476,15 +45721,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-15879-1-ND"
-			(at 308.61 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 308.61 185.42 90)
 			(effects
@@ -46522,6 +45758,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 308.61 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 308.61 185.42 90)
 			(effects
 				(font
@@ -46669,7 +45914,7 @@
 		(at 345.44 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "b0a33e07-23d7-4b7f-b4f7-7b76b6d2ce77")
@@ -46710,15 +45955,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 345.44 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 345.44 172.72 0)
 			(effects
 				(font
@@ -46909,15 +46145,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "	 296-3970-5-ND"
-			(at 389.89 185.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 389.89 185.42 90)
 			(effects
@@ -46955,6 +46182,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 389.89 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-15879-1-ND"
 			(at 389.89 185.42 90)
 			(effects
 				(font
@@ -47124,6 +46360,24 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 213.36 335.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
+			(at 213.36 335.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "12"
 			(uuid "15d6db8c-7aea-436e-a8f6-30c1651009bf")
 		)
@@ -47186,7 +46440,7 @@
 		(at 102.87 162.56 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "b423d4b7-33a2-4bea-9ee3-4a69060b9720")
@@ -47225,15 +46479,6 @@
 			)
 		)
 		(property "Description" "Generic connector, double row, 02x05, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 102.87 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2098-ND"
 			(at 102.87 162.56 0)
 			(effects
 				(font
@@ -47287,6 +46532,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "732-2098-ND"
+			(at 102.87 162.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "9"
 			(uuid "0a39a798-fa21-49d2-8fbf-b4e48b02f6e9")
 		)
@@ -47331,7 +46585,7 @@
 		(at 342.9 48.26 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -47373,15 +46627,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 342.9 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 342.9 48.26 0)
 			(effects
 				(font
@@ -47521,7 +46766,7 @@
 		(at 220.98 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "b87a5911-aa78-40e7-ae0b-4f0daffc8780")
@@ -47562,15 +46807,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 220.98 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 220.98 172.72 0)
 			(effects
 				(font
@@ -47644,7 +46880,7 @@
 		(at 90.17 35.56 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "b87c8aff-4873-4c0b-aa7b-7941364a6e88")
@@ -47691,15 +46927,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "1481-EADIP205G-4NLED-ND"
-			(at 90.17 35.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 90.17 35.56 0)
 			(effects
@@ -47737,6 +46964,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 90.17 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "1481-EADIP205G-4NLED-ND"
 			(at 90.17 35.56 0)
 			(effects
 				(font
@@ -47813,7 +47049,7 @@
 		(at 209.55 353.06 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "b91d4b1a-1111-451a-b4a5-f013d43e06ed")
@@ -47854,15 +47090,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 209.55 353.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 209.55 353.06 0)
 			(effects
 				(font
@@ -47986,15 +47213,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "296-12407-5-ND"
-			(at 152.4 335.28 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 152.4 335.28 0)
 			(effects
@@ -48032,6 +47250,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 152.4 335.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-12407-5-ND"
 			(at 152.4 335.28 0)
 			(effects
 				(font
@@ -48158,6 +47385,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 406.4 346.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "296-49883-1-ND"
+			(at 406.4 346.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "SN74CBT3251DR"
 			(at 406.4 346.71 0)
 			(effects
 				(font
@@ -48295,7 +47540,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "bfa8a37e-d111-4402-907e-f7778dd65582")
@@ -48342,15 +47587,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5299-ND"
-			(at 467.36 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 467.36 172.72 0)
 			(effects
@@ -48388,6 +47624,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 467.36 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5299-ND"
 			(at 467.36 172.72 0)
 			(effects
 				(font
@@ -48458,7 +47703,7 @@
 		(at 405.13 38.1 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -48499,15 +47744,6 @@
 		)
 		(property "Description" "Resistor, small symbol"
 			(at 405.13 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
-			(at 405.13 38.1 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48646,7 +47882,7 @@
 		(at 499.11 252.73 0)
 		(unit 1)
 		(exclude_from_sim yes)
-		(in_bom yes)
+		(in_bom no)
 		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -48696,15 +47932,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "S5751-09-ND"
-			(at 499.11 252.73 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" "NPPN091BFCN-RC"
 			(at 499.11 252.73 0)
 			(effects
@@ -48742,6 +47969,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 499.11 252.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "S5751-09-ND"
 			(at 499.11 252.73 0)
 			(effects
 				(font
@@ -48988,7 +48224,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "d4f839d0-3334-45f0-8eca-251d39013128")
@@ -49029,15 +48265,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 172.72 116.84 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 172.72 116.84 0)
 			(effects
 				(font
@@ -49177,7 +48404,7 @@
 		(at 375.92 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "d9675b86-f955-4b2e-b1a2-ef86092bda36")
@@ -49218,15 +48445,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 375.92 172.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 375.92 172.72 0)
 			(effects
 				(font
@@ -49300,7 +48518,7 @@
 		(at 93.98 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "dd23abfd-5056-44a2-bb4e-2d3c8820aeea")
@@ -49342,15 +48560,6 @@
 		)
 		(property "Description" "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
 			(at 93.98 143.51 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 93.98 143.51 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -49403,6 +48612,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "732-5316-ND"
+			(at 93.98 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "745d6621-47d1-45da-995e-69f2d0e8001d")
 		)
@@ -49426,7 +48644,7 @@
 		(at 373.38 88.9 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "ddaf0233-d634-4f0f-a075-6cd6303a7356")
@@ -49467,15 +48685,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 373.38 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 373.38 88.9 0)
 			(effects
 				(font
@@ -49616,7 +48825,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "debf8932-2c82-4796-9ebb-4358ed16eb88")
@@ -49657,15 +48866,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 189.23 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 189.23 140.97 0)
 			(effects
 				(font
@@ -49937,7 +49137,7 @@
 		(at 402.59 331.47 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "e20fdd32-2a7a-4ca1-9984-aec56a0eae6f")
@@ -49978,15 +49178,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 402.59 331.47 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 402.59 331.47 0)
 			(effects
 				(font
@@ -50061,7 +49252,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "e624b237-d622-40ac-b792-1f0be5af18d9")
@@ -50102,15 +49293,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 262.89 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 262.89 140.97 0)
 			(effects
 				(font
@@ -50250,7 +49432,7 @@
 		(at 161.29 128.27 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "e7e46f44-beda-4c7c-bad8-7fb92b224c32")
@@ -50291,15 +49473,6 @@
 			)
 		)
 		(property "Description" "Resistor, small symbol"
-			(at 161.29 128.27 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 161.29 128.27 0)
 			(effects
 				(font
@@ -50373,7 +49546,7 @@
 		(at 109.22 143.51 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "e9cf818b-158a-4056-b846-3b24ac411ea3")
@@ -50422,15 +49595,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5316-ND"
-			(at 109.22 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 109.22 143.51 90)
 			(effects
@@ -50476,6 +49640,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "732-5316-ND"
+			(at 109.22 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "0d186286-809b-42c7-8e93-fac57fa5836a")
 		)
@@ -50500,7 +49673,7 @@
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "e9dab205-2716-423f-adac-c90238ab72ad")
@@ -50547,15 +49720,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "732-5299-ND"
-			(at 467.36 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 467.36 146.05 0)
 			(effects
@@ -50593,6 +49757,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 467.36 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "732-5299-ND"
 			(at 467.36 146.05 0)
 			(effects
 				(font
@@ -50663,7 +49836,7 @@
 		(at 161.29 120.65 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "eaf69863-2007-4ade-b691-2dd19a765a4e")
@@ -50704,15 +49877,6 @@
 			)
 		)
 		(property "Description" "Resistor, small symbol"
-			(at 161.29 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 161.29 120.65 0)
 			(effects
 				(font
@@ -50864,6 +50028,24 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 219.71 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "MCP23S17-E/SO-ND"
+			(at 219.71 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "MCP23S17-E/SO"
 			(at 219.71 138.43 90)
 			(effects
 				(font
@@ -51228,130 +50410,12 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_1")
-		(at 490.22 149.86 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board no)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "fa82e837-ff06-4422-951a-3d26718375c4")
-		(property "Reference" "J81"
-			(at 491.49 148.5899 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Jumper"
-			(at 491.49 151.1299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" "732-2678-ND"
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MANUFACTURER" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MAXIMUM_PACKAGE_HEIGHT" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "PARTREV" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "STANDARD" ""
-			(at 490.22 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(instances
-			(project "Zx50 Bus Probe_RevB"
-				(path "/25f447e7-64bf-42d9-acfb-0aea4b7e6169"
-					(reference "J81")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector:Conn_Coaxial")
 		(at 121.92 312.42 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "fc0264f5-3818-43ba-ab4f-92ced712b744")
@@ -51400,15 +50464,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "ARF1060-ND"
-			(at 121.92 312.42 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 121.92 312.42 0)
 			(effects
@@ -51454,6 +50509,15 @@
 				(hide yes)
 			)
 		)
+		(property "DigiKey_PN" "ARF1060-ND"
+			(at 121.92 312.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "393c6483-c8de-4d0e-9a69-befd1046c2a5")
 		)
@@ -51474,7 +50538,7 @@
 		(at 346.71 265.43 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "fd68ac58-0f79-444f-a1d6-eef54b310408")
@@ -51515,15 +50579,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 346.71 265.43 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Digi-Key_PN" ""
 			(at 346.71 265.43 0)
 			(effects
 				(font
@@ -51597,7 +50652,7 @@
 		(at 132.08 312.42 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -51645,15 +50700,6 @@
 				(hide yes)
 			)
 		)
-		(property "Digi-Key_PN" "541-CPF149R900FKRE6CT-ND"
-			(at 132.08 312.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "SKU" ""
 			(at 132.08 312.42 90)
 			(effects
@@ -51691,6 +50737,15 @@
 			)
 		)
 		(property "STANDARD" ""
+			(at 132.08 312.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "541-CPF149R900FKRE6CT-ND"
 			(at 132.08 312.42 90)
 			(effects
 				(font

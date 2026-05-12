@@ -1,7 +1,7 @@
 (export (version "E")
   (design
-    (source "/Users/marc/Library/CloudStorage/GoogleDrive-marc@tear.com/My Drive/Electronics/z80/Zx50/boards/Zx50_FrontPanelCard/Zx50_FrontPanelCard.kicad_sch")
-    (date "2026-03-25T09:12:48-0700")
+    (source "/Users/marc/Documents/z80/Zx50/boards/Zx50_FrontPanelCard/Zx50_FrontPanelCard.kicad_sch")
+    (date "2026-05-11T20:30:22-0700")
     (tool "Eeschema 9.0.7")
     (sheet (number "1") (name "/") (tstamps "/")
       (title_block
@@ -287,7 +287,7 @@
       (sheetpath (names "/") (tstamps "/"))
       (tstamps "8aa9b14b-6df1-4634-960d-cf313ba35238"))
     (comp (ref "J3")
-      (value "Front Panel 2")
+      (value "Displays")
       (footprint "zx50_footprints:IDC-Header_2x05_P2.54mm_Horizontal_Edge")
       (datasheet "~")
       (description "Generic connector, double row, 02x05, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
@@ -309,7 +309,7 @@
       (sheetpath (names "/") (tstamps "/"))
       (tstamps "29739fb5-894f-4d38-a787-188d511e3ac3"))
     (comp (ref "J4")
-      (value "Front Panel")
+      (value "Switchs")
       (footprint "zx50_footprints:IDC-Header_2x05_P2.54mm_Horizontal_Edge")
       (datasheet "~")
       (description "Generic connector, double row, 02x05, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
@@ -780,7 +780,7 @@
     (library (logical "Regulator_Linear")
       (uri "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//Regulator_Linear.kicad_sym"))
     (library (logical "zx50_symbols")
-      (uri "/Users/marc/Library/CloudStorage/GoogleDrive-marc@tear.com/My Drive/Electronics/z80/Zx50/boards/zx50_symbols.kicad_sym")))
+      (uri "/Users/marc/Documents/z80/Zx50/boards/zx50_symbols.kicad_sym")))
   (nets
     (net (code "11") (name "+3.3V") (class "PWR-3.3V,Default")
       (node (ref "C2") (pin "2") (pintype "passive"))

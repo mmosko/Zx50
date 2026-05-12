@@ -19723,7 +19723,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 162 "/B.~SH_BUSY")
 			(pinfunction "PB20A")
-			(pintype "open_collector")
+			(pintype "bidirectional")
 			(uuid "c727e571-d4ab-4841-8632-7b48ab7ce409")
 		)
 		(pad "69" smd rect
@@ -19732,7 +19732,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 161 "/B.~INT")
 			(pinfunction "PB20B")
-			(pintype "open_collector")
+			(pintype "output")
 			(uuid "f510a4c9-fea4-403a-aded-9601d04472fd")
 		)
 		(pad "70" smd rect
@@ -19741,7 +19741,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net 160 "/B.~WAIT")
 			(pinfunction "PB20C")
-			(pintype "open_collector")
+			(pintype "output")
 			(uuid "83d78d54-abcb-44f3-acb1-4e753765a0eb")
 		)
 		(pad "71" smd rect
