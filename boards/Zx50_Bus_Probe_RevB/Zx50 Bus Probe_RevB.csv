@@ -1,0 +1,8 @@
+"Reference","Qty","Value","DigiKey_PN","SKU","DNP","Exclude from BOM","Exclude from Board","Footprint","Datasheet"
+"U1,U13,U21","3","MCP23S17_SO","MCP23S17-E/SO-ND","MCP23S17-E/SO","","","","Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm","http://ww1.microchip.com/downloads/en/DeviceDoc/20001952C.pdf"
+"U2,U3,U4,U5,U8,U9,U10,U11,U12","9","74CBT3251","296-49883-1-ND","SN74CBT3251DR","","","","Package_SO:SOIC-16_3.9x9.9mm_P1.27mm","https://www.ti.com/lit/gpn/sn74cbt3251"
+"U6,U7,U17,U19,U22,U23","6","SN74ABT245BN","296-15879-1-ND","","","","","zx50_footprints:NS20","https://www.ti.com/lit/gpn/sn74abt245b"
+"U14","1","CD74HC154M96","296-24352-1-ND","","","","","Package_SO:SOIC-24W_7.5x15.4mm_P1.27mm","http://www.ti.com/lit/gpn/sn74HC154"
+"U15,U16","2","OPA356xxD","296-12407-5-ND","","","","","Package_SO:SOIC-8_3.9x4.9mm_P1.27mm","http://www.ti.com/lit/ds/symlink/opa356.pdf"
+"U18","1","74AHCT541","296-4754-1-ND","","","","","Package_SO:SOIC-20W_7.5x12.8mm_P1.27mm","https://www.ti.com/lit/ds/symlink/sn74ahct541.pdf"
+"U20","1","PIC18F27Q43-I/SO","150-PIC18F27Q43-I/SO-ND","","","","","zx50_footprints:SOIC28_SO_MCH","PIC18F27Q43-I/SO"

@@ -2048,7 +2048,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin output line
 					(at 71.12 -5.08 180)
 					(length 7.62)
 					(name "PB20C"
@@ -2066,7 +2066,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin output line
 					(at 71.12 -7.62 180)
 					(length 7.62)
 					(name "PB20B"
@@ -2084,7 +2084,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin bidirectional line
 					(at 71.12 -10.16 180)
 					(length 7.62)
 					(name "PB20A"
@@ -6199,7 +6199,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin output line
 					(at 71.12 -5.08 180)
 					(length 7.62)
 					(name "PB20C"
@@ -6217,7 +6217,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin output line
 					(at 71.12 -7.62 180)
 					(length 7.62)
 					(name "PB20B"
@@ -6235,7 +6235,7 @@
 						)
 					)
 				)
-				(pin open_collector line
+				(pin bidirectional line
 					(at 71.12 -10.16 180)
 					(length 7.62)
 					(name "PB20A"

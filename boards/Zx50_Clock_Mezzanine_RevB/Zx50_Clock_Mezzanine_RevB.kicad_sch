@@ -6393,6 +6393,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "863-MC74VHC1G14DBVTG"
+			(at 26.67 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "f2d1a490-6c90-47f8-9cac-2012eb6c56a6")
 		)
@@ -6489,7 +6498,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "02643c47-809d-4051-8655-7ad83ba0713c")
@@ -6698,6 +6707,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0710KL"
+			(at 90.17 163.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0710KL"
+			(at 90.17 163.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "185fe334-31dc-4718-a143-69817c8f57c8")
 		)
@@ -6884,7 +6911,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(uuid "12fe7151-634c-4d40-a53f-e19f399c176e")
 		(property "Reference" "Y1"
@@ -7089,6 +7116,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 142.24 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 142.24 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "2183ed42-fc85-4563-be61-23ceff9de161")
 		)
@@ -7159,6 +7204,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 93.98 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 93.98 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 93.98 105.41 0)
 			(effects
 				(font
@@ -7246,6 +7309,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 64.77 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
+			(at 64.77 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "f0e5656a-a941-4151-880e-de945f3ab0ff")
 		)
@@ -7317,6 +7398,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-33.0CRCT-ND"
+			(at 104.14 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 104.14 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
 			(at 104.14 83.82 0)
 			(effects
 				(font
@@ -7403,6 +7502,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 58.42 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 58.42 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "817ccaf0-e257-44ca-afe2-5181265d8171")
 		)
@@ -7474,6 +7591,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 97.79 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 97.79 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 97.79 54.61 0)
 			(effects
 				(font
@@ -7571,7 +7706,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(uuid "25ef8ff5-92f9-4722-98ec-ad2d0d8793e8")
 		(property "Reference" "JP1"
@@ -7756,6 +7891,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 123.19 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 123.19 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 123.19 140.97 0)
 			(effects
 				(font
@@ -8304,6 +8457,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 143.51 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
+			(at 143.51 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "440ef5e2-1ace-4775-9a58-7cfc49beec79")
 		)
@@ -8391,7 +8562,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "58b14a77-f944-4e13-9e78-87650809897c")
@@ -8625,6 +8796,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 224.79 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 224.79 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "7484b625-3c7d-478d-a48e-4535f4775c1d")
 		)
@@ -8761,6 +8950,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 261.62 27.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 261.62 27.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 261.62 27.94 0)
 			(effects
 				(font
@@ -8906,6 +9113,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-33.0CRCT-ND"
+			(at 265.43 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 265.43 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
 			(at 265.43 38.1 0)
 			(effects
 				(font
@@ -9165,6 +9390,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "863-MC74VHC1G14DBVTG"
+			(at 91.44 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "e5f6db66-cacd-4759-bca5-87acba7a6208")
 		)
@@ -9377,6 +9611,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 130.81 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 130.81 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 130.81 106.68 0)
 			(effects
 				(font
@@ -9729,6 +9981,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 74.93 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
+			(at 74.93 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "7997e259-d90d-4b7f-9726-30046d74a96a")
 		)
@@ -9849,6 +10119,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "863-MC74VHC1G14DBVTG"
+			(at 256.54 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "ec2b4904-ab98-4c4a-abd6-561651b833f3")
 		)
@@ -9929,6 +10208,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-10.0KCRCT-ND"
+			(at 138.43 163.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RC0805FR-0710KL"
+			(at 138.43 163.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0710KL"
 			(at 138.43 163.83 0)
 			(effects
 				(font
@@ -10344,6 +10641,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 99.06 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 99.06 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "3d47e4ac-9f80-4d32-bc9f-d7b679065013")
 		)
@@ -10657,6 +10972,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "595-SN74AHC74DR"
+			(at 153.67 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "7"
 			(uuid "19ce56da-ece2-43a1-b60a-7dd6a2ee6f68")
 		)
@@ -10770,6 +11094,15 @@
 			)
 		)
 		(property "SKU" "SN74AHC1G08DBVR"
+			(at 87.63 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "595-SN74AHC1G08DBVR"
 			(at 87.63 113.03 0)
 			(effects
 				(font
@@ -10907,6 +11240,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "863-MC74VHC1G14DBVTG"
+			(at 67.31 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "24b3401b-9f74-48d0-b9c8-3089ee345fe9")
 		)
@@ -10996,6 +11338,15 @@
 			)
 		)
 		(property "SKU" " 74AHC1G79GV"
+			(at 125.73 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "771-AHC1G79GV125"
 			(at 125.73 76.2 0)
 			(effects
 				(font
@@ -11158,6 +11509,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 102.87 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
+			(at 102.87 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "b8e8c697-284a-4d24-8964-9d0dbc0a8eae")
 		)
@@ -11228,6 +11597,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-33.0CRCT-ND"
+			(at 218.44 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 218.44 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
 			(at 218.44 78.74 0)
 			(effects
 				(font
@@ -11314,6 +11701,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0733RL"
+			(at 265.43 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0733RL"
+			(at 265.43 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "6cf67929-c5da-43df-b024-a3ce72520e0b")
 		)
@@ -11391,6 +11796,15 @@
 			)
 		)
 		(property "SKU" "SN74AHC1G32DBVR"
+			(at 187.96 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "595-SN74AHC1G32DBVR"
 			(at 187.96 48.26 0)
 			(effects
 				(font
@@ -11486,6 +11900,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 241.3 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 241.3 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "4419e23c-4a29-49b7-88fa-873cdb22be69")
 		)
@@ -11557,6 +11989,24 @@
 			)
 		)
 		(property "DigiKey_PN" "311-1140-1-ND"
+			(at 100.33 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 100.33 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
 			(at 100.33 156.21 0)
 			(effects
 				(font
@@ -11776,6 +12226,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-RC0805FR-0749K9L"
+			(at 27.94 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "RC0805FR-0749K9L"
+			(at 27.94 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "fc6a2add-9946-4d96-9750-fbffb85857c8")
 		)
@@ -11920,6 +12388,24 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser_PN" "603-CC805KRX7R9BB104"
+			(at 194.31 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CC0805KRX7R9BB104"
+			(at 194.31 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "205fc0f4-2e5d-43fd-aaec-4176780890d6")
 		)
@@ -11999,6 +12485,15 @@
 			)
 		)
 		(property "SKU" "MC74VHC125DR2G"
+			(at 240.03 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "863-MC74VHC125DR2G"
 			(at 240.03 45.72 0)
 			(effects
 				(font
@@ -12160,6 +12655,15 @@
 					(size 1.27 1.27)
 				)
 				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "595-CD74AC161M96"
+			(at 201.93 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)
