@@ -27,7 +27,7 @@ def run(pic, bus_mgr, output):
     Executes a comprehensive 1MB Memory Card test.
     Tests all 256 physical pages (1MB) by mapping them into the Z80's 64KB window.
     """
-    CARD_ID = 3
+    CARD_ID = 1
     BASE_PORT = 0x30 | CARD_ID
     TOTAL_PHYSICAL_PAGES = 256
     PAGES_PER_WINDOW = 16

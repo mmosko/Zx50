@@ -20,7 +20,7 @@ def run(pic, bus, output):
     Executes a custom sequence of Z80 bus operations to validate a 64K Memory Card.
     """
     # Set this to the DIP switch ID of your card (0-3)
-    CARD_ID = 3
+    CARD_ID = 1
     BASE_PORT = 0x30 | CARD_ID
 
     output(f">> Z80 Script: Initializing Memory Card {CARD_ID} MMU...")
