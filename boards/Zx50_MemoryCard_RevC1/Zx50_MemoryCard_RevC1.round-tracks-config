@@ -1,0 +1,9 @@
+Default	False	2.0	3
+CLOCK	True	2.0	3
+FPGA	False	2.0	3
+LVDS	True	2.0	3
+PWR-2V5	False	2.0	3
+PWR-GND	True	2.0	3
+PWR-SMALL	False	2.0	3
+PWR-Vdd	False	2.0	3
+False	True	False

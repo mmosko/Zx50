@@ -1,6 +1,6 @@
 {
   "board": {
-    "active_layer": 25,
+    "active_layer": 0,
     "active_layer_preset": "",
     "auto_track_width": true,
     "hidden_netclasses": [],
@@ -20,7 +20,7 @@
       "footprints": true,
       "graphics": true,
       "keepouts": true,
-      "lockedItems": true,
+      "lockedItems": false,
       "otherItems": true,
       "pads": true,
       "text": true,
@@ -49,7 +49,7 @@
       "conflict_shadows",
       "shapes"
     ],
-    "visible_layers": "ffffffff_ffffffff_ffffd575_df5555af",
+    "visible_layers": "ffffffff_ffffffff_ffffd575_ff5551ef",
     "zone_display_mode": 0
   },
   "git": {
@@ -58,11 +58,13 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "Zx50_MemoryCard_RevC.kicad_prl",
+    "filename": "Zx50_MemoryCard_RevC1.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
     "col_hidden": [
+      false,
+      false,
       false,
       false,
       false,
@@ -88,7 +90,9 @@
       8,
       9,
       10,
-      11
+      11,
+      12,
+      13
     ],
     "col_widths": [
       156,
@@ -102,7 +106,9 @@
       103,
       103,
       103,
-      10
+      103,
+      103,
+      103
     ],
     "custom_group_rules": [],
     "expanded_rows": [],
