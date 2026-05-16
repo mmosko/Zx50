@@ -41,6 +41,7 @@
 #define CMD_STEP           0x11  // Clock control
 #define CMD_CLK_AUTO_START 0x12  // Start 1kHz background clock
 #define CMD_CLK_AUTO_STOP  0x13  // Stop 1kHz background clock
+#define CMD_BOOT           0x14  // Perform Z80/CPLD Boot Sequence
 
 #define CMD_ACK            0x5A
 #define CMD_NACK           0x5B
@@ -48,9 +49,9 @@
 
 /*
  * RETURN
- *   0 : OK
- *   1 : ERROR (NACK)
- *   -1 : NO-OP (continue)
+ * 0 : OK
+ * 1 : ERROR (NACK)
+ * -1 : NO-OP (continue)
  */
 static inline
 int read_uart(uint8_t packet[4]) {
@@ -89,13 +90,25 @@ void main(void) {
     // Initialize pins safely to High-Z
     System_Init(); 
 
-    // Safely reset the CPLD via the Z80 bus
-    Z80_Boot_Sequence();
-
     uint8_t sync, opcode, addr_h, addr_l, param;
+
+    // --- Track AUTO mode and AUX pin state ---
+    uint8_t is_auto_clock = 0;
+    uint8_t last_aux = AUX_PIN_VAL;
 
     while(1) {
         
+        // --- Check for AUX toggle to step clock ---
+        uint8_t current_aux = AUX_PIN_VAL;
+        if (current_aux != last_aux) {
+            last_aux = current_aux;
+            
+            // If auto clock is off, dispatch exactly one cycle per edge
+            if (!is_auto_clock) {
+                CQ_Dispatch_Cycle();
+            }
+        }
+
         if (pending_cmd != NULL && pending_cmd->status == STAT_DONE) {
             UART_Write(CMD_ACK);     
             switch(pending_cmd->op) {
@@ -202,12 +215,19 @@ void main(void) {
             }
             case CMD_CLK_AUTO_START: {
                 Z80_Clock_Start_Auto();
+                is_auto_clock = 1;
                 UART_Write(CMD_ACK);     
                 break;
             }
             case CMD_CLK_AUTO_STOP: {
                 Z80_Clock_Stop_Auto();
+                is_auto_clock = 0;
                 UART_Write(CMD_ACK);     
+                break;
+            }
+            case CMD_BOOT: {
+                Z80_Boot_Sequence();
+                UART_Write(CMD_ACK);
                 break;
             }
             default:

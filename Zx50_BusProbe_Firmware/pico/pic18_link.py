@@ -12,6 +12,7 @@ CMD_GHOST = 0x08
 CMD_STEP = 0x11
 CMD_CLK_AUTO_START = 0x12
 CMD_CLK_AUTO_STOP = 0x13
+CMD_BOOT = 0x14
 
 SYNC_BYTE = 0x5A
 SYNC_NACK = 0x5B
@@ -36,6 +37,7 @@ class PIC18Link:
             "SNAPSHOT": self._do_snapshot,
             "CLK_START": self._do_clk_start,
             "CLK_STOP": self._do_clk_stop,
+            "BOOT": self._do_boot,
             "HELP": self._do_help,
             "?": self._do_help
         }
@@ -144,6 +146,11 @@ class PIC18Link:
         self._send_packet(CMD_CLK_AUTO_STOP)
         return self._wait_for_ack_and_data(expect_data=False)
 
+    def _boot_sequence(self):
+        self._send_packet(CMD_BOOT)
+        # Give it a slightly longer timeout since it pumps the clock 40 times before ACKing
+        return self._wait_for_ack_and_data(timeout_ms=200, expect_data=False)
+
     # ==========================================
     # DISPATCH HANDLERS
     # ==========================================
@@ -159,7 +166,8 @@ class PIC18Link:
             "  pic ghost <1|0>          - Enable/Disable bus driving\n"
             "  pic step [count]         - Single-step the clock (Decimal)\n"
             "  pic clk_start            - Start 1kHz background clock\n"
-            "  pic clk_stop             - Stop background clock"
+            "  pic clk_stop             - Stop background clock\n"
+            "  pic boot                 - Perform Z80/CPLD Boot Sequence"
         )
 
     def _do_ghost(self, args):
@@ -253,12 +261,12 @@ class PIC18Link:
         return "ERR PIC_TIMEOUT"
 
     def _do_snapshot(self, args):
-        res = self._bus_snapshot()
-        if isinstance(res, bytearray):
-            hex_str = "".join([f"{b:02X}" for b in res])
-            return f"OK {hex_str}"
-        if res == "NACK": return "ERR PIC_NACK"
-        return "ERR PIC_TIMEOUT"
+        # res = self._bus_snapshot()
+        # if isinstance(res, bytearray):
+        #     hex_str = "".join([f"{b:02X}" for b in res])
+        #     return f"OK {hex_str}"
+        # if res == "NACK": return "ERR PIC_NACK"
+        return "ERR NOT_SUPPORTED"
 
     def _do_clk_start(self, args):
         res = self._start_clock()
@@ -268,6 +276,12 @@ class PIC18Link:
 
     def _do_clk_stop(self, args):
         res = self._stop_clock()
+        if res is True: return "OK"
+        if res == "NACK": return "ERR PIC_NACK"
+        return "ERR PIC_TIMEOUT"
+
+    def _do_boot(self, args):
+        res = self._boot_sequence()
         if res is True: return "OK"
         if res == "NACK": return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
