@@ -7,14 +7,7 @@
 #define COMMAND_QUEUE_H
 
 #include <stdint.h>
-
-typedef enum {
-    OP_IDLE = 0,
-    OP_MEM_READ,
-    OP_MEM_WRITE,
-    OP_IO_READ,
-    OP_IO_WRITE
-} bus_op_t;
+#include <stdbool.h>
 
 typedef enum {
     STAT_EMPTY = 0,
@@ -23,21 +16,32 @@ typedef enum {
     STAT_DONE
 } cmd_status_t;
 
-typedef struct {
-    bus_op_t op;
-    uint16_t address;
-    uint8_t  data_in;   // Data to write to the bus
-    uint8_t  data_out;  // Data read from the bus
-    volatile cmd_status_t status; // Volatile because it is modified by the ISR
-} cmd_t;
+// ==== ENQUEUE API ====
 
-// Face 1: Called by main.c to schedule a job
-cmd_t* CQ_Enqueue(bus_op_t op, uint16_t address, uint8_t data);
+// Called by main.c to schedule a job.  Returns TRUE if the
+// command is enqueues, false if it cannot be queues (i.e. the queue is full).)
 
-// Face 2: Called by the ISR/Single-Step to execute exactly ONE clock cycle
+bool CQ_Enqueue_MemRead(uint16_t address);
+bool CQ_Enqueue_MemWrite(uint16_t address, uint8_t data);
+bool CQ_Enqueue_IoRead(uint16_t address);
+bool CQ_Enqueue_IoWrite(uint16_t address, uint8_t data);
+
+// =====================
+
+// Called by the ISR/Single-Step to execute exactly ONE clock cycle
 void CQ_Dispatch_Cycle(void);
 
-// clears the command state so it can be recycled
-void CQ_Clear(cmd_t *cmd);
+cmd_status_t CQ_Get_Head_Status(void);
+
+// If the head element returns data and it has data available, it
+// will put that data in the data pointer and return "true".  If
+// "false" is returned, data is unmodified.
+// Should only be used with STAT_DONE.
+bool CQ_Read_Head_Data(uint8_t *data);
+
+// Removes the head element.  Typically, this is used by main to
+// clear the head element after it has processed the STAT_DONE and
+// optionally read any return data.
+void CQ_Pop_Head(void);
 
 #endif /* COMMAND_QUEUE_H */

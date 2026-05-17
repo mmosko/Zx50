@@ -3,257 +3,183 @@
  * Author: Marc Mosko
  */
 
-// ==========================================
-// PIC18F4620 Configuration Bits (Fuses)
-// ==========================================
-#pragma config OSC = INTIO67    // Oscillator Selection: Internal oscillator, RA6/RA7 are digital I/O
-#pragma config FCMEN = OFF      // Fail-Safe Clock Monitor: Disabled
-#pragma config IESO = OFF       // Internal/External Osc Switchover: Disabled
-#pragma config PWRT = ON        // Power-up Timer: Enabled (Wait for power to stabilize)
-#pragma config BOREN = SBORDIS  // Brown-out Reset: Hardware only
-#pragma config BORV = 3         // Brown-out Reset Voltage: Minimum setting
-#pragma config WDT = OFF        // Watchdog Timer: Disabled (CRITICAL!)
-#pragma config MCLRE = ON       // MCLR Pin Enable: MCLR pin enabled, RE3 disabled
-#pragma config PBADEN = OFF     // PORTB A/D Enable: PORTB<4:0> are digital I/O on Reset
-#pragma config LVP = OFF        // Low Voltage ICSP: Disabled (CRITICAL for standard JTAG/ICSP)
-#pragma config XINST = OFF      // Extended Instruction Set: Disabled (Legacy mode)
+#pragma config OSC = INTIO67    
+#pragma config FCMEN = OFF      
+#pragma config IESO = OFF       
+#pragma config PWRT = ON        
+#pragma config BOREN = SBORDIS  
+#pragma config BORV = 3         
+#pragma config WDT = OFF        
+#pragma config MCLRE = ON       
+#pragma config PBADEN = OFF     
+#pragma config LVP = OFF        
+#pragma config XINST = OFF      
 
-// Define the system clock frequency for the __delay_us() macro
 #define _XTAL_FREQ 32000000 
 
 #include <xc.h>
-#include "hal.h"        // Adds UART_Read, System_Init, etc.
+#include <stdbool.h>
+#include "hal.h"        
 #include "z80_bus.h"
-#include "clock.h"      // Included so we can pump the clock
+#include "clock.h"      
 #include "pins.h"
-#include "command_queue.h"       // Included so we can release RESET
+#include "command_queue.h"
+#include "cmd.h" // Include new shared definitions
 
-// ==========================================
-// Packet Opcodes
-// ==========================================
-#define CMD_LD             0x01
-#define CMD_STORE          0x02
-#define CMD_IN             0x03
-#define CMD_OUT            0x04
-#define CMD_LDIR           0x05
-#define CMD_SNAPSHOT       0x07  // Read state of the entire bus
-#define CMD_GHOST          0x08  // 1 = Ghost (Release Bus), 0 = Unghost (Drive Bus)
-#define CMD_STEP           0x11  // Clock control
-#define CMD_CLK_AUTO_START 0x12  // Start 1kHz background clock
-#define CMD_CLK_AUTO_STOP  0x13  // Stop 1kHz background clock
-#define CMD_BOOT           0x14  // Perform Z80/CPLD Boot Sequence
-
-#define CMD_ACK            0x5A
-#define CMD_NACK           0x5B
-
-// ==========================================
-// Debounce Tuning
-// ==========================================
-// At 32MHz (8 MIPS), the main loop executes roughly ~150,000 times per second 
-// when idle. 2500 loops = roughly ~15ms of required stability.
-// Increase this if the switch still double-steps.
 #define DEBOUNCE_THRESHOLD 2500 
 
-/*
- * RETURN
- * 0 : OK
- * 1 : ERROR (NACK)
- * -1 : NO-OP (continue)
- */
+static uint8_t is_auto_clock = 0;
+
 static inline
 int read_uart(uint8_t packet[4]) {
-    // =========================================
-    // ENTER CRITICAL SECTION
-    // =========================================
     INTCONbits.GIE = 0; 
-
     uint8_t sync_byte;
-    // If UART_Read returns non-zero (error), or isn't SYNC, bail out immediately.
-    if (UART_Read(&sync_byte) != 0 || sync_byte != 0x5A) {
-        INTCONbits.GIE = 1; // EXIT CRITICAL SECTION
+    if (UART_Read(&sync_byte) != 0 || sync_byte != SYNC_OK) {
+        INTCONbits.GIE = 1; 
         return -1; 
     }
-
     uint8_t rx_err = 0;
-    // SYNC confirmed. Grab the remaining 4 bytes as fast as possible.
     for(int i = 0; i < 4; i++) {
         if (UART_Read(&packet[i]) != 0) {
             rx_err = 1;
             break;
         }
     }
-
-    // =========================================
-    // EXIT CRITICAL SECTION
-    // =========================================
     INTCONbits.GIE = 1; 
-
     return rx_err;
 }
 
-void main(void) {
-    cmd_t *pending_cmd = 0;
+static inline void Send_Status_Response() {
+    cmd_status_t status = CQ_Get_Head_Status();
     
-    // Initialize pins safely to High-Z
+    if (status == STAT_DONE) {
+        UART_Write(RESP_DONE);
+        
+        // Attempt to read data. If it returns true, it was a read operation!
+        uint8_t read_data;
+        if (CQ_Read_Head_Data(&read_data)) {
+            UART_Write(read_data);
+        }
+        
+        // Command fully delivered, clear it out of the queue!
+        CQ_Pop_Head();
+        
+    } else if (status == STAT_PROCESSING || status == STAT_PENDING) {
+        UART_Write(RESP_PENDING);
+    } else {
+        UART_Write(RESP_IDLE);
+    }
+}
+
+static inline void Process_Hardware_Inputs(uint8_t *debounced_aux, uint16_t *debounce_counter) {
+    uint8_t raw_aux = AUX_PIN_VAL;
+        
+    if (raw_aux != *debounced_aux) {
+        (*debounce_counter)++;
+        if (*debounce_counter > DEBOUNCE_THRESHOLD) {
+            *debounced_aux = raw_aux;
+            *debounce_counter = 0; 
+            
+            if (!is_auto_clock) {
+                CQ_Dispatch_Cycle();
+            }
+        }
+    } else {
+        *debounce_counter = 0; 
+    }
+}
+
+static inline void Process_UART_Command(void) {
+    uint8_t packet[4];
+    int rx_err = read_uart(packet);
+    
+    if (rx_err < 0) return; 
+    if (rx_err > 0) {
+        UART_Write(SYNC_NACK);
+        return;
+    }
+    
+    uint8_t opcode = packet[0];
+    uint16_t address = (((uint16_t) packet[1]) << 8) | packet[2];
+    uint8_t param = packet[3];
+
+    switch(opcode) {
+// --- ASYNC QUEUED COMMANDS ---
+        case CMD_LD:
+            if (CQ_Enqueue_MemRead(address)) UART_Write(RESP_QUEUED);
+            else UART_Write(SYNC_NACK);
+            break;
+            
+        case CMD_STORE:
+            if (CQ_Enqueue_MemWrite(address, param)) UART_Write(RESP_QUEUED);
+            else UART_Write(SYNC_NACK);
+            break;
+            
+        case CMD_IN:
+            if (CQ_Enqueue_IoRead(address)) UART_Write(RESP_QUEUED);
+            else UART_Write(SYNC_NACK);
+            break;
+            
+        case CMD_OUT:
+            if (CQ_Enqueue_IoWrite(address, param)) UART_Write(RESP_QUEUED);
+            else UART_Write(SYNC_NACK);
+            break;
+
+        // --- ASYNC POLLING / STEPPING ---
+        case CMD_STEP:
+            if (param == 0) param = 1;
+            for (int i = 0; i < param; i++) {
+                CQ_Dispatch_Cycle();
+            }
+            
+        case CMD_STATUS:
+            Send_Status_Response();
+            break;
+
+        // --- IMMEDIATE COMMANDS ---
+        case CMD_GHOST:
+            Ghost(param);
+            UART_Write(SYNC_OK);       
+            break;
+            
+        case CMD_SNAPSHOT:
+            Z80_Bus_Snapshot(); 
+            break;
+            
+        case CMD_CLK_AUTO_START:
+            Z80_Clock_Start_Auto();
+            is_auto_clock = 1;
+            UART_Write(SYNC_OK);     
+            break;
+            
+        case CMD_CLK_AUTO_STOP:
+            Z80_Clock_Stop_Auto();
+            is_auto_clock = 0;
+            UART_Write(SYNC_OK);     
+            break;
+            
+        case CMD_BOOT:
+            Z80_Boot_Sequence();
+            UART_Write(SYNC_OK);
+            break;
+            
+        default:
+            UART_Write(SYNC_NACK);
+            break;
+    }
+}
+
+void main(void) {
     System_Init(); 
 
-    uint8_t sync, opcode, addr_h, addr_l, param;
-
-    // --- Track AUTO mode and AUX pin state ---
-    uint8_t is_auto_clock = 0;
-    
     uint8_t debounced_aux = AUX_PIN_VAL;
     uint16_t debounce_counter = 0;
 
     while(1) {
+        Process_Hardware_Inputs(&debounced_aux, &debounce_counter);
         
-        // --- Non-Blocking Hardware Debounce ---
-        uint8_t raw_aux = AUX_PIN_VAL;
-        
-        if (raw_aux != debounced_aux) {
-            // The pin has changed. Start counting consecutive stable loops.
-            debounce_counter++;
-            
-            if (debounce_counter > DEBOUNCE_THRESHOLD) {
-                // Pin has been stable long enough! Accept the new state.
-                debounced_aux = raw_aux;
-                debounce_counter = 0; // Reset for the next transition
-                
-                // If auto clock is off, dispatch exactly one cycle per settled edge
-                if (!is_auto_clock) {
-                    CQ_Dispatch_Cycle();
-                }
-            }
-        } else {
-            // If the pin bounces back to the old state before hitting the 
-            // threshold, reset the counter. It was just noise/bounce!
-            debounce_counter = 0; 
-        }
-
-
-        if (pending_cmd != NULL && pending_cmd->status == STAT_DONE) {
-            UART_Write(CMD_ACK);     
-            switch(pending_cmd->op) {
-                case OP_IDLE:
-                case OP_MEM_WRITE:
-                case OP_IO_WRITE:
-                    // no further action needed for these
-                    break;
-                case OP_MEM_READ:
-                    UART_Write(pending_cmd->data_out);
-                    break;
-                case OP_IO_READ:
-                    UART_Write(pending_cmd->data_out);
-                    break;
-            }
-            
-            CQ_Clear(pending_cmd);
-            pending_cmd = 0;
-            continue;
-        }
-        
-        if (!UART_Data_Available()) {
-            continue;
-        }
-        
-        uint8_t packet[4];
-        int rx_err = read_uart(packet);
-        
-        if (rx_err < 0) {
-            continue;
-        } else if (rx_err > 0) {
-            UART_Write(CMD_NACK);
-            continue;
-        }
-        
-        // rx_err is 0, have a good read
-        opcode = packet[0];
-        addr_h = packet[1];
-        addr_l = packet[2];
-        param  = packet[3];
-       
-        uint16_t address = (((uint16_t) addr_h) << 8) | addr_l;
-
-        switch(opcode) {
-            case CMD_LD: {
-                if (pending_cmd != 0) {
-                    UART_Write(CMD_NACK); 
-                } else {
-                    pending_cmd = CQ_Enqueue(OP_MEM_READ, address, 0);
-                }
-                
-                break;
-            }
-            case CMD_STORE: {
-                if (pending_cmd != 0) {
-                    UART_Write(CMD_NACK); 
-                } else {
-                    pending_cmd = CQ_Enqueue(OP_MEM_WRITE, address, param);
-                }
-                break;
-            }
-            case CMD_IN: {
-                if (pending_cmd != 0) {
-                    UART_Write(CMD_NACK); 
-                } else {
-                    pending_cmd = CQ_Enqueue(OP_IO_READ, address, 0);
-                }
-                break;
-            }
-            case CMD_OUT: {
-                if (pending_cmd != 0) {
-                    UART_Write(CMD_NACK); 
-                } else {
-                    pending_cmd = CQ_Enqueue(OP_IO_WRITE, address, param);
-                }
-                break;
-            }
-            case CMD_GHOST: {
-                Ghost(param);
-                UART_Write(CMD_ACK);       
-                break;
-            }
-            case CMD_SNAPSHOT: {
-                Z80_Bus_Snapshot(); 
-                break;
-            }
-            case CMD_LDIR: {
-                // not supported under async setup yet
-                UART_Write(CMD_NACK);     
-                break;
-            }
-            case CMD_STEP: {
-                // always step at least once, even if user did not provide count
-                if (param == 0) {
-                    param = 1;
-                }
-                
-                for (int i = 0; i < param; i++) {
-                    // step clock and dispatch commands
-                    CQ_Dispatch_Cycle(); 
-                }
-                UART_Write(CMD_ACK);     
-                break;
-            }
-            case CMD_CLK_AUTO_START: {
-                Z80_Clock_Start_Auto();
-                is_auto_clock = 1;
-                UART_Write(CMD_ACK);     
-                break;
-            }
-            case CMD_CLK_AUTO_STOP: {
-                Z80_Clock_Stop_Auto();
-                is_auto_clock = 0;
-                UART_Write(CMD_ACK);     
-                break;
-            }
-            case CMD_BOOT: {
-                Z80_Boot_Sequence();
-                UART_Write(CMD_ACK);
-                break;
-            }
-            default:
-                break;
+        if (UART_Data_Available()) {
+            Process_UART_Command();
         }
     }
 }

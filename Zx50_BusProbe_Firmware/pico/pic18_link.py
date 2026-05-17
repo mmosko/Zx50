@@ -13,9 +13,15 @@ CMD_STEP = 0x11
 CMD_CLK_AUTO_START = 0x12
 CMD_CLK_AUTO_STOP = 0x13
 CMD_BOOT = 0x14
+CMD_STATUS = 0x15
 
-SYNC_BYTE = 0x5A
+# Async Response Codes
+SYNC_OK = 0x5A
 SYNC_NACK = 0x5B
+RESP_QUEUED = 0x5C
+RESP_PENDING = 0x5D
+RESP_DONE = 0x5E
+RESP_IDLE = 0x5F
 
 
 class PIC18Link:
@@ -25,6 +31,10 @@ class PIC18Link:
                                  tx=machine.Pin(tx_gpio), rx=machine.Pin(rx_gpio))
         self.uart.init(bits=8, parity=None, stop=1, timeout=10)
 
+        # Depth-1 Queue Tracking
+        # Will hold None, "READ", "WRITE", "IN", or "OUT"
+        self.pending_cmd_type = None
+
         # Dictionary Dispatcher
         self.dispatcher = {
             "GHOST": self._do_ghost,
@@ -33,7 +43,7 @@ class PIC18Link:
             "IN": self._do_in,
             "OUT": self._do_out,
             "STEP": self._do_step,
-            "LDIR": self._do_ldir,
+            "STATUS": self._do_status,
             "SNAPSHOT": self._do_snapshot,
             "CLK_START": self._do_clk_start,
             "CLK_STOP": self._do_clk_stop,
@@ -49,107 +59,64 @@ class PIC18Link:
         addr_h = (address >> 8) & 0xFF
         addr_l = address & 0xFF
 
-        # Flush the input buffer to prevent reading stale ACKs
+        # Flush the input buffer to prevent reading stale data
         while self.uart.any():
             self.uart.read()
 
-        packet = bytearray([SYNC_BYTE, opcode, addr_h, addr_l, param])
+        packet = bytearray([SYNC_OK, opcode, addr_h, addr_l, param])
         self.uart.write(packet)
 
-    def _wait_for_ack_and_data(self, timeout_ms=100, expect_data=False):
-        """
-        Waits for the PIC's deferred ACK, and optionally the payload byte.
-        Returns: True (ACK only), Int (Data Payload), "NACK", or False (Timeout)
-        """
+    def _submit_command(self, opcode, address=0x0000, param=0x00, timeout_ms=50):
+        """Sends a command and waits for an immediate acknowledgment (SYNC_OK or RESP_QUEUED)."""
+        self._send_packet(opcode, address, param)
+
+        t0 = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
+            if self.uart.any():
+                resp = self.uart.read(1)[0]
+                if resp == SYNC_NACK:
+                    return "NACK"
+                if resp in (SYNC_OK, RESP_QUEUED):
+                    return resp
+        return "TIMEOUT"
+
+    def _poll_action(self, opcode, param=0, timeout_ms=100):
+        """Used for STEP and STATUS. Waits for the state of the queue and grabs data if DONE."""
+        self._send_packet(opcode, param=param)
+
         t0 = time.ticks_ms()
         while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
             if self.uart.any():
                 resp = self.uart.read(1)[0]
 
-                if resp == SYNC_NACK:
-                    return "NACK"
+                if resp == RESP_IDLE:
+                    return "OK IDLE"
 
-                if resp == SYNC_BYTE:
-                    # ACK Received! If this is a WRITE or IO command, we are done.
-                    if not expect_data:
-                        return True
+                elif resp == RESP_PENDING:
+                    return "OK PENDING"
 
-                    # If this is a READ command, the data byte is right behind it!
-                    # Give it a tiny 2ms window to finish arriving at 115200 baud.
-                    t1 = time.ticks_ms()
-                    while time.ticks_diff(time.ticks_ms(), t1) < 5:
-                        if self.uart.any():
-                            return self.uart.read(1)[0]
-                    return "TIMEOUT"  # Got ACK, but the data payload never arrived!
+                elif resp == RESP_DONE:
+                    # If the command that just finished was a read, the data byte is right behind it
+                    if self.pending_cmd_type in ["READ", "IN"]:
+                        t1 = time.ticks_ms()
+                        while time.ticks_diff(time.ticks_ms(), t1) < 10:  # 10ms window for the data byte
+                            if self.uart.any():
+                                data = self.uart.read(1)[0]
+                                self.pending_cmd_type = None  # Clear the tracking slot
+                                return f"OK DONE {data:02X}"
 
-        return False  # Absolute timeout waiting for ACK
+                        self.pending_cmd_type = None  # Clear it even if we failed, so we don't lock up
+                        return "ERR PIC_TIMEOUT_DATA_BYTE_MISSING"
 
-    # ==========================================
-    # PRIVATE Z80 COMMANDS
-    # ==========================================
-    def _mem_read(self, address):
-        self._send_packet(CMD_LD, address)
-        # We expect a data byte attached to the ACK
-        res = self._wait_for_ack_and_data(expect_data=True)
-        return "TIMEOUT" if res is False else res
+                    else:
+                        # Write commands are done, no data to fetch
+                        self.pending_cmd_type = None
+                        return "OK DONE"
 
-    def _io_read(self, port):
-        self._send_packet(CMD_IN, port)
-        # We expect a data byte attached to the ACK
-        res = self._wait_for_ack_and_data(expect_data=True)
-        return "TIMEOUT" if res is False else res
+                elif resp == SYNC_NACK:
+                    return "ERR PIC_NACK"
 
-    def _mem_write(self, address, data):
-        self._send_packet(CMD_STORE, address, param=data)
-        # Write only expects an ACK
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _io_write(self, port, data):
-        self._send_packet(CMD_OUT, port, param=data)
-        # Write only expects an ACK
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _set_ghost_mode(self, enable):
-        param = 1 if enable else 0
-        self._send_packet(CMD_GHOST, param=param)
-        # Ghost mode still sends an immediate ACK, so this works perfectly
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _mem_ldir(self, address, data_bytes):
-        self._send_packet(CMD_LDIR, address, param=len(data_bytes))
-        self.uart.write(data_bytes)
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _step_clock(self, count):
-        self._send_packet(CMD_STEP, param=count)
-        # Scale timeout based on count since the PIC blocks during stepping
-        return self._wait_for_ack_and_data(timeout_ms=100 + (count * 2), expect_data=False)
-
-    # def _bus_snapshot(self):
-    #     self._send_packet(CMD_SNAPSHOT)
-    #     res = self._wait_for_ack()
-    #     if res is True:
-    #         data = bytearray()
-    #         t0 = time.ticks_ms()
-    #         while time.ticks_diff(time.ticks_ms(), t0) < 50:
-    #             if self.uart.any():
-    #                 data.extend(self.uart.read(self.uart.any()))
-    #                 t0 = time.ticks_ms()
-    #         return data if data else "TIMEOUT"
-    #     return res
-
-    def _start_clock(self):
-        self._send_packet(CMD_CLK_AUTO_START)
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _stop_clock(self):
-        self._send_packet(CMD_CLK_AUTO_STOP)
-        return self._wait_for_ack_and_data(expect_data=False)
-
-    def _boot_sequence(self):
-        self._send_packet(CMD_BOOT)
-        # Give it a slightly longer timeout since it pumps the clock 40 times before ACKing
-        return self._wait_for_ack_and_data(timeout_ms=200, expect_data=False)
+        return "ERR PIC_TIMEOUT"
 
     # ==========================================
     # DISPATCH HANDLERS
@@ -157,34 +124,28 @@ class PIC18Link:
     def _do_help(self, args):
         return (
             "PIC Subsystem Commands:\n"
-            "  pic read <addr>          - Read memory byte (Hex)\n"
-            "  pic write <addr> <data>  - Write memory byte (Hex)\n"
-            "  pic in <port>            - Read IO port (Hex)\n"
-            "  pic out <port> <data>    - Write IO port (Hex)\n"
-            "  pic ldir <addr> <hex>    - Write block of data\n"
+            "  pic read <addr>          - Queue memory read (Hex)\n"
+            "  pic write <addr> <data>  - Queue memory write (Hex)\n"
+            "  pic in <port>            - Queue IO read (Hex)\n"
+            "  pic out <port> <data>    - Queue IO write (Hex)\n"
+            "  pic status               - Check status of queued command\n"
+            "  pic step [count]         - Step the clock and check status\n"
             "  pic snapshot             - Capture full bus state\n"
             "  pic ghost <1|0>          - Enable/Disable bus driving\n"
-            "  pic step [count]         - Single-step the clock (Decimal)\n"
             "  pic clk_start            - Start 1kHz background clock\n"
             "  pic clk_stop             - Stop background clock\n"
             "  pic boot                 - Perform Z80/CPLD Boot Sequence"
         )
 
-    def _do_ghost(self, args):
-        if len(args) == 2:
-            enable = args[1] == "1"
-            res = self._set_ghost_mode(enable)
-            if res is True: return f"OK GHOST {'ENABLE' if enable else 'DISABLE'}"
-            if res == "NACK": return "ERR PIC_NACK"
-            return "ERR PIC_TIMEOUT"
-        return "ERR SYNTAX_PIC_GHOST_1|0"
-
     def _do_read(self, args):
+        if self.pending_cmd_type is not None: return "ERR BUSY_FINISH_PENDING_CMD_FIRST"
         if len(args) == 2:
             try:
                 addr = int(args[1], 16)
-                res = self._mem_read(addr)
-                if isinstance(res, int): return f"OK {res:02X}"
+                res = self._submit_command(CMD_LD, addr)
+                if res == RESP_QUEUED:
+                    self.pending_cmd_type = "READ"
+                    return "OK QUEUED"
                 if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
@@ -192,42 +153,30 @@ class PIC18Link:
         return "ERR SYNTAX_PIC_READ_<HEX_ADDR>"
 
     def _do_write(self, args):
+        if self.pending_cmd_type is not None: return "ERR BUSY_FINISH_PENDING_CMD_FIRST"
         if len(args) == 3:
             try:
                 addr = int(args[1], 16)
                 data = int(args[2], 16)
-                res = self._mem_write(addr, data)
-                if res is True: return "OK"
+                res = self._submit_command(CMD_STORE, addr, data)
+                if res == RESP_QUEUED:
+                    self.pending_cmd_type = "WRITE"
+                    return "OK QUEUED"
                 if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ARGS_MUST_BE_HEX"
         return "ERR SYNTAX_PIC_WRITE_<HEX_ADDR>_<HEX_DATA>"
 
-    def _do_ldir(self, args):
-        if len(args) == 3:
-            try:
-                addr = int(args[1], 16)
-                data_hex = args[2]
-                if len(data_hex) % 2 != 0:
-                    return "ERR LDIR_DATA_MUST_BE_EVEN_LENGTH"
-                data_bytes = bytes.fromhex(data_hex)
-                if len(data_bytes) > 255:
-                    return "ERR LDIR_MAX_255_BYTES"
-                res = self._mem_ldir(addr, data_bytes)
-                if res is True: return "OK"
-                if res == "NACK": return "ERR PIC_NACK"
-                return "ERR PIC_TIMEOUT"
-            except ValueError:
-                return "ERR ARGS_MUST_BE_HEX"
-        return "ERR SYNTAX_PIC_LDIR_<HEX_ADDR>_<HEX_DATA_STRING>"
-
     def _do_in(self, args):
+        if self.pending_cmd_type is not None: return "ERR BUSY_FINISH_PENDING_CMD_FIRST"
         if len(args) == 2:
             try:
                 port = int(args[1], 16)
-                res = self._io_read(port)
-                if isinstance(res, int): return f"OK {res:02X}"
+                res = self._submit_command(CMD_IN, port)
+                if res == RESP_QUEUED:
+                    self.pending_cmd_type = "IN"
+                    return "OK QUEUED"
                 if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
@@ -235,17 +184,23 @@ class PIC18Link:
         return "ERR SYNTAX_PIC_IN_<HEX_PORT>"
 
     def _do_out(self, args):
+        if self.pending_cmd_type is not None: return "ERR BUSY_FINISH_PENDING_CMD_FIRST"
         if len(args) == 3:
             try:
                 port = int(args[1], 16)
                 data = int(args[2], 16)
-                res = self._io_write(port, data)
-                if res is True: return "OK"
+                res = self._submit_command(CMD_OUT, port, data)
+                if res == RESP_QUEUED:
+                    self.pending_cmd_type = "OUT"
+                    return "OK QUEUED"
                 if res == "NACK": return "ERR PIC_NACK"
                 return "ERR PIC_TIMEOUT"
             except ValueError:
                 return "ERR ARGS_MUST_BE_HEX"
         return "ERR SYNTAX_PIC_OUT_<HEX_PORT>_<HEX_DATA>"
+
+    def _do_status(self, args):
+        return self._poll_action(CMD_STATUS)
 
     def _do_step(self, args):
         count = 1
@@ -255,35 +210,57 @@ class PIC18Link:
             except ValueError:
                 return "ERR COUNT_MUST_BE_INT"
 
-        res = self._step_clock(count)
-        if res is True: return "OK"
-        if res == "NACK": return "ERR PIC_NACK"
-        return "ERR PIC_TIMEOUT"
+        # Scale the timeout based on how many steps we requested
+        return self._poll_action(CMD_STEP, param=count, timeout_ms=100 + (count * 2))
 
-    def _do_snapshot(self, args):
-        # res = self._bus_snapshot()
-        # if isinstance(res, bytearray):
-        #     hex_str = "".join([f"{b:02X}" for b in res])
-        #     return f"OK {hex_str}"
-        # if res == "NACK": return "ERR PIC_NACK"
-        return "ERR NOT_SUPPORTED"
+    # --- Immediate / Sync Commands ---
+
+    def _do_ghost(self, args):
+        if len(args) == 2:
+            enable = args[1] == "1"
+            param = 1 if enable else 0
+            res = self._submit_command(CMD_GHOST, param=param)
+            if res == SYNC_OK: return f"OK GHOST {'ENABLE' if enable else 'DISABLE'}"
+            if res == "NACK": return "ERR PIC_NACK"
+            return "ERR PIC_TIMEOUT"
+        return "ERR SYNTAX_PIC_GHOST_1|0"
 
     def _do_clk_start(self, args):
-        res = self._start_clock()
-        if res is True: return "OK"
+        res = self._submit_command(CMD_CLK_AUTO_START)
+        if res == SYNC_OK: return "OK"
         if res == "NACK": return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
 
     def _do_clk_stop(self, args):
-        res = self._stop_clock()
-        if res is True: return "OK"
+        res = self._submit_command(CMD_CLK_AUTO_STOP)
+        if res == SYNC_OK: return "OK"
         if res == "NACK": return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
 
     def _do_boot(self, args):
-        res = self._boot_sequence()
-        if res is True: return "OK"
+        res = self._submit_command(CMD_BOOT, timeout_ms=200)  # Give boot extra time
+        if res == SYNC_OK: return "OK"
         if res == "NACK": return "ERR PIC_NACK"
+        return "ERR PIC_TIMEOUT"
+
+    def _do_snapshot(self, args):
+        # Snapshot behaves differently as it dumps a raw stream of bytes
+        self._send_packet(CMD_SNAPSHOT)
+        t0 = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), t0) < 50:
+            if self.uart.any():
+                resp = self.uart.read(1)[0]
+                if resp == SYNC_OK:
+                    data = bytearray()
+                    t1 = time.ticks_ms()
+                    while time.ticks_diff(time.ticks_ms(), t1) < 50:
+                        if self.uart.any():
+                            data.extend(self.uart.read(self.uart.any()))
+                            t1 = time.ticks_ms()
+                    hex_str = "".join([f"{b:02X}" for b in data])
+                    return f"OK {hex_str}"
+                elif resp == SYNC_NACK:
+                    return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
 
     # ==========================================

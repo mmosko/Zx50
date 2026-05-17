@@ -271,7 +271,7 @@ class Zx50Console:
             self._send_response(f"ERR SCRIPT_EXCEPTION: {e}", is_tcp)
 
     def do_idn(self, args, is_tcp):
-        self._send_response("OK Zx50_PROBE_REVA", is_tcp)
+        self._send_response(f"OK Zx50_PROBE_REVA1 firmware {APP_VERSION} TCP {self.pico_ip}:{TCP_PORT}", is_tcp)
 
     def do_pic(self, args, is_tcp):
         if not args:
