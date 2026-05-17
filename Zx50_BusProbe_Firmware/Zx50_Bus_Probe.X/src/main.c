@@ -80,7 +80,8 @@ static inline void Process_Hardware_Inputs(uint8_t *debounced_aux, uint16_t *deb
             *debounced_aux = raw_aux;
             *debounce_counter = 0; 
             
-            if (!is_auto_clock) {
+            // FIX: Only trigger on the falling edge (button press, assuming active-low 0)
+            if (*debounced_aux == 0 && !is_auto_clock) {
                 CQ_Dispatch_Cycle();
             }
         }

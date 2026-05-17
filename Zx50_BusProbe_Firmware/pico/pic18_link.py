@@ -134,7 +134,8 @@ class PIC18Link:
             "  pic ghost <1|0>          - Enable/Disable bus driving\n"
             "  pic clk_start            - Start 1kHz background clock\n"
             "  pic clk_stop             - Stop background clock\n"
-            "  pic boot                 - Perform Z80/CPLD Boot Sequence"
+            "  pic boot                 - Perform Z80/CPLD Boot Sequence\n"
+            "  pic clear                - Clear the local state machine\n"
         )
 
     def _do_read(self, args):
@@ -262,6 +263,17 @@ class PIC18Link:
                 elif resp == SYNC_NACK:
                     return "ERR PIC_NACK"
         return "ERR PIC_TIMEOUT"
+
+    def _do_clear(self, args):
+        """Clears the Pico's local queue tracking in case of desync or PIC reboot."""
+        self.pending_cmd_type = None
+
+        # Optionally flush the UART RX buffer to clear any garbage
+        # that accumulated while the PIC was restarting
+        while self.uart.any():
+            self.uart.read()
+
+        return "OK LOCAL_STATE_RESET"
 
     # ==========================================
     # PUBLIC API
