@@ -46,6 +46,13 @@
 #define CMD_ACK            0x5A
 #define CMD_NACK           0x5B
 
+// ==========================================
+// Debounce Tuning
+// ==========================================
+// At 32MHz (8 MIPS), the main loop executes roughly ~150,000 times per second 
+// when idle. 2500 loops = roughly ~15ms of required stability.
+// Increase this if the switch still double-steps.
+#define DEBOUNCE_THRESHOLD 2500 
 
 /*
  * RETURN
@@ -94,20 +101,35 @@ void main(void) {
 
     // --- Track AUTO mode and AUX pin state ---
     uint8_t is_auto_clock = 0;
-    uint8_t last_aux = AUX_PIN_VAL;
+    
+    uint8_t debounced_aux = AUX_PIN_VAL;
+    uint16_t debounce_counter = 0;
 
     while(1) {
         
-        // --- Check for AUX toggle to step clock ---
-        uint8_t current_aux = AUX_PIN_VAL;
-        if (current_aux != last_aux) {
-            last_aux = current_aux;
+        // --- Non-Blocking Hardware Debounce ---
+        uint8_t raw_aux = AUX_PIN_VAL;
+        
+        if (raw_aux != debounced_aux) {
+            // The pin has changed. Start counting consecutive stable loops.
+            debounce_counter++;
             
-            // If auto clock is off, dispatch exactly one cycle per edge
-            if (!is_auto_clock) {
-                CQ_Dispatch_Cycle();
+            if (debounce_counter > DEBOUNCE_THRESHOLD) {
+                // Pin has been stable long enough! Accept the new state.
+                debounced_aux = raw_aux;
+                debounce_counter = 0; // Reset for the next transition
+                
+                // If auto clock is off, dispatch exactly one cycle per settled edge
+                if (!is_auto_clock) {
+                    CQ_Dispatch_Cycle();
+                }
             }
+        } else {
+            // If the pin bounces back to the old state before hitting the 
+            // threshold, reset the counter. It was just noise/bounce!
+            debounce_counter = 0; 
         }
+
 
         if (pending_cmd != NULL && pending_cmd->status == STAT_DONE) {
             UART_Write(CMD_ACK);     
