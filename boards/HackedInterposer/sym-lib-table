@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 0)
+  (lib (name "HackedInterposer-eagle-import")(type "KiCad")(uri "${KIPRJMOD}/HackedInterposer-eagle-import.kicad_sym")(options "")(descr ""))
+)

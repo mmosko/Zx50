@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 1.0,
-          "height": 1.2,
-          "width": 2.5
+          "drill": 0.8,
+          "height": 1.27,
+          "width": 2.54
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -187,7 +187,10 @@
         }
       ],
       "track_widths": [
-        0.0
+        0.0,
+        0.2032,
+        0.4064,
+        0.8128
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -443,7 +446,7 @@
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
       "pin_not_driven": "error",
-      "pin_to_pin": "error",
+      "pin_to_pin": "warning",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
       "similar_label_and_power": "warning",
@@ -460,13 +463,11 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [
-      "zx50_footprints"
-    ],
+    "pinned_footprint_libs": [],
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Zx50_Backplane_RevD.kicad_pro",
+    "filename": "Zx50_SwitchInterposer.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -484,63 +485,10 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.254,
-        "via_diameter": 0.762,
-        "via_drill": 0.3048,
+        "track_width": 0.2,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
         "wire_width": 6
-      },
-      {
-        "name": "ADDRESS",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 4,
-        "schematic_color": "rgb(255, 153, 0)",
-        "track_width": 0.254
-      },
-      {
-        "name": "CLOCK",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.3048
-      },
-      {
-        "name": "DATA",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 3,
-        "schematic_color": "rgb(255, 0, 255)",
-        "track_width": 0.254
-      },
-      {
-        "name": "GPIO",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgb(194, 194, 0)",
-        "track_width": 0.254
-      },
-      {
-        "name": "PWR-5V",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 6,
-        "schematic_color": "rgb(255, 0, 0)",
-        "track_width": 0.508,
-        "via_diameter": 0.762,
-        "via_drill": 0.4064
-      },
-      {
-        "name": "PWR-GND",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 5,
-        "schematic_color": "rgb(0, 0, 255)",
-        "track_width": 0.508,
-        "via_diameter": 0.762,
-        "via_drill": 0.3048
-      },
-      {
-        "name": "SHADOW",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 2,
-        "schematic_color": "rgb(0, 194, 194)",
-        "track_width": 0.254
       }
     ],
     "meta": {
@@ -548,46 +496,13 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "PWR-5V",
-        "pattern": "+5V"
-      },
-      {
-        "netclass": "PWR-GND",
-        "pattern": "GND"
-      },
-      {
-        "netclass": "ADDRESS",
-        "pattern": "/A*"
-      },
-      {
-        "netclass": "DATA",
-        "pattern": "/D?"
-      },
-      {
-        "netclass": "SHADOW",
-        "pattern": "/S*"
-      },
-      {
-        "netclass": "GPIO",
-        "pattern": "/GPIO*"
-      },
-      {
-        "netclass": "GPIO",
-        "pattern": "/AUX"
-      },
-      {
-        "netclass": "CLOCK",
-        "pattern": "*CLK"
-      }
-    ]
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {
       "gencad": "",
       "idf": "",
-      "netlist": "../power_supply.net",
+      "netlist": "",
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
@@ -633,24 +548,6 @@
           "show": true
         },
         {
-          "group_by": false,
-          "label": "LCSC",
-          "name": "LCSC",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "DigiKey_PN",
-          "name": "DigiKey_PN",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "SKU",
-          "name": "SKU",
-          "show": true
-        },
-        {
           "group_by": true,
           "label": "DNP",
           "name": "${DNP}",
@@ -679,30 +576,12 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
-        },
-        {
-          "group_by": false,
-          "label": "Sim.Pins",
-          "name": "Sim.Pins",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Description",
-          "name": "Description",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "#",
-          "name": "${ITEM_NUMBER}",
-          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "",
+      "name": "Default Editing",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -748,7 +627,7 @@
   },
   "sheets": [
     [
-      "a9be8ac1-8185-41b8-90b4-fd7f7c839ff9",
+      "b69eac25-dbb5-442e-b71b-7cd183f2caa2",
       "Root"
     ]
   ],

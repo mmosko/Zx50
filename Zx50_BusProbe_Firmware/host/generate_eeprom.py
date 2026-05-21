@@ -1,6 +1,11 @@
 # generate_eeprom_bin.py
 
 # Creates a test pattern for an EEPROM to validate memory reads on the card.
+#
+# Use a command like:
+# ```bash
+# minipro -p SST39SF040 -w eeprom_zeros.bin
+# ```
 
 EEPROM_SIZE = 512 * 1024  # 512 KB
 

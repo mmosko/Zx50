@@ -2952,430 +2952,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:C_Network04"
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "CN"
-				(at -0.508 -5.334 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "C_Network04"
-				(at -5.08 -6.858 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-				(at 7.112 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 2.54 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "C network star-topology"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "C*Array* SIP*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "C_Network04_0_1"
-				(polyline
-					(pts
-						(xy -1.778 5.08) (xy 0.3556 5.08)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 2.54) (xy 0.3556 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 0) (xy 0.3556 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 -2.54) (xy 0.3556 -2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 6.604)
-					(end 2.54 -4.064)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 5.08) (xy 1.1684 5.08)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 2.54) (xy 1.1684 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 0) (xy 1.1684 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -2.54) (xy 1.1684 -2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "C_Network04_1_1"
-				(polyline
-					(pts
-						(xy 0.3556 6.096) (xy 0.3556 4.064)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.3556 3.556) (xy 0.3556 1.524)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.3556 1.016) (xy 0.3556 -1.016)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.3556 -1.524) (xy 0.3556 -3.556)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.1684 6.096) (xy 1.1684 4.064)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.1684 3.556) (xy 1.1684 1.524)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.1684 1.016) (xy 1.1684 -1.016)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.1684 -1.524) (xy 1.1684 -3.556)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -3.81 5.08 0)
-					(length 2.54)
-					(name "common"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -3.81 2.54 0)
-					(length 2.54)
-					(name "common"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -3.81 0 0)
-					(length 2.54)
-					(name "common"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -3.81 -2.54 0)
-					(length 2.54)
-					(name "common"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 5.08 180)
-					(length 2.54)
-					(name "C1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 2.54 180)
-					(length 2.54)
-					(name "C2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 2.54)
-					(name "C3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 -2.54 180)
-					(length 2.54)
-					(name "C4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Device:C_Polarized_US"
 			(pin_numbers
 				(hide yes)
@@ -4288,660 +3864,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R_Pack08"
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "RN"
-				(at -12.7 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "R_Pack08"
-				(at 10.16 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 12.065 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "8 resistor network, parallel topology"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "R network parallel topology isolated"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "DIP* SOIC* R*Array*Concave* R*Array*Convex*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "R_Pack08_0_1"
-				(rectangle
-					(start -11.43 -2.413)
-					(end 8.89 2.413)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(rectangle
-					(start -10.795 1.905)
-					(end -9.525 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -10.16 1.905) (xy -10.16 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -10.16 -2.54) (xy -10.16 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -8.255 1.905)
-					(end -6.985 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -7.62 1.905) (xy -7.62 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -7.62 -2.54) (xy -7.62 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -5.715 1.905)
-					(end -4.445 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -5.08 1.905) (xy -5.08 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -5.08 -2.54) (xy -5.08 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -3.175 1.905)
-					(end -1.905 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 1.905) (xy -2.54 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 -2.54) (xy -2.54 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -0.635 1.905)
-					(end 0.635 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 1.905) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -2.54) (xy 0 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start 1.905 1.905)
-					(end 3.175 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 1.905) (xy 2.54 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -2.54) (xy 2.54 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start 4.445 1.905)
-					(end 5.715 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 5.08 1.905) (xy 5.08 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 5.08 -2.54) (xy 5.08 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start 6.985 1.905)
-					(end 8.255 -1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 7.62 1.905) (xy 7.62 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 7.62 -2.54) (xy 7.62 -1.905)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "R_Pack08_1_1"
-				(pin passive line
-					(at -10.16 5.08 270)
-					(length 2.54)
-					(name "R1.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -10.16 -5.08 90)
-					(length 2.54)
-					(name "R1.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -7.62 5.08 270)
-					(length 2.54)
-					(name "R2.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -7.62 -5.08 90)
-					(length 2.54)
-					(name "R2.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 5.08 270)
-					(length 2.54)
-					(name "R3.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -5.08 90)
-					(length 2.54)
-					(name "R3.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 5.08 270)
-					(length 2.54)
-					(name "R4.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -2.54 -5.08 90)
-					(length 2.54)
-					(name "R4.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 5.08 270)
-					(length 2.54)
-					(name "R5.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 90)
-					(length 2.54)
-					(name "R5.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 5.08 270)
-					(length 2.54)
-					(name "R6.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 -5.08 90)
-					(length 2.54)
-					(name "R6.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 5.08 270)
-					(length 2.54)
-					(name "R7.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 -5.08 90)
-					(length 2.54)
-					(name "R7.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 7.62 5.08 270)
-					(length 2.54)
-					(name "R8.2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 7.62 -5.08 90)
-					(length 2.54)
-					(name "R8.1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Mechanical:MountingHole"
 			(pin_names
 				(offset 1.016)
@@ -5347,6 +4269,1592 @@
 					)
 					(fill
 						(type none)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zx50_symbols:CN_47pf_1206x4"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "CN"
+				(at 0 -7.112 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify right)
+				)
+			)
+			(property "Value" "CN_47pf_1206x4"
+				(at 5.588 -9.906 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify right)
+				)
+			)
+			(property "Footprint" ""
+				(at 7.112 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at -1.27 1.27 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C22446551"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "SKU" "CA0612JRNPO9BN470"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "C network star-topology"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C*Array* SIP*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "CN_47pf_1206x4_0_1"
+				(polyline
+					(pts
+						(xy -3.048 5.08) (xy -0.9144 5.08)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.048 2.54) (xy -0.9144 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.048 0) (xy -0.9144 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.048 -2.54) (xy -0.9144 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -2.54 6.604)
+					(end 1.27 -4.064)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 5.08) (xy -0.1016 5.08)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 2.54) (xy -0.1016 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 0) (xy -0.1016 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -2.54) (xy -0.1016 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "CN_47pf_1206x4_1_1"
+				(polyline
+					(pts
+						(xy -0.9144 6.096) (xy -0.9144 4.064)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.9144 3.556) (xy -0.9144 1.524)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.9144 1.016) (xy -0.9144 -1.016)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.9144 -1.524) (xy -0.9144 -3.556)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.1016 6.096) (xy -0.1016 4.064)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.1016 3.556) (xy -0.1016 1.524)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.1016 1.016) (xy -0.1016 -1.016)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.1016 -1.524) (xy -0.1016 -3.556)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 5.08 0)
+					(length 2.54)
+					(name "common"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 2.54)
+					(name "common"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "common"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 2.54)
+					(name "common"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 5.08 180)
+					(length 2.54)
+					(name "C1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 2.54 180)
+					(length 2.54)
+					(name "C2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "C3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 -2.54 180)
+					(length 2.54)
+					(name "C4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zx50_symbols:C_100nF_0805"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "100nF"
+				(at 0.635 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+				(at 0.9652 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C28233"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "SKU" "CL21B104KCFNNNE"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_100nF_0805_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_100nF_0805_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zx50_symbols:C_47pF_0805"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C?"
+				(at 1.524 -8.128 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "47pF"
+				(at -1.016 -8.128 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+				(at 0.9652 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "47pF 50V C0G ±5% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "DigiKey_PN" ""
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "SKU" "CL21C470JBANNNC"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C14857"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_47pF_0805_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_47pF_0805_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zx50_symbols:RN_100R_SOIC16"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "RN"
+				(at 1.27 11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "100R"
+				(at 1.27 -11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
+				(at 12.065 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 1.27 -1.27 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C1358123"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "SKU" "4816P-T01-101LF"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R network parallel topology isolated"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "DIP* SOIC* R*Array*Concave* R*Array*Convex*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "RN_100R_SOIC16_0_1"
+				(polyline
+					(pts
+						(xy -1.27 8.89) (xy -0.635 8.89)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 6.35) (xy -0.635 6.35)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 3.81) (xy -0.635 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 1.27) (xy -0.635 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -1.27) (xy -0.635 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -3.81) (xy -0.635 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -6.35) (xy -0.635 -6.35)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -8.89) (xy -0.635 -8.89)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.143 10.16)
+					(end 3.683 -10.16)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(rectangle
+					(start 3.175 9.525)
+					(end -0.635 8.255)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 8.89) (xy 3.81 8.89)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 6.985)
+					(end -0.635 5.715)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 6.35) (xy 3.81 6.35)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 4.445)
+					(end -0.635 3.175)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 3.81) (xy 3.81 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 1.905)
+					(end -0.635 0.635)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 1.27) (xy 3.81 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 -0.635)
+					(end -0.635 -1.905)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 -1.27) (xy 3.81 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 -3.175)
+					(end -0.635 -4.445)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 -3.81) (xy 3.81 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 -5.715)
+					(end -0.635 -6.985)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 -6.35) (xy 3.81 -6.35)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 3.175 -8.255)
+					(end -0.635 -9.525)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.175 -8.89) (xy 3.81 -8.89)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "RN_100R_SOIC16_1_1"
+				(pin passive line
+					(at -3.81 8.89 0)
+					(length 2.54)
+					(name "R1.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 6.35 0)
+					(length 2.54)
+					(name "R2.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 3.81 0)
+					(length 2.54)
+					(name "R3.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 1.27 0)
+					(length 2.54)
+					(name "R4.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 -1.27 0)
+					(length 2.54)
+					(name "R5.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 -3.81 0)
+					(length 2.54)
+					(name "R6.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 -6.35 0)
+					(length 2.54)
+					(name "R7.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -3.81 -8.89 0)
+					(length 2.54)
+					(name "R8.1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 8.89 180)
+					(length 2.54)
+					(name "R1.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 6.35 180)
+					(length 2.54)
+					(name "R2.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 3.81 180)
+					(length 2.54)
+					(name "R3.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 1.27 180)
+					(length 2.54)
+					(name "R4.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 -1.27 180)
+					(length 2.54)
+					(name "R5.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 -3.81 180)
+					(length 2.54)
+					(name "R6.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 -6.35 180)
+					(length 2.54)
+					(name "R7.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 6.35 -8.89 180)
+					(length 2.54)
+					(name "R8.2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "zx50_symbols:R_100R_100mW_0805"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "100R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "SKU" "0805W8F1000T5E"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C17408"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 0.9906 0.9906)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_100R_100mW_0805_0_1"
+				(rectangle
+					(start -1.016 2.54)
+					(end 1.016 -2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_100R_100mW_0805_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
 					)
 				)
 			)
@@ -13425,6 +13933,16 @@
 	)
 	(wire
 		(pts
+			(xy 138.43 229.87) (xy 147.32 229.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a6dd278-91e3-4498-a876-e812237aaada")
+	)
+	(wire
+		(pts
 			(xy 138.43 201.93) (xy 147.32 201.93)
 		)
 		(stroke
@@ -15452,6 +15970,16 @@
 			(type default)
 		)
 		(uuid "2a429ac6-2788-4850-8618-1bd58b22f1da")
+	)
+	(wire
+		(pts
+			(xy 120.65 227.33) (xy 128.27 227.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2a434545-019b-4edf-b03f-d657dda00e68")
 	)
 	(wire
 		(pts
@@ -20735,16 +21263,6 @@
 	)
 	(wire
 		(pts
-			(xy 138.43 219.71) (xy 143.51 219.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6edb8ff4-dcee-43a7-946c-9e0ddbeab055")
-	)
-	(wire
-		(pts
 			(xy 132.08 120.65) (xy 140.97 120.65)
 		)
 		(stroke
@@ -21012,6 +21530,16 @@
 			(type default)
 		)
 		(uuid "7289fe35-0cb7-44c3-8194-7f6537362327")
+	)
+	(wire
+		(pts
+			(xy 54.61 201.93) (xy 58.42 201.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "73160615-9260-4fcb-a6c3-f7bf8fc5383a")
 	)
 	(wire
 		(pts
@@ -22955,6 +23483,16 @@
 	)
 	(wire
 		(pts
+			(xy 138.43 219.71) (xy 143.51 219.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8b9fef4d-fb06-4ad5-a74b-bc4e9d930952")
+	)
+	(wire
+		(pts
 			(xy 322.58 194.31) (xy 314.96 194.31)
 		)
 		(stroke
@@ -23662,16 +24200,6 @@
 			(type default)
 		)
 		(uuid "953017e6-3c35-4478-b648-7160edf1bdf0")
-	)
-	(wire
-		(pts
-			(xy 128.27 227.33) (xy 120.65 227.33)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "953b91d6-ed9c-4dcb-b4c2-f87741ce98e6")
 	)
 	(bus
 		(pts
@@ -28393,16 +28921,6 @@
 		)
 		(uuid "d6569df9-5229-4e9d-8b37-61eb58c4b004")
 	)
-	(wire
-		(pts
-			(xy 138.43 229.87) (xy 147.32 229.87)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d677b272-53e0-4c3f-b060-8e2c86a0d8cd")
-	)
 	(bus
 		(pts
 			(xy 143.51 80.01) (xy 143.51 82.55)
@@ -30722,16 +31240,6 @@
 			(type default)
 		)
 		(uuid "f1ecfc44-3b5b-4025-bba0-047064ec052a")
-	)
-	(wire
-		(pts
-			(xy 54.61 201.93) (xy 58.42 201.93)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f1f0474a-741a-4bd1-ae94-15a966c8a5b0")
 	)
 	(wire
 		(pts
@@ -34533,7 +35041,7 @@
 		)
 		(uuid "674b6f2a-440e-489e-a781-2c9ec3164d98")
 	)
-	(label "{SHADOW}"
+	(label "{SHADOW, CTRL}"
 		(at 220.98 173.99 0)
 		(effects
 			(font
@@ -38920,7 +39428,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 29.21 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -38944,7 +39452,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 33.02 134.9248 0)
 			(effects
 				(font
@@ -38962,7 +39470,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 29.21 135.89 0)
 			(effects
 				(font
@@ -38980,20 +39488,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 29.21 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 29.21 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 29.21 135.89 90)
+		(property "LCSC" "C28233"
+			(at 29.21 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -39014,7 +39522,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "zx50_symbols:R_100R_100mW_0805")
 		(at 386.08 76.2 90)
 		(mirror x)
 		(unit 1)
@@ -39033,16 +39541,15 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "100"
-			(at 387.858 76.2 90)
+		(property "Value" "100R"
+			(at 386.08 76.2 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 386.08 74.422 90)
 			(effects
 				(font
@@ -39060,7 +39567,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
+		(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
 			(at 386.08 76.2 0)
 			(effects
 				(font
@@ -39078,20 +39585,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "RC0805FR-07100RL"
+		(property "SKU" "0805W8F1000T5E"
 			(at 386.08 76.2 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C105577"
+		(property "LCSC" "C17408"
 			(at 386.08 76.2 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -39112,7 +39619,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 111.76 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -39136,7 +39643,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 115.57 134.9248 0)
 			(effects
 				(font
@@ -39154,7 +39661,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 111.76 135.89 0)
 			(effects
 				(font
@@ -39172,20 +39679,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 111.76 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 111.76 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 111.76 135.89 90)
+		(property "LCSC" "C28233"
+			(at 111.76 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -39321,7 +39828,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 154.94 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -39345,7 +39852,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 158.75 134.9248 0)
 			(effects
 				(font
@@ -39363,7 +39870,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 154.94 135.89 0)
 			(effects
 				(font
@@ -39381,20 +39888,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 154.94 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 154.94 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 154.94 135.89 90)
+		(property "LCSC" "C28233"
+			(at 154.94 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -39487,7 +39994,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "16d683cd-6ed2-4ae6-86f6-5d66deb6db05")
 		(property "Reference" "C1"
@@ -39690,7 +40197,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "1afd8e1e-661a-499a-a4e7-ce0defe57743")
 		(property "Reference" "H3"
@@ -39766,7 +40273,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "zx50_symbols:R_100R_100mW_0805")
 		(at 171.45 261.62 90)
 		(mirror x)
 		(unit 1)
@@ -39784,16 +40291,15 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100"
-			(at 173.228 261.62 90)
+		(property "Value" "100R"
+			(at 171.45 261.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 171.45 259.842 90)
 			(effects
 				(font
@@ -39811,7 +40317,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
+		(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
 			(at 171.45 261.62 0)
 			(effects
 				(font
@@ -39829,20 +40335,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "RC0805FR-07100RL"
+		(property "SKU" "0805W8F1000T5E"
 			(at 171.45 261.62 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C105577"
-			(at 171.45 261.62 90)
+		(property "LCSC" "C17408"
+			(at 171.45 261.62 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -39867,9 +40373,9 @@
 		(at 166.37 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "21a3fe5e-ca33-4f18-a2cf-ba376013dfd9")
 		(property "Reference" "J4"
@@ -40249,6 +40755,119 @@
 		)
 	)
 	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 248.92 184.15 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "254049ed-2ef4-4f48-b833-ccbe4da23201")
+		(property "Reference" "CN3"
+			(at 261.874 185.928 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 261.874 183.388 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 256.032 184.15 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 247.65 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 248.92 184.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 248.92 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 248.92 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 248.92 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "b55f75a4-d763-4085-91bb-f375ef5f844a")
+		)
+		(pin "5"
+			(uuid "36cd9431-5047-4f59-833e-5b670d104604")
+		)
+		(pin "6"
+			(uuid "45730173-9e76-43ac-8fb6-e7dcbe451bc0")
+		)
+		(pin "2"
+			(uuid "0daf3b23-514d-4144-808c-57b6dfe30c71")
+		)
+		(pin "1"
+			(uuid "926e602f-6dcf-44f2-8036-c3918fc8edc4")
+		)
+		(pin "8"
+			(uuid "e364e09d-652b-404d-bb24-60fae7bc2af6")
+		)
+		(pin "4"
+			(uuid "37af77a7-318b-4a23-aacf-7cb9a87c527b")
+		)
+		(pin "3"
+			(uuid "a801ec2a-f6b4-453e-b743-c423f0d84fe8")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 17.78 157.48 0)
 		(unit 1)
@@ -40314,7 +40933,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_47pF_0805")
 		(at 394.97 109.22 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -40330,7 +40949,7 @@
 				)
 			)
 		)
-		(property "Value" "100pF"
+		(property "Value" "47pF"
 			(at 403.098 110.236 90)
 			(effects
 				(font
@@ -40338,7 +40957,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 398.78 108.2548 0)
 			(effects
 				(font
@@ -40356,7 +40975,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "47pF 50V C0G ±5% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 394.97 109.22 0)
 			(effects
 				(font
@@ -40374,7 +40993,7 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C101J5GACTU"
+		(property "SKU" "CL21C470JBANNNC"
 			(at 394.97 109.22 90)
 			(effects
 				(font
@@ -40383,7 +41002,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2167185"
+		(property "LCSC" "C14857"
 			(at 394.97 109.22 90)
 			(effects
 				(font
@@ -40408,24 +41027,25 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 151.13 232.41 0)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 248.92 196.85 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "29967265-b177-4029-88fd-6f237748d502")
-		(property "Reference" "CN2"
-			(at 163.576 230.124 0)
+		(uuid "270fb0bf-a654-4543-b383-a66f1369f91f")
+		(property "Reference" "CN4"
+			(at 261.874 198.628 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100pF"
-			(at 164.338 232.664 0)
+		(property "Value" "47pF"
+			(at 261.874 196.088 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -40433,7 +41053,7 @@
 			)
 		)
 		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 158.242 232.41 90)
+			(at 256.032 196.85 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -40442,7 +41062,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 151.13 229.87 90)
+			(at 247.65 198.12 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -40450,8 +41070,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 151.13 232.41 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 248.92 196.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -40459,68 +41079,68 @@
 				(hide yes)
 			)
 		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 151.13 232.41 0)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 248.92 196.85 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 151.13 232.41 0)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 248.92 196.85 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1322399"
-			(at 151.13 232.41 0)
+		(property "LCSC" "C22446551"
+			(at 248.92 196.85 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
 		(pin "7"
-			(uuid "bbc5d845-2ba9-4645-92ee-4a9cc06888a5")
+			(uuid "23bb16a5-1729-4cf1-80e7-4fb42ae224fd")
 		)
 		(pin "5"
-			(uuid "699e3048-3647-480f-847f-75777ae76f3f")
+			(uuid "466a8ee1-60d0-4e47-8f34-d5880d195604")
 		)
 		(pin "6"
-			(uuid "fd2c8cf5-7e82-47c8-bed6-4019912f8ae6")
+			(uuid "dfc5df7f-9803-4011-af79-2aca3043bb3b")
 		)
 		(pin "2"
-			(uuid "2bb0837b-f9c5-4be6-a394-da553ae160ed")
+			(uuid "8c5ea5ea-b5ac-4e57-a717-e3a89b14d1df")
 		)
 		(pin "1"
-			(uuid "fbd931b1-d2b9-4101-93b0-64f8cd517c97")
+			(uuid "bd8d35e0-4948-4354-8d6c-2ac099efd17f")
 		)
 		(pin "8"
-			(uuid "6de0016b-739b-4058-a6db-8d21b323023e")
+			(uuid "a9db4561-b0e2-489d-8b52-b8b4c238f0fa")
 		)
 		(pin "4"
-			(uuid "2342542d-f86a-432c-b7d7-19cfc1d4d408")
+			(uuid "ac84bff4-919b-43d7-8661-9f38d74a83fe")
 		)
 		(pin "3"
-			(uuid "396fca9c-a0f8-4ca7-80e0-f9e42529168f")
+			(uuid "83fd6905-4208-4153-8215-8a92a1ea413d")
 		)
 		(instances
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN2")
+					(reference "CN4")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 196.85 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -40544,7 +41164,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 200.66 134.9248 0)
 			(effects
 				(font
@@ -40562,7 +41182,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 196.85 135.89 0)
 			(effects
 				(font
@@ -40580,20 +41200,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 196.85 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 196.85 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 196.85 135.89 90)
+		(property "LCSC" "C28233"
+			(at 196.85 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -40614,126 +41234,13 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 247.65 196.85 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2d39c0c6-a463-4ca4-b1c7-7fefb72211a6")
-		(property "Reference" "CN4"
-			(at 260.35 198.882 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 260.858 196.596 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 254.762 196.85 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 247.65 199.39 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 247.65 196.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 247.65 196.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 247.65 196.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 247.65 196.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "bbfa9e1c-317f-45f4-bba1-ce62e72f8933")
-		)
-		(pin "5"
-			(uuid "25a15cff-59fc-449e-bc52-d07ed460196b")
-		)
-		(pin "6"
-			(uuid "621f58bd-82a2-4945-a8d5-ab1f664cae83")
-		)
-		(pin "2"
-			(uuid "0547c18d-968d-4918-bdd9-d978748eb99a")
-		)
-		(pin "1"
-			(uuid "bf721575-d1ee-4f9a-be64-d61cac36c1db")
-		)
-		(pin "8"
-			(uuid "6850e78e-6ec7-497c-a69e-dc5e821a457b")
-		)
-		(pin "4"
-			(uuid "84f01d3a-294b-4ff1-a800-3833258a6c7a")
-		)
-		(pin "3"
-			(uuid "c8438d3a-a7ec-4e5e-8759-073ff2e8ed65")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector_Generic:Conn_02x40_Odd_Even")
 		(at 208.28 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "2d964121-723a-4e87-9bd8-8dcb22ef5266")
 		(property "Reference" "J5"
@@ -41048,7 +41555,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_47pF_0805")
 		(at 394.97 130.81 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -41064,7 +41571,7 @@
 				)
 			)
 		)
-		(property "Value" "100pF"
+		(property "Value" "47pF"
 			(at 403.098 131.826 90)
 			(effects
 				(font
@@ -41072,7 +41579,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 398.78 129.8448 0)
 			(effects
 				(font
@@ -41090,7 +41597,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "47pF 50V C0G ±5% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 394.97 130.81 0)
 			(effects
 				(font
@@ -41108,7 +41615,7 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C101J5GACTU"
+		(property "SKU" "CL21C470JBANNNC"
 			(at 394.97 130.81 90)
 			(effects
 				(font
@@ -41117,7 +41624,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2167185"
+		(property "LCSC" "C14857"
 			(at 394.97 130.81 90)
 			(effects
 				(font
@@ -41148,7 +41655,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "3178c2a5-d13c-49fe-9c44-9c2bb4a0bc23")
 		(property "Reference" "J11"
 			(at 39.116 158.75 90)
@@ -41233,8 +41740,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 229.87 191.77 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 228.6 193.04 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -41243,7 +41750,7 @@
 		(dnp no)
 		(uuid "33006665-c39b-418a-abc3-87d6113d896d")
 		(property "Reference" "RN3"
-			(at 229.87 208.28 90)
+			(at 229.87 179.324 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41251,7 +41758,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 229.87 205.74 90)
+			(at 229.87 181.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41259,7 +41766,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 229.87 179.705 90)
+			(at 240.665 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41268,7 +41775,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 229.87 191.77 0)
+			(at 229.87 191.77 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41276,8 +41783,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 229.87 191.77 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 228.6 193.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41286,7 +41793,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 229.87 191.77 90)
+			(at 228.6 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -41294,20 +41801,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 229.87 191.77 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 228.6 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 229.87 191.77 90)
+		(property "LCSC" "C1358123"
+			(at 228.6 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -41537,9 +42044,9 @@
 		(at 292.1 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "35df27ed-2667-42bc-a418-bdc36e4f9228")
 		(property "Reference" "J7"
@@ -41854,7 +42361,120 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 346.71 217.17 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3a5bc40b-6f9e-4a8b-b7ed-0ddef7a618be")
+		(property "Reference" "CN11"
+			(at 359.664 218.948 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 359.664 216.408 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 353.822 217.17 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 345.44 218.44 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 346.71 217.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 346.71 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 346.71 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 346.71 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "1386a5ee-4f0c-48b3-a3d1-a5b4fa895579")
+		)
+		(pin "5"
+			(uuid "fb951864-6bc2-4953-94b5-05d5e770855e")
+		)
+		(pin "6"
+			(uuid "aa7db609-7df3-40dd-b59a-b3cb34e5df0b")
+		)
+		(pin "2"
+			(uuid "ab9bf844-cf4a-4115-a4ca-55921218a062")
+		)
+		(pin "1"
+			(uuid "fb3f2964-81c2-4a1c-9f8c-098b01db508f")
+		)
+		(pin "8"
+			(uuid "cf926953-2229-491a-a856-5c84c476fb36")
+		)
+		(pin "4"
+			(uuid "f42699a6-0dd4-4232-8b8e-96f480b95ceb")
+		)
+		(pin "3"
+			(uuid "7b87d1f0-c3b0-45b3-9e68-5af573bd8228")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:R_100R_100mW_0805")
 		(at 386.08 130.81 90)
 		(mirror x)
 		(unit 1)
@@ -41873,16 +42493,15 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "100"
-			(at 387.858 130.81 90)
+		(property "Value" "100R"
+			(at 386.08 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 386.08 129.032 90)
 			(effects
 				(font
@@ -41900,7 +42519,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
+		(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
 			(at 386.08 130.81 0)
 			(effects
 				(font
@@ -41918,20 +42537,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "RC0805FR-07100RL"
+		(property "SKU" "0805W8F1000T5E"
 			(at 386.08 130.81 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C105577"
+		(property "LCSC" "C17408"
 			(at 386.08 130.81 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -41946,119 +42565,6 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "R10")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 49.53 217.17 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "48435eed-fe9d-4964-bc6a-3887f9acf940")
-		(property "Reference" "CN15"
-			(at 62.484 218.948 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 62.484 216.408 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 56.642 217.17 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 49.53 219.71 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 49.53 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 49.53 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 49.53 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 49.53 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "26954024-489a-460c-b676-4a9892cd0120")
-		)
-		(pin "5"
-			(uuid "0cf3c9f8-e68e-4267-9c94-67a652b34999")
-		)
-		(pin "6"
-			(uuid "1e96d933-8657-4e94-88af-a96a2a9c782c")
-		)
-		(pin "2"
-			(uuid "44bfa149-5bc9-4f40-8b3e-f35ea35963d6")
-		)
-		(pin "1"
-			(uuid "aa35ba3a-96c4-4522-b4fc-92f565ed8c5b")
-		)
-		(pin "8"
-			(uuid "70ed70da-e8ef-4d0b-a210-9415163cd876")
-		)
-		(pin "4"
-			(uuid "50d36154-2abc-42ce-a4a3-da1bdaf0898a")
-		)
-		(pin "3"
-			(uuid "8e29739a-e632-4334-bbb0-6337ae2c7673")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN15")
 					(unit 1)
 				)
 			)
@@ -42124,6 +42630,118 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "#PWR06")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 152.4 232.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4a5bf144-f28c-47e8-a228-d89385264a2b")
+		(property "Reference" "CN2"
+			(at 165.354 230.632 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 165.354 233.172 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 159.512 232.41 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 151.13 231.14 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 152.4 232.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 152.4 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 152.4 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 152.4 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "1aa3e3eb-6ccd-48db-bbd5-51c82f0a2b03")
+		)
+		(pin "5"
+			(uuid "1e844af9-82b9-402e-9d52-e2400ccb116d")
+		)
+		(pin "6"
+			(uuid "05f089fa-0b87-4444-9d7a-7cb10c387ad9")
+		)
+		(pin "2"
+			(uuid "72ef46af-462e-4be9-8e98-7036770e5d6d")
+		)
+		(pin "1"
+			(uuid "ded11af3-e94d-4e31-85d9-7c61fa97be47")
+		)
+		(pin "8"
+			(uuid "dc796189-87c2-4af4-b590-82499999aa1f")
+		)
+		(pin "4"
+			(uuid "1b7a38e1-0f40-4007-9ed3-9fb6f45e4819")
+		)
+		(pin "3"
+			(uuid "5c545379-b832-4848-8133-3e070fa4e8b9")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN2")
 					(unit 1)
 				)
 			)
@@ -42251,7 +42869,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "4e0a5e36-680c-449f-99a6-2f9340385f9d")
 		(property "Reference" "H1"
@@ -42424,6 +43042,119 @@
 		)
 	)
 	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 346.71 229.87 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5310574a-162d-4085-bdb3-5811fa769084")
+		(property "Reference" "CN12"
+			(at 359.664 231.648 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 359.664 229.108 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 353.822 229.87 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 345.44 231.14 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 346.71 229.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 346.71 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 346.71 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 346.71 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "a27790da-532f-4cdd-b6e3-c00e0982deae")
+		)
+		(pin "5"
+			(uuid "66f1d604-2154-475c-8a3b-768516fcd1a9")
+		)
+		(pin "6"
+			(uuid "1d737543-fad3-4d97-b03a-4756130dd275")
+		)
+		(pin "2"
+			(uuid "27e2db1e-4760-428b-941e-095e56552688")
+		)
+		(pin "1"
+			(uuid "d8e182b8-5dd2-4515-a69a-e305bad6abf7")
+		)
+		(pin "8"
+			(uuid "324916aa-fcd7-459a-a462-ff94a1cbe0b4")
+		)
+		(pin "4"
+			(uuid "7ee6af23-f3dd-4ca2-93ed-514db34b31ae")
+		)
+		(pin "3"
+			(uuid "dc4c80f4-6a25-4444-b44f-d11b86b50f43")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN12")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R_Network08_US")
 		(at 289.56 194.31 270)
 		(unit 1)
@@ -42539,7 +43270,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_47pF_0805")
 		(at 394.97 76.2 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -42555,7 +43286,7 @@
 				)
 			)
 		)
-		(property "Value" "100pF"
+		(property "Value" "47pF"
 			(at 403.098 77.216 90)
 			(effects
 				(font
@@ -42563,7 +43294,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 398.78 75.2348 0)
 			(effects
 				(font
@@ -42581,7 +43312,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "47pF 50V C0G ±5% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 394.97 76.2 0)
 			(effects
 				(font
@@ -42599,7 +43330,7 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C101J5GACTU"
+		(property "SKU" "CL21C470JBANNNC"
 			(at 394.97 76.2 90)
 			(effects
 				(font
@@ -42608,7 +43339,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2167185"
+		(property "LCSC" "C14857"
 			(at 394.97 76.2 90)
 			(effects
 				(font
@@ -42633,7 +43364,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 322.58 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -42657,7 +43388,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 326.39 134.9248 0)
 			(effects
 				(font
@@ -42675,7 +43406,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 322.58 135.89 0)
 			(effects
 				(font
@@ -42693,20 +43424,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 322.58 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 322.58 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 322.58 135.89 90)
+		(property "LCSC" "C28233"
+			(at 322.58 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -42733,7 +43464,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "591a8216-9b7d-489e-90ca-18f837643f72")
 		(property "Reference" "H5"
@@ -42809,6 +43540,232 @@
 		)
 	)
 	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 50.8 229.87 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5af4d9df-f119-4d63-97d1-4e4bc20ee487")
+		(property "Reference" "CN16"
+			(at 63.754 231.648 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 63.754 229.108 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 57.912 229.87 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 49.53 231.14 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 50.8 229.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 50.8 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 50.8 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 50.8 229.87 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "ad231ce6-1fcf-4ec5-bdf7-e9020f2fc6ec")
+		)
+		(pin "5"
+			(uuid "89e2b8d6-cef7-4dd3-89d9-c68e913590d3")
+		)
+		(pin "6"
+			(uuid "b2521bd3-b3b0-422e-86f6-3217d9319807")
+		)
+		(pin "2"
+			(uuid "07966ee4-825c-4e91-a5df-2326aacdf9ee")
+		)
+		(pin "1"
+			(uuid "21c771d7-7b00-473a-859d-177ca4ba575a")
+		)
+		(pin "8"
+			(uuid "3d28ed2f-b4ac-4cc2-a0d0-87c8a12f83c0")
+		)
+		(pin "4"
+			(uuid "b0e85e47-2506-4475-924f-e42ecb4a747e")
+		)
+		(pin "3"
+			(uuid "676f3088-c5e8-4c6a-bde1-c9a0a85fd954")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN16")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 50.8 217.17 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5ca65341-ce2d-4886-8fbf-15b5371e1e81")
+		(property "Reference" "CN15"
+			(at 63.754 218.948 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 63.754 216.408 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 57.912 217.17 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 49.53 218.44 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 50.8 217.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 50.8 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 50.8 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 50.8 217.17 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "8b565864-7954-42a4-a75a-541292162fe8")
+		)
+		(pin "5"
+			(uuid "c05b45b6-12b5-4510-a928-0ef8f59c0a32")
+		)
+		(pin "6"
+			(uuid "c240bab2-63e2-4bda-9165-8ad948b04717")
+		)
+		(pin "2"
+			(uuid "d98910b7-a4e5-4251-a909-84c5b2115fa4")
+		)
+		(pin "1"
+			(uuid "7bd35ba0-45ee-4c50-800f-1eae1436efc8")
+		)
+		(pin "8"
+			(uuid "b3b0744c-89c1-4280-91e5-268daffa136c")
+		)
+		(pin "4"
+			(uuid "7681469e-b463-4384-ac30-9de33593fdbb")
+		)
+		(pin "3"
+			(uuid "a97a05aa-ddb1-4af5-967f-ccf7912b8973")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+5V")
 		(at 299.72 177.8 0)
 		(unit 1)
@@ -42874,8 +43831,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 31.75 224.79 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 30.48 226.06 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -42884,7 +43841,7 @@
 		(dnp no)
 		(uuid "5eaa392d-abb4-49b3-8dda-c1e1f2e686ae")
 		(property "Reference" "RN15"
-			(at 31.75 241.3 90)
+			(at 32.258 212.344 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42892,7 +43849,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 31.75 238.76 90)
+			(at 31.75 214.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42900,7 +43857,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 31.75 212.725 90)
+			(at 42.545 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42909,7 +43866,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 31.75 224.79 0)
+			(at 31.75 224.79 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42917,8 +43874,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 31.75 224.79 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 30.48 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42927,7 +43884,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 31.75 224.79 90)
+			(at 30.48 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -42935,20 +43892,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 31.75 224.79 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 30.48 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 31.75 224.79 90)
+		(property "LCSC" "C1358123"
+			(at 30.48 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -43005,119 +43962,6 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "RN15")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 345.44 217.17 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "616bf8ff-6bcb-41a7-9dbb-2e3aefc7ccf6")
-		(property "Reference" "CN11"
-			(at 358.394 218.948 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 358.394 216.408 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 352.552 217.17 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 345.44 219.71 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 345.44 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 345.44 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 345.44 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 345.44 217.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "cad55d8b-e8df-4abd-b181-652e7803ac4b")
-		)
-		(pin "5"
-			(uuid "353106ac-3702-4490-8476-9cd25190f466")
-		)
-		(pin "6"
-			(uuid "1bf4f35e-5d19-4be5-8cbb-b93ba02554b4")
-		)
-		(pin "2"
-			(uuid "bf384529-3fb0-4ccd-b341-669fd3f924cd")
-		)
-		(pin "1"
-			(uuid "c5ac5e16-1bcb-4f9c-ac10-06661a4f65eb")
-		)
-		(pin "8"
-			(uuid "6f9cbb88-bf85-463a-802a-695e381c37d1")
-		)
-		(pin "4"
-			(uuid "686055d3-b241-4509-948d-689400a99972")
-		)
-		(pin "3"
-			(uuid "88abdde2-6a1e-480e-91d6-ce93ae06a321")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN11")
 					(unit 1)
 				)
 			)
@@ -43239,17 +44083,16 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 133.35 227.33 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 132.08 226.06 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "6654a31d-5f22-4bc5-8105-720a898c35e9")
 		(property "Reference" "RN1"
-			(at 133.35 210.82 90)
+			(at 133.35 241.3 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43257,7 +44100,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 133.35 213.36 90)
+			(at 133.35 238.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43265,7 +44108,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 133.35 239.395 90)
+			(at 144.145 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43274,7 +44117,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 133.35 227.33 0)
+			(at 133.35 227.33 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43282,8 +44125,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 133.35 227.33 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 132.08 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43292,7 +44135,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 133.35 227.33 90)
+			(at 132.08 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -43300,20 +44143,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 133.35 227.33 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 132.08 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 133.35 227.33 90)
+		(property "LCSC" "C1358123"
+			(at 132.08 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -43448,7 +44291,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "69e83e7a-24cc-4dd5-8a32-9e7e7233ce5a")
 		(property "Reference" "H6"
@@ -43524,119 +44367,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 49.53 184.15 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6c7b3c0f-5be5-498a-a11f-55b126867b1c")
-		(property "Reference" "CN13"
-			(at 62.484 185.928 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 62.484 183.388 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 56.642 184.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 49.53 186.69 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 49.53 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 49.53 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 49.53 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 49.53 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "997d2b25-309b-4b1e-a764-d3f57dfe71ad")
-		)
-		(pin "5"
-			(uuid "7ed52516-5afa-4d02-b9e6-e474bbb0a6e7")
-		)
-		(pin "6"
-			(uuid "e85e1e8a-b376-4d58-b57b-b10598547402")
-		)
-		(pin "2"
-			(uuid "493c688e-3f48-47d7-9953-c512785b7e0e")
-		)
-		(pin "1"
-			(uuid "97350735-b245-4092-8936-16e42473f562")
-		)
-		(pin "8"
-			(uuid "80a5236e-2082-43df-8226-0cbba6335c01")
-		)
-		(pin "4"
-			(uuid "1d334fdf-b777-4bfd-8846-a8163c808dc0")
-		)
-		(pin "3"
-			(uuid "f34a886e-c6f1-4a4b-af0d-10e6a2569bce")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN13")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 186.69 275.59 0)
 		(mirror y)
@@ -43703,7 +44433,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 238.76 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -43727,7 +44457,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 242.57 134.9248 0)
 			(effects
 				(font
@@ -43745,7 +44475,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 238.76 135.89 0)
 			(effects
 				(font
@@ -43763,20 +44493,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 238.76 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 238.76 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 238.76 135.89 90)
+		(property "LCSC" "C28233"
+			(at 238.76 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -43791,118 +44521,6 @@
 			(project "Z80home_RevC"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "C7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 247.65 232.41 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "7031cc85-971a-4ff7-b19b-a221fb1f68cb")
-		(property "Reference" "CN8"
-			(at 260.096 230.124 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 260.858 232.664 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 254.762 232.41 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 247.65 229.87 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 247.65 232.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 247.65 232.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 247.65 232.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 247.65 232.41 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "b89eba7c-0875-430e-87d9-a4d9b48b9b18")
-		)
-		(pin "5"
-			(uuid "2ef643af-4298-42c2-98e1-f5e5d4b07d59")
-		)
-		(pin "6"
-			(uuid "8c9d6c88-6ac2-44cd-9944-21efe55b93f7")
-		)
-		(pin "2"
-			(uuid "48c661ba-18e6-4121-8ddd-488600563033")
-		)
-		(pin "1"
-			(uuid "e9cbd532-ebe2-4929-bea7-ed8a1a77c024")
-		)
-		(pin "8"
-			(uuid "ef0f708a-dee2-4eab-b81e-3571f187fde7")
-		)
-		(pin "4"
-			(uuid "2ad1449c-59ac-4c48-8daf-024695239c47")
-		)
-		(pin "3"
-			(uuid "d066cd42-7be6-4db1-b466-4ada7d9c972c")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN8")
 					(unit 1)
 				)
 			)
@@ -44005,17 +44623,16 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 133.35 194.31 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 132.08 193.04 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "74df854c-7c12-4927-95a5-8e970a62f664")
 		(property "Reference" "RN11"
-			(at 133.35 177.8 90)
+			(at 133.35 177.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44023,7 +44640,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 133.35 180.34 90)
+			(at 133.35 180.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44031,7 +44648,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 133.35 206.375 90)
+			(at 144.145 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44040,7 +44657,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 133.35 194.31 0)
+			(at 133.35 194.31 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44048,8 +44665,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 133.35 194.31 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 132.08 193.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44058,7 +44675,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 133.35 194.31 90)
+			(at 132.08 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44066,20 +44683,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 133.35 194.31 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 132.08 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 133.35 194.31 90)
+		(property "LCSC" "C1358123"
+			(at 132.08 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -44305,120 +44922,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 151.13 186.69 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "7e71e184-d840-4d7d-81e4-07ba02ee090d")
-		(property "Reference" "CN5"
-			(at 164.084 184.912 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 164.084 187.452 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 158.242 186.69 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 151.13 184.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 151.13 186.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 151.13 186.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 151.13 186.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 151.13 186.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "003d47e9-24a6-46a7-a15d-2e7658bfc499")
-		)
-		(pin "5"
-			(uuid "e6cb830d-0532-474c-b91d-f450591369ca")
-		)
-		(pin "6"
-			(uuid "ef072e55-8c74-4b56-b86c-c081ea88cb36")
-		)
-		(pin "2"
-			(uuid "fc26deea-8383-4e41-adca-d56f1c21c6f4")
-		)
-		(pin "1"
-			(uuid "8df9a29a-0f73-4465-acb5-943a0374fe95")
-		)
-		(pin "8"
-			(uuid "abbe4751-2bc8-4aa5-bacd-086a712aea75")
-		)
-		(pin "4"
-			(uuid "d5a3ddb3-5bc8-492e-ae40-30365d555545")
-		)
-		(pin "3"
-			(uuid "36da2c3c-8d38-4ab0-ae1c-52f11d8f5850")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 327.66 194.31 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 326.39 193.04 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -44427,7 +44932,7 @@
 		(fields_autoplaced yes)
 		(uuid "8ae5b8a2-44ea-4610-8cfe-5f51c16a2f24")
 		(property "Reference" "RN8"
-			(at 327.66 177.8 90)
+			(at 327.66 177.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44435,7 +44940,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 327.66 180.34 90)
+			(at 327.66 180.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44443,7 +44948,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 327.66 206.375 90)
+			(at 338.455 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44452,7 +44957,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 327.66 194.31 0)
+			(at 327.66 194.31 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44460,8 +44965,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 327.66 194.31 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 326.39 193.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44470,7 +44975,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 327.66 194.31 90)
+			(at 326.39 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44478,20 +44983,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 327.66 194.31 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 326.39 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 327.66 194.31 90)
+		(property "LCSC" "C1358123"
+			(at 326.39 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -44548,6 +45053,118 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "RN8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 248.92 232.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8de0ab9f-640f-4a7f-8bc5-f8c57b3abca1")
+		(property "Reference" "CN8"
+			(at 261.874 230.632 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 261.874 233.172 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 256.032 232.41 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 247.65 231.14 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 248.92 232.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 248.92 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 248.92 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 248.92 232.41 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "f78d8827-6f94-4521-aa49-6cc5964a5412")
+		)
+		(pin "5"
+			(uuid "a88425d3-616a-45c0-bb57-a0f02a2b1cd9")
+		)
+		(pin "6"
+			(uuid "7b3e36bf-1ac4-4c9c-9719-f060c7bd73de")
+		)
+		(pin "2"
+			(uuid "d6de4a5e-9916-4e5a-b7fc-504a0ecf2101")
+		)
+		(pin "1"
+			(uuid "65284f91-d42b-4bfc-b7ef-b5e8865a3a6c")
+		)
+		(pin "8"
+			(uuid "0de1962c-de59-4c8c-a51d-387bc09b7c6f")
+		)
+		(pin "4"
+			(uuid "a7cefa2f-c374-4a9c-af44-3945d3327383")
+		)
+		(pin "3"
+			(uuid "930ef0c0-d00d-42c5-ab86-63f6fa54ba44")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN8")
 					(unit 1)
 				)
 			)
@@ -44835,9 +45452,9 @@
 		(at 40.64 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "95727041-82a3-4f81-9462-14bf3b3d93d1")
 		(property "Reference" "J1"
@@ -45221,9 +45838,9 @@
 		(at 250.19 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "9a9f60d0-7730-4494-a5d3-aec397f55f90")
 		(property "Reference" "J6"
@@ -45542,9 +46159,9 @@
 		(at 124.46 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "9b269d38-c5b7-403e-aba0-9d10f0184772")
 		(property "Reference" "J3"
@@ -46071,232 +46688,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 345.44 229.87 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a2e09f2b-3d01-4a1b-aa9d-e0655f8c5279")
-		(property "Reference" "CN12"
-			(at 357.886 232.156 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 358.648 229.616 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 352.552 229.87 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 345.44 232.41 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 345.44 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 345.44 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 345.44 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 345.44 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "86b9f1fb-9891-40fa-8119-65ebc49c267c")
-		)
-		(pin "5"
-			(uuid "3a19d0ac-1f49-4fb6-9a81-98f7e2efa7ad")
-		)
-		(pin "6"
-			(uuid "3558d4ea-5820-4ce9-a285-a44244f389a6")
-		)
-		(pin "2"
-			(uuid "42055a42-89b1-4b80-8941-5a5fd9fd6476")
-		)
-		(pin "1"
-			(uuid "5d958f51-2071-4a66-801b-e5a5b7e3e630")
-		)
-		(pin "8"
-			(uuid "4846d73f-da1b-461a-8d24-0a3c5cce6c1e")
-		)
-		(pin "4"
-			(uuid "b8af90b8-df73-40f8-902e-0ef107c55c9d")
-		)
-		(pin "3"
-			(uuid "46380dde-e577-4807-ba6f-f71be0058c5a")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN12")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 151.13 199.39 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a3710c68-db4f-464c-b331-7d9fc407e9fd")
-		(property "Reference" "CN6"
-			(at 163.83 197.358 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 164.338 199.644 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 158.242 199.39 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 151.13 196.85 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 151.13 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 151.13 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 151.13 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 151.13 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "1764c291-ecd2-46fc-95a8-c0a0ed347858")
-		)
-		(pin "5"
-			(uuid "d6f03ef0-a4d7-429d-9ad5-7abf759323fb")
-		)
-		(pin "6"
-			(uuid "553767b7-c9a0-49a3-817d-be40b6ad8bd7")
-		)
-		(pin "2"
-			(uuid "e13fe958-d263-4332-a923-f6ccc18b84f2")
-		)
-		(pin "1"
-			(uuid "01507e86-7d53-4337-b6f6-b7968092d565")
-		)
-		(pin "8"
-			(uuid "6dd6688d-d7b0-4878-9afe-daea5904fd8c")
-		)
-		(pin "4"
-			(uuid "87256b5f-a4a1-408d-8857-59c15bdef06d")
-		)
-		(pin "3"
-			(uuid "7f07304f-5569-48ff-8193-b7191c43204f")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
+		(lib_id "zx50_symbols:R_100R_100mW_0805")
 		(at 386.08 109.22 90)
 		(mirror x)
 		(unit 1)
@@ -46315,16 +46707,15 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "100"
-			(at 387.858 109.22 90)
+		(property "Value" "100R"
+			(at 386.08 109.22 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 386.08 107.442 90)
 			(effects
 				(font
@@ -46342,7 +46733,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
+		(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
 			(at 386.08 109.22 0)
 			(effects
 				(font
@@ -46360,20 +46751,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "RC0805FR-07100RL"
+		(property "SKU" "0805W8F1000T5E"
 			(at 386.08 109.22 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C105577"
+		(property "LCSC" "C17408"
 			(at 386.08 109.22 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -46388,6 +46779,119 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "R9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 50.8 196.85 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a96928ee-b6cd-4572-9793-b6d8ae4bbdbd")
+		(property "Reference" "CN14"
+			(at 63.754 198.628 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 63.754 196.088 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 57.912 196.85 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 49.53 198.12 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 50.8 196.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 50.8 196.85 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 50.8 196.85 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 50.8 196.85 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "f29452e2-e3c7-4cce-9d67-6866457556ea")
+		)
+		(pin "5"
+			(uuid "8c4d04f1-fd0c-4815-9d26-83470ab9e31f")
+		)
+		(pin "6"
+			(uuid "98c054b1-69f9-45e6-beb4-a0d61ddf6683")
+		)
+		(pin "2"
+			(uuid "25e13d6c-dee8-40b8-ad21-56f58269a848")
+		)
+		(pin "1"
+			(uuid "2a918992-e13e-403b-8649-3e5afdffdc9c")
+		)
+		(pin "8"
+			(uuid "9ed27a93-96e2-4d8f-972c-ea8d5f8f3ff2")
+		)
+		(pin "4"
+			(uuid "12728b68-adac-4f5e-8b08-1b45d1662164")
+		)
+		(pin "3"
+			(uuid "ad71f92e-1ce2-4336-9a74-93608a1e7c5a")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN14")
 					(unit 1)
 				)
 			)
@@ -46460,33 +46964,32 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 229.87 227.33 270)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 248.92 219.71 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "b58afb2c-cf59-4b24-9d3a-b022e1c4d1ad")
-		(property "Reference" "RN4"
-			(at 229.87 210.82 90)
+		(uuid "b29cc443-8c83-4d1d-97c1-a8107ac4e185")
+		(property "Reference" "CN7"
+			(at 261.874 217.932 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100R"
-			(at 229.87 213.36 90)
+		(property "Value" "47pF"
+			(at 261.874 220.472 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 229.87 239.395 90)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 256.032 219.71 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46495,7 +46998,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 229.87 227.33 0)
+			(at 247.65 218.44 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46503,8 +47006,121 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 229.87 227.33 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 248.92 219.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 248.92 219.71 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 248.92 219.71 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 248.92 219.71 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "2b074918-e07a-4a51-a7d4-0b685bd5000e")
+		)
+		(pin "5"
+			(uuid "4c4922a0-6b33-462d-aba4-85a10ac7980e")
+		)
+		(pin "6"
+			(uuid "96d4eba3-4e65-4e66-a48f-630e57c4102f")
+		)
+		(pin "2"
+			(uuid "ca46fe30-ce9f-4e84-a789-7a08e9d61daa")
+		)
+		(pin "1"
+			(uuid "5928a3d2-9cad-4b94-9cc1-2af74616194c")
+		)
+		(pin "8"
+			(uuid "3855b209-3c50-430f-bf34-13a026b8756a")
+		)
+		(pin "4"
+			(uuid "82c776ed-e86b-40de-b709-02ea3e4ac1eb")
+		)
+		(pin "3"
+			(uuid "f006f4ac-0415-4f90-8165-1a547ff4ffeb")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 228.6 226.06 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b58afb2c-cf59-4b24-9d3a-b022e1c4d1ad")
+		(property "Reference" "RN4"
+			(at 229.87 210.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100R"
+			(at 229.87 213.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
+			(at 240.665 226.06 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 229.87 227.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 228.6 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46513,7 +47129,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 229.87 227.33 90)
+			(at 228.6 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46521,20 +47137,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 229.87 227.33 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 228.6 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 229.87 227.33 90)
+		(property "LCSC" "C1358123"
+			(at 228.6 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -46597,25 +47213,24 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 49.53 196.85 0)
-		(mirror x)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 152.4 199.39 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "bbc0a0bf-e06d-4879-90d5-9a41472aea4e")
-		(property "Reference" "CN14"
-			(at 62.23 198.882 0)
+		(uuid "b6c8eed6-d3e3-4f42-8c39-52fbc897e5c2")
+		(property "Reference" "CN6"
+			(at 165.354 197.612 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100pF"
-			(at 62.738 196.596 0)
+		(property "Value" "47pF"
+			(at 165.354 200.152 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46623,7 +47238,7 @@
 			)
 		)
 		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 56.642 196.85 90)
+			(at 159.512 199.39 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46632,7 +47247,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 49.53 199.39 90)
+			(at 151.13 198.12 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46640,8 +47255,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 49.53 196.85 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 152.4 199.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46649,61 +47264,174 @@
 				(hide yes)
 			)
 		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 49.53 196.85 0)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 152.4 199.39 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 49.53 196.85 0)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 152.4 199.39 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1322399"
-			(at 49.53 196.85 0)
+		(property "LCSC" "C22446551"
+			(at 152.4 199.39 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
 		(pin "7"
-			(uuid "6ea9005c-3f49-4a0e-b589-65a68f1ba40d")
+			(uuid "b85f9331-da97-47e4-b4be-0aaee6b37656")
 		)
 		(pin "5"
-			(uuid "515bb08a-9f3b-460c-9917-a22859f33b60")
+			(uuid "af2294c5-d9e5-4ed4-91e9-621d550db6e4")
 		)
 		(pin "6"
-			(uuid "b88e2e99-e186-4c88-92d2-3fe509c687d1")
+			(uuid "8def585e-d6ad-4cbd-915e-448af9caf462")
 		)
 		(pin "2"
-			(uuid "8a6a0abf-c1fb-4e27-b3a7-8900527d032b")
+			(uuid "5f70d9c9-54a4-48df-b26d-1ae498cff8da")
 		)
 		(pin "1"
-			(uuid "0e7b16a2-67c8-4991-bf9c-01f5428f2f2e")
+			(uuid "2edb9c2a-151c-4fc8-9eae-c7a0319d7c01")
 		)
 		(pin "8"
-			(uuid "17a8c8f5-9479-4d1e-9330-d5b145b0a431")
+			(uuid "a9684575-946c-449b-ac9e-87188e29b97d")
 		)
 		(pin "4"
-			(uuid "a2f31fc8-b4fd-4445-b4bb-298830f3f9ed")
+			(uuid "8cdffdec-6e2f-492c-9eb9-7f4ee1370fa8")
 		)
 		(pin "3"
-			(uuid "57f0b6c1-c870-4272-a603-a1e18f11b619")
+			(uuid "9cd4bb1c-5482-43dd-a040-f787f6001bcf")
 		)
 		(instances
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN14")
+					(reference "CN6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 50.8 184.15 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b71a9dcf-629b-4db6-af5c-3c341260a5aa")
+		(property "Reference" "CN13"
+			(at 63.754 185.928 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 63.754 183.388 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 57.912 184.15 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 49.53 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 50.8 184.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 50.8 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 50.8 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 50.8 184.15 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "8701a4f9-bad0-4341-a09d-32df4889e9f0")
+		)
+		(pin "5"
+			(uuid "abb56a86-eaa3-4712-8ca4-77e7fbd1c779")
+		)
+		(pin "6"
+			(uuid "21095342-ae86-481b-9715-0c2d0e07823f")
+		)
+		(pin "2"
+			(uuid "5fed28a3-4c43-4253-a911-57332eb54dfe")
+		)
+		(pin "1"
+			(uuid "f2c5657b-e820-4485-9989-ef25b91d2158")
+		)
+		(pin "8"
+			(uuid "c638e64d-8239-48ad-bd8d-06b6a4e4fcff")
+		)
+		(pin "4"
+			(uuid "f9ea3a95-0551-4cc7-b77a-f745cb8429ae")
+		)
+		(pin "3"
+			(uuid "89f6adea-7ebc-47f3-a204-5390e7d9b936")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN13")
 					(unit 1)
 				)
 			)
@@ -46807,8 +47535,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 151.13 219.71 0)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 152.4 219.71 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -46816,15 +47544,15 @@
 		(dnp no)
 		(uuid "bffea674-5b47-4910-8c8c-64ce4daa6cd8")
 		(property "Reference" "CN1"
-			(at 164.084 217.932 0)
+			(at 165.354 217.932 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100pF"
-			(at 164.084 220.472 0)
+		(property "Value" "47pF"
+			(at 165.354 220.472 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46832,7 +47560,7 @@
 			)
 		)
 		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 158.242 219.71 90)
+			(at 159.512 219.71 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46841,7 +47569,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 151.13 217.17 90)
+			(at 151.13 218.44 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46849,8 +47577,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 151.13 219.71 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 152.4 219.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -46858,29 +47586,29 @@
 				(hide yes)
 			)
 		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 151.13 219.71 0)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 152.4 219.71 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 151.13 219.71 0)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 152.4 219.71 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1322399"
-			(at 151.13 219.71 0)
+		(property "LCSC" "C22446551"
+			(at 152.4 219.71 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -46913,119 +47641,6 @@
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
 					(reference "CN1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 247.65 184.15 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c5013ced-dbdb-4c3e-b2ee-5ffce76ecf3a")
-		(property "Reference" "CN3"
-			(at 260.604 185.928 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 260.604 183.388 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 254.762 184.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 247.65 186.69 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 247.65 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 247.65 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 247.65 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 247.65 184.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "c82e6f79-dc01-4f4f-b438-61aa5219909f")
-		)
-		(pin "5"
-			(uuid "64c52da6-9f60-4294-b25d-ecd0deef6081")
-		)
-		(pin "6"
-			(uuid "c31c95c6-afbc-46c1-bb9d-8e341fa8c16b")
-		)
-		(pin "2"
-			(uuid "93460ff2-7d67-49be-ab90-2d2bc56a6b37")
-		)
-		(pin "1"
-			(uuid "6e5f1e9d-dedb-4165-a04a-9bf8d42b99c7")
-		)
-		(pin "8"
-			(uuid "b61ed7f1-4c29-4060-ac2e-8f73b1041221")
-		)
-		(pin "4"
-			(uuid "61474609-bebe-47b2-b160-04db3880e880")
-		)
-		(pin "3"
-			(uuid "5ab1f4cd-c6ae-490d-8300-635f59bd12db")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN3")
 					(unit 1)
 				)
 			)
@@ -47129,118 +47744,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 247.65 219.71 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c817700c-f8d9-47d8-979e-fb46683ab856")
-		(property "Reference" "CN7"
-			(at 260.604 217.932 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 260.604 220.472 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 254.762 219.71 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 247.65 217.17 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 247.65 219.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 247.65 219.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 247.65 219.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 247.65 219.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "1e0301d4-8b55-4036-ba95-3c6ee9b52aa8")
-		)
-		(pin "5"
-			(uuid "fa63a58b-4a11-4d68-9341-ce7d93d6d86d")
-		)
-		(pin "6"
-			(uuid "1fce649f-7042-4fcf-b819-f49ced9653e1")
-		)
-		(pin "2"
-			(uuid "f3395661-ef6c-485b-b81c-384c7f8286a3")
-		)
-		(pin "1"
-			(uuid "42f4f326-4ed2-47e2-8ccb-2f99c703005b")
-		)
-		(pin "8"
-			(uuid "d8a8e703-02b9-4750-bbc4-e86f2ff8d57d")
-		)
-		(pin "4"
-			(uuid "0f1fa588-da90-47ca-b09b-decbb47840f5")
-		)
-		(pin "3"
-			(uuid "c6466dde-057d-4ff0-9616-d022cebc0f9a")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector:Conn_01x03_Pin")
 		(at 397.51 166.37 90)
 		(mirror x)
@@ -47248,7 +47751,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "c8d6f133-71f3-4d27-8492-f0d9d8e649d6")
 		(property "Reference" "J10"
 			(at 397.51 158.242 90)
@@ -47445,33 +47948,32 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 327.66 227.33 90)
-		(mirror x)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 346.71 186.69 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "de872d47-998c-46e6-85da-a2e70c01b697")
-		(property "Reference" "RN9"
-			(at 327.66 241.3 90)
+		(uuid "db925860-da97-48cf-be61-615e55dc2a0e")
+		(property "Reference" "CN9"
+			(at 359.664 184.912 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100R"
-			(at 327.66 238.76 90)
+		(property "Value" "47pF"
+			(at 359.664 187.452 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 327.66 239.395 90)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 353.822 186.69 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -47480,7 +47982,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 327.66 227.33 0)
+			(at 345.44 185.42 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -47488,8 +47990,121 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 327.66 227.33 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 346.71 186.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 346.71 186.69 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 346.71 186.69 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 346.71 186.69 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "606e6235-5e73-45b9-a1ec-5849136eab41")
+		)
+		(pin "5"
+			(uuid "c509f2cd-0189-415f-8e06-edcb64dd4214")
+		)
+		(pin "6"
+			(uuid "a66f8e85-9f60-4da2-bd0d-a09b137a50c5")
+		)
+		(pin "2"
+			(uuid "0de9981d-0f92-49d7-9fcd-0b937ccf83ad")
+		)
+		(pin "1"
+			(uuid "76c71f02-a7fd-45ef-ac93-597219e04a86")
+		)
+		(pin "8"
+			(uuid "affa006c-1981-4cb2-be11-1440b93fd469")
+		)
+		(pin "4"
+			(uuid "9a6e0f72-938c-4202-a93c-c893ecee017a")
+		)
+		(pin "3"
+			(uuid "1a637327-d98a-4591-9151-a081f8abb225")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 328.93 226.06 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "de872d47-998c-46e6-85da-a2e70c01b697")
+		(property "Reference" "RN9"
+			(at 327.66 239.268 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100R"
+			(at 327.66 237.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
+			(at 316.865 226.06 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 327.66 227.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 328.93 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -47498,7 +48113,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 327.66 227.33 90)
+			(at 328.93 226.06 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -47506,20 +48121,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 327.66 227.33 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 328.93 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 327.66 227.33 90)
+		(property "LCSC" "C1358123"
+			(at 328.93 226.06 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -47582,238 +48197,13 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 49.53 229.87 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "e3846ebd-b49b-45cc-950a-f3a22d397344")
-		(property "Reference" "CN16"
-			(at 61.976 232.156 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 62.738 229.616 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 56.642 229.87 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 49.53 232.41 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 49.53 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 49.53 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 49.53 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 49.53 229.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "9f0f3fd2-710c-490b-9942-52ca581a631d")
-		)
-		(pin "5"
-			(uuid "61271e5f-cbbe-4029-bd81-d17b0c08269d")
-		)
-		(pin "6"
-			(uuid "06e5ef0e-893a-4eea-9083-186f1e5f665f")
-		)
-		(pin "2"
-			(uuid "7f742025-59c5-4d00-bda1-a5933c7e8766")
-		)
-		(pin "1"
-			(uuid "7fa5768d-e552-4dc1-9889-ab4cf463a356")
-		)
-		(pin "8"
-			(uuid "b78b0b55-35da-4832-bacb-e32851dbd515")
-		)
-		(pin "4"
-			(uuid "8e1c465e-110e-4b88-b147-1f2c51c46eb8")
-		)
-		(pin "3"
-			(uuid "f67bed8a-40cd-4512-9316-b06961eed7ba")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN16")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Network04")
-		(at 345.44 199.39 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "e4c7ce1b-a22b-42e6-8611-8e218f8bbedb")
-		(property "Reference" "CN10"
-			(at 358.14 197.358 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100pF"
-			(at 358.648 199.644 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 352.552 199.39 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 345.44 196.85 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 345.44 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 345.44 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 345.44 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C1322399"
-			(at 345.44 199.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "a7149663-8327-48de-8575-c743884d5125")
-		)
-		(pin "5"
-			(uuid "b194d486-2a15-459a-aeed-0fb71fa51bc5")
-		)
-		(pin "6"
-			(uuid "756a71e4-89d3-483e-9492-e4ff49aca45e")
-		)
-		(pin "2"
-			(uuid "7b125b40-9dd7-4ab9-81bd-2abb9b326356")
-		)
-		(pin "1"
-			(uuid "9dcd9126-d3f6-45a5-a04f-a3c904b779b2")
-		)
-		(pin "8"
-			(uuid "7e38f52d-097c-4500-8bf5-870af62f23bd")
-		)
-		(pin "4"
-			(uuid "00bfe5a4-27ac-442e-88cd-f9c38284bf7d")
-		)
-		(pin "3"
-			(uuid "c770a469-f7d2-456a-b691-9f9ac68a1b6b")
-		)
-		(instances
-			(project "Zx50_Backplane_RevD"
-				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN10")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:LED")
 		(at 67.31 147.32 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "e5935aef-65ac-46cd-b5b9-381172abf164")
 		(property "Reference" "D1"
@@ -47910,7 +48300,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "e62aab2d-2d01-4b9b-9663-9630959120b8")
 		(property "Reference" "H4"
@@ -47986,8 +48376,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Pack08")
-		(at 31.75 191.77 270)
+		(lib_id "zx50_symbols:RN_100R_SOIC16")
+		(at 30.48 193.04 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -47996,7 +48386,7 @@
 		(dnp no)
 		(uuid "e666022e-a838-4706-9826-5074c76330a2")
 		(property "Reference" "RN13"
-			(at 31.75 208.28 90)
+			(at 31.75 178.562 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48004,7 +48394,7 @@
 			)
 		)
 		(property "Value" "100R"
-			(at 31.75 205.74 90)
+			(at 31.75 181.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48012,7 +48402,7 @@
 			)
 		)
 		(property "Footprint" "Package_SO:SOIC-16W_5.3x10.2mm_P1.27mm"
-			(at 31.75 179.705 90)
+			(at 42.545 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48021,7 +48411,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 31.75 191.77 0)
+			(at 31.75 191.77 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48029,8 +48419,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "8 resistor isolated"
-			(at 31.75 191.77 0)
+		(property "Description" "100Ω 16 160mW 8 ±100ppm/℃ ±2% SOIC-16-5.6mm Resistor Networks, Arrays ROHS"
+			(at 30.48 193.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48039,7 +48429,7 @@
 			)
 		)
 		(property "DigiKey_PN" "4816P-1-101LFCT-ND "
-			(at 31.75 191.77 90)
+			(at 30.48 193.04 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48047,20 +48437,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "	 4816P-1-101LF"
-			(at 31.75 191.77 90)
+		(property "SKU" "4816P-T01-101LF"
+			(at 30.48 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1357946"
-			(at 31.75 191.77 90)
+		(property "LCSC" "C1358123"
+			(at 30.48 193.04 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -48123,24 +48513,24 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Network04")
-		(at 345.44 186.69 0)
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 152.4 186.69 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "e6d7be6c-54cc-4958-9dc1-6adf4251313a")
-		(property "Reference" "CN9"
-			(at 358.394 184.912 0)
+		(uuid "e67ddca1-e05a-4359-9d83-83f163f8fe48")
+		(property "Reference" "CN5"
+			(at 165.354 184.912 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "100pF"
-			(at 358.394 187.452 0)
+		(property "Value" "47pF"
+			(at 165.354 187.452 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48148,7 +48538,7 @@
 			)
 		)
 		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
-			(at 352.552 186.69 90)
+			(at 159.512 186.69 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48157,7 +48547,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 345.44 184.15 90)
+			(at 151.13 185.42 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48165,8 +48555,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "4 capacitor network, star topology, bussed capacitors, single bus pin, small symbol, SIP-5"
-			(at 345.44 186.69 0)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 152.4 186.69 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48174,68 +48564,68 @@
 				(hide yes)
 			)
 		)
-		(property "DigiKey_PN" "13-CA0612JRNPO9BN101CT-ND "
-			(at 345.44 186.69 0)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 152.4 186.69 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "SKU" "CA0612JRNPO9BN101"
-			(at 345.44 186.69 0)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 152.4 186.69 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C1322399"
-			(at 345.44 186.69 0)
+		(property "LCSC" "C22446551"
+			(at 152.4 186.69 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
 		(pin "7"
-			(uuid "7f052488-159c-4043-8de0-83c4dcd97216")
+			(uuid "8158ea1d-1e81-4e68-a063-f85d489ea689")
 		)
 		(pin "5"
-			(uuid "0c3ad182-9deb-48da-b4c7-9f52a6b4c89c")
+			(uuid "5380c989-2640-48f1-a401-8f4acd83b2c0")
 		)
 		(pin "6"
-			(uuid "8233fa06-45be-4aa5-829b-ac2070242366")
+			(uuid "42593be3-d5db-4e30-9d30-cdd37a5c233d")
 		)
 		(pin "2"
-			(uuid "34ab3fcb-1d12-4548-a20c-2d924cc6969b")
+			(uuid "60face24-4242-4158-957a-edf6fc24c9ae")
 		)
 		(pin "1"
-			(uuid "106ae819-ffe5-43b5-92cc-38897c514c91")
+			(uuid "08cd31d2-ae13-439b-a417-90844d8d11ba")
 		)
 		(pin "8"
-			(uuid "9a1e0d8f-b7d2-420a-a0f2-f2646b64673d")
+			(uuid "0d9ed356-a2ed-492f-a7bc-f90e095e9fb1")
 		)
 		(pin "4"
-			(uuid "27bc994d-d055-4b3f-bef9-ff09f0ff0953")
+			(uuid "fe6928fc-6af0-492e-ba7a-b39f34ff3823")
 		)
 		(pin "3"
-			(uuid "ddc5c00d-86e2-483c-bebd-a2b0c470f7c3")
+			(uuid "605f9052-c934-46d7-8972-d0aad27dc1e5")
 		)
 		(instances
 			(project "Zx50_Backplane_RevD"
 				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
-					(reference "CN9")
+					(reference "CN5")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 71.12 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -48259,7 +48649,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 74.93 134.9248 0)
 			(effects
 				(font
@@ -48277,7 +48667,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 71.12 135.89 0)
 			(effects
 				(font
@@ -48295,20 +48685,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 71.12 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 71.12 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 71.12 135.89 90)
+		(property "LCSC" "C28233"
+			(at 71.12 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -48329,7 +48719,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_47pF_0805")
 		(at 180.34 261.62 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -48346,16 +48736,15 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100pF"
-			(at 180.848 257.81 90)
+		(property "Value" "47pF"
+			(at 177.546 258.318 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 184.15 260.6548 0)
 			(effects
 				(font
@@ -48373,7 +48762,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "47pF 50V C0G ±5% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 180.34 261.62 0)
 			(effects
 				(font
@@ -48383,7 +48772,7 @@
 			)
 		)
 		(property "DigiKey_PN" "399-C0805C101J5GACTUCT-ND"
-			(at 180.34 261.62 0)
+			(at 180.34 261.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48391,8 +48780,8 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C101J5GACTU"
-			(at 180.34 261.62 0)
+		(property "SKU" "CL21C470JBANNNC"
+			(at 180.34 261.62 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -48400,7 +48789,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2167185"
+		(property "LCSC" "C14857"
 			(at 180.34 261.62 90)
 			(effects
 				(font
@@ -48425,7 +48814,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
+		(lib_id "zx50_symbols:C_100nF_0805")
 		(at 280.67 135.89 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -48449,7 +48838,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 284.48 134.9248 0)
 			(effects
 				(font
@@ -48467,7 +48856,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
+		(property "Description" "100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 280.67 135.89 0)
 			(effects
 				(font
@@ -48485,20 +48874,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "C0805C104K5RACTU"
-			(at 280.67 135.89 90)
+		(property "SKU" "CL21B104KCFNNNE"
+			(at 280.67 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C3018562"
-			(at 280.67 135.89 90)
+		(property "LCSC" "C28233"
+			(at 280.67 135.89 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
@@ -48525,7 +48914,7 @@
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board no)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "ef7b312e-e2c0-4dcb-98c5-6afabed849f7")
 		(property "Reference" "H2"
@@ -48601,6 +48990,118 @@
 		)
 	)
 	(symbol
+		(lib_id "zx50_symbols:CN_47pf_1206x4")
+		(at 346.71 199.39 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "efee8a72-7616-40cf-ae1f-f60988f3d68e")
+		(property "Reference" "CN10"
+			(at 359.664 197.612 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "47pF"
+			(at 359.664 200.152 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "zx50_footprints:CAP_CA0612_3P2X1P6_YAG"
+			(at 353.822 199.39 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 345.44 198.12 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "47pF 50V C0G ±5% 1206x4 Capacitor Networks, Arrays ROHS"
+			(at 346.71 199.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey_PN" "13-CA0612JRNPO9BN470CT-ND "
+			(at 346.71 199.39 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "SKU" "CA0612JRNPO9BN470"
+			(at 346.71 199.39 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C22446551"
+			(at 346.71 199.39 0)
+			(effects
+				(font
+					(size 0.9906 0.9906)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "73e70ce8-7c35-401f-beca-04a2d3260ed2")
+		)
+		(pin "5"
+			(uuid "942c69cd-8c79-47f0-ad8f-17d13a6d992f")
+		)
+		(pin "6"
+			(uuid "baa815f6-8053-4d5d-acd8-6428c331c553")
+		)
+		(pin "2"
+			(uuid "6cd8ea6e-2525-4a3d-b989-bcde46ff8c21")
+		)
+		(pin "1"
+			(uuid "fe6d6ba8-9755-4020-af18-2188eb00e710")
+		)
+		(pin "8"
+			(uuid "7ab3f0f4-c187-414e-89bc-c8840e3c387b")
+		)
+		(pin "4"
+			(uuid "2d0b5c4a-5bb8-42d1-a479-8bcf10e73e27")
+		)
+		(pin "3"
+			(uuid "5a91d0d6-b3e9-4707-9370-486320fcc910")
+		)
+		(instances
+			(project "Zx50_Backplane_RevD"
+				(path "/a9be8ac1-8185-41b8-90b4-fd7f7c839ff9"
+					(reference "CN10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+5V")
 		(at 101.6 177.8 0)
 		(unit 1)
@@ -48670,9 +49171,9 @@
 		(at 82.55 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "fb762aaf-6f3c-4a50-abf0-06b91d93fb13")
 		(property "Reference" "J2"
@@ -48991,9 +49492,9 @@
 		(at 334.01 80.01 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "fbfe2b14-17ad-4eed-b8d3-a6a033891cd1")
 		(property "Reference" "J8"
@@ -49308,7 +49809,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
+		(lib_id "zx50_symbols:R_100R_100mW_0805")
 		(at 171.45 273.05 90)
 		(mirror x)
 		(unit 1)
@@ -49326,16 +49827,15 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100"
-			(at 173.228 273.05 90)
+		(property "Value" "100R"
+			(at 171.45 273.05 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 171.45 271.272 90)
 			(effects
 				(font
@@ -49353,7 +49853,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
+		(property "Description" "-55℃~+155℃ 100Ω 125mW 150V Thick Film Resistor ±1% ±100ppm/℃ 0805 Chip Resistor - Surface Mount ROHS"
 			(at 171.45 273.05 0)
 			(effects
 				(font
@@ -49371,20 +49871,20 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "RC0805FR-07100RL"
+		(property "SKU" "0805W8F1000T5E"
 			(at 171.45 273.05 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C105577"
-			(at 171.45 273.05 90)
+		(property "LCSC" "C17408"
+			(at 171.45 273.05 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 0.9906 0.9906)
 				)
 				(hide yes)
 			)

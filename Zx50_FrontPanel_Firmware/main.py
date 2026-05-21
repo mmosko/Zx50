@@ -42,7 +42,7 @@ def update_passive_displays():
 
     # Encode the string to bytes, hexlify it, and decode the hex bytes back to a string
     hex_str = ubinascii.hexlify(hcms_text.encode('utf-8')).decode('utf-8')
-    print(f"[DEBUG] hcms_text: {hcms_text} (0x{hex_str})")
+    # print(f"[DEBUG] hcms_text: {hcms_text} (0x{hex_str})")
 
     # --- 3. Update LCD Debug Lines (20 Characters max) ---
     lcd.print_line(2, status.get_lcd_line_2())
@@ -55,10 +55,10 @@ def main():
     leds.set_discrete_led_off()
     lcd.print_line(0, "Zx50 Front Panel")
     lcd.print_line(1, f"Firmware {FIRMWARE_VERSION}")
-    lcd.print_line(3, "  ...  warmup  ... ")
+    lcd.print_line(3, " ...  self test  ...")
     # need to have the RED leds first
     leds.write_hcms_text("89AB01234567")
-    time.sleep(4)
+    time.sleep(3)
     lcd.print_line(3, "")
 
     # State Machine Variables
@@ -78,7 +78,10 @@ def main():
 
         # 1. Read Raw Switch Inputs (Active Low = 0 is ON)
         disp_enabled = (pins.DISP_EN.value() == 0)
-        run_switch_active = (pins.SW_RUN.value() == 0)
+
+        # inverted logic to match the CPU card
+        run_switch_active = (pins.SW_RUN.value() == 1)
+
         step_switch_pressed = (pins.SW_STEP.value() == 0)
 
         # 2. Determine Edge Cases (Rising/Falling edges)
@@ -118,6 +121,9 @@ def main():
         elif current_state == PanelState.STEPPING:
             # Update exactly once upon entering Step Mode, OR when the STEP button is clicked
             if state_changed or step_just_pressed:
+                # The PIC requires a few milliseconds to debounce this exact same switch
+                # and execute the Z80 clock cycle. Wait for it to finish before looking.
+                time.sleep_ms(20)
                 should_update = True
 
         # 6. Apply UI Updates
