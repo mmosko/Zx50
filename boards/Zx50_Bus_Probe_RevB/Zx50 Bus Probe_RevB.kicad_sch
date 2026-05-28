@@ -11591,6 +11591,16 @@
 		)
 		(uuid "3077265c-1a77-4f62-94e9-e6f0b7516cbe")
 	)
+	(text "Only populate one direction"
+		(exclude_from_sim no)
+		(at 144.78 359.41 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "5708a7fc-485c-43b0-9594-76cd367cb5a0")
+	)
 	(text "Rev B Changes:\n- reverse Pico GPIO0 and GPIO 1\n- LCD pin 3 to contrast adjustment\n- Pico pin 39 (Vsys) to +5V"
 		(exclude_from_sim yes)
 		(at 113.284 26.924 0)

@@ -1,4 +1,5 @@
 import ubinascii
+import machine
 
 import pins
 import time
@@ -7,7 +8,7 @@ import lcd
 import leds
 from zx50_card import read_bus
 
-FIRMWARE_VERSION = "v2.0"
+FIRMWARE_VERSION = "v2.1"
 
 
 class PanelState:
@@ -15,6 +16,13 @@ class PanelState:
     DISABLED = 0
     RUNNING = 1
     STEPPING = 2
+
+volatile_step_flag = False
+
+def step_pulse_isr(pin):
+    """Hardware interrupt triggered on the falling edge of the 4us STEP pulse."""
+    global volatile_step_flag
+    volatile_step_flag = True
 
 
 def process_fifo():
@@ -50,6 +58,7 @@ def update_passive_displays():
 
 
 def main():
+    global volatile_step_flag
     lcd.init()
     leds.initialize_display()
     leds.set_discrete_led_off()
@@ -61,6 +70,8 @@ def main():
     time.sleep(3)
     lcd.print_line(3, "")
 
+    pins.SW_STEP.irq(trigger=machine.Pin.IRQ_FALLING, handler=step_pulse_isr)
+
     # State Machine Variables
     current_state = None
     step_pressed_previously = False
@@ -69,7 +80,7 @@ def main():
 
     while True:
         # High-speed IO tasks must always run regardless of UI state
-        process_fifo()
+        # process_fifo()
 
         # =====================================================================
         # STATE MACHINE LOGIC
@@ -82,11 +93,9 @@ def main():
         # inverted logic to match the CPU card
         run_switch_active = (pins.SW_RUN.value() == 1)
 
-        step_switch_pressed = (pins.SW_STEP.value() == 0)
-
-        # 2. Determine Edge Cases (Rising/Falling edges)
-        step_just_pressed = step_switch_pressed and not step_pressed_previously
-        step_pressed_previously = step_switch_pressed
+        # 2. Check our hardware interrupt flag instead of polling the pin
+        step_just_pressed = volatile_step_flag
+        volatile_step_flag = False  # Instantly clear it after reading
 
         # 3. Determine Next State
         if not disp_enabled:
@@ -121,9 +130,7 @@ def main():
         elif current_state == PanelState.STEPPING:
             # Update exactly once upon entering Step Mode, OR when the STEP button is clicked
             if state_changed or step_just_pressed:
-                # The PIC requires a few milliseconds to debounce this exact same switch
-                # and execute the Z80 clock cycle. Wait for it to finish before looking.
-                time.sleep_ms(20)
+                time.sleep_ms(1)
                 should_update = True
 
         # 6. Apply UI Updates
