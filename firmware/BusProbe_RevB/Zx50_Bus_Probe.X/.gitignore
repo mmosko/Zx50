@@ -1,0 +1,39 @@
+# ---------------------------------------------------
+# Microchip MPLAB X IDE .gitignore
+# ---------------------------------------------------
+
+# Build and Distribution folders (executables, object files, hex files)
+build/
+dist/
+debug/
+disassembly/
+
+# User-specific local IDE settings (DO NOT commit these)
+nbproject/private/
+
+# MPLAB X auto-generated Makefiles and packaging scripts
+nbproject/Makefile-*
+nbproject/Package-*
+
+# MPLAB X (v5.35+) auto-generated caching folders
+.generated_files/
+**/*.X/.generated_files/
+
+# MPLAB X Trace, Debug, and Log files
+*.log
+*.inx
+build_failure_log.txt
+MPLABXlog.*
+
+# Optional: Ignore zip files created if you use the "Package" tool in the IDE
+*.zip
+
+# Optional: Ignore backup files sometimes created by the IDE or MCC
+*.bak
+*.bak[0-9]
+*~
+
+# OS Generated files
+.DS_Store
+Thumbs.db
+
