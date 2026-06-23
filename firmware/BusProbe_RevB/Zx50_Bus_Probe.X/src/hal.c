@@ -75,9 +75,9 @@ static void GPIO_Init(void) {
     Z80_WAIT_DIR = 0;
     Z80_INT_DIR = 0;
 
-    // Clock outputs
-    Z80_CLK_DIR = 0;
-    Z80_MCLK_DIR = 0;
+    // Clock outputs -- start as isolated inputs
+    Z80_CLK_DIR = 1;
+    Z80_MCLK_DIR = 1;
 
     // --- Heartbeat LED Setup ---
     ANSELBbits.ANSELB5 = 0; // Ensure RB5 is digital

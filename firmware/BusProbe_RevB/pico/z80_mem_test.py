@@ -50,7 +50,11 @@ def run(pic, bus_mgr, output):
         for logical_page in range(PAGES_PER_WINDOW):
             physical_page = window_start_page + logical_page
             port_addr = (logical_page << 12) | BASE_PORT
-            do_cmd(pic, ["OUT", f"{port_addr:04X}", f"{physical_page:02X}"], output, raise_on_error=True)
+            do_cmd(pic,
+                   args = ["OUT", f"{port_addr:04X}", f"{physical_page:02X}"],
+                   output = output,
+                   raise_on_error = True,
+                   timeout = 5.0)
 
         # 2. Write to the newly mapped 64KB window
         for logical_page in range(PAGES_PER_WINDOW):
@@ -65,7 +69,12 @@ def run(pic, bus_mgr, output):
                 val = (physical_addr ^ (physical_addr >> 8) ^ (physical_addr >> 16) ^ 0x5A) & 0xFF
 
                 # Async wrapper silently handles the QUEUED -> STATUS polling loop
-                resp = do_cmd(pic, ["WRITE", f"{logical_addr:04X}", f"{val:02X}"])
+                resp = do_cmd(pic,
+                              args = ["WRITE", f"{logical_addr:04X}", f"{val:02X}"],
+                              output=output,
+                              raise_on_error=True,
+                              timeout=5.0
+                              )
 
                 if not resp.startswith("OK"):
                     output(f"WRITE ERROR at Physical 0x{physical_addr:05X} (Logical 0x{logical_addr:04X}): {resp}")

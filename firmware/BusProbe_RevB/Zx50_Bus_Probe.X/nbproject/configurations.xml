@@ -216,7 +216,7 @@
         <property key="memories.programmemory.ranges" value="0-ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="/Users/marc/Documents/z80/Zx50/firmware/BusProbe_RevB/Zx50_Bus_Probe.X/debug/production/Zx50_Bus_Probe_ptg"/>
+                  value="/Users/marc/Documents/z80/Zx50/Zx50_BusProbe_Firmware/Zx50_Bus_Probe.X/debug/production/Zx50_Bus_Probe_ptg"/>
         <property key="programmerToGoImageName" value="Zx50_Bus_Probe_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
@@ -1458,7 +1458,7 @@
         <property key="memories.programmemory.ranges" value="0-ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="/Users/marc/Documents/z80/Zx50/firmware/BusProbe_RevB/Zx50_Bus_Probe.X/debug/debug/Zx50_Bus_Probe_ptg"/>
+                  value="/Users/marc/Documents/z80/Zx50/Zx50_BusProbe_Firmware/Zx50_Bus_Probe.X/debug/debug/Zx50_Bus_Probe_ptg"/>
         <property key="programmerToGoImageName" value="Zx50_Bus_Probe_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

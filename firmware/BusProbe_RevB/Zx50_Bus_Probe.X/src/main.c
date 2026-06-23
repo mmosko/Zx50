@@ -42,8 +42,35 @@
 // Tracks the clock mode so the AUX button knows if it should dispatch cycles
 static uint8_t is_sync_clock_active = 0;
 
+// ======
+// Check the command queue for a DONE event.  If it exists, send the
+// specified response code and optional data.
+//
+// This is used for both STATUS polls and async completion checks
+// ======
+static inline bool poll_event(uint8_t resp_code) {
+    if (CQ_Get_Head_Status() == STAT_DONE) {
+        // Push the completion byte
+        UART_Write(resp_code);
+
+        // Push data if it was a read command
+        uint8_t read_data;
+        if (CQ_Read_Head_Data(&read_data)) {
+            UART_Write(read_data);
+        }
+
+        // Pop the queue so we don't spam the UART
+        CQ_Pop_Head(); 
+        return true;
+    }
+    
+    return false;
+}
+
 // =========================================================================
 // UART Packet Reader
+// Has a timeout reading the 4 consecutive bytes, so if a byte is lost
+// will not spin forever
 // =========================================================================
 static inline int read_uart(uint8_t packet[4]) {
     // Q43 uses INTCON0 for the Global Interrupt Enable
@@ -57,8 +84,13 @@ static inline int read_uart(uint8_t packet[4]) {
 
     // Block briefly to grab the 4 payload bytes
     for(int i = 0; i < 4; i++) {
+        uint16_t timeout = 50000; // Safety timeout (~2-3 ms)
         while (UART_Read(&packet[i]) != 0) {
-            // Wait for byte to arrive in FIFO
+            if (--timeout == 0) {
+                // Packet stalled or byte dropped! Abort gracefully.
+                INTCON0bits.GIE = 1;
+                return -1; 
+            }
         }
     }
 
@@ -72,16 +104,9 @@ static inline int read_uart(uint8_t packet[4]) {
 static inline void Send_Status_Response() {
     cmd_status_t status = CQ_Get_Head_Status();
 
-    if (status == STAT_DONE) {
-        UART_Write(RESP_DONE);
-
-        uint8_t read_data;
-        if (CQ_Read_Head_Data(&read_data)) {
-            UART_Write(read_data);
-        }
-
-        CQ_Pop_Head(); // Free the slot
-
+    if (poll_event(RESP_DONE)) {
+        // If we found a DONE, we're finished
+        return;
     } else if (status == STAT_PROCESSING || status == STAT_PENDING) {
         UART_Write(RESP_PENDING);
     } else {
@@ -224,5 +249,7 @@ void main(void) {
         if (UART_Data_Available()) {
             Process_UART_Command();
         }
+        
+        poll_event(RESP_ASYNC_DONE);
     }
 }

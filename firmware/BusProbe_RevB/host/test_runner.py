@@ -18,24 +18,28 @@ from pin_connection import PicoConnection
 from scope_control import TektronixMDO
 
 # --- Hardware Configuration ---
-SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
+# SCOPE_ADDR = 'TCPIP0::172.16.1.43::inst0::INSTR'
+SCOPE_ADDR = 'TCPIP::172.16.1.43::INSTR'
 
 # Connection Toggle: 'USB' or 'WIFI' or 'None' (for debugging)
-PICO_MODE = 'WIFI'
+PICO_MODE = 'USB'
 
 # USB Settings
-PICO_PORT = '/dev/ttyACM0'
+# PICO_PORT = '/dev/ttyACM0'
+PICO_PORT = '/dev/cu.usbmodem1101'
 PICO_BAUD = 115200
 
 # Wi-Fi Settings
-PICO_IP = '172.16.1.46'
+PICO_IP = '172.16.1.182'
 PICO_PORT_TCP = 5050
 
 # --- Test Definitions ---
 TEST_FREQS = [100_000, 1_000_000, 10_000_000]
 # TEST_FREQS = [100_000]
 QUICK_TEST_MATRIX = [
-    (42, 42), (42, 40), (42, 44)
+    (20, 20), (20, 21), (20, 22),
+    (21, 21), (21, 22), (21, 23),
+    # (42, 42), (44, 44)
     # (42, 42)
 ]
 
@@ -49,7 +53,7 @@ class Zx50TestRunner:
         logging.info("Initializing Hardware Connections...")
         self.pico.connect()
 
-        resp = self.pico.send_cmd("IDN?")
+        resp = self.pico.send_cmd("IDN")
         if "OK" not in resp:
             raise ConnectionError(f"Pico verification failed: {resp}")
 

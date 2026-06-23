@@ -8,7 +8,7 @@ from bus import BusController
 from pic18_link import PIC18Link
 
 # --- CONFIGURATION ---
-APP_VERSION = "RevA-0.3.2"
+APP_VERSION = "RevB-0.5.0"
 USE_WIFI = True  # Set to False to drop back to purely USB Serial
 TCP_PORT = 5050  # Port for the laptop host script to connect to
 
@@ -17,6 +17,8 @@ class Zx50Console:
     """A lightweight line-processing CLI for MicroPython with optional TCP Socket Server."""
 
     def __init__(self):
+        # Default to True to lock out booting by default
+        self.cpu_card_installed = True
         self.pic = PIC18Link(uart_id=0, tx_gpio=0, rx_gpio=1)
         self.bus = BusController()
 
@@ -210,10 +212,12 @@ class Zx50Console:
         self._send_response("ERR UNKNOWN_COMMAND. Type 'help' for a list of commands.", is_tcp)
 
     def do_help(self, args, is_tcp):
-        resp = "Available Subsystems:\n"
+        resp = "Available Subsystems & Commands:\n"
         resp += "  pic   - Commands for the PIC18F4620 Z80 Controller\n"
         resp += "  bus   - Commands for the Multiplexer routing\n"
-        resp += "  z80   - Run custom scripts (e.g. 'z80 run' or 'z80 run myscript')\n"
+        resp += "  z80   - Run custom scripts (e.g. 'z80 run myscript')\n"
+        resp += "  cpu   - Set CPU presence lock (e.g. 'cpu in' or 'cpu out')\n"
+        resp += "  boot  - Safely boot the system (Requires 'cpu out')\n"
         resp += "  idn?  - Get device identity\n"
         resp += "Type 'pic help' or 'bus help' for subsystem commands."
         self._send_response(resp, is_tcp)
@@ -252,9 +256,9 @@ class Zx50Console:
                     try:
                         # Try calling the new version of run() with the output function
                         result = z80_script.run(self.pic, self.bus, output_func)
-                    except TypeError:
+                    except TypeError as e:
                         # Fallback for older scripts that don't accept an output function
-                        self._send_response("WARN: Script does not support output redirection. Using legacy mode.", is_tcp)
+                        self._send_response(f"WARN: script error: {e}.", is_tcp)
                         result = z80_script.run(self.pic, self.bus)
 
                     self._send_response(f"OK DONE. Result: {result}", is_tcp)
@@ -271,7 +275,7 @@ class Zx50Console:
             self._send_response(f"ERR SCRIPT_EXCEPTION: {e}", is_tcp)
 
     def do_idn(self, args, is_tcp):
-        self._send_response(f"OK Zx50_PROBE_REVA1 firmware {APP_VERSION} TCP {self.pico_ip}:{TCP_PORT}", is_tcp)
+        self._send_response(f"OK Zx50_PROBE_REVB firmware {APP_VERSION} TCP {self.pico_ip}:{TCP_PORT}", is_tcp)
 
     def do_pic(self, args, is_tcp):
         if not args:
@@ -288,6 +292,42 @@ class Zx50Console:
         if "OK" in response and args and args[0].upper() in ["SELECT", "GHOST"]:
             display.update("ROUTING ACTIVE", f"TX: {self.bus.current_tx_str}", f"RX: {self.bus.current_rx_str}")
 
+    def do_cpu(self, args, is_tcp):
+        """Toggles the CPU presence safety lock."""
+        if not args:
+            state = "INSTALLED (Boot Locked)" if self.cpu_card_installed else "REMOVED (Boot Permitted)"
+            self._send_response(f"OK CPU_CARD_STATE: {state}", is_tcp)
+            return
+
+        arg = args[0].upper()
+        if arg in ["IN", "INSTALLED", "1", "TRUE"]:
+            self.cpu_card_installed = True
+            self._send_response("OK CPU_CARD_INSTALLED=TRUE. Boot sequence locked out.", is_tcp)
+        elif arg in ["OUT", "REMOVED", "0", "FALSE"]:
+            self.cpu_card_installed = False
+            self._send_response("OK CPU_CARD_INSTALLED=FALSE. Boot sequence permitted.", is_tcp)
+        else:
+            self._send_response("ERR INVALID_ARG. Use 'cpu in' or 'cpu out'.", is_tcp)
+
+    def do_boot(self, args, is_tcp):
+        """Safely executes a system boot if the CPU card is removed."""
+        if self.cpu_card_installed:
+            self._send_response("ERR BOOT_BLOCKED: CPU Card is installed! Hardware conflict prevented.", is_tcp)
+            return
+
+        self._send_response("OK CPU Card not detected. Initiating Boot Sequence...", is_tcp)
+
+        # 1. Turn on the free-running PWM clocks (since the CPU/Mezzanine is missing)
+        self.pic.handle_command(["clk", "auto"])
+        time.sleep(0.1)  # Give the clock a moment to stabilize on the bus
+
+        # 2. Fire the boot reset pulse sequence
+        resp = self.pic.handle_command(["boot"])
+
+        if "OK" in resp:
+            self._send_response("OK BOOT COMPLETE. System clock is running.", is_tcp)
+        else:
+            self._send_response(f"ERR BOOT_FAILED: {resp}", is_tcp)
 
 def main():
     display.init()

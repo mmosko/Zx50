@@ -121,8 +121,8 @@ class TektronixMDO:
         self._write(f'SEL:CH2 OFF')
         self._write(f'SEL:CH3 OFF')
         self._write(f'SEL:CH4 ON')
-        self._write("CH1:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS 0.0")
-        self._write("CH4:IMP MEG;COUP DC;SCA 2.0;OFFS 0.0; POS -3.0")
+        self._write("CH1:IMP MEG;COUP DC;SCA 1.0;OFFS 0.0; POS 1.0")
+        self._write("CH4:IMP MEG;COUP DC;SCA 1.0;OFFS 0.0; POS -2.0")
 
     def _measure_parameters(self, meas_commands, stat_population=50):
         """Generalized measurement runner using provided command list."""

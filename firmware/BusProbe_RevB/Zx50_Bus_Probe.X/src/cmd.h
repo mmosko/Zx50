@@ -30,6 +30,7 @@
 // ==========================================
 // Async Response Codes (PIC -> Pico)
 // ==========================================
+#define RESP_ASYNC_DONE    0x59
 #define SYNC_OK            0x5A
 #define SYNC_NACK          0x5B
 #define RESP_QUEUED        0x5C

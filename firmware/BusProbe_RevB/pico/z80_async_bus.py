@@ -30,6 +30,8 @@ def do_cmd(pic, args, output=None, raise_on_error=False, timeout=1.0):
     while (time.time() - start_time) < timeout:
         status_resp = pic.handle_command(["STATUS"])
 
+        # output(f"STATUS result: {status_resp}")
+
         # We use startswith() because DONE might have a data byte appended
         if status_resp.startswith(pic18_link.RES_OK_DONE):
             # Normalize "OK DONE 42" -> "OK 42" for legacy parser compatibility
@@ -39,7 +41,7 @@ def do_cmd(pic, args, output=None, raise_on_error=False, timeout=1.0):
             return pic18_link.RES_OK
 
         elif status_resp.startswith(pic18_link.RES_OK_PENDING):
-            time.sleep(0.001)
+            time.sleep(0.010)
 
         elif status_resp.startswith(pic18_link.RES_OK_IDLE):
             msg = f">> FAILED: Queue unexpectedly went IDLE for cmd {args}"
@@ -47,6 +49,10 @@ def do_cmd(pic, args, output=None, raise_on_error=False, timeout=1.0):
                 if output: output(msg)
                 raise RuntimeError(msg)
             return "FAIL IDLE"
+        else:
+            if output:
+                msg = f">> WARN: Unsupported STATUS response '{status_resp}'"
+                output(msg)
 
     # 4. Timeout Fallback
     msg = f">> TIMEOUT waiting for async cmd {args} to complete"

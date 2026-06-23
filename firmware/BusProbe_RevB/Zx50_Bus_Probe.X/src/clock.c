@@ -65,8 +65,8 @@ void Z80_Clock_Start_FreeRun(void) {
     free_run_running = true;
 
     // Ensure pins are outputs
-    TRISCbits.TRISC1 = 0;
-    TRISCbits.TRISC2 = 0;
+    Z80_CLK_DIR = 0;
+    Z80_MCLK_DIR = 0;
 
     // Reconnect the pins to the PWM hardware
     RC2PPS = 0x18; // PWM1
@@ -88,20 +88,30 @@ void Z80_Clock_Stop_FreeRun(void) {
     RC1PPS = 0x00; 
     RC2PPS = 0x00; 
 
-    // Revert pins to normal GPIO and hold them LOW
-    TRISCbits.TRISC1 = 0;
-    TRISCbits.TRISC2 = 0;
+    // RELEASE THE CLOCK PINS (Inputs / High-Z)
+    Z80_CLK_DIR = 1;
+    Z80_MCLK_DIR = 1;
+    
     Z80_CLK_LAT = 0;
     Z80_MCLK_LAT = 0;
 }
 
 void Z80_Clock_Start_Synchronized_Step(void) {
     Z80_Clock_Stop_FreeRun();
+    
+    // Ensure pins are outputs
+    Z80_CLK_DIR = 0;
+    Z80_MCLK_DIR = 0;
+    
     synchronized_step_running = true;
 }
 
 void Z80_Clock_Stop_Synchronized_Step(void) {
     synchronized_step_running = false;
+    
+    // RELEASE THE CLOCK PINS (Inputs / High-Z)
+    Z80_CLK_DIR = 1;
+    Z80_MCLK_DIR = 1;
 }
 
 void Z80_Clock_Manual_Pulse(void) {

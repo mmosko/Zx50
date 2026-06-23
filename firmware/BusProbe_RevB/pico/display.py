@@ -1,6 +1,8 @@
 import machine
 import time
 
+from main import APP_VERSION
+
 # Hardware configuration
 CS_PIN = 17
 RST_PIN = 20
@@ -87,7 +89,7 @@ def print_line(line_num, text):
 
 
 def update(state, detail1="", detail2=""):
-    print_line(0, "Zx50 Bus Probe Rev A")
+    print_line(0, f"Zx50 {APP_VERSION}")
     print_line(1, f"State: {state}")
     print_line(2, detail1)
     print_line(3, detail2)

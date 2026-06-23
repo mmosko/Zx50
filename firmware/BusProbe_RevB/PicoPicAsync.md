@@ -1,76 +1,67 @@
-# Zx50 Bus Probe: Asynchronous Protocol & State Machine
+# Zx50 Bus Probe: Protocol Evolution & Queue Management
 
-## 1. Architectural Overview
+## 1. Architectural Overview & Evolution
 
-The Zx50 Bus Probe originally utilized a synchronous Remote Procedure Call (RPC) paradigm. The Pico (Host) would send a command (e.g., Memory Read) and block until the PIC18 completed the full Z80 instruction cycle (T1, T2, T3) and returned the result.
+The Zx50 Bus Probe architecture has evolved through several paradigms to handle the latency mismatch between the Pico's
+USB/UART stack and the PIC18's real-time Z80 bus toggling.
 
-While this worked for auto-running clocks, it fundamentally broke **Manual Stepping Mode**. If the user wanted to step the clock manually via the front panel `AUX` switch to observe the bus states, the PIC would pause mid-instruction. This caused the Pico's UART timeout to expire, dropping the packet and breaking the CLI.
-
-To resolve this, the protocol has been redesigned as a **Fully Asynchronous Polling System**.
-1. **Submission:** The Pico submits a command and receives an immediate `RESP_QUEUED` acknowledgment.
-2. **Execution:** The PIC processes the command asynchronously (either driven by the 1kHz auto-clock timer or manual `AUX` steps).
-3. **Retrieval:** The Pico polls the PIC (via `CMD_STEP` or `CMD_STATUS`) to check if the command is complete and fetch the data payload.
-
----
-
-## 2. Protocol Definitions
-
-### 2.1 Command Opcodes (Pico $\rightarrow$ PIC)
-* `CMD_LD (0x01)`: Queue Memory Read.
-* `CMD_STORE (0x02)`: Queue Memory Write.
-* `CMD_IN (0x03)`: Queue I/O Read.
-* `CMD_OUT (0x04)`: Queue I/O Write.
-* `CMD_STEP (0x11)`: Advance the clock 1 cycle (if auto-clock is off) and return queue status.
-* `CMD_STATUS (0x15)`: *[NEW]* Return queue status without advancing the clock.
-
-### 2.2 Response Codes (PIC $\rightarrow$ Pico)
-* `RESP_QUEUED (0x5C)`: Command accepted into the empty queue slot.
-* `RESP_PENDING (0x5D)`: Command is actively executing (currently in T1 or T2).
-* `RESP_DONE (0x5E)`: Command finished (T cycle completed). A data byte immediately follows if the command was a Read.
-* `RESP_IDLE (0x5F)`: Queue is empty. Nothing is executing.
-* `SYNC_OK (0x5A)`: Command accepted (e.g. non-queued commend, like STEP).
-* `SYNC_NACK (0x5B)`: Command rejected (e.g., Queue is full or invalid syntax).
+1. **Legacy Synchronous (RPC):** The Pico sent a command and blocked until the PIC completed the full instruction cycle.
+   This broke if the user manually stepped the clock, causing the Pico's UART to timeout.
+2. **Current Mode (Depth-1 Async Polling):** The current implementation. The Pico submits a command, gets an immediate
+   acknowledgment, and then repeatedly polls the PIC using `CMD_STATUS` to wait for completion.
+3. **Target Mode (Decoupled 8-Slot Ring Buffer):** The planned redesign. The PIC will utilize its full 8-slot ring
+   buffer, running independently. The Pico will rely on a physical hardware strobe (`PIC_PICO_INT`) to fetch batched
+   results, acting as a high-speed DMA pipeline.
 
 ---
 
-## 3. State Machines
+## 2. Protocol Definitions & Command Classes
 
-### 3.1 PIC18 State Machine (Command Queue)
+The `Process_UART_Command` dispatcher categorizes 4-byte packets into four distinct behavioral classes.
 
-The PIC maintains a command queue and tracks the Z80 T-States for the active command.
+### 2.1 Async Queued Commands
+These commands attempt to insert an operation into the PIC's ring buffer.
+* **Opcodes:** `CMD_LD (0x01)`, `CMD_STORE (0x02)`, `CMD_IN (0x03)`, `CMD_OUT (0x04)`
+* **Response:** * `RESP_QUEUED (0x5C)` if successfully added to the queue.
+  * `SYNC_NACK (0x5B)` if rejected (Queue is full).
 
-```plantuml
-@startuml
-skinparam handwritten false
-skinparam shadowing false
-skinparam state {
-  BackgroundColor White
-  BorderColor Black
-  ArrowColor Black
-}
+### 2.2 Async Polling & Stepping
+Used to manually advance the Z80 state machine or check the status of the `head` pointer.
+* **Opcodes:** * `CMD_STATUS (0x15)`: Queries the queue. Returns `DONE` (and pops), `PENDING`, or `IDLE`.
+  * `CMD_STEP (0x11)`: Uses the `param` byte to loop `CQ_Dispatch_Cycle()` N times. It intentionally falls through to `CMD_STATUS` to instantly report the resulting state.
 
-[*] --> STAT_EMPTY
+### 2.3 Clock Controls
+Instantly reconfigures the PIC's hardware timers and updates the `is_sync_clock_active` flag (which dictates if the physical AUX button is allowed to dispatch cycles).
+* **Opcodes:** `CMD_CLK_AUTO (0x20)`, `CMD_CLK_SYNC (0x21)`, `CMD_CLK_OFF (0x22)`
+* **Response:** `SYNC_OK (0x5A)`
 
-STAT_EMPTY --> STAT_PENDING : Rx Bus Command\n(Tx RESP_QUEUED)
-STAT_PENDING --> STAT_PROCESSING : Clock Pulses\nEnter T1
-STAT_PROCESSING --> STAT_PROCESSING : Clock Pulses\nEnter T2 (Wait States)
-STAT_PROCESSING --> STAT_DONE : Clock Pulses\nEnter T cycle (Data Latched)
-STAT_DONE --> STAT_EMPTY : Rx CMD_STATUS or CMD_STEP\n(Tx RESP_DONE + Data)
+### 2.4 Immediate Commands
+Synchronous hardware overrides.
+* **Opcodes:**
+  * `CMD_GHOST (0x08)`: Toggles bus driving. Returns `SYNC_OK`.
+  * `CMD_BOOT (0x14)`: Triggers reset sequence. Returns `SYNC_OK`.
+  * `CMD_SNAPSHOT (0x07)`: Assumes UART control and returns a raw buffer of bus states.
 
-@enduml
-```
+---
 
-**State Definitions:**
+## 3. Current Implementation: "Stop-and-Wait" (Depth-1)
 
-* `STAT_EMPTY`: No command loaded. If stepped or polled, returns `RESP_IDLE`.
-* `STAT_PENDING`: Command is queued but hasn't started its T1 cycle yet.
-* `STAT_PROCESSING`: The PIC is actively driving the transceivers and holding the bus.
-* `STAT_DONE`: The Z80 cycle is complete. The result is buffered. The PIC waits for the Pico to retrieve it, then clears the queue.
+In the current code, the PIC has a queue, but the Pico driver (`pic18_link.py` and `z80_async_bus.py`) artificially
+restricts it to a depth of 1.
 
+### 3.1 Command Opcodes & Responses
 
-### 3.2 Pico State Machine (Host CLI)
+* **Opcodes:** `CMD_LD (0x01)`, `CMD_STORE (0x02)`, `CMD_IN (0x03)`, `CMD_OUT (0x04)`, `CMD_STATUS (0x15)`.
+* **Responses:**
+    * `RESP_QUEUED (0x5C)`: Command accepted.
+    * `RESP_PENDING (0x5D)`: Command is actively executing T-states.
+    * `RESP_DONE (0x5E)`: Command finished (popped from queue). Data follows if a Read.
+    * `RESP_IDLE (0x5F)`: Queue is empty.
 
-The Pico CLI must track whether it is waiting for a bus operation to complete, preventing the user from overflowing the queue.
+### 3.2 The Polling State Machine
+
+The Pico submits a command, receives `RESP_QUEUED`, and enters a `HOST_WAITING` state where it spins in a polling loop,
+sending `CMD_STATUS` until it receives `RESP_DONE`.
 
 ```plantuml
 @startuml
@@ -84,109 +75,90 @@ skinparam state {
 
 [*] --> HOST_IDLE
 
-HOST_IDLE --> HOST_WAITING : Send CMD_LD / CMD_STORE\n(Rx RESP_QUEUED)
-HOST_WAITING --> HOST_WAITING : Send CMD_STEP / CMD_STATUS\n(Rx RESP_PENDING)
-HOST_WAITING --> HOST_IDLE : Send CMD_STEP / CMD_STATUS\n(Rx RESP_DONE)
-
+HOST_IDLE --> HOST_WAITING : Send CMD_LD\n(Rx RESP_QUEUED)
+HOST_WAITING --> HOST_WAITING : Send CMD_STATUS\n(Rx RESP_PENDING)
+HOST_WAITING --> HOST_IDLE : Send CMD_STATUS\n(Rx RESP_DONE + Data)
 @enduml
 ```
-
-**State Definitions:**
-
-* `HOST_IDLE`: Ready to accept new CLI commands.
-* `HOST_WAITING`: A bus command is queued. New bus commands are rejected locally. The user must issue `pic step` or `pic status` to resolve the pending command.
 
 ---
 
-## 4. Sequence Diagrams
+## 4. Target Redesign: The Decoupled 8-Slot Ring Buffer
 
-### 4.1 Scenario A: Manual Stepping (Read Operation)
+To achieve high-speed memory sweeps (e.g., 1MB SRAM tests), the architecture will be refactored into a pipelined "
+Sliding Window". The Pico will push up to 8 commands without waiting, and the PIC will execute them unstoppably.
 
-This scenario demonstrates how the asynchronous protocol allows the user to manually step through a Memory Read without triggering a UART timeout on the Pico.
+### 4.1 The Hardware Strobe (`PIC_PICO_INT`)
 
-```plantuml
-@startuml
-skinparam maxMessageSize 150
-participant Pico
-participant PIC18
-participant Z80_Bus
+A physical trace bridging PIC `RC0` to Pico `GPIO21` will replace UART polling.
 
-== Submission Phase ==
-Pico -> PIC18 : CMD_LD 0x1234
-PIC18 -> Pico : RESP_QUEUED
-note over Pico : State: HOST_WAITING
+* **Driven HIGH (Ready):** The PIC asserts this line whenever there is $\ge 1$ completed command waiting at the head of
+  the buffer to be fetched.
+* **Driven LOW (Busy/Empty):** The queue is empty, or the PIC is actively executing and no commands are finished.
 
-== Execution Phase (Manual Steps) ==
-Pico -> PIC18 : CMD_STEP
-PIC18 -> Z80_Bus : Execute T1 (Address Out)
-PIC18 -> Pico : RESP_PENDING
+### 4.2 The PIC Three-Pointer Queue
 
-Pico -> PIC18 : CMD_STEP
-PIC18 -> Z80_Bus : Execute T2 (~RD Falls)
-PIC18 -> Pico : RESP_PENDING
+The PIC C-code will decouple execution from fetching by maintaining three pointers:
 
-Pico -> PIC18 : CMD_STEP
-PIC18 -> Z80_Bus : Execute T cycle (Latch Data)
-PIC18 -> Pico : RESP_DONE [0x42]
+1. **`tail`:** UART inserts new commands here.
+2. **`exec`:** The Z80 state machine independently runs the command here, caches the result in the slot, marks it
+   `STAT_DONE`, and immediately advances to the next slot.
+3. **`head`:** The oldest completed command. Only advances when the Pico explicitly asks for the data via `CMD_STATUS`.
 
-== Retrieval Phase ==
-note over Pico : State: HOST_IDLE\nPrints: "OK 42"
-@enduml
+### 4.3 The Pico 3-Tier Python Architecture
 
-```
+The Python host will be refactored to cleanly manage the pipeline.
 
-### 4.2 Scenario B: Auto-Clock Mode (Write Operation)
+1. **Layer 1: `pic18_link` (The Dumb Pipe)**
+   Strictly non-blocking. It pushes formatted packets, reads the 1-byte immediate `RESP_QUEUED` ack, and exposes the
+   `GPIO21` pin state. It enforces a strict ~50ms timeout for UART desyncs.
+2. **Layer 2: `pic18_dispatch` (The FIFO Manager)**
+   Maintains a local `in_flight` counter (0 to 8).
+    * `push(cmd)`: Submits to the PIC. Returns a local "Receipt" dictionary. Blocks if queue is full.
+    * `pop()`: Blocks until `GPIO21` goes HIGH (with an execution timeout). Sends `CMD_STATUS`, retrieves the payload,
+      and returns `(Receipt, Data)`.
+3. **Layer 3: Application (`z80_mem_test`)**
+   Uses pipelining. Blasts 8 `push()` commands in a loop, followed by 8 `pop()` commands to retrieve the data rapidly.
 
-When the 1kHz auto-clock is running, the PIC will execute the command in the background immediately. The Pico uses `CMD_STATUS` to poll for completion.
+### 4.4 Target Sequence: Pipelined Fetch
 
-```plantuml
-@startuml
-participant Pico
-participant PIC18
-participant Z80_Bus
-
-Pico -> PIC18 : CMD_CLK_START
-PIC18 -> Pico : ACK
-
-== Submission Phase ==
-Pico -> PIC18 : CMD_STORE 0x1234 0xFF
-PIC18 -> Pico : RESP_QUEUED
-note over Pico : State: HOST_WAITING
-
-== Background Execution ==
-note over PIC18 : Timer ISR fires 3x (3ms)
-PIC18 -> Z80_Bus : T1, T2, T3, T4 execute automatically
-note over PIC18 : State moves to STAT_DONE
-
-== Polling Phase ==
-Pico -> PIC18 : CMD_STATUS
-PIC18 -> Pico : RESP_DONE
-note over Pico : State: HOST_IDLE\nPrints: "OK"
-@enduml
-
-```
-
-### 4.3 Scenario C: Hardware AUX Switch Stepping
-
-If the user steps the clock using the physical hardware switch on the PCB instead of the CLI, the PIC completes the command silently. The Pico retrieves it via `CMD_STATUS`.
+The Pico pushes a batch of reads, then immediately waits to pop them. `PIC_PICO_INT` signals exactly when the Pico
+should fetch.
 
 ```plantuml
 @startuml
-participant Pico
-participant PIC18
-actor User
+participant "App" as App
+participant "Dispatcher" as Disp
+participant "PIC18" as PIC
 
-Pico -> PIC18 : CMD_LD 0x1000
-PIC18 -> Pico : RESP_QUEUED
+== Batch Push (Up to 8) ==
+App -> Disp : push(READ 0x2000)
+Disp -> PIC : CMD_LD
+PIC -> Disp : RESP_QUEUED
+Disp -> App : Receipt 1
 
-User -> PIC18 : Toggle AUX Switch
-note over PIC18 : Executes T1
-User -> PIC18 : Toggle AUX Switch
-note over PIC18 : Executes T2
-User -> PIC18 : Toggle AUX Switch
-note over PIC18 : Executes T3 (Done)
+App -> Disp : push(READ 0x2001)
+Disp -> PIC : CMD_LD
+PIC -> Disp : RESP_QUEUED
+Disp -> App : Receipt 2
 
-Pico -> PIC18 : CMD_STATUS
-PIC18 -> Pico : RESP_DONE [0xAA]
+== Hardware Pipelined Fetch ==
+App -> Disp : pop()
+note over Disp : Blocks until RC0 (GPIO21) is HIGH
+note over PIC : Exec pointer finishes 0x2000\nCaches [0x42]
+PIC -> Disp : **Drives PIC_PICO_INT (RC0) HIGH**
+
+Disp -> PIC : CMD_STATUS
+PIC -> Disp : RESP_DONE [0x42]
+Disp -> App : (Receipt 1, Data: 0x42)
+
+App -> Disp : pop()
+note over Disp : Blocks until RC0 (GPIO21) is HIGH
+note over PIC : Exec pointer finishes 0x2001\nCaches [0x5A]
+PIC -> Disp : **Drives PIC_PICO_INT (RC0) HIGH**
+
+Disp -> PIC : CMD_STATUS
+PIC -> Disp : RESP_DONE [0x5A]
+Disp -> App : (Receipt 2, Data: 0x5A)
 @enduml
 ```
