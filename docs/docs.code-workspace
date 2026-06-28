@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../model_rev1"
+		},
+		{
+			"path": "../Zx50_BusProbe_Firmware"
+		},
+		{
+			"path": "../mmu"
+		},
+		{
+			"path": "../msbasic"
+		}
+	],
+	"settings": {}
+}

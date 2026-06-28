@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body { background-color: #1e1e1e; color: #00ff00; font-family: monospace; font-size: 14px; padding: 10px; }
+        #console { white-space: pre-wrap; word-wrap: break-word; outline: none; margin-top: 10px; }
+        .dbg { color: #ffaa00; font-style: italic; } 
+        
+        /* Hardware LCD Styling */
+        #lcd-bezel { background-color: #333; padding: 8px; border-radius: 4px; display: inline-block; border: 2px solid #555; margin-bottom: 15px; }
+        #lcd { 
+            background-color: #0000aa; 
+            color: #ffffff; 
+            padding: 4px 8px; 
+            min-width: 250px; 
+            min-height: 2.4em; /* Bumped up for 2 lines */
+            line-height: 1.2em;
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5); 
+            white-space: pre-wrap; /* Critical for rendering \n */
+        }    </style>
+</head>
+<body tabindex="0" autofocus>
+    
+    <div id="lcd-bezel">
+        <div id="lcd">WAITING FOR CPU...</div>
+    </div>
+
+    <div id="console">--- Interactive Zx50 Terminal ---<br></div>
+
+    <script>
+        const consoleDiv = document.getElementById('console');
+        const lcdDiv = document.getElementById('lcd');
+        let dbgBuffer = ""; 
+
+        // --- 1. SEND KEYSTROKES TO JAVASCRIPT ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Backspace') e.preventDefault(); 
+
+            let charCode = 0;
+            if (e.key === 'Enter') charCode = 0x0D;
+            else if (e.key === 'Backspace') charCode = 0x08;
+            else if (e.key.length === 1) charCode = e.key.charCodeAt(0);
+
+            if (charCode !== 0) {
+                UIAPI.sendToCustomLogic({ command: 'tx', char: charCode });
+            }
+        });
+
+        // --- 2. RECEIVE BYTES FROM JAVASCRIPT ---
+        UIAPI.receivedFromCustomLogic = (msg) => {
+            const char = msg.char;
+
+            // MAIN CONSOLE (Port 0x84)
+            if (msg.command === 'con') {
+                if (char === 0x08) { 
+                    if (consoleDiv.lastChild && consoleDiv.lastChild.nodeType === Node.TEXT_NODE) {
+                        consoleDiv.lastChild.textContent = consoleDiv.lastChild.textContent.slice(0, -1);
+                    }
+                } else if (char !== 0x0D && char !== 0x00) {
+                    let appendStr = (char === 0x0A) ? '\n' : String.fromCharCode(char);
+                    consoleDiv.appendChild(document.createTextNode(appendStr));
+                }
+            } 
+            // DEBUG TRACE (Port 0x85)
+            else if (msg.command === 'dbg') {
+                if (char === 0x0A) { 
+                    let span = document.createElement('span');
+                    span.className = 'dbg';
+                    span.textContent = dbgBuffer + '\n';
+                    consoleDiv.appendChild(span);
+                    dbgBuffer = ""; 
+                } else if (char !== 0x0D && char !== 0x00) {
+                    dbgBuffer += String.fromCharCode(char);
+                }
+            }
+            // FRONT PANEL LCD (Port 0x50)
+            else if (msg.command === 'lcd') {
+                if (char === 0x01) {
+                    // Standard HD44780 Clear Display Command
+                    lcdDiv.textContent = "";
+                } else if (char === 0x0A) {
+                    // Handle Line Feed / Newline
+                    lcdDiv.textContent += '\n';
+                } else if (char >= 0x20 && char <= 0x7E) {
+                    // Only print standard displayable ASCII characters
+                    lcdDiv.textContent += String.fromCharCode(char);
+                }
+            }
+
+            window.scrollTo(0, document.body.scrollHeight);
+        };
+    </script>
+</body>
+</html>
