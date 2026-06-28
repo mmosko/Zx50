@@ -72,9 +72,12 @@ The firmware is considered feature-complete for its initial goals and is ready f
 
 - **Remote Bus Monitoring via Wi-Fi:**
     - Enable the Pico's Wi-Fi module to connect to the local network.
-    - Stream the bus status over a simple TCP socket (e.g., for `nc` or a custom client) or create a small embedded web page that mirrors the physical LCD and LEDs. This would allow for remote, headless monitoring of the Z80 system.
+    - Stream the bus status over a simple TCP socket (e.g., for `nc` or a custom client) or create a small embedded web
+      page that mirrors the physical LCD and LEDs. This would allow for remote, headless monitoring of the Z80 system.
 - **Z80 Control Implementation:**
-    - Implement the logic to drive the Z80's `~WAIT` line based on the `RUN`/`STEP` switches to allow for true single-stepping and pausing of the CPU.
+    - Implement the logic to drive the Z80's `~WAIT` line based on the `RUN`/`STEP` switches to allow for true
+      single-stepping and pausing of the CPU.
 - **Full HCMS Display Implementation:**
-    - Expand the `leds.py` and `font.py` modules to render the full Z80 address and data bus values on the dot-matrix displays, not just the status codes.
+    - Expand the `leds.py` and `font.py` modules to render the full Z80 address and data bus values on the dot-matrix
+      displays, not just the status codes.
 

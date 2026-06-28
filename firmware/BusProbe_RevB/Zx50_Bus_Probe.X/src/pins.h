@@ -1,9 +1,6 @@
-/* 
- * File:   pins.h
+/* * File:   pins.h
  * Author: Marc Mosko
  * Description: Hardware Abstraction Layer for Zx50 Bus Probe Rev B.
- * Defines meaningful names for all PIC18F27Q43 I/O pins and the
- * three MCP23S17 I/O expanders based on the schematic.
  */
 
 #ifndef PINS_H
@@ -20,24 +17,37 @@
 #define SPI_SDO_DIR         TRISCbits.TRISC5
 #define SPI_SDI_DIR         TRISCbits.TRISC4
 
-// --- I/O Expander Chip Selects ---
-#define EXP_ADDR_CS_DIR     TRISAbits.TRISA5
-#define EXP_ADDR_CS_LAT     LATAbits.LATA5
+// --- Expander SPI Chip Select (Shared) ---
+#define EXP_CS_DIR          TRISAbits.TRISA5
+#define EXP_CS_LAT          LATAbits.LATA5
 
-#define EXP_DATA_CS_DIR     TRISAbits.TRISA4
-#define EXP_DATA_CS_LAT     LATAbits.LATA4
+// --- Expander Reset (Shared) ---
+#define EXP_RESET_DIR       TRISAbits.TRISA4
+#define EXP_RESET_LAT       LATAbits.LATA4
 
-#define EXP_SHADOW_CS_DIR   TRISAbits.TRISA3
-#define EXP_SHADOW_CS_LAT   LATAbits.LATA3
+// --- Transceiver Controls (74ABT245) ---
+// Data Bus Transceiver (U6)
+#define DATA_XCVR_OE_DIR    TRISAbits.TRISA0
+#define DATA_XCVR_OE_LAT    LATAbits.LATA0
+#define DATA_XCVR_DIR_DIR   TRISAbits.TRISA1
+#define DATA_XCVR_DIR_LAT   LATAbits.LATA1
 
-// --- I/O Expander Reset ---
-#define EXP_RESET_DIR       TRISAbits.TRISA2
-#define EXP_RESET_LAT       LATAbits.LATA2
+// Address & Control Bus Transceivers (U7, U17, U19)
+#define ADDR_XCVR_OE_DIR    TRISAbits.TRISA2
+#define ADDR_XCVR_OE_LAT    LATAbits.LATA2
+#define ADDR_XCVR_DIR_DIR   TRISAbits.TRISA3
+#define ADDR_XCVR_DIR_LAT   LATAbits.LATA3
+
+// Shadow Bus Transceivers (U22, U23)
+#define SHADOW_XCVR_OE_DIR  TRISAbits.TRISA6
+#define SHADOW_XCVR_OE_LAT  LATAbits.LATA6
+#define SHADOW_XCVR_DIR_DIR TRISAbits.TRISA7
+#define SHADOW_XCVR_DIR_LAT LATAbits.LATA7
 
 // --- Communication with Raspberry Pi Pico ---
-#define PICO_TX_DIR         TRISCbits.TRISC6 // PIC's TX pin (connects to Pico's RX)
-#define PICO_RX_DIR         TRISCbits.TRISC7 // PIC's RX pin (connects to Pico's TX)
-#define PICO_INT_DIR        TRISCbits.TRISC0 // Interrupt pin to signal the Pico
+#define PICO_TX_DIR         TRISCbits.TRISC6 
+#define PICO_RX_DIR         TRISCbits.TRISC7 
+#define PICO_INT_DIR        TRISCbits.TRISC0 
 #define PICO_INT_LAT        LATCbits.LATC0
 
 // --- Z80 Bus Control (Directly from PIC) ---
@@ -55,9 +65,9 @@
 #define AUX_PIN_VAL         PORTBbits.RB4
 
 // --- Clock Generation ---
-#define Z80_CLK_DIR         TRISCbits.TRISC1 // Output for the Z80 clock signal
+#define Z80_CLK_DIR         TRISCbits.TRISC1 
 #define Z80_CLK_LAT         LATCbits.LATC1
-#define Z80_MCLK_DIR        TRISCbits.TRISC2 // Output for the master clock
+#define Z80_MCLK_DIR        TRISCbits.TRISC2 
 #define Z80_MCLK_LAT        LATCbits.LATC2
 
 // --- Programming Pins ---
@@ -66,20 +76,15 @@
 #define MCLR_PIN            RE3
 
 // ==========================================
-// MCP23S17 I/O Expander Pin Definitions
-// These are not physical PIC pins, but rather the port pins on the expanders.
-// The firmware will access these via SPI commands.
+// MCP23S17 I/O Expander Register Mapping
 // ==========================================
 
 // --- U1: Z80 Address Bus (A0-A15) ---
-// GPA for A0-A7, GPB for A8-A15
 #define EXP_ADDR_PORTA      GPIOA
 #define EXP_ADDR_PORTB      GPIOB
 
 // --- U21: Z80 Data Bus (D0-D7) & Control Signals ---
-// GPA for D0-D7
 #define EXP_DATA_PORTA      GPIOA
-// GPB for control signals
 #define EXP_DATA_PORTB      GPIOB
 #define Z80_RD_N_PIN        0 // GPB0
 #define Z80_WR_N_PIN        1 // GPB1
@@ -91,9 +96,7 @@
 #define Z80_RFSH_N_PIN      7 // GPB7
 
 // --- U13: Shadow Bus (SD0-SD7) & Control Signals ---
-// GPA for SD0-SD7
 #define EXP_SHADOW_DATAPORT GPIOA
-// GPB for shadow control signals
 #define EXP_SHADOW_CTRLPORT GPIOB
 #define SH_STB_N_PIN        0 // GPB0
 #define SH_INC_N_PIN        1 // GPB1

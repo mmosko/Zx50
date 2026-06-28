@@ -25,8 +25,8 @@ extern "C" {
 // --- Hardware Addresses ---
 // These are set by the A0, A1, A2 pins on the schematic.
 #define EXP_ADDR_HW_ADDR   0x00  // U1: Z80 Address Bus (A0-A15)
-#define EXP_DATA_HW_ADDR   0x01  // U21: Z80 Data Bus (D0-D7) & Control
-#define EXP_SHADOW_HW_ADDR 0x02  // U13: Shadow Bus (SD0-SD7) & Control
+#define EXP_DATA_HW_ADDR   0x02  // U21: Z80 Data Bus (D0-D7) & Control
+#define EXP_SHADOW_HW_ADDR 0x01  // U13: Shadow Bus (SD0-SD7) & Control
 
 // --- Register Map (with BANK=0) ---
 #define REG_IODIRA 0x00 // Data Direction Port A (1=Input, 0=Output)

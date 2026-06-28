@@ -27,17 +27,18 @@ static inline uint8_t Reverse_Byte(uint8_t b) {
 
 void Ghost(uint8_t enable) {
     // Always enable the transceivers by driving their *OE pins LOW
-    LATAbits.LATA0 = 0; // Data Bus *OE
-    LATAbits.LATA2 = 0; // Addr/Ctrl Bus *OE
-    LATAbits.LATA6 = 0; // Shadow Bus *OE
+    DATA_XCVR_OE_LAT = 0;
+    ADDR_XCVR_OE_LAT = 0;
+    SHADOW_XCVR_OE_LAT = 0;
 
     if (enable) {
         // --- GHOST MODE (LISTEN) ---
-        LATAbits.LATA1 = 1; // Data DIR: Inward
-        LATAbits.LATA3 = 1; // Addr/Ctrl DIR: Inward
-        LATAbits.LATA7 = 1; // Shadow DIR: Inward
+        // DIR = 1 means flow is A -> B (Z80 driving into Expander)
+        DATA_XCVR_DIR_LAT = 1; 
+        ADDR_XCVR_DIR_LAT = 1; 
+        SHADOW_XCVR_DIR_LAT = 1;
 
-        // 2. Configure all expander ports as INPUTS
+        // Configure all expander ports as INPUTS so they don't fight
         Expander_Write(EXP_ADDR_HW_ADDR, REG_IODIRA, 0xFF);
         Expander_Write(EXP_ADDR_HW_ADDR, REG_IODIRB, 0xFF);
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0xFF);
@@ -47,11 +48,12 @@ void Ghost(uint8_t enable) {
 
     } else {
         // --- CONTROL MODE (DRIVE) ---
-        LATAbits.LATA1 = 0; // Data DIR: Outward
-        LATAbits.LATA3 = 0; // Addr/Ctrl DIR: Outward
-        LATAbits.LATA7 = 0; // Shadow DIR: Outward
+        // DIR = 0 means flow is B -> A (Expander driving into Z80)
+        DATA_XCVR_DIR_LAT = 0; 
+        ADDR_XCVR_DIR_LAT = 0; 
+        SHADOW_XCVR_DIR_LAT = 0;
 
-        // 2. Configure all expander ports as OUTPUTS
+        // Configure all expander ports as OUTPUTS
         Expander_Write(EXP_ADDR_HW_ADDR, REG_IODIRA, 0x00);
         Expander_Write(EXP_ADDR_HW_ADDR, REG_IODIRB, 0x00);
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0x00);
@@ -59,7 +61,7 @@ void Ghost(uint8_t enable) {
         Expander_Write(EXP_SHADOW_HW_ADDR, REG_IODIRA, 0x00);
         Expander_Write(EXP_SHADOW_HW_ADDR, REG_IODIRB, 0x00);
 
-        // 3. Drive a safe, inactive state on all buses
+        // Drive a safe, inactive state on all buses
         Expander_Write(EXP_ADDR_HW_ADDR, REG_GPIOA, 0x00);
         Expander_Write(EXP_ADDR_HW_ADDR, REG_GPIOB, 0x00);
         Expander_Write(EXP_DATA_HW_ADDR, REG_GPIOA, 0x00);
@@ -122,14 +124,11 @@ void Z80_Mem_Write(uint16_t address, uint8_t data, t_cycle_t cycle) {
 uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t cycle) {
     uint8_t data = 0xFF;
     if (cycle == CYCLE_T1) {
-        Z80_Set_Address(address);
-        Z80_Generate_Single_Pulse();
-        Z80_Set_Control(0, 1, 1, 1);
+        // ... [keep] ...
     } else if (cycle == CYCLE_T2) {
-        // ⚠️ CRITICAL: We are about to assert ~RD.
-        // We MUST turn our Data Transceiver around to LISTEN (Inward)
-        // and switch the Expander to INPUT so we don't fight the RAM chip!
-        LATAbits.LATA1 = 1;
+        // ?? CRITICAL: We are about to assert ~RD.
+        // Turn Data Transceiver to LISTEN (Inward A->B)
+        DATA_XCVR_DIR_LAT = 1;
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0xFF);
 
         Z80_Generate_Single_Pulse();
@@ -139,12 +138,13 @@ uint8_t Z80_Mem_Read(uint16_t address, t_cycle_t cycle) {
         Z80_Generate_Single_Pulse();
         Z80_Set_Control(1, 1, 1, 1);
 
-        // Restore Drive state for the next cycle
-        LATAbits.LATA1 = 0;
+        // Restore Drive state (B->A) for the next cycle
+        DATA_XCVR_DIR_LAT = 0;
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0x00);
     }
     return data;
 }
+
 
 void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t cycle) {
     if (cycle == CYCLE_T1) {
@@ -162,17 +162,13 @@ void Z80_IO_Write(uint16_t port_and_ah, uint8_t data, t_cycle_t cycle) {
     }
 }
 
-
 uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t cycle) {
     uint8_t data = 0xFF;
     if (cycle == CYCLE_T1) {
-        Z80_Set_Address(port_and_ah);
-        Z80_Generate_Single_Pulse();
+        // ... [keep] ...
     } else if (cycle == CYCLE_T2) {
-        // We are about to assert ~RD.
-        // We MUST turn our Data Transceiver around to LISTEN (Inward)
-        // and switch the Expander to INPUT
-        LATAbits.LATA1 = 1;
+        // Turn Data Transceiver to LISTEN (Inward A->B)
+        DATA_XCVR_DIR_LAT = 1;
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0xFF);
 
         Z80_Generate_Single_Pulse();
@@ -183,8 +179,9 @@ uint8_t Z80_IO_Read(uint16_t port_and_ah, t_cycle_t cycle) {
         Z80_Generate_Single_Pulse();
         Z80_Set_Control(1, 1, 1, 1);
         WAIT_Deassert();
-        // Restore Drive state for the next cycle
-        LATAbits.LATA1 = 0;
+        
+        // Restore Drive state (B->A)
+        DATA_XCVR_DIR_LAT = 0;
         Expander_Write(EXP_DATA_HW_ADDR, REG_IODIRA, 0x00);
     }
     return data;

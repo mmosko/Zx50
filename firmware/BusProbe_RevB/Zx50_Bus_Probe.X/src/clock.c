@@ -119,6 +119,10 @@ void Z80_Clock_Manual_Pulse(void) {
 }
 
 void Z80_Generate_Single_Pulse(void) {
+    // Ensure pins are outputs
+    Z80_CLK_DIR = 0;
+    Z80_MCLK_DIR = 0;
+    
     Z80_MCLK_LAT = 1; NOP();
     Z80_MCLK_LAT = 0; NOP();
     Z80_CLK_LAT = 1;
@@ -132,6 +136,10 @@ void Z80_Generate_Single_Pulse(void) {
 
     Z80_MCLK_LAT = 1; NOP();
     Z80_MCLK_LAT = 0; NOP();
+    
+    // RELEASE THE CLOCK PINS (Inputs / High-Z)
+    Z80_CLK_DIR = 1;
+    Z80_MCLK_DIR = 1;
 }
 
 // ==========================================

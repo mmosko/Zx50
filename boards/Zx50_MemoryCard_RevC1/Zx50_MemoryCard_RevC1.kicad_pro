@@ -638,6 +638,10 @@
       {
         "netclass": "FPGA",
         "pattern": "*/UROM*"
+      },
+      {
+        "netclass": "FPGA",
+        "pattern": "/SD*"
       }
     ]
   },

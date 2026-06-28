@@ -38,17 +38,18 @@ CMD_STEP = 0x11
 CMD_BOOT = 0x14
 CMD_STATUS = 0x15
 
-# New Simplified Clock Commands
+# Simplified Clock Commands
 CMD_CLK_AUTO = 0x20
 CMD_CLK_SYNC = 0x21
 CMD_CLK_OFF = 0x22
 
 # Async Response Codes
+RESP_ASYNC_DONE = 0x59  # Gratuitous async completion push
 SYNC_OK = 0x5A
 SYNC_NACK = 0x5B
 RESP_QUEUED = 0x5C
 RESP_PENDING = 0x5D
-RESP_DONE = 0x5E
+RESP_DONE = 0x5E  # Polled completion
 RESP_IDLE = 0x5F
 
 
@@ -108,8 +109,33 @@ class PIC18Link:
                     return resp
         return ERR_TIMEOUT
 
+    def _fetch_payload(self):
+        """Helper to extract the data byte if the completed command was a READ/IN."""
+        if self.pending_cmd_type in ["READ", "IN"]:
+            t1 = time.ticks_ms()
+            while time.ticks_diff(time.ticks_ms(), t1) < 10:  # 10ms window for the data byte
+                if self.uart.any():
+                    data = self.uart.read(1)[0]
+                    self.pending_cmd_type = None  # Clear the tracking slot
+                    return f"{RES_OK_DONE} {data:02X}"
+
+            self.pending_cmd_type = None  # Clear it even if we failed to prevent lockup
+            return ERR_TIMEOUT_DATA
+        else:
+            # Write commands are done, no data to fetch
+            self.pending_cmd_type = None
+            return RES_OK_DONE
+
     def _poll_action(self, opcode, param=0, timeout_ms=100):
-        """Used for STEP and STATUS. Waits for the state of the queue and grabs data if DONE."""
+        """Used for STEP and STATUS. Checks for gratuitous completion, then polls if needed."""
+
+        # 1. Catch gratuitous async byte BEFORE sending a new poll command to avoid a race condition
+        while self.uart.any():
+            resp = self.uart.read(1)[0]
+            if resp == RESP_ASYNC_DONE:
+                return self._fetch_payload()
+
+        # 2. If nothing is in the buffer, actively ask the PIC
         self._send_packet(opcode, param=param)
 
         t0 = time.ticks_ms()
@@ -123,28 +149,36 @@ class PIC18Link:
                 elif resp == RESP_PENDING:
                     return RES_OK_PENDING
 
-                elif resp == RESP_DONE:
-                    # If the command that just finished was a read, the data byte is right behind it
-                    if self.pending_cmd_type in ["READ", "IN"]:
-                        t1 = time.ticks_ms()
-                        while time.ticks_diff(time.ticks_ms(), t1) < 10:  # 10ms window for the data byte
-                            if self.uart.any():
-                                data = self.uart.read(1)[0]
-                                self.pending_cmd_type = None  # Clear the tracking slot
-                                return f"{RES_OK_DONE} {data:02X}"
-
-                        self.pending_cmd_type = None  # Clear it even if we failed, so we don't lock up
-                        return ERR_TIMEOUT_DATA
-
-                    else:
-                        # Write commands are done, no data to fetch
-                        self.pending_cmd_type = None
-                        return RES_OK_DONE
+                elif resp in (RESP_DONE, RESP_ASYNC_DONE):
+                    return self._fetch_payload()
 
                 elif resp == SYNC_NACK:
                     return ERR_NACK
 
         return ERR_TIMEOUT
+
+    # ==========================================
+    # PUBLIC ASYNC HANDLER
+    # ==========================================
+    def wait_for_completion(self, timeout_ms=1000):
+        """Passively blocks for RESP_ASYNC_DONE, falling back to a STATUS poll if needed."""
+        t0 = time.ticks_ms()
+
+        # Phase 1: Passive Listening
+        while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
+            if self.uart.any():
+                resp = self.uart.read(1)[0]
+                if resp in (RESP_ASYNC_DONE, RESP_DONE):
+                    return self._fetch_payload()
+                elif resp == RESP_IDLE:
+                    self.pending_cmd_type = None
+                    return RES_OK_IDLE
+
+            # Brief yield to prevent pegging the Pico CPU
+            time.sleep(0.001)
+
+            # Phase 2: Active Fallback (The PIC missed the push or we timed out waiting passively)
+        return self._poll_action(CMD_STATUS)
 
     # ==========================================
     # DISPATCH HANDLERS

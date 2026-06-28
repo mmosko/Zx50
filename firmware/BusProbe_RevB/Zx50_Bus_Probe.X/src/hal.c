@@ -2,8 +2,8 @@
 #include "hal.h"
 
 // MCP23S17 Base Opcodes (0100 A2 A1 A0 R/W)
-#define OPCODE_WRITE 0x40
-#define OPCODE_READ  0x41
+static const uint8_t OPCODE_WRITE = 0x40;
+static const uint8_t OPCODE_READ = 0x41;
 
 static void SPI1_Initialize(void);
 static void GPIO_Init(void);
@@ -25,64 +25,54 @@ void System_Init(void) {
 }
 
 static void GPIO_Init(void) {
-    // --- 1. Disable all analog inputs to use pins as digital I/O ---
+    // --- 1. Disable all analog inputs ---
     ANSELA = 0x00;
     ANSELB = 0x00;
     ANSELC = 0x00;
 
     // --- 2. Configure Open-Drain Outputs for Bus Safety ---
-    // RB0 (~INT), RB1 (~WAIT), and RB3 (~BUSRQ) must be open-drain.
-    // This allows the PIC to pull them low without causing a dead-short
-    // if another device on the Z80 bus is driving them high.
     ODCONBbits.ODCB0 = 1; // Z80_INT
     ODCONBbits.ODCB1 = 1; // Z80_WAIT
     ODCONBbits.ODCB3 = 1; // Z80_BUSRQ
 
-    // --- 3. Set Initial Latch States (BEFORE enabling outputs) ---
-    EXP_ADDR_CS_LAT = 1;   // Deselect all expanders
-    EXP_DATA_CS_LAT = 1;
-    EXP_SHADOW_CS_LAT = 1;
-    EXP_RESET_LAT = 1;     // Hold expanders out of reset
+    // --- 3. Set Initial Latch States ---
+    EXP_CS_LAT = 1;        // Deselect all expanders (RA5)
+    EXP_RESET_LAT = 1;     // Hold expanders out of reset (RA4)
+    
+    // Disable all transceivers on boot by driving *OE High
+    DATA_XCVR_OE_LAT = 1;
+    ADDR_XCVR_OE_LAT = 1;
+    SHADOW_XCVR_OE_LAT = 1;
 
-    Z80_BUSRQ_LAT = 1;     // Float high (De-assert BUSRQ)
-    Z80_WAIT_LAT = 1;      // Float high (De-assert WAIT)
-    Z80_INT_LAT = 1;       // Float high (De-assert INT)
+    Z80_BUSRQ_LAT = 1;     
+    Z80_WAIT_LAT = 1;      
+    Z80_INT_LAT = 1;       
 
-    Z80_CLK_LAT = 0;       // Initialize clock outputs low
+    Z80_CLK_LAT = 0;       
     Z80_MCLK_LAT = 0;
 
     // --- 4. Set Pin Directions ---
-    // All pins default to input, we selectively poke holes for outputs
-    TRISA = 0xFF;
-    TRISB = 0xFF;
-    TRISC = 0xFF;
+    TRISA = 0x00; // PORTA is strictly Output (Transceivers + Expander CS/RST)
+    TRISB = 0xFF; // Default inputs
+    TRISC = 0xFF; // Default inputs
 
-    // SPI and Expander Control Pins
-    SPI_SCK_DIR = 0; // SCK is an output in master mode
-    SPI_SDO_DIR = 0; // SDO is an output
-    // Note: SPI_SDI_DIR is implicitly 1 (Input) from TRISC = 0xFF
-    EXP_ADDR_CS_DIR = 0;
-    EXP_DATA_CS_DIR = 0;
-    EXP_SHADOW_CS_DIR = 0;
-    EXP_RESET_DIR = 0;
+    // SPI Pins
+    SPI_SCK_DIR = 0; 
+    SPI_SDO_DIR = 0; 
 
     // UART Pins
-    PICO_TX_DIR = 0; // TX is an output
-    PICO_RX_DIR = 1; // RX is an input
+    PICO_TX_DIR = 0; 
+    PICO_RX_DIR = 1; 
 
-    // Z80 Control Pins (Now safely backed by ODCONB)
+    // Z80 Control Pins
     Z80_BUSRQ_DIR = 0;
     Z80_WAIT_DIR = 0;
     Z80_INT_DIR = 0;
 
-    // Clock outputs -- start as isolated inputs
-    Z80_CLK_DIR = 1;
-    Z80_MCLK_DIR = 1;
-
-    // --- Heartbeat LED Setup ---
-    ANSELBbits.ANSELB5 = 0; // Ensure RB5 is digital
-    TRISBbits.TRISB5 = 0;   // Set RB5 as output
-    LATBbits.LATB5 = 1;     // Turn LED OFF at boot (Active Low)
+    // Heartbeat LED Setup
+    ANSELBbits.ANSELB5 = 0; 
+    TRISBbits.TRISB5 = 0;   
+    LATBbits.LATB5 = 1;     
 }
 
 static void UART_Init(void) {
@@ -194,12 +184,19 @@ void UART_Write(uint8_t data) {
     U1TXB = data;
 }
 
+
 int UART_Read(uint8_t *output) {
+    // If the hardware FIFO overflows, safely flush it
     if (U1ERRIRbits.U1RXFOIF) {
-        U1CON1bits.ON = 0;
-        U1CON1bits.ON = 1;
+        // Drain the FIFO to clear the overflow condition
+        while (PIR4bits.U1RXIF) {
+            volatile uint8_t dummy = U1RXB;
+        }
+        // Manually clear the flag just to be safe
+        U1ERRIRbits.U1RXFOIF = 0; 
         return 1;
     }
+    
     if (PIR4bits.U1RXIF) {
         *output = U1RXB;
         return 0;
@@ -225,37 +222,29 @@ uint8_t SPI_Transfer(uint8_t data) {
 }
 
 void Expander_Write(uint8_t hw_addr, uint8_t reg_addr, uint8_t data) {
-    // Select the correct expander based on its hardware address
-    if (hw_addr == EXP_ADDR_HW_ADDR) EXP_ADDR_CS_LAT = 0;
-    else if (hw_addr == EXP_DATA_HW_ADDR) EXP_DATA_CS_LAT = 0;
-    else if (hw_addr == EXP_SHADOW_HW_ADDR) EXP_SHADOW_CS_LAT = 0;
+    EXP_CS_LAT = 0; // Assert Shared CS
 
-    SPI_Transfer(OPCODE_WRITE);
+    uint8_t opcode = (uint8_t)(OPCODE_WRITE | (hw_addr << 1));
+    
+    SPI_Transfer(opcode);
     SPI_Transfer(reg_addr);
     SPI_Transfer(data);
 
-    // Deselect all
-    EXP_ADDR_CS_LAT = 1;
-    EXP_DATA_CS_LAT = 1;
-    EXP_SHADOW_CS_LAT = 1;
+    EXP_CS_LAT = 1; // De-assert Shared CS
 }
 
 uint8_t Expander_Read(uint8_t hw_addr, uint8_t reg_addr) {
     uint8_t data;
 
-    // Select the correct expander
-    if (hw_addr == EXP_ADDR_HW_ADDR) EXP_ADDR_CS_LAT = 0;
-    else if (hw_addr == EXP_DATA_HW_ADDR) EXP_DATA_CS_LAT = 0;
-    else if (hw_addr == EXP_SHADOW_HW_ADDR) EXP_SHADOW_CS_LAT = 0;
+    EXP_CS_LAT = 0; // Assert Shared CS
 
-    SPI_Transfer(OPCODE_READ);
+    uint8_t opcode = (uint8_t)(OPCODE_READ | (hw_addr << 1));
+    
+    SPI_Transfer(opcode);
     SPI_Transfer(reg_addr);
-    data = SPI_Transfer(0x00); // Send dummy byte to clock in data
+    data = SPI_Transfer(0x00); 
 
-    // Deselect all
-    EXP_ADDR_CS_LAT = 1;
-    EXP_DATA_CS_LAT = 1;
-    EXP_SHADOW_CS_LAT = 1;
+    EXP_CS_LAT = 1; // De-assert Shared CS
 
     return data;
 }
