@@ -1,12 +1,21 @@
 ; -- Memory Table --
 
-CLI_BUFFER      EQU 0x8000
+; Start just after the monitor program
+CLI_BUFFER      EQU _END_OF_ROM + 1
 CLI_MAX_LEN     EQU 128
 ; We reserve the last byte for the NULL terminator
 CLI_BUFFER_END  EQU CLI_BUFFER + CLI_MAX_LEN - 1
 
 ; The last address used for "D" command
-LAST_DUMP_ADDR  EQU CLI_BUFFER_END + 1  ; 0x8080 (Stores 16-bit address)
+LAST_DUMP_ADDR  EQU CLI_BUFFER_END + 1
+
+; This measures to the end of the monitor scratch pad.  It is
+; used to zero out the RAM after the ROM is copied to RAM.
+MONITOR_STORAGE_SIZE EQU LAST_DUMP_ADDR + 2 - _END_OF_ROM
+
+; Start the stack pointer at 8K and work down
+; This is the end of logical page 1
+STACK_POINTER   EQU 0x2000
 
 ; --- I/O Port Definitions ---
 CTC_CH0     EQU 0x80    ; CTC Channel 0 (Drives SIO Port A Clock)

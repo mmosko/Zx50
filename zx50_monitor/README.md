@@ -1,5 +1,13 @@
 # Zx50 Monitor - Session Summary & Resume State
 
+## Programming EEPROM
+
+Remember to add the `-s` flag so minipro will write an undersized ROM image.
+
+```bash
+minipro -p SST39SF040 -w monitor.bin -s
+```
+
 ## 1. Accomplished
 
 We successfully built a cycle-accurate, interactive hardware monitor for the custom Z80 "Zx50" project, fully verified
