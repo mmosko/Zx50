@@ -1,0 +1,119 @@
+; =============================================================================
+; Subroutine: PCB_Verify
+; Purpose:    Parses an app name from HL, finds it in PCB, and verifies checksum.
+; Input:      HL = Pointer to argument string (after the command)
+; Output:     C Flag SET = App not found
+;             C Flag CLEAR = App found
+;                Z Flag SET = Checksum Valid
+;                Z Flag CLEAR = Checksum Corrupt
+; Destroys:   AF, BC, DE, HL, IX
+; =============================================================================
+PCB_Verify:
+    ; 1. Skip spaces to find the app name
+.skip_spaces:
+    LD A, (HL)
+    OR A
+    JR Z, .not_found        ; Hit NULL before finding a name
+    CP ' '
+    JR NZ, .found_name
+    INC HL
+    JR .skip_spaces
+
+.found_name:
+    LD DE, HL               ; DE = Start of user's app name string
+
+    ; 2. Search PCB (Same logic as Cmd_Run)
+    LD IX, PROG_TABLE
+    LD B, PROG_TABLE_MAX
+
+.search_loop:
+    LD A, (IX + PCB_Entry.Name)
+    OR A
+    JR Z, .next_entry
+    
+    PUSH BC
+    PUSH DE
+    PUSH IX
+    POP HL
+    LD B, 8
+
+.compare_char:
+    LD A, (DE)
+    OR A
+    JR Z, .check_padding
+    CP ' '
+    JR Z, .check_padding
+    CP (HL)
+    JR NZ, .mismatch
+    INC HL
+    INC DE
+    DJNZ .compare_char
+    JR .app_found
+
+.check_padding:
+    LD A, (HL)
+    CP ' '
+    JR NZ, .mismatch
+    INC HL
+    DJNZ .check_padding
+    JR .app_found
+
+.mismatch:
+    POP DE
+    POP BC
+
+.next_entry:
+    PUSH DE
+    LD DE, PCB_Entry
+    ADD IX, DE
+    POP DE
+    DEC B
+    JR NZ, .search_loop
+
+.not_found:
+    SCF                     ; Set Carry Flag to indicate error
+    RET
+
+    ; 3. App Found - Verify Checksum
+.app_found:
+    POP DE                  ; Discard saved DE
+    POP BC                  ; Discard saved BC
+
+    LD L, (IX + PCB_Entry.Base)
+    LD H, (IX + PCB_Entry.Base + 1)
+    LD C, (IX + PCB_Entry.Size)
+    LD B, (IX + PCB_Entry.Size + 1)
+
+    LD A, B
+    OR C
+    JR Z, .is_valid         ; Size 0 (ROM apps) are always valid
+
+    LD DE, 0                ; Checksum Accumulator
+
+.calc_loop:
+    LD A, (HL)
+    PUSH HL
+    LD L, A
+    LD H, 0
+    ADD HL, DE
+    EX DE, HL
+    POP HL
+    
+    INC HL
+    DEC BC
+    LD A, B
+    OR C
+    JR NZ, .calc_loop
+
+    ; Compare calculated (DE) to stored Checksum
+    LD L, (IX + PCB_Entry.Chksum)
+    LD H, (IX + PCB_Entry.Chksum + 1)
+    
+    OR A                    ; CLEAR Carry Flag (App was found)
+    SBC HL, DE              ; If HL == DE, this sets the Zero Flag!
+    RET                     ; Return back to CLI
+
+.is_valid:
+    OR A                    ; CLEAR Carry Flag
+    CP A                    ; SET Zero Flag (A == A)
+    RET

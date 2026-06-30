@@ -1,0 +1,105 @@
+Cmd_Run:
+    LD HL, CLI_BUFFER
+    
+    ; 1. Skip the 'r' or "run" command and any leading spaces
+.skip_cmd:
+    LD A, (HL)
+    OR A
+    JP Z, Shell_Loop        ; If end of string, just return to prompt
+    CP ' '
+    JR Z, .skip_spaces      ; We found the space after the command
+    INC HL
+    JR .skip_cmd
+
+.skip_spaces:
+    INC HL
+    LD A, (HL)
+    CP ' '
+    JR Z, .skip_spaces
+    OR A
+    JP Z, Shell_Loop        ; If nothing but spaces, return to prompt
+    
+    ; HL now points to the first letter of the target app name!
+    LD DE, HL               ; Save the start of the user's string in DE
+
+    ; 2. Initialize the table scanner
+    LD IX, PROG_TABLE
+    LD B, PROG_TABLE_MAX
+
+.search_loop:
+    LD A, (IX + PCB_Entry.Name)
+    OR A
+    JR Z, .next_entry       ; Skip empty slots
+
+    ; 3. Compare the strings
+    PUSH BC                 ; Save outer loop counter
+    PUSH DE                 ; Save user string pointer so we can reset it for the next entry
+    
+    PUSH IX
+    POP HL                  ; HL = Start of PCB Name field
+    LD B, 8                 ; Inner loop: Max 8 characters to compare
+
+.compare_char:
+    LD A, (DE)              ; Read user's char
+    OR A                    ; Did we hit the end of the user's input?
+    JR Z, .check_padding    ; If yes, make sure the rest of the PCB name is spaces
+    
+    CP ' '                  ; NEW: Is it a space? (Start of arguments)
+    JR Z, .check_padding    ; NEW: Treat the space as the end of the app name!
+    
+    CP (HL)                 ; Compare user char to PCB char
+    JR NZ, .mismatch        ; If they don't match, this isn't our app
+    
+    INC HL
+    INC DE
+    DJNZ .compare_char      ; Loop for next character
+    
+    ; If we successfully matched all 8 characters exactly, it's a match!
+    JR .execute_app
+
+.check_padding:
+    ; User string ended early. Check if the remaining PCB chars are spaces.
+    LD A, (HL)
+    CP ' '
+    JR NZ, .mismatch
+    INC HL
+    DJNZ .check_padding
+    
+    ; If we made it here, it's a perfect match!
+
+.execute_app:
+    ; Clean up the stack before jumping!
+    POP AF                  ; Discard the saved user string pointer
+    POP BC                  ; Discard the saved loop counter
+
+    ; At this exact moment, DE points to the space or NULL directly after the app name!
+    ; We leave it in DE so the application can use it to parse its arguments!
+
+    ; Grab the Execution Address into HL
+    LD L, (IX + PCB_Entry.Base)
+    LD H, (IX + PCB_Entry.Base + 1)
+    
+    ; The Z80 has no "CALL (HL)", so we use a tiny trampoline routine
+    CALL Indirect_Call
+    
+    ; When the app executes a RET, it will come right back here!
+    JP Shell_Loop
+
+.mismatch:
+    POP DE                  ; Restore user string pointer for the next attempt
+    POP BC                  ; Restore outer loop counter
+
+.next_entry:
+    PUSH DE                 ; Save the user string pointer!
+    LD DE, PCB_Entry        ; Load struct size (10)
+    ADD IX, DE              ; Advance IX to the next slot cleanly
+    POP DE                  ; Restore the user string pointer!
+    
+    DEC B
+    JR NZ, .search_loop     ; 
+
+    ; If we exhausted the table, print an error
+    LD HL, CLI_MSG_APP_NOT_FOUND
+    CALL PrintConsoleString
+    JP Shell_Loop
+    

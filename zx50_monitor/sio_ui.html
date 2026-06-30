@@ -6,37 +6,56 @@
         #console { white-space: pre-wrap; word-wrap: break-word; outline: none; margin-top: 10px; }
         .dbg { color: #ffaa00; font-style: italic; } 
         
-        /* Hardware LCD Styling */
         #lcd-bezel { background-color: #333; padding: 8px; border-radius: 4px; display: inline-block; border: 2px solid #555; margin-bottom: 15px; }
         #lcd { 
-            background-color: #0000aa; 
-            color: #ffffff; 
-            padding: 4px 8px; 
-            min-width: 250px; 
-            min-height: 2.4em; /* Bumped up for 2 lines */
-            line-height: 1.2em;
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5); 
-            white-space: pre-wrap; /* Critical for rendering \n */
-        }    </style>
+            background-color: #0000aa; color: #ffffff; padding: 4px 8px; 
+            min-width: 250px; min-height: 2.4em; line-height: 1.2em;
+            text-transform: uppercase; letter-spacing: 1px; 
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5); white-space: pre-wrap; 
+        }
+        
+        #xm-btn {
+            background-color: #005500; color: white; border: 1px solid #00ff00;
+            padding: 5px 10px; cursor: pointer; font-family: monospace;
+            vertical-align: top; margin-left: 10px;
+        }
+        #xm-btn:hover { background-color: #008800; }
+    </style>
 </head>
 <body tabindex="0" autofocus>
     
     <div id="lcd-bezel">
         <div id="lcd">WAITING FOR CPU...</div>
     </div>
+    
+    <input type="file" id="file-input" style="display: none;" />
+    <button id="xm-btn" onclick="document.getElementById('file-input').click();">Upload File (XMODEM)</button>
 
     <div id="console">--- Interactive Zx50 Terminal ---<br></div>
 
     <script>
         const consoleDiv = document.getElementById('console');
         const lcdDiv = document.getElementById('lcd');
+        const fileInput = document.getElementById('file-input');
         let dbgBuffer = ""; 
+
+        // --- XMODEM STATE VARIABLES ---
+        let xmodemActive = false;
+        let xmodemRxResolve = null;
+
+        // --- VISUAL LOGGING FOR TRANSFERS ---
+        function sysLog(msg) {
+            let span = document.createElement('span');
+            span.style.color = '#00ffff'; // Cyan for system messages
+            span.textContent = "[UI] " + msg + '\n';
+            consoleDiv.appendChild(span);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
 
         // --- 1. SEND KEYSTROKES TO JAVASCRIPT ---
         document.addEventListener('keydown', (e) => {
             if (e.key === ' ' || e.key === 'Backspace') e.preventDefault(); 
+            if (xmodemActive) return; // Block typing during transfer!
 
             let charCode = 0;
             if (e.key === 'Enter') charCode = 0x0D;
@@ -54,6 +73,14 @@
 
             // MAIN CONSOLE (Port 0x84)
             if (msg.command === 'con') {
+                
+                // INTERCEPT BYTES FOR XMODEM IF ACTIVE
+                if (xmodemActive && xmodemRxResolve) {
+                    xmodemRxResolve(char);
+                    xmodemRxResolve = null;
+                    return; 
+                }
+
                 if (char === 0x08) { 
                     if (consoleDiv.lastChild && consoleDiv.lastChild.nodeType === Node.TEXT_NODE) {
                         consoleDiv.lastChild.textContent = consoleDiv.lastChild.textContent.slice(0, -1);
@@ -77,20 +104,92 @@
             }
             // FRONT PANEL LCD (Port 0x50)
             else if (msg.command === 'lcd') {
-                if (char === 0x01) {
-                    // Standard HD44780 Clear Display Command
-                    lcdDiv.textContent = "";
-                } else if (char === 0x0A) {
-                    // Handle Line Feed / Newline
-                    lcdDiv.textContent += '\n';
-                } else if (char >= 0x20 && char <= 0x7E) {
-                    // Only print standard displayable ASCII characters
-                    lcdDiv.textContent += String.fromCharCode(char);
-                }
+                if (char === 0x01) lcdDiv.textContent = "";
+                else if (char === 0x0A) lcdDiv.textContent += '\n';
+                else if (char >= 0x20 && char <= 0x7E) lcdDiv.textContent += String.fromCharCode(char);
             }
 
             window.scrollTo(0, document.body.scrollHeight);
         };
+
+        // --- 3. XMODEM FILE TRANSFER LOGIC ---
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const payload = new Uint8Array(e.target.result);
+                sysLog(`Loaded ${file.name} (${payload.length} bytes). Waiting for Z80 NAK...`);
+                await simulateXmodemTransfer(payload);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        async function simulateXmodemTransfer(payload) {
+            xmodemActive = true;
+            const SOH = 0x01, EOT = 0x04, ACK = 0x06, NAK = 0x15, CPM_EOF = 0x1A;
+            let blockNum = 1;
+            let offset = 0;
+
+            const sendByteToZ80 = (byte) => {
+                UIAPI.sendToCustomLogic({ command: 'tx', char: byte });
+            };
+
+            const readByteFromZ80 = async () => {
+                return new Promise(resolve => { xmodemRxResolve = resolve; });
+            };
+
+            // WAKE UP THE Z80! 
+            // The Z80 already sent its initial NAK and is blocked waiting for SOH.
+            // We send a dummy byte to trigger its garbage-handler, forcing a fresh NAK.
+            sendByteToZ80(0x00);
+            
+            let handshake = await readByteFromZ80();
+            if (handshake !== NAK) {
+                sysLog(`Transfer failed. Expected NAK (0x15), got 0x${handshake.toString(16)}`);
+                xmodemActive = false;
+                return;
+            }
+            sysLog("NAK received! Sending data...");
+
+            while (offset < payload.length) {
+                sendByteToZ80(SOH);
+                sendByteToZ80(blockNum);
+                sendByteToZ80(255 - blockNum); 
+
+                let checksum = 0;
+                for (let i = 0; i < 128; i++) {
+                    let data = (offset + i < payload.length) ? payload[offset + i] : CPM_EOF;
+                    sendByteToZ80(data);
+                    checksum = (checksum + data) & 0xFF; 
+                }
+                
+                sendByteToZ80(checksum);
+
+                let response = await readByteFromZ80();
+                if (response !== ACK) {
+                    sysLog(`Packet ${blockNum} rejected! Expected ACK, got 0x${response.toString(16)}`);
+                    xmodemActive = false;
+                    return;
+                }
+                
+                offset += 128;
+                blockNum = (blockNum + 1) & 0xFF; 
+            }
+
+            sysLog("Payload complete. Sending EOT...");
+            sendByteToZ80(EOT);
+            
+            let finalAck = await readByteFromZ80();
+            if (finalAck === ACK) {
+                sysLog("Transfer Successful! Z80 has control.");
+            } else {
+                sysLog("Transfer failed on final ACK.");
+            }
+            
+            xmodemActive = false;
+        }
     </script>
 </body>
 </html>

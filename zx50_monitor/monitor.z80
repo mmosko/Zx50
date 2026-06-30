@@ -2,18 +2,38 @@
 ;    SLDOPT COMMENT WPMEM, LOGPOINT, ASSERTION  ; Enables DeZog advanced debugging
     SLDOPT COMMENT WPMEM, ASSERTION  ; Enables DeZog advanced debugging
     OUTPUT "monitor.bin"
-    ORG 0x0000
 
-    INCLUDE "defines.asm"
+    INCLUDE "kernel/defines.z80"
 
     ; ==========================================
     ; MEMORY MAP
     ; 0x0000 - 0x2000 : Reserved for Monitor Program (8KB)
+    ;    0x0008 - 0x000F : Zx50 Kernel API (jump table)
     ;    0x0000 - 0x0FFF : logical page 0 (the operating system)
     ;    0x1000 - 0x1FFF : logical page 1 (stack)
     ; 0x2000 - 0xFFFF : program RAM (logical pages 2-15)
     ; ==========================================
 
+    ORG 0x0000          ; 0x0000 - Hard reset vector
+run    JP Boot         
+
+    ; --- THE Zx50 KERNEL API ---
+    ; jump table.  See syscall.z80.
+    DS 0x0008 - $       ; Pad the binary gap perfectly to 0x0008
+Sys_ReadChar:
+    JP Console_Rx       ; 0x0008 - Wait for & return char in A
+Sys_PrintChar:
+    JP Console_Tx       ; 0x000B - Print char in A
+Sys_PrintString:
+    JP PrintConsoleString ; 0x000E - Print NULL-terminated string at HL
+Sys_ParseHexWord:
+    JP ParseHexWord     ; 0x0011 - Parse a 4-digit hex string at HL, return value in DE
+Sys_ParseStringArg:
+    JP ParseStringArg   ; 0x0014 - Parse a string argument at HL, return pointer in DE
+Sys_RegisterApp:
+    JP RegisterApp      ; 0x0017 - Register an app to the PCB
+Sys_PollChar:
+    JP Console_Poll     ; 0x001A - Poll console for a character
 
 Boot:
     DI                  ; 1. Disable interrupts before anything else
@@ -46,12 +66,13 @@ RomToRam:
     ; We are currently executing from EEPROM at Logical Page 0.
     ; We are about to swap Physical RAM Page 0 over top of it.
     
+    LD C, MMU_PORT      ; LDIR destroys C, so reload it
     LD B, 0x00          ; Logical page 0
     LD A, 0x00          ; Physical page 0
     OUT (C), A          ; ROM is gone, RAM is now mapped at 0x0000.
 
     ; =============================
-    ; --- Zero out the variables area ---
+    ; Zero out the variables area
     ; =============================
     LD HL, _END_OF_ROM
     LD BC, MONITOR_STORAGE_SIZE  ; Length of CLI_BUFFER + LAST_DUMP_ADDR
@@ -86,6 +107,9 @@ MapRAM:
     LD HL, MSG_MEM_INIT     ; Point HL to the first string
     CALL PrintStringLCD     ; Blast it to the LCD
 
+    ; --- Initialize the Program Control Block (PCB) table ---
+    CALL PCB_Init             
+
     ; --- Hardware Initialization ---
     CALL Init_CTC
     CALL Init_SIO
@@ -105,10 +129,22 @@ MapRAM:
     ; ==========================================
     ; Source File Inclusions
     ; ==========================================
-    INCLUDE "io.asm"
-    INCLUDE "cli.asm"
-    INCLUDE "hex.asm"
-    INCLUDE "strings.asm"
+    INCLUDE "kernel/io.z80"
+    INCLUDE "kernel/hex.z80"
+    INCLUDE "kernel/pcb/pcb.z80"
+    INCLUDE "kernel/strings.z80"
+    INCLUDE "shell/cli.z80"
+    INCLUDE "syscall.z80"
+    INCLUDE "kernel/apps/xmodem.z80"
+    INCLUDE "kernel/apps/ddt.z80"
+
+    ; ==========================================
+    ; Built-in Kernel Applications
+    ; ==========================================
+BuiltInApps:
+    PCB_Entry { {"xm      "}, App_Xmodem, 0x0000, 0x0000 }
+    PCB_Entry { {"ddt     "}, App_Ddt, 0x0000, 0x0000 }
+BuiltInAppsSize: EQU $ - BuiltInApps
 
 _END_OF_ROM: 
     ; The assembler assigns this label the exact address of the last byte + 1.

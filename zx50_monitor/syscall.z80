@@ -1,0 +1,73 @@
+
+
+; ==========================
+; SYSCALL well-known addresses
+; ==========================
+
+; =============================================================================
+; Subroutine: Console_Rx
+; Purpose:    Waits for and receives a single character from Console port
+; Output:     A = Received character
+; Destroys:   A
+; Usage:      `CALL SYS_READCHAR`
+; =============================================================================
+SYS_READCHAR  EQU 0x0008
+
+; =============================================================================
+; Subroutine: Console_Tx
+; Purpose:    Transmits a single character out of the main console port
+; Input:      A = Character to transmit
+; Destroys:   None (Flags are preserved)
+; =============================================================================
+SYS_PRINTCHAR EQU 0x000B
+
+; =============================================================================
+; Subroutine: PrintConsoleString
+; Purpose:    Prints a null-terminated string to the main console port
+; Input:      HL = Pointer to the null-terminated string
+; Destroys:   A, HL
+; =============================================================================
+SYS_PRINTSTR  EQU 0x000E
+
+; =============================================================================
+; Subroutine: ParseHexWord
+; Purpose:    Parses an ASCII hex string into a 16-bit binary value.
+;             Skips leading spaces. Stops on comma, space, or null.
+; Input:      HL = Pointer to the ASCII string buffer
+; Output:     DE = Parsed 16-bit value
+;             HL = Pointer to the character that stopped the parsing (e.g. ',' or 0x00)
+;             Carry (C) Flag = SET if invalid hex character found, RESET if success
+; Destroys:   A, DE
+; =============================================================================
+SYS_PARSEHEX  EQU 0x0011
+
+
+; =============================================================================
+; Subroutine: ParseStringArg
+; Purpose:    Extracts the next argument string into a destination buffer.
+;             Skips leading spaces. Stops on space, comma, or NULL.
+; Input:      HL = Pointer to argument string
+;             DE = Pointer to destination buffer (e.g., inside the program's RAM)
+; Output:     HL = Pointer to the delimiter that stopped the parsing
+; Destroys:   A, DE
+; Usage:      `CALL SYS_PARSESTR`
+; =============================================================================
+SYS_PARSESTR  EQU 0x0014
+
+; =============================================================================
+; Subroutine: RegisterApp
+; Purpose:    Adds a new application to the PROG_TABLE
+; Input:      HL = Pointer to null-terminated app name string
+;             DE = Base Execution Address
+; Output:     Carry Flag (C) = SET if table is full, RESET if successful
+; Destroys:   A, B, IX, DE
+; =============================================================================
+SYS_REG_APP  EQU 0x0017
+
+; =============================================================================
+; Subroutine: Console_Poll
+; Purpose:    Checks if a character is available. Does not block.
+; Output:     Carry Flag (C) = SET if no data.
+;             Carry Flag (C) = RESET (Clear) if data received, byte in A.
+; =============================================================================
+SYS_POLLCHAR  EQU 0x001A

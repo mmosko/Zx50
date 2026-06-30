@@ -9,9 +9,8 @@ CLI_BUFFER_END  EQU CLI_BUFFER + CLI_MAX_LEN - 1
 ; The last address used for "D" command
 LAST_DUMP_ADDR  EQU CLI_BUFFER_END + 1
 
-; This measures to the end of the monitor scratch pad.  It is
-; used to zero out the RAM after the ROM is copied to RAM.
-MONITOR_STORAGE_SIZE EQU LAST_DUMP_ADDR + 2 - _END_OF_ROM
+; Update MONITOR_STORAGE_SIZE so the ZeroRAM loop clears the new table too!
+MONITOR_STORAGE_SIZE EQU LAST_DUMP_ADDR - _END_OF_ROM
 
 ; Start the stack pointer at 8K and work down
 ; This is the end of logical page 1

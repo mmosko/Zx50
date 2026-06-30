@@ -1,0 +1,68 @@
+Cmd_List:
+    ; Print the header
+    LD HL, CLI_MSG_LIST_HEADER
+    CALL PrintConsoleString
+
+    ; Initialize the table scanner
+    LD IX, PROG_TABLE       
+    LD B, PROG_TABLE_MAX    
+
+.list_loop:
+    ; 1. Is this slot empty?
+    LD A, (IX + PCB_Entry.Name)
+    OR A
+    JR Z, .next_entry       ; If 0x00, skip this slot and check the next
+
+    ; 2. Print the Name (exactly 8 bytes)
+    PUSH BC                 ; Save our outer loop counter!
+    LD B, 8                 ; Inner loop counter for the name
+    PUSH IX
+    POP HL                  ; Quickly copy IX into HL for fast reading
+
+.print_name:
+    LD A, (HL)
+    CALL Console_Tx         
+    INC HL
+    DJNZ .print_name        ; Loop 8 times
+
+    ; 3. Print the separator (" : 0x")
+    LD HL, CLI_MSG_LIST_SEP
+    CALL PrintConsoleString
+
+    ; 4. Print the Base Address in Hex
+    LD A, (IX + PCB_Entry.Base + 1)
+    CALL PrintHexByte               
+    LD A, (IX + PCB_Entry.Base)     
+    CALL PrintHexByte
+
+    ; 5. Print the Size in Hex
+    LD HL, CLI_MSG_LIST_SEP
+    CALL PrintConsoleString
+    LD A, (IX + PCB_Entry.Size + 1)
+    CALL PrintHexByte               
+    LD A, (IX + PCB_Entry.Size)     
+    CALL PrintHexByte
+
+    ; 6. Print the Checksum in Hex
+    LD HL, CLI_MSG_LIST_SEP
+    CALL PrintConsoleString
+    LD A, (IX + PCB_Entry.Chksum + 1)
+    CALL PrintHexByte               
+    LD A, (IX + PCB_Entry.Chksum)     
+    CALL PrintHexByte
+
+    ; 7. Drop to a new line
+    LD HL, MSG_CRLF
+    CALL PrintConsoleString
+
+    POP BC                  ; Restore our outer loop counter!
+
+.next_entry:
+    LD DE, PCB_Entry        ; Load the struct size into DE
+    ADD IX, DE              ; IX = IX + struct size
+    
+    DEC B
+    JR NZ, .list_loop       
+
+    JP Shell_Loop
+    

@@ -1,0 +1,160 @@
+App_Ddt:
+    ; Print DDT welcome banner
+    LD HL, DDT_MSG_BANNER
+    CALL Sys_PrintString
+
+Ddt_Loop:
+    ; 1. Print the DDT prompt ("ddt> ")
+    LD HL, DDT_PROMPT
+    CALL Sys_PrintString
+
+    ; 2. Read input into CLI_BUFFER
+    CALL Sys_ReadLine
+
+    ; 3. Parse your standard debugger commands (d, etc.)
+    LD HL, CLI_BUFFER       ; <-- NEW: Point HL to the start of the user's input!
+    LD A, (HL)              ; <-- FIXED: Load the first character using our pointer
+
+    ; Routing Table
+    CP '?'
+    JR Z, Ddt_Help
+    CP 'h'
+    JR Z, Ddt_Help
+    CP 'H'
+    JR Z, Ddt_Help
+
+    CP 'd'
+    JR Z, Ddt_Dump
+    CP 'D'
+    JR Z, Ddt_Dump
+
+    CP 'q'
+    JR Z, Ddt_Exit      ; If 'q', we leave the app
+    
+    JR Ddt_Loop         ; Loop forever until 'q'
+
+Ddt_Unknown:
+    LD HL, MSG_UNKNOWN
+    CALL Sys_PrintString
+    JP Ddt_Loop         ; Go back to the ddt> prompt instead of the shell
+
+Ddt_Exit:
+    RET                 ; Pops the PC back to the main Kernel Shell!
+
+; =============================================================================
+; Command Subroutines
+; =============================================================================
+
+Ddt_Help:
+    LD HL, DDT_MSG_HELP
+    CALL Sys_PrintString
+    JP Ddt_Loop
+
+; =============================================================================
+; Subroutine: Cmd_Quit
+; Purpose:    Halt the program (useful in zsim debugger)
+; =============================================================================
+
+Ddt_Quit:
+    ; LD HL, MSG_LCD_HALT
+    ; CALL PrintStringLCD
+    LD HL, DDT_MSG_QUIT
+    CALL Sys_PrintString
+    HALT
+
+; =============================================================================
+; Subroutine: Cmd_Dump
+; Purpose:    Prints memory contents
+; =============================================================================
+
+Ddt_Dump:
+    INC HL              ; Skip the 'D'
+
+.skip_spaces:
+    LD A, (HL)
+    CP ' '
+    JR NZ, .check_args  ; If not a space, check what it is
+    INC HL
+    JR .skip_spaces
+
+.check_args:
+    OR A                ; Did we hit the end of the string?
+    JR NZ, .parse_start 
+    
+    ; --- No arguments provided! Load from LAST_DUMP_ADDR ---
+    LD HL, (LAST_DUMP_ADDR)
+    LD B, H
+    LD C, L
+    JR .set_default_end
+
+.parse_start:
+    ; --- Parse the Start Address ---
+    CALL ParseHexWord
+    JR C, Ddt_Unknown   ; Abort if invalid hex
+    LD B, D             ; Store Start Address in BC
+    LD C, E
+
+    LD A, (HL)
+    CP ','              ; Is there a comma (End Address)?
+    JR Z, .parse_end
+
+.set_default_end:
+    ; --- No End Address. Default = Start + 0x00FF (256 bytes) ---
+    LD H, B
+    LD L, C
+    LD DE, 0x00FF
+    ADD HL, DE
+    LD D, H
+    LD E, L
+    JR .execute
+
+.parse_end:
+    ; --- Parse the End Address ---
+    INC HL              ; Skip the ','
+    CALL ParseHexWord
+    JP C, Ddt_Unknown
+
+.execute:
+    ; --- Execution Loop ---
+    LD H, B             ; Move Current Address into HL for DumpLine
+    LD L, C
+
+.dump_loop:
+    CALL DumpLine       ; Dumps 16 bytes and advances HL by 16
+
+    ; Did we pass the End Address (DE)?
+    ; We check this by doing: DE - HL. If it carries/borrows, HL > DE.
+    PUSH HL
+    PUSH DE              ; Save the End Address!
+    EX DE, HL           ; HL = End Address, DE = Current Address
+    OR A                ; Clear Carry Flag
+    SBC HL, DE          ; End - Current
+    POP DE              ; Restore the End Address!
+    POP HL              ; Restore Current Address into HL
+    
+    JR NC, .dump_loop   ; If no carry, End >= Current. Keep looping!
+
+    ; --- Save our place for the next 'D' command ---
+    LD (LAST_DUMP_ADDR), HL
+    
+    JP Ddt_Loop
+
+DDT_MSG_BANNER:
+    DB 0x0D, 0x0A, "========================", 0x0D, 0x0A
+    DB " Zx50 DDT v1.0", 0x0D, 0x0A
+    DB "========================", 0x0D, 0x0A, 0x00
+
+DDT_PROMPT:
+    DB "ddt>", 0x00 
+
+DDT_MSG_QUIT:
+    DB "Exit ddt", 0x0D, 0x0A, 0x00
+
+DDT_MSG_HELP:
+    DB "Commands:", 0x0D, 0x0A
+    DB "  D[start][,end] - Display Memory", 0x0D, 0x0A
+    DB "  Q              - Quit DDT", 0x0D, 0x0A
+    DB "  ?, H           - This help menu", 0x0D, 0x0A, 0x00
+
+    ; DB "  L[start]       - Disassemble (List) Memory", 0x0D, 0x0A
+    ; DB "  G[start]       - Go (Execute)", 0x0D, 0x0A

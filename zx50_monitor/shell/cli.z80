@@ -1,0 +1,67 @@
+; --------------------------------------------------------------------------------
+; Kernel Shell 
+; --------------------------------------------------------------------------------
+Init_CLI:
+Shell_Loop:
+    ; 1. Print the Kernel Shell prompt
+    LD HL, MSG_PROMPT
+    CALL PrintConsoleString
+
+    ; 2. Read user input into CLI_BUFFER
+    CALL Sys_ReadLine
+
+    ; 3. Parse Command
+    LD HL, CLI_BUFFER
+    LD A, (HL)
+    
+    OR A                    ; Ignore empty lines (just pressed Enter)
+    JR Z, Shell_Loop
+
+    CP 'h'
+    JP Z, Cmd_Help
+    CP 'l'
+    JP Z, Cmd_List
+    CP 'r'
+    JP Z, Cmd_Run
+    CP 'v'
+    JP Z, Cmd_Verify
+
+Cmd_Unknown:
+    LD HL, MSG_UNKNOWN
+    CALL PrintConsoleString
+    JR Shell_Loop
+
+Cmd_Help:
+    LD HL, CLI_MSG_HELP
+    CALL PrintConsoleString
+    JR Shell_Loop
+
+    INCLUDE "shell/cmd_list.z80"
+    INCLUDE "shell/cmd_run.z80"
+    INCLUDE "shell/cmd_verify.z80"
+    INCLUDE "shell/readline.z80"
+
+; --------------------------------------------------------------------------------
+; Indirect Call Trampoline
+; --------------------------------------------------------------------------------
+Indirect_Call:
+    JP (HL)                 ; Jumps to HL. When that code RETs, it goes to the caller of Indirect_Call!
+
+
+
+CLI_MSG_HELP:
+    DB "Commands:", 0x0D, 0x0A
+    DB "  h[elp]      - This help menu", 0x0D, 0x0A
+    DB "  l[ist]      - List programs", 0x0D, 0x0A
+    DB "  r[un] name  - Run a program", 0x0D, 0x0A, 0x00
+
+CLI_MSG_LIST_HEADER:
+    DB 0x0D, 0x0A, "Name     Address  Size     Chksum", 0x0D, 0x0A
+    DB "---------------------------------------", 0x0D, 0x0A, 0x00
+
+CLI_MSG_LIST_SEP:
+    DB " : 0x", 0x00
+
+CLI_MSG_APP_NOT_FOUND:
+    DB "App not found.", 0x0D, 0x0A, 0x00
+

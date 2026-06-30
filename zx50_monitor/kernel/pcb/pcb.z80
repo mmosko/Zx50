@@ -1,0 +1,109 @@
+; =============================================================================
+; PCB & Application Management (pcb.z80)
+; =============================================================================
+
+; =============================================================================
+; Subroutine: Init_PCB
+; Purpose:    Zeros out the program table and loads built-in apps
+; =============================================================================
+PCB_Init:
+    ; 1. Zero out the entire PROG_TABLE
+    LD HL, PROG_TABLE
+    LD DE, PROG_TABLE + 1
+    LD BC, (PCB_Entry * PROG_TABLE_MAX) - 1
+    LD (HL), 0x00
+    LDIR
+
+    ; 2. Copy the Built-In Apps
+    LD HL, BuiltInApps
+    LD DE, PROG_TABLE
+    LD BC, BuiltInAppsSize
+    LDIR
+    RET
+
+; =============================================================================
+; Subroutine: RegisterApp
+; Purpose:    Adds a new application to the PROG_TABLE
+; Input:      HL = Pointer to null-terminated app name string
+;             DE = Base Execution Address
+; Output:     Carry Flag (C) = SET if table is full, RESET if successful
+; Destroys:   A, B, IX, DE
+; =============================================================================
+RegisterApp:
+    PUSH HL                 ; Save Name pointer
+    PUSH DE                 ; Save Base Address
+
+    ; 1. Find an empty slot
+    LD IX, PROG_TABLE
+    LD B, PROG_TABLE_MAX
+    
+.find_slot:
+    LD A, (IX + PCB_Entry.Name)
+    OR A
+    JR Z, .write_entry      ; A = 0x00 means this slot is empty!
+    
+    ; Advance to next slot
+    LD DE, PCB_Entry
+    ADD IX, DE              
+    
+    DEC B
+    JR NZ, .find_slot
+    
+    ; --- Table is full ---
+    POP DE
+    POP HL
+    SCF                     ; Set Carry flag to indicate error
+    RET
+
+.write_entry:
+    POP DE                  ; Restore Base Address
+    
+    ; 2. Save the Base Address
+    LD (IX + PCB_Entry.Base), E
+    LD (IX + PCB_Entry.Base + 1), D
+    
+    ; 3. Copy the name and space-pad it
+    POP HL                  ; Restore Name pointer
+    PUSH IX
+    POP DE                  ; Point DE to the Name field in the PCB
+    LD B, 8                 ; Max 8 characters
+    
+.copy_name:
+    LD A, (HL)
+    OR A
+    JR Z, .pad_spaces       
+    
+    LD (DE), A
+    INC HL
+    INC DE
+    DJNZ .copy_name
+    JR .done
+
+.pad_spaces:
+    LD A, ' '
+    LD (DE), A
+    INC DE
+    DJNZ .pad_spaces
+
+.done:
+    OR A                    ; Clear Carry flag to indicate success
+    RET
+
+
+    INCLUDE "kernel/pcb/pcb_verify.z80"
+    
+; ====================
+; Subroutine Storage
+; ====================
+
+; Program Control Block
+    STRUCT PCB_Entry
+Name    TEXT 8        ; 8-byte ASCII name, space-padded
+Base    WORD          ; 2-byte execution address
+Size    WORD          ; 2-byte length of the binary in bytes
+Chksum  WORD          ; 16-bit checksum (simple addition of all bytes)
+    ENDS
+
+PROG_TABLE          EQU LAST_DUMP_ADDR + 2
+PROG_TABLE_MAX      EQU 10   ; Space for 10 loaded programs
+PROG_TABLE_END      EQU PROG_TABLE + (PCB_Entry * PROG_TABLE_MAX)

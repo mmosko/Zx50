@@ -1,0 +1,72 @@
+; ================================================================================
+; SYSTEM API: Read Line
+; Waits for serial input, handles backspaces, and null-terminates at Enter.
+; ================================================================================
+Sys_ReadLine:
+    LD HL, CLI_BUFFER       ; Point HL to the start of the RAM buffer
+
+.read_loop:
+    CALL Console_Rx         ; Wait for user keystroke
+    LD E, A                 ; Save character in E
+    
+    CP 0x0D                 ; Is it Enter?
+    JR Z, .process_enter
+    
+    CP 0x08                 ; Is it Backspace?
+    JR Z, .handle_bs
+    CP 0x7F                 ; Is it Delete?
+    JR Z, .handle_bs
+    
+    ; Check for Buffer Overflow
+    LD A, L
+    CP LOW(CLI_BUFFER_END)
+    JR NZ, .store_char      
+    LD A, H
+    CP HIGH(CLI_BUFFER_END) 
+    JR Z, .buffer_full      
+
+.store_char:
+    LD (HL), E              ; Store character
+    INC HL                  
+    LD A, E                     
+    CALL Console_Tx         ; Echo
+    JR .read_loop           
+
+.buffer_full:
+    LD A, 0x07              ; ASCII Bell
+    CALL Console_Tx
+    JR .read_loop           
+
+.handle_bs:
+    ; --- Bulletproof 16-bit boundary check ---
+    PUSH HL                 ; Save our current buffer pointer
+    LD DE, CLI_BUFFER       ; DE = Start of the buffer
+    OR A                    ; Clear the Carry Flag before subtracting
+    SBC HL, DE              ; HL = Current Pointer - Start Pointer
+    POP HL                  ; Restore our current buffer pointer!
+    
+    JR Z, .read_loop        ; If difference is 0 (Z flag set), we are at the start. Ignore BS!
+
+.do_bs:
+    DEC HL              
+    LD A, 0x08              ; Visually erase character on terminal
+    CALL Console_Tx
+    LD A, 0x20
+    CALL Console_Tx
+    LD A, 0x08
+    CALL Console_Tx
+    JR .read_loop
+
+.process_enter:
+    LD (HL), 0x00           ; Null-terminate the string
+    
+    ; Echo command to front panel LCD
+    LD A, 0x01
+    OUT (LCD_PORT), A       
+    LD HL, CLI_BUFFER
+    CALL PrintNullStringLCD 
+    
+    ; Drop console to new line
+    LD HL, MSG_CRLF
+    CALL PrintConsoleString
+    RET                     ; Return to caller!

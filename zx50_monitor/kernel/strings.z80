@@ -1,3 +1,40 @@
+
+; =============================================================================
+; Subroutine: ParseStringArg
+; Purpose:    Extracts the next argument string into a destination buffer.
+;             Skips leading spaces. Stops on space, comma, or NULL.
+; Input:      HL = Pointer to argument string
+;             DE = Pointer to destination buffer (e.g., inside the program's RAM)
+; Output:     HL = Pointer to the delimiter that stopped the parsing
+; Destroys:   A, DE
+; =============================================================================
+ParseStringArg:
+.skip_spaces:
+    LD A, (HL)
+    CP ' '
+    JR NZ, .copy_loop
+    INC HL
+    JR .skip_spaces
+
+.copy_loop:
+    LD A, (HL)
+    OR A                ; Is it NULL?
+    JR Z, .done
+    CP ' '              ; Is it a Space?
+    JR Z, .done
+    CP ','              ; Is it a Comma?
+    JR Z, .done
+    
+    LD (DE), A          ; Copy character to destination
+    INC HL
+    INC DE
+    JR .copy_loop
+
+.done:
+    XOR A               ; A = 0x00
+    LD (DE), A          ; Null-terminate the destination buffer
+    RET
+
 ; =============================================================================
 ; Front Panel LCD String Table
 ; Format: [Length Byte], [0x01 Command], [ASCII Text], [0x0A Newline]
@@ -52,15 +89,6 @@ MSG_PROMPT:
 
 MSG_UNKNOWN:
     DB "?", 0x0D, 0x0A, 0x00    ; Standard CP/M error
-
-MSG_HELP:
-    DB "Commands:", 0x0D, 0x0A
-    DB "  D[start][,end] - Display Memory", 0x0D, 0x0A
-    DB "  Q              - Quit (halt)", 0x0D, 0x0A
-    DB "  ?, H           - This help menu", 0x0D, 0x0A, 0x00
-
-    ; DB "  L[start]       - Disassemble (List) Memory", 0x0D, 0x0A
-    ; DB "  G[start]       - Go (Execute)", 0x0D, 0x0A
 
 MSG_DUMP_STUB:
     DB "Dump command triggered!", 0x0D, 0x0A, 0x00

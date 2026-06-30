@@ -117,6 +117,25 @@ Console_Rx:
     RET
 
 ; =============================================================================
+; Subroutine: Console_Poll
+; Purpose:    Checks if a character is available. Does not block.
+; Output:     Carry Flag (C) = SET if no data.
+;             Carry Flag (C) = RESET (Clear) if data received, byte in A.
+; =============================================================================
+Console_Poll:
+    IN A, (CONSOLE_CMD)
+    BIT 0, A
+    JR Z, .no_char          ; If bit 0 is empty, jump to exit
+    
+    IN A, (CONSOLE_DAT)     ; Read the byte!
+    OR A                    ; Clear the Carry Flag to indicate success
+    RET
+
+.no_char:
+    SCF                     ; Set the Carry Flag to indicate no data
+    RET
+    
+; =============================================================================
 ; Subroutine: PrintDebugString
 ; Purpose:    Prints a null-terminated string to the debug trace port
 ; Input:      HL = Pointer to the null-terminated string

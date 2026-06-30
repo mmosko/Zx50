@@ -1,0 +1,213 @@
+App_Xmodem:
+    EX DE, HL               ; Move the argument pointer into HL for the API [cite: 198, 199]
+    
+    ; 1. Parse the hex address
+    CALL SYS_PARSEHEX
+    JP C, .syntax_error     
+    
+    ; --- Kernel Memory Protection Check ---
+    PUSH HL                 ; Save the starting pointer
+    PUSH DE                 ; Save the parsed target address   PUSH DE                 ; Save the parsed target address
+    LD HL, STACK_POINTER    ; Load our memory boundary (0x2000)
+    EX DE, HL               ; Swap: HL = Target Address, DE = STACK_POINTER
+    OR A                    ; Clear the carry flag before subtraction
+    SBC HL, DE              ; HL = Target - STACK_POINTER
+    POP DE                  ; Restore the target address back into DE
+    POP HL                  ; Restore starting pointer
+    JP C, .mem_error        ; If Carry is SET, Target < STACK_POINTER! Reject it!
+    
+    ; --- Memory address is above kernel ---
+    LD (XM_Base), DE        ; Save Base Address locally    
+
+    ; --- Skip leading spaces and commas, then extract the name argument ---
+.skip_spaces:
+    LD A, (HL)
+    CP ' '
+    JR Z, .inc_hl
+    CP ','
+    JR Z, .inc_hl
+    JR .extract_name        ; Found a valid character!
+
+.inc_hl:
+    INC HL
+    JR .skip_spaces
+
+.extract_name:
+    ; 2. Extract the Name argument into local buffer
+    LD DE, XM_Name_Buffer   
+    CALL SYS_PARSESTR
+
+    LD HL, XM_Name_Buffer   ; Point to the extracted string
+    LD DE, (XM_Base)        ; Load the verified 0x4000 address
+    
+    ; -- Now we can register the application with the OS! ---
+    CALL SYS_REG_APP      
+    JP C, .table_full       
+    
+    ; SYS_REG_APP conveniently leaves IX pointing to our new PCB entry!
+    LD (XM_PCB_Ptr), IX
+
+    ; 4. Initialize transfer state
+    LD HL, 0
+    LD (XM_Size), HL        ; Reset Size to 0
+    LD HL, (XM_Base)        ; HL = Memory Write Pointer
+
+.flush_rx:
+    CALL SYS_POLLCHAR       ; Check for a byte
+    JR NC, .flush_rx        ; If we got one (Carry clear), loop and discard it!
+
+.send_nak:
+    LD A, 0x15              ; NAK (Tell PC we are ready to receive)
+    CALL SYS_PRINTCHAR
+    
+.start_timer:
+    LD B, 20                 ; Outer loop: 20 * 0.5s = 10-second timeout!
+.timeout_outer:
+    LD DE, 0                ; Inner loop: ~0.5 second countdown
+.wait_header:
+    CALL SYS_POLLCHAR       ; Check for a byte without blocking!
+    JR NC, .check_header    ; If Carry is CLEAR, we got a byte in A!
+    
+    ; --- No byte received. Decrement timeout counter ---
+    DEC DE
+    LD A, D
+    OR E
+    JR NZ, .wait_header     ; Loop inner countdown
+    
+    DJNZ .timeout_outer     ; Decrement B. If not zero, run another 0.5s loop
+    
+    ; --- 3 Seconds Passed! Send ONE fresh NAK ---
+    JR .send_nak
+
+.check_header:
+    CP 0x01                 ; SOH (Start of Header)
+    JR Z, .rx_packet
+    CP 0x04                 ; EOT (End of Transmission)
+    JR Z, .rx_eot
+    
+    JR .flush_rx            ; If it's garbage, flush the line and send NAK
+
+.rx_packet:
+    ; 1. Read Block Number (Discard/Ignore for simplicity)
+    CALL SYS_READCHAR
+    ; 2. Read Inverse Block Number (Discard/Ignore)
+    CALL SYS_READCHAR
+
+    ; 3. Read 128 Bytes of Data
+    LD B, 128               ; Byte counter for DJNZ
+    LD C, 0                 ; 8-bit XMODEM checksum accumulator
+.rx_data:
+    CALL SYS_READCHAR       ; Wait for byte. Returns byte in A.
+    
+    LD (HL), A              ; Write the byte directly to memory
+    INC HL                  ; Advance memory pointer
+
+    ADD A, C                ; A = A + previous checksum
+    LD C, A                 ; Store the new running sum back into C
+
+    DJNZ .rx_data           ; Decrement B, loop 128 times!
+
+    ; 4. Read PC's 8-bit Checksum
+    CALL SYS_READCHAR
+    CP C                    ; Does it match our calculated checksum?
+    JR NZ, .bad_packet      ; If not, jump down and send NAK!
+
+    ; --- Good Packet! ---
+    ; Increase total size by 128
+    PUSH HL
+    LD HL, (XM_Size)
+    LD DE, 128
+    ADD HL, DE
+    LD (XM_Size), HL
+    POP HL
+
+    ; Send ACK and wait for next packet
+    LD A, 0x06              ; ACK
+    CALL SYS_PRINTCHAR
+    JR .wait_header
+
+.bad_packet:
+    ; Rewind HL by 128 bytes to overwrite the bad data
+    OR A                    ; Clear carry
+    LD DE, 128
+    SBC HL, DE
+    
+    LD A, 0x15              ; Send NAK to request retransmission
+    CALL SYS_PRINTCHAR
+    JR .wait_header
+
+.rx_eot:
+    LD A, 0x06              ; Send final ACK
+    CALL SYS_PRINTCHAR
+
+    ; --- Transfer Complete! Calculate 16-bit OS Checksum ---
+    LD HL, (XM_Base)
+    LD BC, (XM_Size)
+    LD DE, 0                ; DE = 16-bit Checksum Accumulator
+    
+    LD A, B
+    OR C
+    JR Z, .save_pcb         ; If size is 0, skip calculation
+
+.calc_loop:
+    LD A, (HL)              ; Read byte from memory
+    PUSH HL
+    LD L, A                 ; Move byte into HL for 16-bit addition
+    LD H, 0
+    ADD HL, DE              ; HL = HL + Accumulator
+    EX DE, HL               ; Move sum back to DE
+    POP HL
+    
+    INC HL
+    DEC BC                  ; Decrement 16-bit counter
+    LD A, B
+    OR C
+    JR NZ, .calc_loop       ; Loop until BC == 0
+
+.save_pcb:
+    LD IX, (XM_PCB_Ptr)     ; Retrieve PCB pointer
+    
+    ; Save Size
+    LD HL, (XM_Size)
+    LD (IX + PCB_Entry.Size), L
+    LD (IX + PCB_Entry.Size + 1), H
+    
+    ; Save 16-bit OS Checksum (from DE)
+    LD (IX + PCB_Entry.Chksum), E
+    LD (IX + PCB_Entry.Chksum + 1), D
+
+    LD HL, XM_MSG_SUCCESS
+    CALL SYS_PRINTSTR
+    RET                     ; Drop cleanly back to the OS!
+
+.table_full:
+    LD HL, XM_MSG_TABLE_FULL
+    CALL SYS_PRINTSTR
+    RET
+
+.syntax_error:
+    LD HL, XM_MSG_SYNTAX_ERR
+    CALL SYS_PRINTSTR
+    RET                     
+
+.mem_error:
+    LD HL, XM_MSG_MEM_ERR
+    CALL SYS_PRINTSTR
+    RET
+
+; =============================================================================
+; Application Variables & Strings
+; =============================================================================
+XM_Base:        DS 2
+XM_Size:        DS 2
+XM_PCB_Ptr:     DS 2
+XM_Name_Buffer: DS 9    
+
+XM_MSG_SUCCESS:
+    DB 0x0D, 0x0A, "Transfer complete.", 0x0D, 0x0A, 0x00
+XM_MSG_SYNTAX_ERR:
+    DB "Syntax: xm <base>, name", 0x0D, 0x0A, 0x00
+XM_MSG_TABLE_FULL:
+    DB "Program table full!", 0x0D, 0x0A, 0x00
+XM_MSG_MEM_ERR:
+    DB "Error: Address must be >= 0x2000", 0x0D, 0x0A, 0x00

@@ -1,0 +1,42 @@
+Cmd_Verify:
+    LD HL, CLI_BUFFER
+    
+    ; Skip the 'v' or 'verify' command text
+.skip_cmd:
+    LD A, (HL)
+    OR A
+    JP Z, Shell_Loop        ; Empty command
+    CP ' '
+    JR Z, .do_verify
+    INC HL
+    JR .skip_cmd
+
+.do_verify:
+    ; Hand over to the Kernel!
+    CALL PCB_Verify         
+    
+    ; Check the Kernel's response flags
+    JR C, .not_found        ; Carry Set = Not Found
+    JR NZ, .corrupt         ; Zero Clear = Checksum Corrupt
+    
+    ; If we got here: Carry Clear & Zero Set = Valid!
+    LD HL, MSG_VALID
+    CALL PrintConsoleString
+    JP Shell_Loop
+
+.not_found:
+    LD HL, CLI_MSG_APP_NOT_FOUND
+    CALL PrintConsoleString
+    JP Shell_Loop
+
+.corrupt:
+    LD HL, MSG_CORRUPT
+    CALL PrintConsoleString
+    JP Shell_Loop
+
+; --- Verification Strings ---
+MSG_VALID:
+    DB "Valid.", 0x0D, 0x0A, 0x00
+MSG_CORRUPT:
+    DB "CORRUPT!", 0x0D, 0x0A, 0x00
+    

@@ -1,0 +1,22 @@
+    DEVICE NOSLOT64K
+    OUTPUT "hello.bin"
+    
+    ; We must assemble this for the exact memory address 
+    ; where we plan to load it via XMODEM.
+    ORG 0x4000          
+
+App_Hello:
+    ; The OS passes the argument pointer in DE. 
+    ; We don't need arguments for this app, so we just ignore it!
+    
+    LD HL, MSG_HELLO
+    CALL SYS_PRINTSTR   ; Call the Kernel API!
+    
+    RET                 ; Exit cleanly back to the Zx50 OS Shell
+
+MSG_HELLO:
+    DB 0x0D, 0x0A, "Hello from User Space!", 0x0D, 0x0A, 0x00
+    
+    ; We only need this one file to talk to the hardware!
+    INCLUDE "syscall.z80"
+    
