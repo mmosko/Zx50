@@ -63,3 +63,22 @@ API.writePort = (port, value) => {
         API.sendToCustomUi({ command: 'lcd', char: value });
     }
 };
+
+// ============================================================================
+// Zx50 CTC Emulator (Channel 3 - 100Hz Tick)
+// ============================================================================
+
+const TSTATES_PER_TICK = 50000; // 5MHz ZCLK / 100Hz = 50,000 T-States
+let nextInterruptTstate = TSTATES_PER_TICK;
+
+// Triggered automatically by DeZog after every Z80 instruction
+API.tick = () => {
+    // API.tstates contains the absolute total of CPU cycles executed since boot
+    if (API.tstates >= nextInterruptTstate) {
+        nextInterruptTstate += TSTATES_PER_TICK;
+        API.log("TICK: " + API.tstates + " Next Interrupt: " + nextInterruptTstate);
+        
+        // Assert the /INT line and place the CH3 Vector (0x06) on the data bus!
+        API.generateInterrupt(false, 0x06);
+    }
+};

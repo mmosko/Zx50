@@ -110,10 +110,20 @@ MapRAM:
     ; --- Initialize the Program Control Block (PCB) table ---
     CALL PCB_Init             
 
+IVT_Init:
+    ; --- Set interrupt vectors ---
+    LD A, high IVT_START    ; High byte of IVT_Base
+    LD I, A
+    IM 2                    ; Enable Vector Interrupts
+
     ; --- Hardware Initialization ---
     CALL Init_CTC
     CALL Init_SIO
 
+    ; --- Turn on the Interrupts! ---
+    EI
+
+Banners:
     ; --- Boot Banners ---
     LD HL, MSG_SIO_READY
     CALL PrintStringLCD
@@ -129,6 +139,7 @@ MapRAM:
     ; ==========================================
     ; Source File Inclusions
     ; ==========================================
+    
     INCLUDE "kernel/io.z80"
     INCLUDE "kernel/hex.z80"
     INCLUDE "kernel/pcb/pcb.z80"
@@ -138,6 +149,9 @@ MapRAM:
     INCLUDE "kernel/apps/xmodem.z80"
     INCLUDE "kernel/apps/ddt.z80"
 
+   ; This will pad out to IVT_START (0x0F00)
+    INCLUDE "kernel/clock.z80"
+
     ; ==========================================
     ; Built-in Kernel Applications
     ; ==========================================
@@ -145,6 +159,25 @@ BuiltInApps:
     PCB_Entry { {"xm      "}, App_Xmodem, 0x0000, 0x0000 }
     PCB_Entry { {"ddt     "}, App_Ddt, 0x0000, 0x0000 }
 BuiltInAppsSize: EQU $ - BuiltInApps
+
+    ; =========================================================================
+    ; INTERRUPT VECTOR TABLE (Must be aligned to a 256-byte boundary)
+    ; =========================================================================
+
+Default_ISR:
+    EI
+    RETI            ; Do nothing and return
+
+    ALIGN 256       ; Align table to a page boundary (Low byte = 00h)
+IVT_START:
+    DW Default_ISR  ; 0x00 - CTC Channel 0 
+    DW Default_ISR  ; 0x02 - CTC Channel 1
+    DW Default_ISR  ; 0x04 - CTC Channel 2
+    DW System_Tick  ; 0x06 - CTC Channel 3 (100Hz Heartbeat)
+
+    ; Fill the remaining 248 bytes (124 words) with a default handler address
+    ; Syntax varies by assembler:
+    BLOCK 124, Default_ISR ; For SJASMPlus / ASLink
 
 _END_OF_ROM: 
     ; The assembler assigns this label the exact address of the last byte + 1.

@@ -10,114 +10,68 @@ minipro -p SST39SF040 -w monitor.bin -s
 
 ## 1. Accomplished
 
-We successfully built a cycle-accurate, interactive hardware monitor for the custom Z80 "Zx50" project, fully verified
-in the DeZog simulator.
+We have successfully transitioned from a basic ROM monitor to a stable, self-hosting Operating System kernel capable of downloading, verifying, and executing third-party user-space applications.
 
-* **CLI & Echo Fix:** Fixed the `Console_Rx` echo bug by correctly restoring the `A` register before transmitting,
-  ensuring the CLI echoes typed characters rather than the RAM buffer pointer.
-* **Custom DeZog UI:** Migrated from basic output logging to a fully interactive HTML terminal (`sio_ui.html`)
-  communicating with a JavaScript hardware emulator (`sio_emulator.js`) using DeZog's `UIAPI`.
-* **Hardware Flow Control (Fixing the Race Condition):** Replaced arbitrary assembly delay loops with true hardware flow
-  control. The JS emulator holds the SIO `Tx Empty` bit low until DeZog fires `API.uiReady()`, perfectly stalling the
-  Z80 at boot until the UI is listening.
-* **Front Panel LCD Emulation:** Mapped I/O Port `0x50` to a simulated blue HD44780 LCD in the UI. Added support for
-  multi-line text (`0x0A`) and the Clear Display command (`0x01`). The monitor now automatically blasts the current CLI
-  input to the LCD when the user presses Enter.
-* **D (Dump) Command Math Fix:** Fixed a register clobbering bug in `Cmd_Dump` by properly preserving `DE` (`PUSH DE` /
-  `POP DE`) during the `SBC HL, DE` bounds-checking math, allowing multi-line dumps to function perfectly.
-* **Hardware Test:** Flash `monitor.bin` to the physical EEPROM and verify that the real silicon behaves exactly like
-   the DeZog simulation (serial I/O, LCD routing, and memory dumps).
-
+* **Hardware Boot & Memory Paging:** Fixed the `LDIR` register clobbering bug. The physical silicon now successfully maps a 16KB copy window, copies the ROM to SRAM, and executes the "Phantom Jump" to swap out the ROM completely.
+* **XMODEM Native File Transfer:** Built a robust, state-machine-driven XMODEM receiver (`apps/xmodem.z80`). It features hardware-accurate polling (`Console_Poll`), adjustable timeout loops to prevent USB NAK-storms, and real-time padding.
+* **The PCB & Memory Auditing:** Implemented a Process Control Block (PCB) table in Logical Page 0. When an app is downloaded, the kernel calculates a 16-bit cumulative checksum and logs its exact memory footprint.
+* **Kernel Memory Protection:** The XMODEM loader now strictly enforces boundary checks. It actively rejects any attempt to load an executable below `0x2000`, safeguarding the kernel and stack from user-space corruption.
+* **The `verify` Command:** Abstracted the checksum math into `pcb_verify.z80`. The CLI `v[erify] <name>` command seamlessly recalculates the payload in SRAM and compares it against the PCB to detect bit-rot or memory corruption before execution.
+* **The Zx50 SDK:** Established a formal Page 0 jump table (`syscall.z80`) and wrote the `DEVGUIDE.md`. Developers can now write hardware-agnostic standalone `.bin` applications (like `hello.z80`) that compile entirely outside the kernel tree.
 
 ## 2. Current System Architecture
 
-* **Console SIO (Port A):** Command `0x86`, Data `0x84`. Mapped to the main green terminal UI.
-* **Debug SIO (Port B):** Command `0x87`, Data `0x85`. Mapped to the amber `[SYS]` trace in the UI.
+* **Console SIO (Port A):** Command `0x86`, Data `0x84`.
+* **Debug SIO (Port B):** Command `0x87`, Data `0x85`. 
 * **LCD Front Panel:** Port `0x50`. Mapped to the blue UI display.
-* **Memory Map:** Page 0x08 mapped to logical 0x8000 for `CLI_BUFFER`.
-* **Executable:** `monitor.bin` (Targeted for EEPROM flashing).
+* **MMU (Port 0x30):** 4KB physical pages mapped to 16 logical windows.
+* **Kernel RAM Layout:** 
+  * `0x0000 - 0x0FFF`: The Operating System, PCB Table, and Jump Table API.
+  * `0x1000 - 0x1FFF`: The Stack (grows downward from `0x2000`).
+  * `0x2000 - 0xFFFF`: User Space / Transient Program Area (TPA).
 
-## 3. Next Steps (When Resuming)
+## 3. Code Layout
 
-1.**G (Go) Command:** Implemented the `G` command to transfer the Program Counter (`JP (HL)`) to a user-specified memory
-  address.
-2. **Implement 'S' (Set Memory) Command:** Decide on the syntax (Interactive CP/M style vs. Inline Array style) and
-   write the routine to poke custom opcodes into RAM.
-3. **Implement 'L' (List) Command:** Build the disassembler to translate hex bytes back into readable Z80 opcodes.
-4. **Grant Searle MS BASIC:** Once the monitor is complete, use the proven I/O routines to port Grant Searle's Z80 MS
-   BASIC to the Zx50 architecture.
+The project has been refactored to enforce a strict separation of concerns between the kernel, the shell, built-in apps, and user-space binaries.
 
-## 4. Information Needed to Resume
+```text
+zx50_monitor/
+├── apps/               # Third-party user-space programs
+│   ├── DEVGUIDE.md     # SDK documentation and memory contracts
+│   └── hello.z80       # Example standalone application
+├── kernel/             # Core OS components
+│   ├── apps/           # Built-in kernel utilities
+│   │   ├── ddt.z80     # Debugger
+│   │   └── xmodem.z80  # Serial file transfer protocol
+│   ├── pcb/            # Process Control Block logic
+│   │   ├── pcb_verify.z80
+│   │   └── pcb.z80
+│   ├── defines.z80     # System-wide memory & port constants
+│   ├── hex.z80         # Hexadecimal parsing & math
+│   ├── io.z80          # Hardware drivers (SIO, LCD)
+│   └── strings.z80     # String manipulation
+├── shell/              # Command Line Interface
+│   ├── cli.z80         # Main prompt and routing loop
+│   ├── cmd_list.z80    # 'l' command
+│   ├── cmd_run.z80     # 'r' command
+│   ├── cmd_verify.z80  # 'v' command
+│   └── readline.z80    # Buffer and backspace handling
+├── monitor.z80         # Main bootloader, MMU init, and API Jump Table
+├── syscall.z80         # The SDK include file for user apps
+├── sio_emulator.js     # DeZog hardware simulation logic
+└── sio_ui.html         # DeZog interactive terminal UI
+```
 
-If starting a completely new chat session, please provide this summary file along with the latest versions of your
-assembly files to restore full context:
+## 4. Next Steps (When Resuming)
 
-* `monitor.asm` (Main entry, MMU mapping, Boot sequence)
-* `cli.asm` (CLI loop, Command router, Dump/Go routines)
-* `io.asm` (SIO/CTC initialization, Tx/Rx polling loops, LCD routines)
-* `hex.asm` & `strings.asm` (If modified)
-*
-
-
-# Zx50 Multitasking Operating System Outline
-
-You just outlined the exact architectural blueprint for a modern, preemptive multitasking Z80 Operating System. You are
-officially graduating from "ROM Monitor" to "Kernel"!
-
-What you are describing perfectly blends the best parts of CP/M (the transient program area and system calls) with
-UNIX-style process isolation. By keeping each program’s stack and state inside its own physical memory page, you isolate
-tasks beautifully.
-
-Here is how we can structure the three main pillars of your new OS:
-
-### 1. The Process Control Block (PCB) Table
-
-Instead of a simple FCB, your kernel will maintain a table of **Process Control Blocks (PCBs)** in Logical Page 0. Each
-entry will track a program's lifecycle and hardware footprint.
-
-A single PCB record (e.g., 16 bytes) would look like this:
-
-* **Status Byte:** (0 = Empty, 1 = Ready, 2 = Running, 3 = Blocked/Sleeping)
-* **Program Name:** 8-byte ASCII string (e.g., `"XMODEM  "`)
-* **Physical Page Mapping:** Which physical MMU page(s) this program lives in.
-* **Saved Stack Pointer (SP):** The 16-bit address of the program's stack when it was last paused.
-
-### 2. The Context Switch (The 100Hz Magic)
-
-Because every program has its own stack residing in its own physical page, preemptive multitasking becomes incredibly
-clean. When your 100Hz RTC interrupt fires, the CPU automatically pushes the Program Counter to the *current program's*
-stack.
-
-Your kernel's Interrupt Service Routine (ISR) then does this:
-
-1. **Save State:** `PUSH AF, BC, DE, HL, IX, IY` (and the shadow registers). Now the entire CPU state is safely frozen
-   on the app's isolated stack.
-2. **Save SP:** Read the Z80's `SP` and save it to the current task's PCB.
-3. **Task Select:** Find the next "Ready" task in the PCB table.
-4. **MMU Swap:** `OUT` the new task's physical page into the `0x2000` execution window.
-5. **Restore State:** Load the Z80's `SP` from the new task's PCB. `POP` all the registers.
-6. **Resume:** Execute `RETI`. The CPU seamlessly wakes up inside the new program exactly where it left off.
-
-### 3. The System Call Interface (The ABI)
-
-To keep "user space" programs completely agnostic of your hardware (so they don't care if a character goes out via SIO,
-bit-banging, or an LCD), we need an Application Binary Interface (ABI).
-
-The most elegant way to do this on a Z80 is using the **`RST` (Restart)** instructions. `RST` is essentially a 1-byte
-hardware `CALL` to a fixed address in Logical Page 0 (e.g., `RST 08H` calls address `0x0008`).
-
-You could establish a standard where user programs load a "Syscall Number" into register `C`, and then execute
-`RST 08H`.
-
-* `LD C, 0x01` / `RST 08H` -> Read character to `A`.
-* `LD C, 0x02` / `RST 08H` -> Write character in `A` to console.
-* `LD C, 0x10` / `RST 08H` -> Yield remainder of time slice to OS.
-
-The kernel intercepts `RST 08H`, looks at `C`, and jumps to the low-level hardware drivers.
+1. **Hardware Interruption (`^C` Handler):** Configure the Z80 CTC to fire a 100Hz hardware tick. Use this interrupt to build an ISR that catches `0x03` (Ctrl+C) on the serial line to forcibly break infinite loops and return to the CLI.
+2. **PCB Paging (Virtual Memory):** Add a `Page` byte to the `PCB_Entry`. Modify the `xm` and `run` commands to dynamically allocate free physical memory pages, map them into the `0x4000` execution window, and unmap them upon exit to achieve true process isolation.
+3. **Multitasking Scheduler:** Leverage the 100Hz RTC interrupt and the isolated physical pages to implement CP/M 3.0 / UNIX-style preemptive context switching between multiple concurrent applications.
 
 # More on paging
 
-3. PCB Paging (Virtual Memory)
+* PCB Paging (Virtual Memory)
+
 This is the holy grail. It turns your simple DOS into a true paged OS (like CP/M 3.0).
 
 How it works: We add a Page byte to PCB_Entry. We write a simple memory manager that knows which of the 16 physical pages are in use.

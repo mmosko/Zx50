@@ -19,6 +19,8 @@ STACK_POINTER   EQU 0x2000
 ; --- I/O Port Definitions ---
 CTC_CH0     EQU 0x80    ; CTC Channel 0 (Drives SIO Port A Clock)
 CTC_CH1     EQU 0x81    ; CTC Channel 1 (Drives SIO Port B Clock)
+CTC_CH2     EQU 0x82    ; Future 1.8MHz Prescaler
+CTC_CH3     EQU 0x83    ; 100Hz System Tick
 
 SIO_A_CMD   EQU 0x86    ; SIO Port A Control/Command Register
 SIO_B_CMD   EQU 0x87    ; SIO Port B Control/Command Register

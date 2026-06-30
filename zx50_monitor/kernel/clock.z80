@@ -1,0 +1,14 @@
+
+
+System_Tick:
+    ; --- The 100Hz Heartbeat ---
+    ; We swap to the shadow registers to save the user app's state cleanly
+    EX AF, AF'
+    EXX
+    
+    ; TODO: Poll SIO for Ctrl+C here!
+    
+    EXX
+    EX AF, AF'
+    EI
+    RETI            ; Return control to the user app
