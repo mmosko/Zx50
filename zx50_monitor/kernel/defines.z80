@@ -36,3 +36,10 @@ DEBUG_DAT   EQU SIO_B_DAT   ;
 
 LCD_PORT    EQU 0x50    ; Pico Front Panel LCD I/O Port
 MMU_PORT    EQU 0x30    ; Pico MMU I/O Port
+
+
+; --- System Configuration ---
+
+; I/O ring buffer sizes
+RB_SIZE     EQU 64
+RB_MASK     EQU RB_SIZE - 1

@@ -1,0 +1,125 @@
+
+Init_SIO:
+    ; 1. Initialize SIO Port A (FTDI)
+    LD C, SIO_A_CMD         ; Point C register to SIO Port A Command
+    
+    LD A, 0x18              ; WR0: Channel Reset
+    OUT (C), A
+    
+    LD A, 0x04              ; WR0: Select WR4
+    OUT (C), A
+    LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
+    OUT (C), A
+    
+    LD A, 0x01              ; WR0: Select WR1
+    OUT (C), A
+    LD A, 0x00              ; WR1: Interrupts Disabled (Polled Mode)
+    OUT (C), A
+    
+    LD A, 0x03              ; WR0: Select WR3
+    OUT (C), A
+    LD A, 0xC1              ; WR3: Receive 8 Bits/Char, Receiver Enable
+    OUT (C), A
+    
+    LD A, 0x05              ; WR0: Select WR5
+    OUT (C), A
+    LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
+    OUT (C), A
+
+    ; 2. Initialize SIO Port B (MAX232/DB9)
+    LD C, SIO_B_CMD         ; Point C register to SIO Port B Command
+    
+    LD A, 0x18              ; WR0: Channel Reset
+    OUT (C), A
+    
+    LD A, 0x04              ; WR0: Select WR4
+    OUT (C), A
+    LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
+    OUT (C), A
+    
+    LD A, 0x01              ; WR0: Select WR1
+    OUT (C), A
+    LD A, 0x00              ; WR1: Interrupts Disabled (Polled Mode)
+    OUT (C), A
+    
+    LD A, 0x03              ; WR0: Select WR3
+    OUT (C), A
+    LD A, 0xC1              ; WR3: Receive 8 Bits/Char, Receiver Enable
+    OUT (C), A
+    
+    LD A, 0x05              ; WR0: Select WR5
+    OUT (C), A
+    LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
+    OUT (C), A
+
+    LD HL, MSG_SIO_READY    ; Point HL to the SIO string
+    CALL PrintStringLCD     ; Blast it to the LCD
+    RET
+
+; =============================================================================
+; Subroutine: Console_Tx
+; Purpose:    Transmits a single character out of the main console port
+; Input:      A = Character to transmit
+; Destroys:   None (Flags are preserved)
+; =============================================================================
+Console_Tx:
+    PUSH AF                 ; Save the character we want to send
+.tx_wait:
+    IN A, (CONSOLE_CMD)       ; Read SIO RR0
+    BIT 2, A                ; Is Bit 2 (Tx Buffer Empty) set?
+    JR Z, .tx_wait          ; If not, loop and wait
+    
+    POP AF                  ; Restore the character
+    OUT (CONSOLE_DAT), A      ; Blast it out the serial port
+    RET
+
+; =============================================================================
+; Subroutine: Console_Rx
+; Purpose:    Waits for and receives a single character from Console port
+; Output:     A = Received character
+; Destroys:   A
+; =============================================================================
+Console_Rx:
+    IN A, (CONSOLE_CMD)     ; Read SIO RR0
+    BIT 0, A                ; Is Bit 0 (Rx Character Available) set?
+    JR Z, Console_Rx        ; If not, loop and wait
+    
+    IN A, (CONSOLE_DAT)       ; Read the character from the buffer
+    RET
+
+; =============================================================================
+; Subroutine: Console_Poll
+; Purpose:    Checks if a character is available. Does not block.
+; Output:     Carry Flag (C) = SET if no data.
+;             Carry Flag (C) = RESET (Clear) if data received, byte in A.
+; =============================================================================
+Console_Poll:
+    IN A, (CONSOLE_CMD)
+    BIT 0, A
+    JR Z, .no_char          ; If bit 0 is empty, jump to exit
+    
+    IN A, (CONSOLE_DAT)     ; Read the byte!
+    OR A                    ; Clear the Carry Flag to indicate success
+    RET
+
+.no_char:
+    SCF                     ; Set the Carry Flag to indicate no data
+    RET
+ 
+
+; =============================================================================
+; Subroutine: Debug_Tx
+; Purpose:    Transmits a single character out of the debug trace port
+; Input:      A = Character to transmit
+; Destroys:   None (Flags are preserved)
+; =============================================================================
+Debug_Tx:
+    PUSH AF                 
+.tx_wait:
+    IN A, (DEBUG_CMD)       ; Poll SIO Port B
+    BIT 2, A                
+    JR Z, .tx_wait          
+    
+    POP AF                  
+    OUT (DEBUG_DAT), A      ; Blast to SIO Port B
+    RET

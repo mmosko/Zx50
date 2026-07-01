@@ -1,0 +1,93 @@
+
+; =============================================================================
+; Subroutine: PrintConsoleString
+; Purpose:    Prints a null-terminated string to the main console port
+; Input:      HL = Pointer to the null-terminated string
+; Destroys:   A, HL
+; =============================================================================
+PrintConsoleString:
+    LD A, (HL)              ; Load the next character
+    OR A                    ; Logical OR with itself (Sets Zero flag if A=0x00)
+    RET Z                   ; If it's the null terminator, return
+    
+    CALL Console_Tx        ; Print the character
+    INC HL                  ; Move to the next character
+    JR PrintConsoleString    ; Loop
+
+   
+; =============================================================================
+; Subroutine: PrintDebugString
+; Purpose:    Prints a null-terminated string to the debug trace port
+; Input:      HL = Pointer to the null-terminated string
+; Destroys:   A, HL
+; =============================================================================
+PrintDebugString:
+    LD A, (HL)              
+    OR A                    
+    RET Z                   
+    
+    CALL Debug_Tx           ; Call the debug specific Tx routine
+    INC HL                  
+    JR PrintDebugString    
+
+; =============================================================================
+; Subroutine: DumpLine
+; Purpose:    Prints a 16-byte hex and ASCII dump of memory, advances HL by 16
+; Input:      HL = Starting address
+; Destroys:   A, B, C
+; =============================================================================
+DumpLine:
+    ; 1. Print Address (HL)
+    CALL PrintHexWord
+    LD A, ' '
+    CALL Console_Tx
+    CALL Console_Tx
+
+    ; 2. Print 16 Hex Bytes
+    PUSH HL             ; Save our start address for the ASCII pass
+    LD B, 16            ; Loop counter
+.hex_loop:
+    LD A, (HL)
+    CALL PrintHexByte
+    LD A, ' '
+    CALL Console_Tx
+    INC HL
+    DJNZ .hex_loop
+
+    ; 3. Print the gap before ASCII
+    LD A, ' '
+    CALL Console_Tx
+
+    ; 4. Print 16 ASCII Characters
+    POP HL              ; Restore start address
+    LD B, 16
+.ascii_loop:
+    LD A, (HL)
+    
+    ; Check if A is a printable ASCII character (0x20 to 0x7E)
+    CP 0x20
+    JR C, .unprintable  ; Less than space?
+    CP 0x7F
+    JR NC, .unprintable ; DEL (0x7F) or higher?
+    JR .print_char
+    
+.unprintable:
+    LD A, '.'           ; Replace with a dot
+    
+.print_char:
+    CALL Console_Tx
+    INC HL              ; Advance HL
+    DJNZ .ascii_loop
+
+    ; 5. Print Newline
+    PUSH HL             ; Save our advanced memory pointer! (PrintConsoleString destroys HL)
+    LD HL, MSG_CRLF
+    CALL PrintConsoleString
+    POP HL              ; Restore memory pointer
+    RET
+    
+
+    INCLUDE "ring_buffer.z80"
+    INCLUDE "lcd.z80"
+    INCLUDE "serial.z80"
+    INCLUDE "timer.z80"

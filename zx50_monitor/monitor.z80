@@ -140,17 +140,9 @@ Banners:
     ; Source File Inclusions
     ; ==========================================
     
-    INCLUDE "kernel/io.z80"
-    INCLUDE "kernel/hex.z80"
-    INCLUDE "kernel/pcb/pcb.z80"
-    INCLUDE "kernel/strings.z80"
+    INCLUDE "kernel/kernel.z80"
     INCLUDE "shell/cli.z80"
     INCLUDE "syscall.z80"
-    INCLUDE "kernel/apps/xmodem.z80"
-    INCLUDE "kernel/apps/ddt.z80"
-
-   ; This will pad out to IVT_START (0x0F00)
-    INCLUDE "kernel/clock.z80"
 
     ; ==========================================
     ; Built-in Kernel Applications

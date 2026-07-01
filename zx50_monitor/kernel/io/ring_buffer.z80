@@ -1,0 +1,199 @@
+; =============================================================================
+; Zx50 Lock-Free Ring Buffer Module (ring_buffer.z80)
+;
+; Thread-safe for Single-Producer / Single-Consumer without DI/EI.
+; Requires the caller to load IX with the address of the RingBuffer instance.
+;
+; REQUIRED DEFINITIONS (Must be in defines.z80):
+; RB_SIZE     EQU 64             ; MUST be a power of 2!
+; RB_MASK     EQU RB_SIZE - 1    ; e.g., 0x3F
+; =============================================================================
+
+    STRUCT RingBuffer
+        Head    BYTE    ; Write index (Modified ONLY by Producer)
+        Tail    BYTE    ; Read index  (Modified ONLY by Consumer)
+        Data    BLOCK RB_SIZE
+    ENDS
+
+; =============================================================================
+; Subroutine: RB_Init
+; Purpose:    Initializes or resets a ring buffer
+; Input:      IX = Pointer to the RingBuffer instance
+; Destroys:   None
+; =============================================================================
+RB_Init:
+    LD (IX + RingBuffer.Head), 0
+    LD (IX + RingBuffer.Tail), 0
+    RET
+
+; =============================================================================
+; Subroutine: RB_Write (PRODUCER)
+; Purpose:    Writes a byte to the ring buffer
+; Input:      IX = Pointer to the RingBuffer instance
+;             A  = Byte to write
+; Output:     Carry Flag SET if buffer is full (byte dropped).
+;             Carry Flag CLEAR if successful.
+; Destroys:   None (A is preserved on error)
+; =============================================================================
+RB_Write:
+    PUSH BC
+    LD B, A                         ; Save the incoming byte in B
+
+    ; 1. Calculate NextHead = (Head + 1) & RB_MASK
+    LD A, (IX + RingBuffer.Head)
+    INC A
+    AND RB_MASK
+    LD C, A                         ; C = NextHead
+
+    ; 2. Check if Full: Is NextHead == Tail?
+    ; RB_Write only *reads* Tail. If the consumer is concurrently reading, 
+    ; it can only increase Tail (freeing space). A stale read is perfectly safe 
+    ; as it just makes us falsely think it's full for one cycle.
+    ; As it is only 1 byte, the read is guaranteed to be atomic.
+    LD A, (IX + RingBuffer.Tail)
+    CP C
+    JR Z, .full                     ; If they match, the buffer is full!
+
+    ; 3. Calculate exact memory address: HL = IX + Data Offset + Current Head
+    PUSH HL
+    PUSH DE
+    
+    PUSH IX
+    POP HL                          
+    LD DE, RingBuffer.Data
+    ADD HL, DE                      
+    
+    LD E, (IX + RingBuffer.Head)    ; Get CURRENT Head
+    LD D, 0
+    ADD HL, DE                      ; HL now points to Data[Head]
+
+    ; 4. Write the payload
+    LD (HL), B
+
+    ; 5. Publish the new Head
+    ; RB_Write is the ONLY context that modifies Head.
+    ; This single 8-bit write is atomic. The consumer will not see the
+    ; new byte until this exact instruction completes.
+    LD A, C                         
+    LD (IX + RingBuffer.Head), A
+
+    POP DE
+    POP HL
+    POP BC
+    OR A                            ; Clear Carry Flag (Success)
+    RET
+
+.full:
+    LD A, B                         ; Restore original payload to A
+    POP BC
+    SCF                             ; Set Carry Flag (Error: Full)
+    RET
+
+; =============================================================================
+; Subroutine: RB_Read (CONSUMER)
+; Purpose:    Reads the oldest byte from the ring buffer
+; Input:      IX = Pointer to the RingBuffer instance
+; Output:     A = Received byte
+;             Carry Flag SET if buffer is empty (A is undefined).
+;             Carry Flag CLEAR if successful.
+; Destroys:   A
+; =============================================================================
+RB_Read:
+    ; 1. Check if Empty: Is Head == Tail?
+    ; RB_Read only *reads* Head. If the producer is concurrently writing,
+    ; it can only increase Head (adding data). A stale read just makes us
+    ; falsely think the buffer is empty for one cycle, which is perfectly safe.
+    ; As it is only 1 byte, the read is guaranteed to be atomic.
+    LD A, (IX + RingBuffer.Head)
+    LD C, (IX + RingBuffer.Tail)    ; C = Current Tail
+    CP C
+    JR Z, .empty                    ; If they match, the buffer is empty!
+
+    PUSH HL
+    PUSH DE
+    PUSH BC
+
+    ; 2. Calculate exact memory address: HL = IX + Data Offset + Current Tail
+    PUSH IX
+    POP HL                          
+    LD DE, RingBuffer.Data
+    ADD HL, DE                      
+    
+    LD E, C                         ; Use Current Tail from C
+    LD D, 0
+    ADD HL, DE                      ; HL now points to Data[Tail]
+
+    ; 3. Read the payload
+    LD B, (HL)
+
+    ; 4. Calculate NextTail = (Tail + 1) & RB_MASK
+    LD A, C
+    INC A
+    AND RB_MASK                     
+    
+    ; 5. Publish the new Tail
+    ; RB_Read is the ONLY context that modifies Tail.
+    ; This single 8-bit write is atomic. The producer will instantly
+    ; see the freed space once this instruction completes.
+    LD (IX + RingBuffer.Tail), A
+
+    LD A, B                         ; Move payload into A for caller
+    
+    POP BC
+    POP DE
+    POP HL
+    OR A                            ; Clear Carry Flag (Success)
+    RET
+
+.empty:
+    SCF                             ; Set Carry Flag (Error: Empty)
+    RET
+
+; =============================================================================
+; Helper: RB_Blocking_Write
+; Purpose: Writes a byte to the ring buffer, blocking if it is full.
+;
+; The blocking write requires "locking" interrupts (DI/EI) to prevent a race
+; condition with how we use HALT.
+;
+; Input:   IX = Pointer to the RingBuffer instance
+;          A  = Byte to write
+; Destroys: None (Success is guaranteed, A is preserved)
+; =============================================================================
+RB_Blocking_Write:
+    DI                              ; 1. Disable interrupts to prevent race condition
+    CALL RB_Write
+    JR C, .buffer_full              ; 2. If Carry is SET, buffer is full
+    
+    EI                              ; 3. Write succeeded! Re-enable interrupts.
+    RET
+    
+.buffer_full:
+    EI                              ; 4. Re-enable interrupts (delayed by 1 instruction)
+    HALT                            ; 5. Sleep CPU safely. Pending INT fires RIGHT AFTER this.
+    JR RB_Blocking_Write            ; 6. Wake up and try writing again.
+
+
+; =============================================================================
+; Helper: RB_Blocking_Read
+; Purpose: Reads the oldest byte from the buffer, blocking if it is empty.
+;
+; The blocking read requires "locking" interrupts (DI/EI) to prevent a race
+; condition with how we use HALT.
+;
+; Input:   IX = Pointer to the RingBuffer instance
+; Output:  A  = Received byte
+; Destroys: A
+; =============================================================================
+RB_Blocking_Read:
+    DI                              ; 1. Disable interrupts to prevent race condition
+    CALL RB_Read
+    JR C, .buffer_empty             ; 2. If Carry is SET, buffer is empty
+    
+    EI                              ; 3. Read succeeded! Re-enable interrupts.
+    RET
+    
+.buffer_empty:
+    EI                              ; 4. Re-enable interrupts (delayed by 1 instruction)
+    HALT                            ; 5. Sleep CPU safely. Pending INT fires RIGHT AFTER this.
+    JR RB_Blocking_Read             ; 6. Wake up and try reading again.
