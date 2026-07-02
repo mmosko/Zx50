@@ -91,7 +91,7 @@ RegisterApp:
 
 
     INCLUDE "kernel/pcb/pcb_verify.z80"
-    
+
 ; ====================
 ; Subroutine Storage
 ; ====================
@@ -104,6 +104,7 @@ Size    WORD          ; 2-byte length of the binary in bytes
 Chksum  WORD          ; 16-bit checksum (simple addition of all bytes)
     ENDS
 
-PROG_TABLE          EQU LAST_DUMP_ADDR + 2
 PROG_TABLE_MAX      EQU 10   ; Space for 10 loaded programs
+PROG_TABLE:
+    BLOCK PROG_TABLE_MAX * SIZEOF PCB_Entry
 PROG_TABLE_END      EQU PROG_TABLE + (PCB_Entry * PROG_TABLE_MAX)

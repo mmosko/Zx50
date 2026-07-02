@@ -1,19 +1,30 @@
 
 Init_SIO:
-    ; 1. Initialize SIO Port A (FTDI)
-    LD C, SIO_A_CMD         ; Point C register to SIO Port A Command
-    
+    ; --- 0. Initialize Ring Buffers ---
+    LD IX, PORT_A_TX_RB
+    CALL RB_Init
+    LD IX, PORT_A_RX_RB 
+    CALL RB_Init
+
+    ; --- 1. Initialize SIO Port B (Must be done FIRST for Vector Routing) ---
+    LD C, SIO_B_CMD         
     LD A, 0x18              ; WR0: Channel Reset
+    OUT (C), A
+    
+    ; Setup SIO Interrupt Vectoring (Managed via Port B)
+    LD A, 0x02              ; WR0: Select WR2
+    OUT (C), A
+    LD A, 0x10              ; WR2: Base Interrupt Vector = 0x10
+    OUT (C), A
+    
+    LD A, 0x01              ; WR0: Select WR1
+    OUT (C), A
+    LD A, 0x04              ; WR1: "Status Affects Vector" ENABLED
     OUT (C), A
     
     LD A, 0x04              ; WR0: Select WR4
     OUT (C), A
     LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
-    OUT (C), A
-    
-    LD A, 0x01              ; WR0: Select WR1
-    OUT (C), A
-    LD A, 0x00              ; WR1: Interrupts Disabled (Polled Mode)
     OUT (C), A
     
     LD A, 0x03              ; WR0: Select WR3
@@ -26,20 +37,14 @@ Init_SIO:
     LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
     OUT (C), A
 
-    ; 2. Initialize SIO Port B (MAX232/DB9)
-    LD C, SIO_B_CMD         ; Point C register to SIO Port B Command
-    
+    ; --- 2. Initialize SIO Port A (FTDI) ---
+    LD C, SIO_A_CMD         
     LD A, 0x18              ; WR0: Channel Reset
     OUT (C), A
     
     LD A, 0x04              ; WR0: Select WR4
     OUT (C), A
     LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
-    OUT (C), A
-    
-    LD A, 0x01              ; WR0: Select WR1
-    OUT (C), A
-    LD A, 0x00              ; WR1: Interrupts Disabled (Polled Mode)
     OUT (C), A
     
     LD A, 0x03              ; WR0: Select WR3
@@ -52,60 +57,159 @@ Init_SIO:
     LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
     OUT (C), A
 
-    LD HL, MSG_SIO_READY    ; Point HL to the SIO string
-    CALL PrintStringLCD     ; Blast it to the LCD
+    ; --- 3. Apply Default Port A Interrupt State ---
+    LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
+    LD C, CONSOLE_CMD
+    CALL SetTermMode        ; Apply WR1 mode and save to shadow state!
+
+    LD HL, MSG_SIO_READY    
+    CALL PrintStringLCD     
     RET
 
 ; =============================================================================
-; Subroutine: Console_Tx
-; Purpose:    Transmits a single character out of the main console port
-; Input:      A = Character to transmit
-; Destroys:   None (Flags are preserved)
+; Subroutine: Console_Tx (THE PRODUCER)
+; Purpose:    Place a character on the transmit ring buffer. Kickstarts SIO safely.
+; =============================================================================
+; =============================================================================
+; Subroutine: Console_Tx (THE PRODUCER)
+; Purpose:    Place a character on the transmit ring buffer. 
+;             "Primes the pump" if the SIO hardware is currently idle.
 ; =============================================================================
 Console_Tx:
-    PUSH AF                 ; Save the character we want to send
-.tx_wait:
-    IN A, (CONSOLE_CMD)       ; Read SIO RR0
-    BIT 2, A                ; Is Bit 2 (Tx Buffer Empty) set?
-    JR Z, .tx_wait          ; If not, loop and wait
+    PUSH IX
+    PUSH BC
     
-    POP AF                  ; Restore the character
-    OUT (CONSOLE_DAT), A      ; Blast it out the serial port
+.retry:
+    DI                      ; 1. Disable ints to avoid race condition
+    LD IX, PORT_A_TX_RB
+    CALL RB_Write
+    JR NC, .success
+    
+    ; BUFFER IS FULL! 
+    ; Turn on Tx Interrupts so the hardware drains it, then sleep.
+    LD A, (SIO_A_WR1_STATE)
+    OR SIO_TX_INT_EN
+    LD (SIO_A_WR1_STATE), A 
+    
+    LD C, CONSOLE_CMD
+    LD B, A                 
+    LD A, 0x01
+    OUT (C), A
+    LD A, B
+    OUT (C), A
+    
+    EI
+    HALT                    ; Sleep until the SIO ISR drains a byte
+    JR .retry               ; Wake up and try writing again
+    
+.success:
+    ; Byte in ring buffer.
+    ; Is the SIO hardware idle?
+    IN A, (CONSOLE_CMD)     ; Read SIO RR0
+    BIT 2, A                ; Bit 2 is Tx Buffer Empty
+    JR Z, .enable_ints      ; If 0, it's busy. Interrupt will fire naturally!
+    
+    ; SIO IS IDLE! ("Prime the Pump")
+    ; We must manually move one byte to the hardware to trigger the edge.
+    CALL RB_Read            ; Pop the oldest byte (guaranteed to exist)
+    OUT (CONSOLE_DAT), A    ; Blast it to the hardware!
+    
+.enable_ints:
+    ; 5. Ensure Tx Interrupts are enabled for the remaining bytes
+    LD A, (SIO_A_WR1_STATE)
+    OR SIO_TX_INT_EN
+    LD (SIO_A_WR1_STATE), A 
+    
+    LD C, CONSOLE_CMD
+    LD B, A                 
+    LD A, 0x01
+    OUT (C), A
+    LD A, B
+    OUT (C), A
+    
+    EI                      ; 6. Safe to re-enable interrupts
+    POP BC
+    POP IX
     RET
 
 ; =============================================================================
-; Subroutine: Console_Rx
-; Purpose:    Waits for and receives a single character from Console port
+; SIO Port A Tx Empty ISR (THE CONSUMER)
+; =============================================================================
+SIO_A_Tx_ISR:
+    EX AF, AF'
+    EXX
+    
+    LD IX, PORT_A_TX_RB
+    CALL RB_Read
+    JR C, .buffer_empty
+    
+    OUT (CONSOLE_DAT), A
+    JR .exit
+    
+.buffer_empty:
+    ; Buffer is dry. Disable Tx Ints safely.
+    LD A, (SIO_A_WR1_STATE)
+    AND 255 - SIO_TX_INT_EN ; Mask out the Tx Int Enable bit (Compiler safe)
+    LD (SIO_A_WR1_STATE), A
+    
+    LD C, CONSOLE_CMD
+    LD B, A                 
+    LD A, 0x01
+    OUT (C), A
+    LD A, B
+    OUT (C), A
+
+.exit:
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+; =============================================================================
+; SIO Port A Rx Character Available ISR (THE PRODUCER)
+; =============================================================================
+SIO_A_Rx_ISR:
+    EX AF, AF'
+    EXX
+    
+    ; Read the character from the hardware
+    IN A, (CONSOLE_DAT)
+    
+    ; [Future Cooked Mode: CP 0x03 -> Trap Ctrl+C here!]
+    
+    ; Push it into the Rx Ring Buffer
+    LD IX, PORT_A_RX_RB
+    CALL RB_Write
+    ; (If Carry is SET, the buffer was full and the byte is dropped. 
+    ;  In a real UART we might send an XOFF, but dropping is fine for now).
+
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+; =============================================================================
+; Subroutine: Console_Rx (THE CONSUMER)
+; Purpose:    Waits for and receives a single character from the Rx Ring Buffer
 ; Output:     A = Received character
-; Destroys:   A
+; Destroys:   A, IX
 ; =============================================================================
 Console_Rx:
-    IN A, (CONSOLE_CMD)     ; Read SIO RR0
-    BIT 0, A                ; Is Bit 0 (Rx Character Available) set?
-    JR Z, Console_Rx        ; If not, loop and wait
-    
-    IN A, (CONSOLE_DAT)       ; Read the character from the buffer
+    LD IX, PORT_A_RX_RB
+    CALL RB_Blocking_Read
     RET
 
 ; =============================================================================
-; Subroutine: Console_Poll
-; Purpose:    Checks if a character is available. Does not block.
+; Subroutine: Console_Poll (THE CONSUMER)
+; Purpose:    Checks if a character is available without blocking.
 ; Output:     Carry Flag (C) = SET if no data.
 ;             Carry Flag (C) = RESET (Clear) if data received, byte in A.
+; Destroys:   A, IX
 ; =============================================================================
 Console_Poll:
-    IN A, (CONSOLE_CMD)
-    BIT 0, A
-    JR Z, .no_char          ; If bit 0 is empty, jump to exit
-    
-    IN A, (CONSOLE_DAT)     ; Read the byte!
-    OR A                    ; Clear the Carry Flag to indicate success
+    LD IX, PORT_A_RX_RB
+    CALL RB_Read
     RET
-
-.no_char:
-    SCF                     ; Set the Carry Flag to indicate no data
-    RET
- 
 
 ; =============================================================================
 ; Subroutine: Debug_Tx
@@ -123,3 +227,36 @@ Debug_Tx:
     POP AF                  
     OUT (DEBUG_DAT), A      ; Blast to SIO Port B
     RET
+
+; =============================================================================
+; Subroutine: SetTermMode (Syscall 0x001D)
+; Purpose:    Dynamically changes the SIO interrupt mode for a specific port.
+; Input:      C = SIO Command Port (CONSOLE_CMD or DEBUG_CMD)
+;             A = WR1 Configuration Byte (e.g., SIO_RX_INT_ALL | SIO_TX_INT_EN)
+; Destroys:   A
+; =============================================================================
+SetTermMode:
+    DI                      ; Prevent ISRs from hijacking the SIO pointer
+    LD (SIO_A_WR1_STATE), A ; Save the state
+    
+    PUSH AF                 ; Save the target WR1 configuration byte
+    
+    LD A, 0x01              ; Command the SIO to select Write Register 1
+    OUT (C), A
+    
+    POP AF                  ; Restore the configuration byte
+    OUT (C), A              ; Apply the new mode to WR1
+    
+    EI                      ; Safe to re-enable interrupts
+    RET
+
+
+; =============================================================================
+; Serial RAM Storage
+; =============================================================================
+SIO_A_WR1_STATE:    
+    BLOCK 1                     ; 1 byte shadow of Port A WR1
+    
+PORT_A_TX_RB RingBuffer {}      ; Dynamically sized Tx Buffer
+
+PORT_A_RX_RB RingBuffer {}      ; Dynamically sized Rx Buffer (for later)

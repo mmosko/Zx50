@@ -34,6 +34,8 @@ Sys_RegisterApp:
     JP RegisterApp      ; 0x0017 - Register an app to the PCB
 Sys_PollChar:
     JP Console_Poll     ; 0x001A - Poll console for a character
+Sys_SetTermMode:
+    JP SetTermMode      ; 0x001D - Set the terminal mode (console vs burst)
 
 Boot:
     DI                  ; 1. Disable interrupts before anything else
@@ -166,6 +168,22 @@ IVT_START:
     DW Default_ISR  ; 0x02 - CTC Channel 1
     DW Default_ISR  ; 0x04 - CTC Channel 2
     DW System_Tick  ; 0x06 - CTC Channel 3 (100Hz Heartbeat)
+
+    ; -- place holders
+    DW Default_ISR  ; 0x08
+    DW Default_ISR  ; 0x0A
+    DW Default_ISR  ; 0x0C
+    DW Default_ISR  ; 0x0E
+
+    ; --- SIO Vectors (Base 0x10) ---
+    DW Default_ISR  ; 0x10 - Ch B Tx Empty
+    DW Default_ISR  ; 0x12 - Ch B Ext/Status
+    DW Default_ISR  ; 0x14 - Ch B Rx Char Available
+    DW Default_ISR  ; 0x16 - Ch B Special Rx Error
+    DW SIO_A_Tx_ISR ; 0x18 - Ch A Tx Empty!
+    DW Default_ISR  ; 0x1A - Ch A Ext/Status
+    DW SIO_A_Rx_ISR ; 0x1C - Ch A Rx Char Available
+    DW Default_ISR  ; 0x1E - Ch A Special Rx Error
 
     ; Fill the remaining 248 bytes (124 words) with a default handler address
     ; Syntax varies by assembler:

@@ -1,5 +1,5 @@
 App_Xmodem:
-    EX DE, HL               ; Move the argument pointer into HL for the API [cite: 198, 199]
+    EX DE, HL               ; Move the argument pointer into HL for the API
     
     ; 1. Parse the hex address
     CALL SYS_PARSEHEX
@@ -7,7 +7,7 @@ App_Xmodem:
     
     ; --- Kernel Memory Protection Check ---
     PUSH HL                 ; Save the starting pointer
-    PUSH DE                 ; Save the parsed target address   PUSH DE                 ; Save the parsed target address
+    PUSH DE                 ; Save the parsed target address
     LD HL, STACK_POINTER    ; Load our memory boundary (0x2000)
     EX DE, HL               ; Swap: HL = Target Address, DE = STACK_POINTER
     OR A                    ; Clear the carry flag before subtraction
@@ -52,10 +52,15 @@ App_Xmodem:
     LD (XM_Size), HL        ; Reset Size to 0
     LD HL, (XM_Base)        ; HL = Memory Write Pointer
 
+    ; --- 5. Switch to High-Speed Burst Mode ---
+    LD C, CONSOLE_CMD
+    LD A, SIO_RX_INT_FIRST | SIO_TX_INT_EN
+    CALL SYS_SET_TERM_MODE
+
 .flush_rx:
     CALL SYS_POLLCHAR       ; Check for a byte
     JR NC, .flush_rx        ; If we got one (Carry clear), loop and discard it!
-
+    
 .send_nak:
     LD A, 0x15              ; NAK (Tell PC we are ready to receive)
     CALL SYS_PRINTCHAR
@@ -178,8 +183,16 @@ App_Xmodem:
 
     LD HL, XM_MSG_SUCCESS
     CALL SYS_PRINTSTR
-    RET                     ; Drop cleanly back to the OS!
+    JR .restore_and_exit    ; Drop down to restore terminal mode!
 
+.restore_and_exit:
+    ; --- Restore Console Port to CLI Mode ---
+    LD C, CONSOLE_CMD
+    LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
+    CALL SYS_SET_TERM_MODE
+    RET
+
+; -- These are called before SET_TERM_MODE, so do not need to undo anything
 .table_full:
     LD HL, XM_MSG_TABLE_FULL
     CALL SYS_PRINTSTR

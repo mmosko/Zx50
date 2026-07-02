@@ -10,9 +10,9 @@
 ; =============================================================================
 
     STRUCT RingBuffer
-        Head    BYTE    ; Write index (Modified ONLY by Producer)
-        Tail    BYTE    ; Read index  (Modified ONLY by Consumer)
-        Data    BLOCK RB_SIZE
+Head    BYTE 0   ; Write index (Modified ONLY by Producer)
+Tail    BYTE 0   ; Read index  (Modified ONLY by Consumer)
+Data    BLOCK RB_SIZE
     ENDS
 
 ; =============================================================================

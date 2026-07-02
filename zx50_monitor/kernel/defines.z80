@@ -9,7 +9,7 @@ CLI_BUFFER_END  EQU CLI_BUFFER + CLI_MAX_LEN - 1
 ; The last address used for "D" command
 LAST_DUMP_ADDR  EQU CLI_BUFFER_END + 1
 
-; Update MONITOR_STORAGE_SIZE so the ZeroRAM loop clears the new table too!
+; Update MONITOR_STORAGE_SIZE so the ZeroRAM loop clears the new structures!
 MONITOR_STORAGE_SIZE EQU LAST_DUMP_ADDR - _END_OF_ROM
 
 ; Start the stack pointer at 8K and work down
@@ -39,6 +39,12 @@ MMU_PORT    EQU 0x30    ; Pico MMU I/O Port
 
 
 ; --- System Configuration ---
+
+; --- SIO WR1 Interrupt Modes ---
+SIO_RX_DISABLE      EQU 0x00    ; Polled Mode
+SIO_RX_INT_FIRST    EQU 0x08    ; Burst/XMODEM Mode
+SIO_RX_INT_ALL      EQU 0x18    ; Console/CLI Mode
+SIO_TX_INT_EN       EQU 0x02    ; Transmit Interrupt Enable
 
 ; I/O ring buffer sizes
 RB_SIZE     EQU 64

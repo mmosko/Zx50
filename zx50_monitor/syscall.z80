@@ -71,3 +71,13 @@ SYS_REG_APP  EQU 0x0017
 ;             Carry Flag (C) = RESET (Clear) if data received, byte in A.
 ; =============================================================================
 SYS_POLLCHAR  EQU 0x001A
+
+; =============================================================================
+; Subroutine: SetTermMode (Syscall 0x001D)
+; Purpose:    Dynamically changes the SIO interrupt mode for a specific port.
+; Input:      C = SIO Command Port (CONSOLE_CMD or DEBUG_CMD)
+;             A = WR1 Configuration Byte (e.g., SIO_RX_INT_ALL | SIO_TX_INT_EN)
+; Destroys:   A
+; =============================================================================
+SYS_SET_TERM_MODE EQU 0x001D
+
