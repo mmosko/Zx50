@@ -1,4 +1,3 @@
-
 ; =============================================================================
 ; Subroutine: PrintConsoleString
 ; Purpose:    Prints a null-terminated string to the main console port
@@ -37,6 +36,8 @@ PrintDebugString:
 ; Destroys:   A, B, C
 ; =============================================================================
 DumpLine:
+    LD C, TX_CONSOLE        ; Register-routed console channel (preemption-safe!)
+
     ; 1. Print Address (HL)
     CALL PrintHexWord
     LD A, ' '
@@ -91,3 +92,4 @@ DumpLine:
     INCLUDE "lcd.z80"
     INCLUDE "serial.z80"
     INCLUDE "timer.z80"
+    

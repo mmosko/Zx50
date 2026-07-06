@@ -1,3 +1,8 @@
+; =============================================================================
+; Zx50 DDT - Dynamic Debugging Tool
+; Refactored to adhere to thread-safe, register-routed printing conventions.
+; =============================================================================
+
 App_Ddt:
     ; Print DDT welcome banner
     LD HL, DDT_MSG_BANNER
@@ -11,9 +16,9 @@ Ddt_Loop:
     ; 2. Read input into CLI_BUFFER
     CALL Sys_ReadLine
 
-    ; 3. Parse your standard debugger commands (d, etc.)
-    LD HL, CLI_BUFFER       ; <-- NEW: Point HL to the start of the user's input!
-    LD A, (HL)              ; <-- FIXED: Load the first character using our pointer
+    ; 3. Parse standard debugger commands
+    LD HL, CLI_BUFFER       ; Point HL to the start of the user's input
+    LD A, (HL)              ; Load the command character
 
     ; Routing Table
     CP '?'
@@ -28,18 +33,23 @@ Ddt_Loop:
     CP 'D'
     JR Z, Ddt_Dump
 
+    CP 't'                  ; NEW: System Time command
+    JR Z, Ddt_Time
+    CP 'T'                  ; NEW: System Time command (uppercase)
+    JR Z, Ddt_Time
+
     CP 'q'
-    JR Z, Ddt_Exit      ; If 'q', we leave the app
+    JR Z, Ddt_Exit          ; If 'q', we leave the app and return to Shell
     
-    JR Ddt_Loop         ; Loop forever until 'q'
+    JR Ddt_Loop             ; Loop forever until 'q'
 
 Ddt_Unknown:
     LD HL, MSG_UNKNOWN
     CALL Sys_PrintString
-    JP Ddt_Loop         ; Go back to the ddt> prompt instead of the shell
+    JP Ddt_Loop             ; Go back to the ddt> prompt instead of the shell
 
 Ddt_Exit:
-    RET                 ; Pops the PC back to the main Kernel Shell!
+    RET                     ; Pops the PC back to the main Kernel Shell!
 
 ; =============================================================================
 ; Command Subroutines
@@ -51,34 +61,57 @@ Ddt_Help:
     JP Ddt_Loop
 
 ; =============================================================================
+; Subroutine: Ddt_Time (NEW COMMAND)
+; Purpose:    Prints the current system time in Jiffies (100Hz ticks) to Console
+; Note:       Safe for preemption by routing via register C (TX_CONSOLE)
+; =============================================================================
+Ddt_Time:
+    ; 1. Print "Time: 0x"
+    LD HL, DDT_MSG_TIME
+    CALL Sys_PrintString
+
+    ; 2. Load 16-bit system clock tick counter
+    LD HL, (System_Time)
+
+    ; 3. Route formatting output to Main Console (Thread-safe!)
+    LD C, TX_CONSOLE        
+    CALL PrintHexWord 
+
+    ; 4. Output Newline
+    LD HL, DDT_CRLF
+    CALL Sys_PrintString
+    JP Ddt_Loop
+
+; =============================================================================
 ; Subroutine: Cmd_Quit
 ; Purpose:    Halt the program (useful in zsim debugger)
 ; =============================================================================
-
 Ddt_Quit:
-    ; LD HL, MSG_LCD_HALT
-    ; CALL PrintStringLCD
     LD HL, DDT_MSG_QUIT
     CALL Sys_PrintString
     HALT
 
 ; =============================================================================
 ; Subroutine: Cmd_Dump
-; Purpose:    Prints memory contents
+; Purpose:    Prints memory contents in Hex and ASCII
 ; =============================================================================
-
 Ddt_Dump:
-    INC HL              ; Skip the 'D'
+    INC HL                  ; Skip the 'D'
 
 .skip_spaces:
     LD A, (HL)
     CP ' '
-    JR NZ, .check_args  ; If not a space, check what it is
+    JR Z, .inc_hl
+    CP ','                  ; Stop checking on comma separator
+    JR Z, .check_args
+    JR .check_args
+
+.inc_hl:
     INC HL
     JR .skip_spaces
 
 .check_args:
-    OR A                ; Did we hit the end of the string?
+    OR A                    ; Did we hit the end of the string?
     JR NZ, .parse_start 
     
     ; --- No arguments provided! Load from LAST_DUMP_ADDR ---
@@ -90,12 +123,12 @@ Ddt_Dump:
 .parse_start:
     ; --- Parse the Start Address ---
     CALL ParseHexWord
-    JR C, Ddt_Unknown   ; Abort if invalid hex
-    LD B, D             ; Store Start Address in BC
+    JR C, Ddt_Unknown       ; Abort if invalid hex
+    LD B, D                 ; Store Start Address in BC
     LD C, E
 
     LD A, (HL)
-    CP ','              ; Is there a comma (End Address)?
+    CP ','                  ; Is there a comma (End Address follows)?
     JR Z, .parse_end
 
 .set_default_end:
@@ -110,38 +143,41 @@ Ddt_Dump:
 
 .parse_end:
     ; --- Parse the End Address ---
-    INC HL              ; Skip the ','
+    INC HL                  ; Skip the ','
     CALL ParseHexWord
     JP C, Ddt_Unknown
 
 .execute:
     ; --- Execution Loop ---
-    LD H, B             ; Move Current Address into HL for DumpLine
+    LD H, B                 ; Move Current Address into HL for DumpLine
     LD L, C
 
 .dump_loop:
-    CALL DumpLine       ; Dumps 16 bytes and advances HL by 16
+    CALL DumpLine           ; Dumps 16 bytes and advances HL by 16
 
     ; Did we pass the End Address (DE)?
     ; We check this by doing: DE - HL. If it carries/borrows, HL > DE.
     PUSH HL
-    PUSH DE              ; Save the End Address!
-    EX DE, HL           ; HL = End Address, DE = Current Address
-    OR A                ; Clear Carry Flag
-    SBC HL, DE          ; End - Current
-    POP DE              ; Restore the End Address!
-    POP HL              ; Restore Current Address into HL
+    PUSH DE                 ; Save the End Address!
+    EX DE, HL               ; HL = End Address, DE = Current Address
+    OR A                    ; Clear Carry Flag
+    SBC HL, DE              ; End - Current
+    POP DE                  ; Restore the End Address!
+    POP HL                  ; Restore Current Address into HL
     
-    JR NC, .dump_loop   ; If no carry, End >= Current. Keep looping!
+    JR NC, .dump_loop       ; If no carry, End >= Current. Keep looping!
 
     ; --- Save our place for the next 'D' command ---
     LD (LAST_DUMP_ADDR), HL
     
     JP Ddt_Loop
 
+; =============================================================================
+; Application Constants & Strings
+; =============================================================================
 DDT_MSG_BANNER:
     DB 0x0D, 0x0A, "========================", 0x0D, 0x0A
-    DB " Zx50 DDT v1.0", 0x0D, 0x0A
+    DB " Zx50 DDT v1.1", 0x0D, 0x0A
     DB "========================", 0x0D, 0x0A, 0x00
 
 DDT_PROMPT:
@@ -150,9 +186,16 @@ DDT_PROMPT:
 DDT_MSG_QUIT:
     DB "Exit ddt", 0x0D, 0x0A, 0x00
 
+DDT_MSG_TIME:
+    DB "Time: 0x", 0x00
+
+DDT_CRLF:
+    DB 0x0D, 0x0A, 0x00
+
 DDT_MSG_HELP:
     DB "Commands:", 0x0D, 0x0A
     DB "  D[start][,end] - Display Memory", 0x0D, 0x0A
+    DB "  T              - Show System Time (Jiffies)", 0x0D, 0x0A
     DB "  Q              - Quit DDT", 0x0D, 0x0A
     DB "  ?, H           - This help menu", 0x0D, 0x0A, 0x00
 

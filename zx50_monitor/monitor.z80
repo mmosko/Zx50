@@ -176,9 +176,9 @@ IVT_START:
     DW Default_ISR  ; 0x0E
 
     ; --- SIO Vectors (Base 0x10) ---
-    DW Default_ISR  ; 0x10 - Ch B Tx Empty
+    DW SIO_B_Tx_ISR  ; 0x10 - Ch B Tx Empty
     DW Default_ISR  ; 0x12 - Ch B Ext/Status
-    DW Default_ISR  ; 0x14 - Ch B Rx Char Available
+    DW SIO_B_Rx_ISR  ; 0x14 - Ch B Rx Char Available
     DW Default_ISR  ; 0x16 - Ch B Special Rx Error
     DW SIO_A_Tx_ISR ; 0x18 - Ch A Tx Empty!
     DW Default_ISR  ; 0x1A - Ch A Ext/Status

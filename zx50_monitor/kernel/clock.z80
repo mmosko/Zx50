@@ -1,4 +1,10 @@
+; =============================================================================
+; Zx50 System Clock & Heartbeat Driver
+; Preemption-safe implementation utilizing register-based hex routing.
+; =============================================================================
 
+; --- Constants ---
+HEARTBEAT_INTERVAL  EQU 1000        ; 1000 ticks = 10 seconds at 100Hz interrupt rate
 
 System_Tick:
     ; --- The 100Hz Heartbeat ---
@@ -6,9 +12,69 @@ System_Tick:
     EX AF, AF'
     EXX
     
-    ; TODO: Poll SIO for Ctrl+C here!
+    ; 1. Increment the 16-bit system time counter (jiffies)
+    LD HL, (System_Time)
+    INC HL
+    LD (System_Time), HL
+
+    ; 2. Decrement the 10-second heartbeat countdown timer
+    LD HL, (Heartbeat_Countdown)
+    DEC HL
+    LD (Heartbeat_Countdown), HL
     
+    ; 3. Check if the countdown has reached 0
+    LD A, H
+    OR L
+    JR NZ, .done                    ; If not zero, we haven't hit 10 seconds yet
+    
+    ; 4. Timer expired! Reset the countdown and call the DebugStatus routine
+    LD HL, HEARTBEAT_INTERVAL
+    LD (Heartbeat_Countdown), HL
+    
+    CALL DebugStatus
+
+.done:
     EXX
     EX AF, AF'
     EI
-    RETI            ; Return control to the user app
+    RETI            ; Return control and restore the user app's main registers
+
+; =============================================================================
+; Subroutine: DebugStatus
+; Purpose:    Outputs system heartbeat and status information to Channel B (Debug)
+; Destroys:   None (All registers are explicitly preserved)
+; =============================================================================
+DebugStatus:
+    PUSH HL
+    PUSH DE
+    PUSH BC
+    PUSH AF
+
+    ; Print "Heartbeat 0x" to Port B
+    LD HL, MSG_HEARTBEAT
+    CALL PrintDebugString
+
+    ; Format and stream the actual value via the shared engine routed to Port B
+    LD HL, (System_Time)
+    LD C, TX_DEBUG                  ; Explicit register-based routing parameter (thread-safe!)
+    CALL PrintHexWord
+
+    ; Print Carriage Return and Line Feed
+    LD HL, MSG_NEWLINE_DBG
+    CALL PrintDebugString
+
+    POP AF
+    POP BC
+    POP DE
+    POP HL
+    RET
+
+; =============================================================================
+; RAM Storage & Strings (Natively shielded from code execution paths)
+; =============================================================================
+MSG_HEARTBEAT:      DB "Heartbeat 0x", 0
+MSG_NEWLINE_DBG:    DB 0x0D, 0x0A, 0x00
+
+; Word Variables
+System_Time:         DW 0x0000
+Heartbeat_Countdown: DW HEARTBEAT_INTERVAL

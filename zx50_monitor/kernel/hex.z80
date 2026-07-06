@@ -1,4 +1,13 @@
 ; =============================================================================
+; Zx50 Hex Parsing and Printing Utility Library
+; Preemption-safe and thread-safe implementation using register C for routing.
+; =============================================================================
+
+; --- Output Channel Route Definitions ---
+TX_CONSOLE          EQU 0       ; Route to main console (Console_Tx)
+TX_DEBUG            EQU 1       ; Route to debug trace port (Debug_Tx)
+
+; =============================================================================
 ; Subroutine: ParseHexWord
 ; Purpose:    Parses an ASCII hex string into a 16-bit binary value.
 ;             Skips leading spaces. Stops on comma, space, or null.
@@ -80,6 +89,7 @@ ParseHexWord:
 ; Subroutine: PrintHexWord
 ; Purpose:    Prints a 16-bit value as four ASCII Hex characters
 ; Input:      HL = 16-bit value to print
+;             C  = Destination route (TX_CONSOLE or TX_DEBUG)
 ; Destroys:   None (Registers are preserved)
 ; =============================================================================
 PrintHexWord:
@@ -94,7 +104,8 @@ PrintHexWord:
 ; =============================================================================
 ; Subroutine: PrintHexByte
 ; Purpose:    Prints an 8-bit value as two ASCII Hex characters
-; Input:      A = 8-bit value to print
+; Input:      A  = 8-bit value to print
+;             C  = Destination route (TX_CONSOLE or TX_DEBUG)
 ; Destroys:   None (Registers are preserved)
 ; =============================================================================
 PrintHexByte:
@@ -111,7 +122,8 @@ PrintHexByte:
 ; =============================================================================
 ; Subroutine: PrintHexNibble
 ; Purpose:    Converts the lower 4 bits of A into an ASCII char and prints it
-; Input:      A = Value containing the nibble in the lower 4 bits
+; Input:      A  = Value containing the nibble in the lower 4 bits
+;             C  = Destination route (TX_CONSOLE or TX_DEBUG)
 ; Destroys:   None (Registers are preserved)
 ; =============================================================================
 PrintHexNibble:
@@ -129,6 +141,29 @@ PrintHexNibble:
     ADD A, '0'              ; Add the ASCII offset for '0' (0x30)
     
 .print:
-    CALL Console_Tx         ; Print the ASCII character
+    CALL PrintHexChar       ; Print the ASCII character using dynamic register route
     POP AF                  ; Restore the original A
+    RET
+
+; =============================================================================
+; Subroutine: PrintHexChar
+; Purpose:    Preemption-safe dynamic output multiplexer for hex characters
+; Input:      A = ASCII character to output
+;             C = Destination route (TX_CONSOLE or TX_DEBUG)
+; Destroys:   None
+; =============================================================================
+PrintHexChar:
+    PUSH AF
+    LD A, C
+    CP TX_DEBUG
+    JR Z, .to_debug
+
+    ; Default / TX_CONSOLE
+    POP AF
+    CALL Console_Tx
+    RET
+
+.to_debug:
+    POP AF
+    CALL Debug_Tx
     RET

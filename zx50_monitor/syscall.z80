@@ -76,8 +76,10 @@ SYS_POLLCHAR  EQU 0x001A
 ; Subroutine: SetTermMode (Syscall 0x001D)
 ; Purpose:    Dynamically changes the SIO interrupt mode for a specific port.
 ; Input:      C = SIO Command Port (CONSOLE_CMD or DEBUG_CMD)
-;             A = WR1 Configuration Byte (e.g., SIO_RX_INT_ALL | SIO_TX_INT_EN)
+;             A = 0 (CHAR Mode) or 1 (BULK Mode)
 ; Destroys:   A
 ; =============================================================================
+TERM_MODE_CHAR EQU 0x00
+TERM_MODE_BULK EQU 0x01
 SYS_SET_TERM_MODE EQU 0x001D
 

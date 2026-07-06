@@ -1,92 +1,107 @@
+; =============================================================================
+; Zx50 Serial Kernel Driver
+; Integrates standard symbolic equates from sio_reg_defs.z80
+; =============================================================================
+
+    INCLUDE "sio_reg_defs.z80"
+
 Init_SIO:
-    ; --- 2. Force-Disable DART Port A ---
-    LD C, CONSOLE_CMD
-    LD A, 0x01              ; Select WR1
-    OUT (C), A
-    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
-    OUT (C), A
-
-    ; --- 3. Force-Disable DART Port B ---
-    LD C, SIO_B_CMD
-    LD A, 0x01              ; Select WR1
-    OUT (C), A
-    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
-    OUT (C), A
-    
-    RET
-
-Init_SIO_X:
     ; --- 0. Initialize Ring Buffers ---
     LD IX, PORT_A_TX_RB
     CALL RB_Init
     LD IX, PORT_A_RX_RB 
     CALL RB_Init
 
-    ; --- 1. Initialize SIO Port B (Must be done FIRST for Vector Routing) ---
-    LD C, SIO_B_CMD         
-    LD A, 0x18              ; WR0: Channel Reset
-    OUT (C), A
-    
-    ; Setup SIO Interrupt Vectoring (Managed via Port B)
-    LD A, 0x02              ; WR0: Select WR2
-    OUT (C), A
-    LD A, 0x10              ; WR2: Base Interrupt Vector = 0x10
-    OUT (C), A
-    
-    LD A, 0x01              ; WR0: Select WR1
-    OUT (C), A
-    LD A, 0x04              ; WR1: "Status Affects Vector" ENABLED
-    OUT (C), A
-    
-    LD A, 0x04              ; WR0: Select WR4
-    OUT (C), A
-    LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
-    OUT (C), A
-    
-    LD A, 0x03              ; WR0: Select WR3
-    OUT (C), A
-    LD A, 0xC1              ; WR3: Receive 8 Bits/Char, Receiver Enable
-    OUT (C), A
-    
-    LD A, 0x05              ; WR0: Select WR5
-    OUT (C), A
-    LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
+    ; =========================================================================
+    ; 1. Configure SIO/DART Channel A (Console Port)
+    ; =========================================================================
+    LD C, SIO_A_CMD
+
+    ; --- Reset Channel A ---
+    LD A, SIO_CMD_CH_RESET  ; WR0: Reset Channel Command
     OUT (C), A
 
-    ; --- 2. Initialize SIO Port A (FTDI) ---
-    LD C, SIO_A_CMD         
-    LD A, 0x18              ; WR0: Channel Reset
+    ; --- WR4: Clock Mode, Stop Bits, Parity ---
+    LD A, SIO_WR0_REG4      ; Select SIO WR4 (0x04)
     OUT (C), A
-    
-    LD A, 0x04              ; WR0: Select WR4
-    OUT (C), A
-    LD A, 0x44              ; WR4: 16x Clock, 1 Stop Bit, No Parity
-    OUT (C), A
-    
-    LD A, 0x03              ; WR0: Select WR3
-    OUT (C), A
-    LD A, 0xC1              ; WR3: Receive 8 Bits/Char, Receiver Enable
-    OUT (C), A
-    
-    LD A, 0x05              ; WR0: Select WR5
-    OUT (C), A
-    LD A, 0xEA              ; WR5: Transmit 8 Bits/Char, Transmitter Enable, DTR/RTS High
+    LD A, SIO_WR4_CLK_X16 | SIO_WR4_STOP_1 | SIO_WR4_PAR_NONE
     OUT (C), A
 
-    ; --- 3. Apply Default Port A Interrupt State ---
-    ; LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
-    LD A, 0
-    LD C, CONSOLE_CMD
-    CALL SetTermMode        ; Apply WR1 mode and save to shadow state!
+    ; --- WR3: Receiver Parameters ---
+    LD A, SIO_WR0_REG3      ; Select SIO WR3 (0x03)
+    OUT (C), A
+    LD A, SIO_WR3_RX_8 | SIO_WR3_AUTO_EN | SIO_WR3_RX_EN
+    OUT (C), A
 
+    ; --- WR5: Transmitter Parameters ---
+    LD A, SIO_WR0_REG5      ; Select SIO WR5 (0x05)
+    OUT (C), A
+    LD A, SIO_WR5_TX_8 | SIO_WR5_TX_EN | SIO_WR5_RTS_EN
+    OUT (C), A
+
+    ; --- WR1: Interrupt Configuration ---
+    LD A, SIO_WR0_REG1      ; Select SIO WR1 (0x01)
+    OUT (C), A
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
+    OUT (C), A
+
+    ; =========================================================================
+    ; 2. Configure SIO/DART Channel B (Auxiliary / Program Port)
+    ; =========================================================================
+    LD C, SIO_B_CMD
+
+    ; --- Reset Channel B ---
+    LD A, SIO_CMD_CH_RESET  ; WR0: Reset Channel Command
+    OUT (C), A
+
+    ; --- WR2: Interrupt Vector Register (Shared Base written directly to Channel B) ---
+    LD A, SIO_WR0_REG2      ; Select SIO WR2 (0x02)
+    OUT (C), A
+    LD A, 0x10              ; SIO Vector Base = 0x10 (Maps cleanly to aligned IVT offsets)
+    OUT (C), A
+
+    ; --- WR4: Clock Mode, Stop Bits, Parity ---
+    LD A, SIO_WR0_REG4      ; Select SIO WR4 (0x04)
+    OUT (C), A
+    LD A, SIO_WR4_CLK_X16 | SIO_WR4_STOP_1 | SIO_WR4_PAR_NONE
+    OUT (C), A
+
+    ; --- WR3: Receiver Parameters ---
+    LD A, SIO_WR0_REG3      ; Select SIO WR3 (0x03)
+    OUT (C), A
+    LD A, SIO_WR3_RX_8 | SIO_WR3_AUTO_EN | SIO_WR3_RX_EN
+    OUT (C), A
+
+    ; --- WR5: Transmitter Parameters ---
+    LD A, SIO_WR0_REG5      ; Select SIO WR5 (0x05)
+    OUT (C), A
+    LD A, SIO_WR5_TX_8 | SIO_WR5_TX_EN | SIO_WR5_RTS_EN
+    OUT (C), A
+
+    ; --- WR1: Interrupt Configuration (Status Affects Vector) ---
+    LD A, SIO_WR0_REG1      ; Select SIO WR1 (0x01)
+    OUT (C), A
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+    OUT (C), A
+    
+    ; =========================================================================
+    ; 3. Establish Default Shadows and Apply Initial Interrupt States
+    ; =========================================================================
+    LD A, 0                 ; Select CHAR Mode (0)
+    LD C, SIO_A_CMD
+    CALL SetTermMode_Inner  ; Commit cleanly to SIO_A_WR1_STATE without corrupting maps
+
+    LD A, 0                 ; Select CHAR Mode (0)
+    LD C, SIO_B_CMD
+    CALL SetTermMode_Inner  ; Commit cleanly to SIO_B_WR1_STATE
+
+    ; --- Update LCD status message ---
     LD HL, MSG_SIO_READY    
-    CALL PrintStringLCD     
-    RET
+    CALL PrintStringLCD    
 
-; =============================================================================
-; Subroutine: Console_Tx (THE PRODUCER)
-; Purpose:    Place a character on the transmit ring buffer. Kickstarts SIO safely.
-; =============================================================================
+    RET
+    
+
 ; =============================================================================
 ; Subroutine: Console_Tx (THE PRODUCER)
 ; Purpose:    Place a character on the transmit ring buffer. 
@@ -105,12 +120,12 @@ Console_Tx:
     ; BUFFER IS FULL! 
     ; Turn on Tx Interrupts so the hardware drains it, then sleep.
     LD A, (SIO_A_WR1_STATE)
-    OR SIO_TX_INT_EN
+    OR SIO_WR1_TX_INT_EN
     LD (SIO_A_WR1_STATE), A 
     
     LD C, CONSOLE_CMD
     LD B, A                 
-    LD A, 0x01
+    LD A, SIO_WR0_REG1      ; Select SIO WR1
     OUT (C), A
     LD A, B
     OUT (C), A
@@ -134,12 +149,12 @@ Console_Tx:
 .enable_ints:
     ; 5. Ensure Tx Interrupts are enabled for the remaining bytes
     LD A, (SIO_A_WR1_STATE)
-    OR SIO_TX_INT_EN
+    OR SIO_WR1_TX_INT_EN
     LD (SIO_A_WR1_STATE), A 
     
     LD C, CONSOLE_CMD
     LD B, A                 
-    LD A, 0x01
+    LD A, SIO_WR0_REG1      ; Select SIO WR1
     OUT (C), A
     LD A, B
     OUT (C), A
@@ -167,12 +182,12 @@ SIO_A_Tx_ISR:
 .buffer_empty:
     ; Buffer is dry. Disable Tx Ints safely.
     LD A, (SIO_A_WR1_STATE)
-    AND 255 - SIO_TX_INT_EN ; Mask out the Tx Int Enable bit (Compiler safe)
+    AND 255 - SIO_WR1_TX_INT_EN ; Mask out the Tx Int Enable bit (Compiler safe)
     LD (SIO_A_WR1_STATE), A
     
     LD C, CONSOLE_CMD
     LD B, A                 
-    LD A, 0x01
+    LD A, SIO_WR0_REG1      ; Select SIO WR1
     OUT (C), A
     LD A, B
     OUT (C), A
@@ -200,10 +215,47 @@ SIO_A_Rx_ISR:
     ; Push it into the Rx Ring Buffer
     LD IX, PORT_A_RX_RB
     CALL RB_Write
+
     ; (If Carry is SET, the buffer was full and the byte is dropped. 
     ;  In a real UART we might send an XOFF, but dropping is fine for now).
 
     POP IX
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+; =============================================================================
+; SIO Port B Tx Empty ISR (Shared Debug Transmit ISR)
+; =============================================================================
+SIO_B_Tx_ISR:
+    EX AF, AF'
+    EXX
+
+    ; --- REQUIRED: Reset Tx Interrupt Pending in SIO WR0 ---
+    LD A, SIO_CMD_RST_TX_INT ; Command 0x28: Reset Tx Int Pending
+    OUT (SIO_B_CMD), A
+
+    ; (Placeholder/Diagnostic: If adding a Port B transmit ring buffer in the future,
+    ;  you can pop the character and OUT it to DEBUG_DAT here.)
+
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+; =============================================================================
+; SIO Port B Rx Character Available ISR (Shared Debug Receive ISR)
+; =============================================================================
+SIO_B_Rx_ISR:
+    EX AF, AF'
+    EXX
+
+    ; Read character from hardware to auto-clear the Rx interrupt state
+    IN A, (DEBUG_DAT)
+
+    ; (Placeholder: Process or push incoming byte to Port B receive queue here.)
+
     EXX
     EX AF, AF'
     EI
@@ -251,32 +303,84 @@ Debug_Tx:
 
 ; =============================================================================
 ; Subroutine: SetTermMode (Syscall 0x001D)
-; Purpose:    Dynamically changes the SIO interrupt mode for a specific port.
-; Input:      C = SIO Command Port (CONSOLE_CMD or DEBUG_CMD)
-;             A = WR1 Configuration Byte (e.g., SIO_RX_INT_ALL | SIO_TX_INT_EN)
-; Destroys:   A
+; Purpose:    Dynamically changes the SIO mode.
+; Input:      C = SIO Command Port (SIO_A_CMD or SIO_B_CMD)
+;             A = Terminal Mode (0 = CHAR mode, 1 = Bulk mode)
 ; =============================================================================
 SetTermMode:
-    DI                      ; Prevent ISRs from hijacking the SIO pointer
-    LD (SIO_A_WR1_STATE), A ; Save the state
-    
-    PUSH AF                 ; Save the target WR1 configuration byte
-    
-    LD A, 0x01              ; Command the SIO to select Write Register 1
-    OUT (C), A
-    
-    POP AF                  ; Restore the configuration byte
-    OUT (C), A              ; Apply the new mode to WR1
-    
-    EI                      ; Safe to re-enable interrupts
+    DI                          ; Prevent ISRs from hijacking the SIO pointer
+    CALL SetTermMode_Inner      ; Handle the mapping and hardware write
+    EI                          ; Safe to re-enable interrupts
     RET
 
+SetTermMode_Inner:
+    ; --- Same as SetTermMode, but does NOT toggle DI/EI ---
+    PUSH BC
+    PUSH AF
+    
+    ; 1. Determine if we are configuring Channel A or Channel B
+    LD A, C
+    CP SIO_B_CMD
+    JR Z, .channel_b
+    
+    ; --- Channel A Mode Mapping ---
+    POP AF                      ; Retrieve mode selection (0 or 1)
+    OR A                        ; Is it 0 (CHAR)?
+    JR NZ, .ch_a_bulk
+    
+    ; Channel A - CHAR Mode
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
+    JR .apply_mode
+    
+.ch_a_bulk:
+    ; Channel A - Bulk Mode (Rx Int on First Character Only)
+    LD A, SIO_WR1_RX_FIRST | SIO_WR1_TX_INT_EN
+    JR .apply_mode
+
+.channel_b:
+    ; --- Channel B Mode Mapping ---
+    POP AF                      ; Retrieve mode selection (0 or 1)
+    OR A                        ; Is it 0 (CHAR)?
+    JR NZ, .ch_b_bulk
+    
+    ; Channel B - CHAR Mode
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+    JR .apply_mode
+    
+.ch_b_bulk:
+    ; Channel B - Bulk Mode
+    LD A, SIO_WR1_RX_FIRST | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+
+.apply_mode:
+    CALL UpdateShadowRegister   ; Save to correct shadow RAM (A is the SIO WR1 byte)
+    PUSH AF                     
+    LD A, SIO_WR0_REG1          ; Select SIO Write Register 1 (0x01)
+    OUT (C), A
+    POP AF                  
+    OUT (C), A                  ; Push configuration to hardware
+    
+    POP BC
+    RET
+
+; --- Internal Helper: Maps Port Address to Correct Shadow Variable ---
+UpdateShadowRegister:
+    PUSH AF
+    LD A, C
+    CP SIO_B_CMD                
+    JR Z, .route_port_b
+    POP AF
+    LD (SIO_A_WR1_STATE), A     ; Commit to Port A Storage
+    RET
+.route_port_b:
+    POP AF
+    LD (SIO_B_WR1_STATE), A     ; Commit to Port B Storage
+    RET
 
 ; =============================================================================
 ; Serial RAM Storage
 ; =============================================================================
-SIO_A_WR1_STATE:    
-    BLOCK 1                     ; 1 byte shadow of Port A WR1
+SIO_A_WR1_STATE:    BLOCK 1     ; 1 byte shadow tracking for Port A WR1
+SIO_B_WR1_STATE:    BLOCK 1     ; 1 byte shadow tracking for Port B WR1
     
 PORT_A_TX_RB RingBuffer {}      ; Dynamically sized Tx Buffer
 

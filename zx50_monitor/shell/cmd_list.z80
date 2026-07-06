@@ -6,6 +6,7 @@ Cmd_List:
     ; Initialize the table scanner
     LD IX, PROG_TABLE       
     LD B, PROG_TABLE_MAX    
+    LD C, TX_CONSOLE        ; Set the routing channel to Console (preemption-safe!)
 
 .list_loop:
     ; 1. Is this slot empty?
@@ -14,7 +15,7 @@ Cmd_List:
     JR Z, .next_entry       ; If 0x00, skip this slot and check the next
 
     ; 2. Print the Name (exactly 8 bytes)
-    PUSH BC                 ; Save our outer loop counter!
+    PUSH BC                 ; Save our outer loop counter AND routing channel!
     LD B, 8                 ; Inner loop counter for the name
     PUSH IX
     POP HL                  ; Quickly copy IX into HL for fast reading
@@ -30,32 +31,29 @@ Cmd_List:
     CALL PrintConsoleString
 
     ; 4. Print the Base Address in Hex
-    LD A, (IX + PCB_Entry.Base + 1)
-    CALL PrintHexByte               
-    LD A, (IX + PCB_Entry.Base)     
-    CALL PrintHexByte
+    LD L, (IX + PCB_Entry.Base)
+    LD H, (IX + PCB_Entry.Base + 1)
+    CALL PrintHexWord
 
     ; 5. Print the Size in Hex
     LD HL, CLI_MSG_LIST_SEP
     CALL PrintConsoleString
-    LD A, (IX + PCB_Entry.Size + 1)
-    CALL PrintHexByte               
-    LD A, (IX + PCB_Entry.Size)     
-    CALL PrintHexByte
+    LD L, (IX + PCB_Entry.Size)
+    LD H, (IX + PCB_Entry.Size + 1)
+    CALL PrintHexWord
 
     ; 6. Print the Checksum in Hex
     LD HL, CLI_MSG_LIST_SEP
     CALL PrintConsoleString
-    LD A, (IX + PCB_Entry.Chksum + 1)
-    CALL PrintHexByte               
-    LD A, (IX + PCB_Entry.Chksum)     
-    CALL PrintHexByte
+    LD L, (IX + PCB_Entry.Chksum)
+    LD H, (IX + PCB_Entry.Chksum + 1)
+    CALL PrintHexWord
 
     ; 7. Drop to a new line
     LD HL, MSG_CRLF
     CALL PrintConsoleString
 
-    POP BC                  ; Restore our outer loop counter!
+    POP BC                  ; Restore our outer loop counter and routing channel!
 
 .next_entry:
     LD DE, SIZEOF PCB_Entry        ; Load the struct size into DE
@@ -65,4 +63,3 @@ Cmd_List:
     JR NZ, .list_loop       
 
     JP Shell_Loop
-    

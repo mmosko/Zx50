@@ -52,9 +52,9 @@ App_Xmodem:
     LD (XM_Size), HL        ; Reset Size to 0
     LD HL, (XM_Base)        ; HL = Memory Write Pointer
 
-    ; --- 5. Switch to High-Speed Burst Mode ---
+    ; --- 5. Switch to High-Speed Bulk Mode (1 = Bulk) ---
     LD C, CONSOLE_CMD
-    LD A, SIO_RX_INT_FIRST | SIO_TX_INT_EN
+    LD A, TERM_MODE_BULK     ; 1 = Bulk Mode (Abstracted WR1 mapping)
     CALL SYS_SET_TERM_MODE
 
 .flush_rx:
@@ -186,9 +186,9 @@ App_Xmodem:
     JR .restore_and_exit    ; Drop down to restore terminal mode!
 
 .restore_and_exit:
-    ; --- Restore Console Port to CLI Mode ---
+    ; --- Restore Console Port to CLI Mode (0 = CHAR Mode) ---
     LD C, CONSOLE_CMD
-    LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
+    LD A, TERM_MODE_CHAR    ; 0 = CHAR Mode (Abstracted WR1 mapping)
     CALL SYS_SET_TERM_MODE
     RET
 

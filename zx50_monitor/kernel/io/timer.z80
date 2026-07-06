@@ -1,52 +1,45 @@
 Init_CTC:
-    ; 1. Configure CTC Channel 0 for SIO Port A
-    LD A, 0x07              ; Control Word: Interrupts Off, Timer Mode, Prescaler 16, TC Follows, Reset
+    ; --- Load the interrupt vector base into the CTC ---
+    LD A, 0x00              ; Vector Base: 0x00
+    OUT (CTC_CH0), A        ; Writing a vector to CH0 sets the base for the block
+
+    ; =========================================================================
+    ; 1. Configure CTC Channel 0 for SIO Port A (115,200 Baud @ x16 SIO Mode)
+    ; =========================================================================
+    ; Bit 7 = 0 (Interrupt Disabled)
+    ; Bit 6 = 1 (Counter Mode - clocks down on CLK/TRG0 external input pins)
+    ; Bit 4 = 1 (Increment on Rising Edge)
+    ; Bit 2 = 1 (Time Constant Follows)
+    ; Bit 1 = 1 (Software Reset)
+    ; Bit 0 = 1 (Control Word)
+    LD A, %01010111         ; 0x57: Counter Mode, No Interrupts, Rising Edge
     OUT (CTC_CH0), A
-    LD A, 0x01              ; Time Constant = 1
+    LD A, 1                 ; Time Constant = 1 (Passes full 1.8432MHz through)
     OUT (CTC_CH0), A
 
-    ; 2. Configure CTC Channel 1 for SIO Port B
-    LD A, 0x07              ; Same configuration for Port B
+    ; =========================================================================
+    ; 2. Configure CTC Channel 1 for SIO Port B (115,200 Baud @ x16 SIO Mode)
+    ; =========================================================================
+    LD A, %01010111         ; 0x57: Same configuration for Port B
     OUT (CTC_CH1), A
-    LD A, 0x01
-    OUT (CTC_CH1), A
+    LD A, 1                 ; Time Constant = 1 (Passes full 1.8432MHz through)
+    OUT (CTC_CH1), A        ; Note: Change to 6 for 19,200 Baud
     
-    ; --- Configure CTC Channel 2 to be silent ---
-    LD A, 0x07              
+    ; =========================================================================
+    ; 3. Configure CTC Channel 2 (Prescaler for 1.8432MHz Oscillator)
+    ; =========================================================================
+    LD A, %01010111         ; 0x57: Counter Mode, No Interrupts
     OUT (CTC_CH2), A
-    LD A, 0x01
-    OUT (CTC_CH2), A
+    LD A, 0                 ; Time Constant: 0 is interpreted by hardware as 256
+    OUT (CTC_CH2), A        ; 1,843,200Hz / 256 = 7,200Hz output on TO2
 
-    ; --- Tell the CTC where its vectors start ---
-    LD A, 0x00          ; Vector Base: 0x00 
-    OUT (CTC_CH0), A    ; Writing a vector to CH0 sets it for the whole chip
-    
-    ; --- Start Channel 3 (100Hz Tick) ---
-    ; Control Word: Int Enable (1), Timer (0), Prescale 256 (1), 
-    ; Edge (0), TC Follows (1), Reset (1), Control (1)
-
-    LD A, 0xA7          
+    ; =========================================================================
+    ; 4. Configure CTC Channel 3 (100Hz Interrupt Tick)
+    ; =========================================================================
+    LD A, %11010111         ; 0xD7: Counter Mode, Interrupts Enabled
     OUT (CTC_CH3), A
-    
-    LD A, 195           ; Time Constant: 5,000,000 / 256 / 195 = ~100.16Hz
+    LD A, 72                ; Time Constant: 72 (7,200Hz / 72 = 100Hz)
     OUT (CTC_CH3), A
 
     RET
-
-; Init_CTC_Silent:
-;     ; --- 1. Force-Disable all 4 CTC Channels ---
-;     ; Control Word 0x07 = Reset, Interrupts OFF, Timer Mode, TC Follows
-;     LD A, 0x07      
-;     OUT (CTC_CH0), A
-;     OUT (CTC_CH1), A
-;     OUT (CTC_CH2), A
-;     OUT (CTC_CH3), A
-    
-;     ; Send dummy Time Constants to complete the reset state
-;     LD A, 0x01
-;     OUT (CTC_CH0), A
-;     OUT (CTC_CH1), A
-;     OUT (CTC_CH2), A
-;     OUT (CTC_CH3), A
-;     RET
     
