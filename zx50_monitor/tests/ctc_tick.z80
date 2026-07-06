@@ -1,0 +1,197 @@
+    DEVICE NOSLOT64K
+;    SLDOPT COMMENT WPMEM, LOGPOINT, ASSERTION  ; Enables DeZog advanced debugging
+    SLDOPT COMMENT WPMEM, ASSERTION  ; Enables DeZog advanced debugging
+    OUTPUT "tests/ctc_tick.bin"
+
+    ; **********
+    ; Memory Map
+    ; 0x0000 - 0x7FFF : ROM
+    ; 0x8000 - 0xFFFF : RAM
+    ; **********
+
+    INCLUDE "kernel/defines.z80"
+
+    ORG 0x0000          ; 0x0000 - Hard reset vector
+
+Boot:
+    DI                  ; 1. Disable interrupts before anything else
+
+    ; *****************
+    ; Program card 0 for 0x8000 - 0xFFFF
+    ; Now do a linear map of physical page 1-15 to logical page 1-15 (0x1000-0xF000)
+    ; *****************
+    LD C, MMU_PORT      ; C = MMU I/O Port
+
+    LD B, 0x80          ; B = Start logical page 1
+    LD D, 0x08          ; D = Start physical RAM page 1
+
+MapRAM:
+    LD A, D             
+    OUT (C), A          ; Trigger mmu_direct_wr: Map physical page D to logical window B
+    INC D               ; Next physical page (0x09, 0x0A...)
+    LD A, B
+    ADD A, 0x10         ; Next logical window (0x10 -> 0x20 -> 0x30...)
+    LD B, A
+    JR NC, MapRAM       ; Loop until B overflows from 0xF0 to 0x00 (Carry flag sets)
+
+    ; 3. Establish the Stack
+    LD SP, 0x0000       ; Stack will be at the top of RAM (0xFFFF) and work down.
+
+    ; LD HL, MSG_MEM_INIT     ; Point HL to the first string
+    ; CALL PrintStringLCD     ; Blast it to the LCD
+
+IVT_Init:
+    ; --- Set interrupt vectors ---
+    LD A, high IVT_START    ; High byte of IVT_Base
+    LD I, A
+    IM 2                    ; Enable Vector Interrupts
+
+    CALL Init_SIO
+
+    ; --- Turn on the Interrupts! ---
+    EI
+
+    ; --- Hardware Initialization ---
+    CALL Init_CTC
+
+Banners:
+    ; --- Boot Banners ---
+    ; LD HL, MSG_SIO_READY
+    ; CALL PrintStringLCD
+
+
+EndlessLoop:
+    HALT                    ; Sleep until the next interrupt
+    JP EndlessLoop          ; Loop forever
+
+    ; -- self contained, only needs defines
+    ; INCLUDE "kernel/io/lcd.z80"
+
+Init_CTC:
+    ; --- Load the interrupt vector base into the CTC ---
+    LD A, 0x00              ; Vector Base: 0x00
+    OUT (CTC_CH0), A        ; Writing a vector to CH0 sets it
+
+    ; 1. Configure CTC Channel 0 for SIO Port A
+    LD A, 0x07              ; Control Word: Interrupts Off, Timer Mode, Prescaler 16, TC Follows, Reset
+    OUT (CTC_CH0), A
+    LD A, 0x01              ; Time Constant = 1
+    OUT (CTC_CH0), A
+
+    ; 2. Configure CTC Channel 1 for SIO Port B
+    LD A, 0x07              ; Same configuration for Port B
+    OUT (CTC_CH1), A
+    LD A, 0x01
+    OUT (CTC_CH1), A
+    
+    ; --- Configure CTC Channel 2 (Prescaler for 1.8432MHz Oscillator) ---
+    ; Bit 7 = 0 (Interrupt Disabled)
+    ; Bit 6 = 1 (Counter Mode - counts pulses on TRG2)
+    ; Bit 5 = 0 (Ignored in Counter Mode)
+    ; Bit 4 = 1 (Increment on Rising Edge)
+    ; Bit 3 = 0 (Ignored in Counter Mode)
+    ; Bit 2 = 1 (Time Constant Follows)
+    ; Bit 1 = 1 (Software Reset)
+    ; Bit 0 = 1 (Control Word)
+    LD A, %01010111         ; 0x57
+    OUT (CTC_CH2), A
+    LD A, 0                 ; Time Constant: 0 is interpreted by CTC hardware as 256
+    OUT (CTC_CH2), A
+
+    ; --- Configure CTC Channel 3 (100Hz Interrupt Tick) ---
+    ; Bit 7 = 1 (Interrupt Enabled)
+    ; Bit 6 = 1 (Counter Mode - counts down based on Ch2 TO2 pulses on TRG3)
+    ; Bit 5 = 0 (Ignored in Counter Mode)
+    ; Bit 4 = 1 (Increment on Rising Edge)
+    ; Bit 3 = 0 (Ignored in Counter Mode)
+    ; Bit 2 = 1 (Time Constant Follows)
+    ; Bit 1 = 1 ( Software Reset)
+    ; Bit 0 = 1 (Control Word)
+    LD A, %11010111         ; 0xD7
+    OUT (CTC_CH3), A
+    LD A, 72                ; Time Constant: 72 (7,200Hz / 72 = 100Hz)
+    OUT (CTC_CH3), A
+
+    RET
+    
+Init_SIO:
+    ; --- 2. Force-Disable SIO Port A ---
+    LD C, CONSOLE_CMD
+    LD A, 0x01              ; Select WR1
+    OUT (C), A
+    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
+    OUT (C), A
+
+    ; --- 3. Force-Disable SIO Port B ---
+    LD C, SIO_B_CMD
+    LD A, 0x01              ; Select WR1
+    OUT (C), A
+    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
+    OUT (C), A
+    
+    RET
+
+    ; =========================================================================
+    ; INTERRUPT VECTOR TABLE (Must be aligned to a 256-byte boundary)
+    ; =========================================================================
+
+Default_ISR:
+    EX AF, AF'
+    EXX
+    
+    ; -- Throw out an an IORQ that is distinct
+    LD B, 0x21
+    LD C, 0x21
+    LD A, 0xC1
+    OUT (C), A
+
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+System_Tick:
+    ; --- The 100Hz Heartbeat ---
+    ; We swap to the shadow registers to save the user app's state cleanly
+    EX AF, AF'
+    EXX
+    
+    ; -- Throw out an an IORQ that is distinct
+    LD B, 0x28
+    LD C, 0x28
+    LD A, 0xC8
+    OUT (C), A
+
+    EXX
+    EX AF, AF'
+    EI
+    RETI
+
+; MSG_MEM_INIT:
+;     DB 10               ; Length: 1 (cmd) + 8 (text) + 1 (newline) = 10
+;     DB 0x01             ; Pico LCD Clear/Text Command
+;     DB "Mem Init"
+;     DB 0x0A             ; '\n'
+
+; MSG_SIO_READY:
+;     DB 16               ; Length: 1 (cmd) + 8 (text) + 1 (newline) + 6 (line 2)= 10
+;     DB 0x01
+;     DB "SIO Init"
+;     DB 0x0A
+;     DB "Ready"
+;     DB 0x0A
+
+    ALIGN 256       ; Align table to a page boundary (Low byte = 00h)
+IVT_START:
+    DW Default_ISR  ; 0x00 - CTC Channel 0 
+    DW Default_ISR  ; 0x02 - CTC Channel 1
+    DW Default_ISR  ; 0x04 - CTC Channel 2
+    DW System_Tick  ; 0x06 - CTC Channel 3 (100Hz Heartbeat)
+
+    ; --- Cleanly fill the remaining table with 16-bit pointers ---
+    REPT 124
+        DW Default_ISR
+    ENDR
+
+_END_OF_ROM: 
+    ; The assembler assigns this label the exact address of the last byte + 1.

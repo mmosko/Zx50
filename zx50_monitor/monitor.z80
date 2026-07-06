@@ -185,9 +185,10 @@ IVT_START:
     DW SIO_A_Rx_ISR ; 0x1C - Ch A Rx Char Available
     DW Default_ISR  ; 0x1E - Ch A Special Rx Error
 
-    ; Fill the remaining 248 bytes (124 words) with a default handler address
-    ; Syntax varies by assembler:
-    BLOCK 124, Default_ISR ; For SJASMPlus / ASLink
+    ; --- Cleanly fill the remaining table with 16-bit pointers ---
+    REPT 112
+        DW Default_ISR
+    ENDR
 
 _END_OF_ROM: 
     ; The assembler assigns this label the exact address of the last byte + 1.

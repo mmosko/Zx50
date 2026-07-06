@@ -7419,6 +7419,12 @@
 		(uuid "7d42a8ea-1ad4-4983-8956-d24545e2e6c1")
 	)
 	(junction
+		(at 38.1 67.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7f79cf29-8bfd-4fa3-9638-49a29bff541e")
+	)
+	(junction
 		(at 191.77 54.61)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -7545,10 +7551,6 @@
 		(uuid "2db76e8e-26c9-48dc-9c15-18c4395ec1bd")
 	)
 	(no_connect
-		(at 45.72 72.39)
-		(uuid "2e7822ee-42f2-400e-a214-f24bed255718")
-	)
-	(no_connect
 		(at 88.9 185.42)
 		(uuid "33c9460b-96a1-4732-be9c-30506b9b53d6")
 	)
@@ -7673,10 +7675,6 @@
 		(uuid "990362b9-1aa3-4b5d-a99b-25540948006d")
 	)
 	(no_connect
-		(at 53.34 72.39)
-		(uuid "9a720c67-481e-4b44-968f-8f8520147a37")
-	)
-	(no_connect
 		(at 111.76 185.42)
 		(uuid "9f508fed-f573-4783-b651-c3a7114ee506")
 	)
@@ -7755,10 +7753,6 @@
 	(no_connect
 		(at 99.06 185.42)
 		(uuid "d562fd23-be3d-434f-af1b-4f97f197ea4c")
-	)
-	(no_connect
-		(at 48.26 72.39)
-		(uuid "d5a96a43-d8de-4c46-ac4a-d9f6bf52942b")
 	)
 	(no_connect
 		(at 86.36 185.42)
@@ -9351,6 +9345,16 @@
 		)
 		(uuid "5425634d-85d8-42ba-8efd-0c6d5038a62f")
 	)
+	(wire
+		(pts
+			(xy 48.26 72.39) (xy 53.34 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55037ac6-2417-4436-b75c-54fcc5ccd1f7")
+	)
 	(bus
 		(pts
 			(xy 140.97 114.3) (xy 143.51 114.3)
@@ -9963,6 +9967,16 @@
 	)
 	(wire
 		(pts
+			(xy 45.72 72.39) (xy 45.72 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92aaa687-96a4-4e98-8615-b730599c979c")
+	)
+	(wire
+		(pts
 			(xy 196.85 30.48) (xy 196.85 50.8)
 		)
 		(stroke
@@ -10220,6 +10234,16 @@
 			(type default)
 		)
 		(uuid "b124133b-c1e6-4c85-9f76-dd0893d18876")
+	)
+	(wire
+		(pts
+			(xy 45.72 67.31) (xy 38.1 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b1a1ffe8-6a37-4c94-a569-3086835af459")
 	)
 	(wire
 		(pts
@@ -12335,7 +12359,7 @@
 				)
 			)
 		)
-		(property "Value" "7.3728 MHz"
+		(property "Value" "1.8432 MHz"
 			(at 34.798 48.26 90)
 			(effects
 				(font
@@ -12352,7 +12376,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://support.epson.biz/td/api/doc_check.php?mode=dl&lang=en&Parts=SG-8002DC"
+		(property "Datasheet" ""
 			(at 24.13 53.34 0)
 			(effects
 				(font
@@ -12361,7 +12385,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "XTAL OSC XO 7.3728MHZ HCMOS TH"
+		(property "Description" "Standard Clock Oscillators DIP-8 5V 1.8432MHz"
 			(at 24.13 55.88 0)
 			(effects
 				(font
@@ -12370,7 +12394,7 @@
 				(hide yes)
 			)
 		)
-		(property "DigiKey_PN" "110-MXO45HS-3C-7M372800-ND"
+		(property "DigiKey_PN" ""
 			(at 24.13 55.88 0)
 			(effects
 				(font
@@ -12379,7 +12403,16 @@
 				(hide yes)
 			)
 		)
-		(property "SKU" "MXO45HS-3C-7M372800"
+		(property "SKU" "ECS-2100AX-1.8432MHZ"
+			(at 24.13 55.88 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "520-TCH184-X"
 			(at 24.13 55.88 90)
 			(effects
 				(font

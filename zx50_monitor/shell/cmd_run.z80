@@ -91,7 +91,7 @@ Cmd_Run:
 
 .next_entry:
     PUSH DE                 ; Save the user string pointer!
-    LD DE, PCB_Entry        ; Load struct size (10)
+    LD DE, SIZEOF PCB_Entry        ; Load struct size (10)
     ADD IX, DE              ; Advance IX to the next slot cleanly
     POP DE                  ; Restore the user string pointer!
     

@@ -10,7 +10,7 @@ PCB_Init:
     ; 1. Zero out the entire PROG_TABLE
     LD HL, PROG_TABLE
     LD DE, PROG_TABLE + 1
-    LD BC, (PCB_Entry * PROG_TABLE_MAX) - 1
+    LD BC, PROG_TABLE_SIZE - 1
     LD (HL), 0x00
     LDIR
 
@@ -105,6 +105,7 @@ Chksum  WORD          ; 16-bit checksum (simple addition of all bytes)
     ENDS
 
 PROG_TABLE_MAX      EQU 10   ; Space for 10 loaded programs
+PROG_TABLE_SIZE     EQU SIZEOF PCB_Entry * PROG_TABLE_MAX
 PROG_TABLE:
-    BLOCK PROG_TABLE_MAX * SIZEOF PCB_Entry
-PROG_TABLE_END      EQU PROG_TABLE + (PCB_Entry * PROG_TABLE_MAX)
+    BLOCK PROG_TABLE_SIZE
+PROG_TABLE_END      EQU PROG_TABLE + PROG_TABLE_SIZE

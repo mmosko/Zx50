@@ -58,7 +58,7 @@ Cmd_List:
     POP BC                  ; Restore our outer loop counter!
 
 .next_entry:
-    LD DE, PCB_Entry        ; Load the struct size into DE
+    LD DE, SIZEOF PCB_Entry        ; Load the struct size into DE
     ADD IX, DE              ; IX = IX + struct size
     
     DEC B

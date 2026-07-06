@@ -9,6 +9,7 @@ Welcome to the Zx50 SDK. This guide outlines the architectural rules, memory con
 * **Clean Exits:** The OS invokes applications via a standard Z80 `CALL`. Your application must exit by executing a `RET` instruction (or calling `Sys_Exit`) to safely return control to the OS Shell.
 * **Argument Passing:** Upon execution, the OS passes a pointer to any command-line arguments via the `DE` register. If no arguments were provided, `DE` points to a NULL (`0x00`) byte.
 * **System Calls:** Applications must include `syscall.z80` to route API requests to the Kernel's Page 0 jump table.
+* **Shadow Register Ban:** Applications **MUST NOT** use the Z80 shadow registers (`EXX` and `EX AF, AF'`). The Kernel reserves the alternate register bank exclusively for high-speed background Interrupt Service Routines (ISRs). If an application attempts to store state in the shadow registers, it will be asynchronously overwritten and corrupted by the OS.
 
 ---
 

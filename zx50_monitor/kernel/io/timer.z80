@@ -11,6 +11,12 @@ Init_CTC:
     LD A, 0x01
     OUT (CTC_CH1), A
     
+    ; --- Configure CTC Channel 2 to be silent ---
+    LD A, 0x07              
+    OUT (CTC_CH2), A
+    LD A, 0x01
+    OUT (CTC_CH2), A
+
     ; --- Tell the CTC where its vectors start ---
     LD A, 0x00          ; Vector Base: 0x00 
     OUT (CTC_CH0), A    ; Writing a vector to CH0 sets it for the whole chip
@@ -18,6 +24,7 @@ Init_CTC:
     ; --- Start Channel 3 (100Hz Tick) ---
     ; Control Word: Int Enable (1), Timer (0), Prescale 256 (1), 
     ; Edge (0), TC Follows (1), Reset (1), Control (1)
+
     LD A, 0xA7          
     OUT (CTC_CH3), A
     
@@ -25,4 +32,21 @@ Init_CTC:
     OUT (CTC_CH3), A
 
     RET
+
+; Init_CTC_Silent:
+;     ; --- 1. Force-Disable all 4 CTC Channels ---
+;     ; Control Word 0x07 = Reset, Interrupts OFF, Timer Mode, TC Follows
+;     LD A, 0x07      
+;     OUT (CTC_CH0), A
+;     OUT (CTC_CH1), A
+;     OUT (CTC_CH2), A
+;     OUT (CTC_CH3), A
+    
+;     ; Send dummy Time Constants to complete the reset state
+;     LD A, 0x01
+;     OUT (CTC_CH0), A
+;     OUT (CTC_CH1), A
+;     OUT (CTC_CH2), A
+;     OUT (CTC_CH3), A
+;     RET
     

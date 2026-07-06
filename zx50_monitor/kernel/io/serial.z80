@@ -1,5 +1,21 @@
-
 Init_SIO:
+    ; --- 2. Force-Disable DART Port A ---
+    LD C, CONSOLE_CMD
+    LD A, 0x01              ; Select WR1
+    OUT (C), A
+    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
+    OUT (C), A
+
+    ; --- 3. Force-Disable DART Port B ---
+    LD C, SIO_B_CMD
+    LD A, 0x01              ; Select WR1
+    OUT (C), A
+    LD A, 0x00              ; Disable Tx/Rx/Ext Interrupts
+    OUT (C), A
+    
+    RET
+
+Init_SIO_X:
     ; --- 0. Initialize Ring Buffers ---
     LD IX, PORT_A_TX_RB
     CALL RB_Init
@@ -58,7 +74,8 @@ Init_SIO:
     OUT (C), A
 
     ; --- 3. Apply Default Port A Interrupt State ---
-    LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
+    ; LD A, SIO_RX_INT_ALL | SIO_TX_INT_EN
+    LD A, 0
     LD C, CONSOLE_CMD
     CALL SetTermMode        ; Apply WR1 mode and save to shadow state!
 
@@ -138,7 +155,8 @@ Console_Tx:
 SIO_A_Tx_ISR:
     EX AF, AF'
     EXX
-    
+    PUSH IX
+
     LD IX, PORT_A_TX_RB
     CALL RB_Read
     JR C, .buffer_empty
@@ -160,6 +178,7 @@ SIO_A_Tx_ISR:
     OUT (C), A
 
 .exit:
+    POP IX
     EXX
     EX AF, AF'
     EI
@@ -171,7 +190,8 @@ SIO_A_Tx_ISR:
 SIO_A_Rx_ISR:
     EX AF, AF'
     EXX
-    
+    PUSH IX
+
     ; Read the character from the hardware
     IN A, (CONSOLE_DAT)
     
@@ -183,6 +203,7 @@ SIO_A_Rx_ISR:
     ; (If Carry is SET, the buffer was full and the byte is dropped. 
     ;  In a real UART we might send an XOFF, but dropping is fine for now).
 
+    POP IX
     EXX
     EX AF, AF'
     EI
