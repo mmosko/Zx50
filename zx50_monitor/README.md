@@ -23,7 +23,18 @@ We have successfully transitioned from a basic ROM monitor to a stable, self-hos
 
 ## 2. Current System Architecture
 
-* **System Clock:** 5.000 MHz `ZCLK` (Divided from 20MHz `MCLK`).
+### Hardware
+
+- Zx50_Backplane_RevD
+- Zx50_Clock_Mezzanine_RevC (with 40 MHz oscillator)
+- Zx50_Cpu_RevB1
+- Zx50_FrontPanelCard_RevB
+- Zx50_FrontPanelDisplay
+- Zx50_MemoryCard_RevA1 (one card with EEPROM)
+- Zx50_Serial_RevB
+- 
+
+* **System Clock:** 10.000 MHz `ZCLK` (Divided from 40MHz `MCLK`).
 * **Console SIO (Port A):** Command `0x86`, Data `0x84`.
 * **Debug SIO (Port B):** Command `0x87`, Data `0x85`. 
 * **LCD Front Panel:** Port `0x50`. Mapped to the blue UI display.
