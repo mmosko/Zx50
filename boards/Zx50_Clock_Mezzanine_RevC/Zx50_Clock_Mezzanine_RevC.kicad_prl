@@ -32,6 +32,7 @@
       "vias",
       "footprint_text",
       "footprint_anchors",
+      "ratsnest",
       "grid",
       "footprints_front",
       "footprints_back",
@@ -58,7 +59,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "Zx50_Clock_Mezzanine_RevB.kicad_prl",
+    "filename": "Zx50_Clock_Mezzanine_RevC.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
