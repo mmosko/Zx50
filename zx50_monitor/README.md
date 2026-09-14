@@ -25,14 +25,25 @@ We have successfully transitioned from a basic ROM monitor to a stable, self-hos
 
 ### Hardware
 
-- Zx50_Backplane_RevD
-- Zx50_Clock_Mezzanine_RevC (with 40 MHz oscillator)
-- Zx50_Cpu_RevB1
-- Zx50_FrontPanelCard_RevB
-- Zx50_FrontPanelDisplay
-- Zx50_MemoryCard_RevA1 (one card with EEPROM)
-- Zx50_Serial_RevB
-- 
+Netlists are available under individual card projects in `zx50/boards/`.
+
+| Slot | Card                                          |
+|:----:|:---------------------------------------------:|
+| n/a  | Zx50_Backplane_RevD                           | 
+| n/a  | Zx50_FrontPanelDisplay                        |
+| 1    | Zx50_Cpu_RevB1 + Zx50_Clock_Mezzanine_RevC    |
+| 2    | Zx50_Serial_RevB                              |
+| 3    | Zx50_MemoryCard_RevA1 (with EEPROM)           |
+| 4    | (reserved 2nd memory card)                    |
+| 5    | empty                                         |
+| 6    | Zx50_FrontPanelCard_RevB                      |
+| 7    | Zx50_Bus_Probe_RevB                           |
+| 8    | empty                                         |
+
+Note: 
+- slot 8 has some oscilliscope probes on ZCLK and MCLK. 
+- Bus Analyzer is connected to bus probe Z80 Data (J16) and Z80 Contro (J17)l
+
 
 * **System Clock:** 10.000 MHz `ZCLK` (Divided from 40MHz `MCLK`).
 * **Console SIO (Port A):** Command `0x86`, Data `0x84`.
