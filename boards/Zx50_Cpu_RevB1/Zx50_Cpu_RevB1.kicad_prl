@@ -1,12 +1,12 @@
 {
   "board": {
-    "active_layer": 6,
+    "active_layer": 45,
     "active_layer_preset": "",
-    "auto_track_width": false,
+    "auto_track_width": true,
     "hidden_netclasses": [],
     "hidden_nets": [],
     "high_contrast_mode": 0,
-    "net_color_mode": 2,
+    "net_color_mode": 1,
     "opacity": {
       "images": 0.6,
       "pads": 1.0,
@@ -50,7 +50,7 @@
       "conflict_shadows",
       "shapes"
     ],
-    "visible_layers": "ffffffff_ffffffff_ffffd575_ff5551ef",
+    "visible_layers": "ffffffff_ffffffff_fffffff5_ffffffaf",
     "zone_display_mode": 0
   },
   "git": {
@@ -59,13 +59,11 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "Zx50_MemoryCard_RevC1.kicad_prl",
+    "filename": "Zx50_Cpu_RevB1.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
     "col_hidden": [
-      false,
-      false,
       false,
       false,
       false,
@@ -91,9 +89,7 @@
       8,
       9,
       10,
-      11,
-      12,
-      13
+      11
     ],
     "col_widths": [
       156,
@@ -104,8 +100,6 @@
       103,
       103,
       74,
-      103,
-      103,
       103,
       103,
       103,

@@ -1,6 +1,6 @@
     DEVICE NOSLOT64K
-;    SLDOPT COMMENT WPMEM, LOGPOINT, ASSERTION  ; Enables DeZog advanced debugging
-    SLDOPT COMMENT WPMEM, ASSERTION  ; Enables DeZog advanced debugging
+    SLDOPT COMMENT WPMEM, LOGPOINT, ASSERTION  ; Enables DeZog advanced debugging
+;    SLDOPT COMMENT WPMEM, ASSERTION  ; Enables DeZog advanced debugging
     OUTPUT "monitor.bin"
 
     INCLUDE "kernel/defines.z80"

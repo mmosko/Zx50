@@ -333,8 +333,9 @@ SetTermMode_Inner:
     JR .apply_mode
     
 .ch_a_bulk:
-    ; Channel A - Bulk Mode (Rx Int on First Character Only)
-    LD A, SIO_WR1_RX_FIRST | SIO_WR1_TX_INT_EN
+    ; Use RX_ALL_PAR instead of RX_FIRST so the ring buffer doesn't freeze
+    ; Had been set to RX_FIRST, but that caused the ring buffer to freeze if a byte was dropped.
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
     JR .apply_mode
 
 .channel_b:

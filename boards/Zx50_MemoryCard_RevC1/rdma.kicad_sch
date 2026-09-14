@@ -6672,7 +6672,7 @@
 		)
 		(uuid "4c19daa9-32d6-43e1-80c6-5995fd457492")
 	)
-	(label "RDMA_CT"
+	(label "RDMA_CT1"
 		(at 222.25 57.15 180)
 		(effects
 			(font
@@ -7062,7 +7062,7 @@
 		)
 		(uuid "e1935e73-b268-4ca7-ba37-8688abef075d")
 	)
-	(label "RDMA_CT"
+	(label "RDMA_CT2"
 		(at 222.25 132.08 180)
 		(effects
 			(font

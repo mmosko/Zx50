@@ -1,0 +1,134 @@
+; =============================================================================
+; Z80 SIO / DART Write Register Bit and Field Definitions
+; =============================================================================
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 0 (WR0): Command and Register Selection
+; -----------------------------------------------------------------------------
+; Register Selection (D2-D0)
+SIO_WR0_REG0        EQU 0x00    ; Select WR0
+SIO_WR0_REG1        EQU 0x01    ; Select WR1
+SIO_WR0_REG2        EQU 0x02    ; Select WR2
+SIO_WR0_REG3        EQU 0x03    ; Select WR3
+SIO_WR0_REG4        EQU 0x04    ; Select WR4
+SIO_WR0_REG5        EQU 0x05    ; Select WR5
+
+; Command Codes (D5-D3)
+SIO_CMD_NULL        EQU 0x00    ; Null Command (No Action)
+SIO_CMD_SEND_ABORT  EQU 0x08    ; Send Abort (SDLC Mode)
+SIO_CMD_RST_STATUS  EQU 0x10    ; Reset External/Status Interrupts
+SIO_CMD_CH_RESET    EQU 0x18    ; Channel Reset (Forces Tx/Rx into inactive states)
+SIO_CMD_INT_NEXT_RX EQU 0x20    ; Enable Interrupt on Next Rx Character
+SIO_CMD_RST_TX_INT  EQU 0x28    ; Reset Transmitter Interrupt Pending
+SIO_CMD_RST_ERROR   EQU 0x30    ; Error Reset (Clears Rx Overrun, Parity, Framing)
+SIO_CMD_EI_CH_A     EQU 0x38    ; End of Interrupt Command (Channel A Only)
+
+; CRC Reset Codes (D7-D6)
+SIO_CRC_NULL        EQU 0x00    ; Null CRC Reset
+SIO_CRC_RST_RX      EQU 0x40    ; Reset Rx CRC Checker
+SIO_CRC_RST_TX      EQU 0x80    ; Reset Tx CRC Generator
+SIO_CRC_RST_EOM     EQU 0xC0    ; Reset Tx Underflow/EOM Latch
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 1 (WR1): Interrupt and Data Transfer Modes
+;
+; Status Affects Vector (D2)
+; This bit is active in Channel B only. If this bit is not set, the fixed vector
+; programmed in WR2 is returned from an interrupt acknowledge sequence.
+; If this bit is set, the vector returned from an interrupt acknowledge is
+; variable. Table 16 describes the vector results. Table 17 describes the
+; Receive Interrupt modes.
+; Table 16. Vector Results
+;      V3 V2 V1 Result
+; Ch B 0  0  0  Ch B Transmit Buffer Empty
+;      0  0  1  Ch B External/Status Change
+;      0  1  0  Ch B Receive Character Available
+;      0  1  1  Ch B Special Receive Condition*
+; Ch A 1  0  0  Ch A Transmit Buffer Empty
+;      1  0  1  Ch A External/Status Change
+;      1  1  0  Ch A Receive Character Available
+;      1  1  1  Ch A Special Receive Condition*
+; Note: *Special Receive conditions:
+;           Parity Error, Rx Overrun Error, Framing Error, End-of-Frame (SDLC).
+; -----------------------------------------------------------------------------
+SIO_WR1_EXT_INT_EN  EQU 0x01    ; External/Status Interrupt Enable (e.g. CTS, DCD, Break)
+SIO_WR1_TX_INT_EN   EQU 0x02    ; Transmitter Interrupt Enable
+SIO_WR1_STATUS_EN   EQU 0x04    ; Status Affects Vector (Channel B Only)
+
+; Receiver Interrupt Modes (D4-D3)
+SIO_WR1_RX_DISABLE  EQU 0x00    ; Receive Interrupts Disabled
+SIO_WR1_RX_FIRST    EQU 0x08    ; Rx Interrupt on First Character Only
+SIO_WR1_RX_ALL_PAR  EQU 0x10    ; Rx Interrupt on All Chars (Parity affects vector)
+SIO_WR1_RX_ALL      EQU 0x18    ; Rx Interrupt on All Chars (Parity doesn't affect vector)
+
+; Wait/Ready Control (D7-D5)
+SIO_WR1_WAIT_R_T    EQU 0x20    ; Wait/Ready on Receive/Transmit
+SIO_WR1_WAIT_SEL    EQU 0x00    ; Wait/Ready pin acts as WAIT (0)
+SIO_WR1_READY_SEL   EQU 0x40    ; Wait/Ready pin acts as READY (1)
+SIO_WR1_WAIT_EN     EQU 0x80    ; Enable Wait/Ready function
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 2 (WR2): Interrupt Vector (Channel B Only)
+; -----------------------------------------------------------------------------
+; SIO WR2 simply contains the base address of your interrupt vector table offset.
+; Standard configuration: 
+; SIO_WR2_VEC_BASE  EQU 0x10    ; Base vector returned during INTA
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 3 (WR3): Receiver Control
+; -----------------------------------------------------------------------------
+SIO_WR3_RX_EN       EQU 0x01    ; Receiver Enable
+SIO_WR3_SYNC_INHIB  EQU 0x02    ; Sync Character Load Inhibit
+SIO_WR3_ADR_SEARCH  EQU 0x04    ; Address Search Mode (SDLC)
+SIO_WR3_RX_CRC_EN   EQU 0x08    ; Receiver CRC Enable
+SIO_WR3_HUNT_PHASE  EQU 0x10    ; Enter Hunt Phase
+SIO_WR3_AUTO_EN     EQU 0x20    ; Auto Enables (Enables hardware CTS/RTS handshaking)
+
+; Receiver Bits/Character (D7-D6)
+SIO_WR3_RX_5        EQU 0x00    ; Rx 5 Bits per Character
+SIO_WR3_RX_7        EQU 0x40    ; Rx 7 Bits per Character
+SIO_WR3_RX_6        EQU 0x80    ; Rx 6 Bits per Character
+SIO_WR3_RX_8        EQU 0xC0    ; Rx 8 Bits per Character
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 4 (WR4): Clock Multipliers and Stop Bits
+; -----------------------------------------------------------------------------
+; Parity (D1-D0)
+SIO_WR4_PAR_NONE    EQU 0x00    ; No Parity
+SIO_WR4_PAR_ODD     EQU 0x01    ; Odd Parity (Parity Enable = 1, Even/Odd = 0)
+SIO_WR4_PAR_EVEN    EQU 0x03    ; Even Parity (Parity Enable = 1, Even/Odd = 1)
+
+; Stop Bits / Sync Modes (D3-D2)
+SIO_WR4_SYNC_MODE   EQU 0x00    ; Synchronous Modes
+SIO_WR4_STOP_1      EQU 0x04    ; 1 Stop Bit per Character
+SIO_WR4_STOP_1_5    EQU 0x08    ; 1.5 Stop Bits per Character
+SIO_WR4_STOP_2      EQU 0x0C    ; 2 Stop Bits per Character
+
+; Sync Mode Selection (D5-D4)
+SIO_WR4_8BIT_SYNC   EQU 0x00    ; 8-Bit Sync Character
+SIO_WR4_16BIT_SYNC  EQU 0x10    ; 16-Bit Sync Character
+SIO_WR4_SDLC_MODE   EQU 0x20    ; SDLC Mode (01111110 Flag)
+SIO_WR4_EXT_SYNC    EQU 0x30    ; External Sync Mode
+
+; Clock Multiplier / Rate (D7-D6)
+SIO_WR4_CLK_X1      EQU 0x00    ; Clock Rate x1 (High-speed / synchronous)
+SIO_WR4_CLK_X16     EQU 0x40    ; Clock Rate x16 (Standard asynchronous)
+SIO_WR4_CLK_X32     EQU 0x80    ; Clock Rate x32
+SIO_WR4_CLK_X64     EQU 0xC0    ; Clock Rate x64
+
+; -----------------------------------------------------------------------------
+; WRITE REGISTER 5 (WR5): Transmitter Control
+; -----------------------------------------------------------------------------
+SIO_WR5_TX_CRC_EN   EQU 0x01    ; Transmitter CRC Enable
+SIO_WR5_RTS_EN      EQU 0x02    ; Request to Send (RTS) Output Control (1 = Active Low / Driven)
+SIO_WR5_CRC16_SEL   EQU 0x04    ; SDLC / CRC-16 Select (0 = SDLC, 1 = CRC-16)
+SIO_WR5_TX_EN       EQU 0x08    ; Transmitter Enable
+SIO_WR5_SEND_BREAK  EQU 0x10    ; Send Break (Forces TxD low)
+
+; Transmitter Bits/Character (D6-D5)
+SIO_WR5_TX_5        EQU 0x00    ; Tx 5 Bits per Character
+SIO_WR5_TX_7        EQU 0x20    ; Tx 7 Bits per Character
+SIO_WR5_TX_6        EQU 0x40    ; Tx 6 Bits per Character
+SIO_WR5_TX_8        EQU 0x60    ; Tx 8 Bits per Character
+
+SIO_WR5_DTR_EN      EQU 0x80    ; Data Terminal Ready (DTR) Control (1 = Active Low / Driven)

@@ -7,7 +7,7 @@ import lcd
 import leds
 from zx50_card import read_bus
 
-FIRMWARE_VERSION = "v2.1"
+FIRMWARE_VERSION = "v2.2"
 
 volatile_step_flag = False
 
@@ -63,11 +63,11 @@ def main():
     leds.set_discrete_led_off()
     lcd.print_line(0, "Zx50 Front Panel")
     lcd.print_line(1, f"Firmware {FIRMWARE_VERSION}")
-    lcd.print_line(3, " ...  self test  ...")
+    #lcd.print_line(3, " ...  self test  ...")
     # need to have the RED leds first
-    leds.write_hcms_text("89AB01234567")
-    time.sleep(3)
-    lcd.print_line(3, "")
+    # leds.write_hcms_text("89AB01234567")
+    # time.sleep(3)
+    #lcd.print_line(3, "")
 
     pins.SW_STEP.irq(trigger=machine.Pin.IRQ_FALLING, handler=step_pulse_isr)
 

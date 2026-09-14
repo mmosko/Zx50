@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.0,
-          "height": 0.4064,
-          "width": 0.4064
+          "drill": 0.5,
+          "height": 0.8,
+          "width": 0.8
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -48,7 +48,7 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.15
+          "min_clearance": 0.5
         }
       },
       "diff_pair_dimensions": [
@@ -56,11 +56,6 @@
           "gap": 0.0,
           "via_gap": 0.0,
           "width": 0.0
-        },
-        {
-          "gap": 0.2032,
-          "via_gap": 0.0,
-          "width": 0.220472
         }
       ],
       "drc_exclusions": [],
@@ -128,11 +123,11 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.09,
+        "min_clearance": 0.0,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
-        "min_hole_clearance": 0.09,
+        "min_hole_clearance": 0.25,
         "min_hole_to_hole": 0.25,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
@@ -140,10 +135,10 @@
         "min_silk_clearance": 0.0,
         "min_text_height": 0.8,
         "min_text_thickness": 0.08,
-        "min_through_hole_diameter": 0.2,
-        "min_track_width": 0.09,
+        "min_through_hole_diameter": 0.3,
+        "min_track_width": 0.0,
         "min_via_annular_width": 0.1,
-        "min_via_diameter": 0.25,
+        "min_via_diameter": 0.5,
         "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
@@ -193,17 +188,9 @@
       ],
       "track_widths": [
         0.0,
-        0.1,
-        0.116078,
-        0.127,
-        0.15,
-        0.2,
-        0.220472,
         0.25,
         0.4,
-        0.5,
-        0.6,
-        1.0
+        0.5
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -489,19 +476,17 @@
   },
   "libraries": {
     "pinned_footprint_libs": [],
-    "pinned_symbol_libs": [
-      "zx50_symbols"
-    ]
+    "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Zx50_MemoryCard_RevC1.kicad_pro",
+    "filename": "Zx50_Cpu_RevB1.kicad_pro",
     "version": 3
   },
   "net_settings": {
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.1524,
+        "clearance": 0.2,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
@@ -512,8 +497,8 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.1524,
-        "via_diameter": 0.6,
+        "track_width": 0.25,
+        "via_diameter": 0.7,
         "via_drill": 0.3,
         "wire_width": 6
       },
@@ -521,78 +506,45 @@
         "clearance": 0.2,
         "name": "CLOCK",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 5,
-        "schematic_color": "rgba(0, 0, 0, 0.000)"
-      },
-      {
-        "clearance": 0.1,
-        "name": "FPGA",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.1,
-        "via_diameter": 0.4,
-        "via_drill": 0.2
-      },
-      {
-        "clearance": 0.1016,
-        "diff_pair_gap": 0.1016,
-        "diff_pair_width": 0.080772,
-        "name": "LVDS",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 3,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.080772
-      },
-      {
-        "clearance": 0.1,
-        "name": "PWR-2V5",
-        "pcb_color": "rgb(255, 153, 0)",
         "priority": 2,
-        "schematic_color": "rgb(255, 153, 0)"
-      },
-      {
-        "clearance": 0.1,
-        "name": "PWR-3V3",
-        "pcb_color": "rgb(255, 0, 255)",
-        "priority": 0,
         "schematic_color": "rgba(0, 0, 0, 0.000)"
       },
       {
-        "clearance": 0.1,
+        "name": "GPIO",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgb(194, 194, 0)"
+      },
+      {
+        "name": "PWR-5V",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 4,
+        "schematic_color": "rgb(255, 0, 0)",
+        "track_width": 0.5,
+        "via_diameter": 0.8,
+        "via_drill": 0.4
+      },
+      {
         "name": "PWR-GND",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 6,
+        "priority": 3,
         "schematic_color": "rgb(0, 0, 194)",
-        "track_width": 0.2,
+        "track_width": 0.5,
         "via_diameter": 0.8,
         "via_drill": 0.4
       },
       {
         "name": "PWR-SMALL",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 4,
+        "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.4
-      },
-      {
-        "name": "PWR-Vdd",
-        "pcb_color": "rgb(255, 0, 0)",
-        "priority": 7,
-        "schematic_color": "rgb(255, 0, 0)",
-        "track_width": 0.5,
-        "via_diameter": 0.8,
-        "via_drill": 0.4
       }
     ],
     "meta": {
       "version": 4
     },
-    "net_colors": {
-      "+2V5": "rgb(255, 153, 0)",
-      "+3.3V": "rgb(255, 0, 255)",
-      "+5V": "rgb(255, 0, 0)"
-    },
+    "net_colors": null,
     "netclass_assignments": null,
     "netclass_patterns": [
       {
@@ -604,76 +556,24 @@
         "pattern": ""
       },
       {
+        "netclass": "PWR-5V",
+        "pattern": "?5V"
+      },
+      {
         "netclass": "CLOCK",
         "pattern": "/MCLK"
       },
       {
-        "netclass": "PWR-Vdd",
-        "pattern": "+*V"
+        "netclass": "GPIO",
+        "pattern": "/G?"
       },
       {
-        "netclass": "PWR-2V5",
-        "pattern": "+2V5"
+        "netclass": "GPIO",
+        "pattern": "/G??"
       },
       {
-        "netclass": "LVDS",
-        "pattern": "*/?.?X*"
-      },
-      {
-        "netclass": "LVDS",
-        "pattern": "*/RDMA/*X*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/FPGA/DBG*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/B.*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/D_DIR"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/FPGA/?TS"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/FPGA/RAM*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "*/UROM*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/SD*"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/*_DIR"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/*_OE"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/FPGA/*"
-      },
-      {
-        "netclass": "PWR-3V3",
-        "pattern": "+3V3"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/~BOOT_EN"
-      },
-      {
-        "netclass": "FPGA",
-        "pattern": "/CARD*"
+        "netclass": "GPIO",
+        "pattern": "/AUX"
       }
     ]
   },
@@ -721,6 +621,12 @@
           "show": true
         },
         {
+          "group_by": true,
+          "label": "Value",
+          "name": "Value",
+          "show": true
+        },
+        {
           "group_by": false,
           "label": "DigiKey_PN",
           "name": "DigiKey_PN",
@@ -730,18 +636,6 @@
           "group_by": false,
           "label": "SKU",
           "name": "SKU",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "LCSC",
-          "name": "LCSC",
-          "show": true
-        },
-        {
-          "group_by": true,
-          "label": "Value",
-          "name": "Value",
           "show": true
         },
         {
@@ -776,6 +670,42 @@
         },
         {
           "group_by": false,
+          "label": "Digikey_PN",
+          "name": "Digikey_PN",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MPN",
+          "name": "MPN",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "OC_FARNELL",
+          "name": "OC_FARNELL",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "OC_NEWARK",
+          "name": "OC_NEWARK",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "PACKAGE",
+          "name": "PACKAGE",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "SUPPLIER",
+          "name": "SUPPLIER",
+          "show": false
+        },
+        {
+          "group_by": false,
           "label": "Sim.Pins",
           "name": "Sim.Pins",
           "show": false
@@ -798,7 +728,7 @@
       "include_excluded_from_bom": true,
       "name": "",
       "sort_asc": true,
-      "sort_field": "LCSC"
+      "sort_field": "DigiKey_PN"
     },
     "connection_grid_size": 50.0,
     "drawing": {
@@ -842,24 +772,8 @@
   },
   "sheets": [
     [
-      "024a2433-248f-41c0-8a0c-ac9ea528ccd5",
+      "d27e6793-29e8-4553-aae0-c58a11de5d25",
       "Root"
-    ],
-    [
-      "77747e00-68ea-483a-b865-379235adbc78",
-      "FPGA"
-    ],
-    [
-      "a2fc9f75-614c-4f9d-af55-f1390db156bf",
-      "RDMA"
-    ],
-    [
-      "f899caf6-0175-4b26-81ab-1ccdfb7503c3",
-      "memory"
-    ],
-    [
-      "1f7ded72-f7ff-40ce-8d68-62dd890f16e5",
-      "PowerSupply"
     ]
   ],
   "text_variables": {}

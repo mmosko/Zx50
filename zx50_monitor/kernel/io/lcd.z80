@@ -6,11 +6,13 @@
 ; Destroys:   A, B, C, HL
 ; =============================================================================
 PrintStringLCD:
+    DI
     LD B, (HL)          ; 1. Load the string length into B (OTIR loop counter)
     INC HL              ; 2. Advance HL to point to the 0x01 command byte
     LD C, LCD_PORT      ; 3. C = 0x50 (Pico Front Panel I/O Port)
     OTIR                ; 4. Output (HL) to Port (C), HL++, B--, repeat until B=0
-    RET                 ; 5. Return to caller
+    EI
+    RET
     
 ; =============================================================================
 ; Subroutine: PrintNullStringLCD
@@ -19,12 +21,16 @@ PrintStringLCD:
 ; Destroys:   A, C, HL
 ; =============================================================================
 PrintNullStringLCD:
+    DI
     LD C, LCD_PORT          ; Set C to 0x50 (LCD Port)
 .loop:
     LD A, (HL)              ; Load the next character
     OR A                    ; Is it 0x00?
-    RET Z                   ; If so, return
+    JR Z, .exit             ; If so, return
     
     OUT (C), A              ; Blast the character to the LCD
     INC HL                  ; Advance pointer
     JR .loop
+.exit
+    EI
+    RET

@@ -5308,12 +5308,6 @@
 		(uuid "26aa9bff-4add-4731-b5cb-1e6197826db9")
 	)
 	(junction
-		(at 49.53 78.74)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "27488f7b-8d38-4311-aee4-5f7163ecda7f")
-	)
-	(junction
 		(at 215.9 99.06)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5612,10 +5606,6 @@
 	(no_connect
 		(at 179.07 92.71)
 		(uuid "7c6060da-db59-4b6f-b4da-a3b0a77a9a4b")
-	)
-	(no_connect
-		(at 68.58 72.39)
-		(uuid "c2843942-1d1a-4b9a-a04d-5b137d9b2adb")
 	)
 	(bus_entry
 		(at 80.01 218.44)
@@ -6399,6 +6389,15 @@
 			(type default)
 		)
 		(uuid "718849a4-af14-4f36-b4fa-57b4e1103dfd")
+	)
+	(bus_entry
+		(at 80.01 115.57)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "75bbbf2e-f5e6-49ce-b0ff-f0e5aa34a42f")
 	)
 	(bus_entry
 		(at 260.35 67.31)
@@ -7764,16 +7763,6 @@
 			(type default)
 		)
 		(uuid "15eeca9b-38ef-4bc6-b9c3-b2a6b2a0fa6e")
-	)
-	(wire
-		(pts
-			(xy 63.5 77.47) (xy 63.5 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "163dda18-028e-4613-9d2c-41329a4da6f1")
 	)
 	(wire
 		(pts
@@ -9287,16 +9276,6 @@
 	)
 	(wire
 		(pts
-			(xy 49.53 78.74) (xy 63.5 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5253d375-c2d5-4333-90fb-d2fd61257c41")
-	)
-	(wire
-		(pts
 			(xy 237.49 24.13) (xy 237.49 27.94)
 		)
 		(stroke
@@ -9474,6 +9453,16 @@
 			(type default)
 		)
 		(uuid "5b56fba2-1963-43b9-b4ba-d94053a871f3")
+	)
+	(wire
+		(pts
+			(xy 77.47 118.11) (xy 77.47 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5bbf6382-04b6-406e-af7e-6850b6ef4f3c")
 	)
 	(wire
 		(pts
@@ -11667,16 +11656,6 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 85.09) (xy 77.47 124.46)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bfe99fac-26eb-4ade-9ae6-6cf901f6f0af")
-	)
-	(wire
-		(pts
 			(xy 102.87 102.87) (xy 111.76 102.87)
 		)
 		(stroke
@@ -11987,7 +11966,7 @@
 	)
 	(bus
 		(pts
-			(xy 60.96 115.57) (xy 82.55 115.57)
+			(xy 60.96 115.57) (xy 80.01 115.57)
 		)
 		(stroke
 			(width 0)
@@ -12185,16 +12164,6 @@
 		)
 		(uuid "d8d1d925-c401-4c4f-b191-419ebe879a8d")
 	)
-	(wire
-		(pts
-			(xy 63.5 72.39) (xy 68.58 72.39)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d94b9dfe-701e-48f6-9d3b-d22095375636")
-	)
 	(bus
 		(pts
 			(xy 120.65 115.57) (xy 125.73 115.57)
@@ -12374,16 +12343,6 @@
 			(type default)
 		)
 		(uuid "dd8ba4e1-e839-4244-be4a-a2504fd72f7c")
-	)
-	(wire
-		(pts
-			(xy 77.47 85.09) (xy 68.58 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dddf11a1-79b7-420a-ba7c-f4a57db3ac3e")
 	)
 	(bus
 		(pts
@@ -12764,6 +12723,16 @@
 			(type default)
 		)
 		(uuid "ebb6db9f-b1dc-469e-8b22-d3e0c235d6c8")
+	)
+	(bus
+		(pts
+			(xy 80.01 115.57) (xy 82.55 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ebe404f3-c706-4ca0-b2e9-89ef2c86de1b")
 	)
 	(wire
 		(pts
@@ -13224,16 +13193,6 @@
 			(type default)
 		)
 		(uuid "fb92ebd0-974d-4c33-8f14-85da86753c6d")
-	)
-	(wire
-		(pts
-			(xy 68.58 85.09) (xy 68.58 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fbc14214-60ad-4c7f-974a-cd0164276939")
 	)
 	(bus
 		(pts
@@ -20415,102 +20374,6 @@
 			(project "Zx50_MemoryCard"
 				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
 					(reference "#PWR037")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Small")
-		(at 63.5 74.93 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(dnp no)
-		(uuid "dc4d50e1-0c0a-4445-8099-71f1c978a744")
-		(property "Reference" "R2"
-			(at 62.738 80.518 0)
-			(effects
-				(font
-					(size 1.016 1.016)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "470"
-			(at 62.738 83.058 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, small symbol"
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" ""
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "DigiKey_PN" ""
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SKU" ""
-			(at 63.5 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "a91ae90f-f40b-41f9-8d35-6c76dce95bab")
-		)
-		(pin "1"
-			(uuid "19b814de-d9a2-4889-97fa-265e5d3c7c2b")
-		)
-		(instances
-			(project "Zx50_MemoryCard"
-				(path "/024a2433-248f-41c0-8a0c-ac9ea528ccd5/77747e00-68ea-483a-b865-379235adbc78"
-					(reference "R2")
 					(unit 1)
 				)
 			)

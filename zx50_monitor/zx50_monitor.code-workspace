@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../docs"
+		},
+		{
+			"path": "../boards/Zx50_MemoryCard_RevB"
+		},
+		{
+			"path": "../mmu"
+		}
+	],
+	"settings": {}
+}
