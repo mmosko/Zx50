@@ -12,6 +12,11 @@ Init_SIO:
     LD IX, PORT_A_RX_RB 
     CALL RB_Init
 
+    ; Clear shadow state tracking
+    XOR A
+    LD (SIO_A_WR1_STATE), A
+    LD (SIO_B_WR1_STATE), A
+
     ; =========================================================================
     ; 1. Configure SIO/DART Channel A (Console Port)
     ; =========================================================================
@@ -28,9 +33,10 @@ Init_SIO:
     OUT (C), A
 
     ; --- WR3: Receiver Parameters ---
+    ; Auto Enables disabled so missing CTS/DCD does not inhibit communication
     LD A, SIO_WR0_REG3      ; Select SIO WR3 (0x03)
     OUT (C), A
-    LD A, SIO_WR3_RX_8 | SIO_WR3_AUTO_EN | SIO_WR3_RX_EN
+    LD A, SIO_WR3_RX_8 | SIO_WR3_RX_EN
     OUT (C), A
 
     ; --- WR5: Transmitter Parameters ---
@@ -40,10 +46,12 @@ Init_SIO:
     OUT (C), A
 
     ; --- WR1: Interrupt Configuration ---
+    ; Tx interrupt starts disabled; Console_Tx enables it when data is queued
     LD A, SIO_WR0_REG1      ; Select SIO WR1 (0x01)
     OUT (C), A
-    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
+    LD A, SIO_WR1_RX_ALL_PAR
     OUT (C), A
+    LD (SIO_A_WR1_STATE), A
 
     ; =========================================================================
     ; 2. Configure SIO/DART Channel B (Auxiliary / Program Port)
@@ -69,7 +77,7 @@ Init_SIO:
     ; --- WR3: Receiver Parameters ---
     LD A, SIO_WR0_REG3      ; Select SIO WR3 (0x03)
     OUT (C), A
-    LD A, SIO_WR3_RX_8 | SIO_WR3_AUTO_EN | SIO_WR3_RX_EN
+    LD A, SIO_WR3_RX_8 | SIO_WR3_RX_EN
     OUT (C), A
 
     ; --- WR5: Transmitter Parameters ---
@@ -79,10 +87,12 @@ Init_SIO:
     OUT (C), A
 
     ; --- WR1: Interrupt Configuration (Status Affects Vector) ---
+    ; Debug port Tx is polled via Debug_Tx; no Tx interrupt needed
     LD A, SIO_WR0_REG1      ; Select SIO WR1 (0x01)
     OUT (C), A
-    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_STATUS_EN
     OUT (C), A
+    LD (SIO_B_WR1_STATE), A
     
     ; =========================================================================
     ; 3. Establish Default Shadows and Apply Initial Interrupt States
@@ -190,6 +200,10 @@ SIO_A_Tx_ISR:
     LD A, SIO_WR0_REG1      ; Select SIO WR1
     OUT (C), A
     LD A, B
+    OUT (C), A
+
+    ; --- REQUIRED: Reset Tx Interrupt Pending in SIO WR0 ---
+    LD A, SIO_CMD_RST_TX_INT ; Command 0x28: Reset Tx Int Pending
     OUT (C), A
 
 .exit:
@@ -329,13 +343,18 @@ SetTermMode_Inner:
     JR NZ, .ch_a_bulk
     
     ; Channel A - CHAR Mode
-    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
-    JR .apply_mode
+    LD B, SIO_WR1_RX_ALL_PAR
+    JR .ch_a_merge_tx
     
 .ch_a_bulk:
     ; Use RX_ALL_PAR instead of RX_FIRST so the ring buffer doesn't freeze
-    ; Had been set to RX_FIRST, but that caused the ring buffer to freeze if a byte was dropped.
-    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN
+    LD B, SIO_WR1_RX_ALL_PAR
+
+.ch_a_merge_tx:
+    ; Preserve dynamic Tx interrupt enable status from shadow register
+    LD A, (SIO_A_WR1_STATE)
+    AND SIO_WR1_TX_INT_EN
+    OR B
     JR .apply_mode
 
 .channel_b:
@@ -344,13 +363,13 @@ SetTermMode_Inner:
     OR A                        ; Is it 0 (CHAR)?
     JR NZ, .ch_b_bulk
     
-    ; Channel B - CHAR Mode
-    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+    ; Channel B - CHAR Mode (polled Tx; no Tx interrupt)
+    LD A, SIO_WR1_RX_ALL_PAR | SIO_WR1_STATUS_EN
     JR .apply_mode
     
 .ch_b_bulk:
-    ; Channel B - Bulk Mode
-    LD A, SIO_WR1_RX_FIRST | SIO_WR1_TX_INT_EN | SIO_WR1_STATUS_EN
+    ; Channel B - Bulk Mode (polled Tx; no Tx interrupt)
+    LD A, SIO_WR1_RX_FIRST | SIO_WR1_STATUS_EN
 
 .apply_mode:
     CALL UpdateShadowRegister   ; Save to correct shadow RAM (A is the SIO WR1 byte)

@@ -104,7 +104,7 @@ MapRAM:
     JR NC, MapRAM       ; Loop until B overflows from 0xF0 to 0x00 (Carry flag sets)
 
     ; 3. Establish the Stack
-    LD SP, STACK_POINTER    ; Stack starts at 8K and works down.
+    LD SP, STACK_POINTER    ; Stack starts and works down.
 
     LD HL, MSG_MEM_INIT     ; Point HL to the first string
     CALL PrintStringLCD     ; Blast it to the LCD

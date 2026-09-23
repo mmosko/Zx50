@@ -113,3 +113,19 @@ When you run xm, the OS finds a free physical page (e.g., Page 4), maps it to th
 When you run the app, the OS looks at the PCB, maps physical Page 4 back into the 0x4000 slot, and CALLs it. When the app RETurns, the OS unmaps it.
 
 The benefit: You never have to worry about memory address collisions again, and apps are completely sandboxed from one another.
+
+## 5. Change History
+
+### 2026-09-13: Serial Driver & Boot Interrupt Fixes
+* **Decoupled RTS/CTS Hardware Handshaking:** Removed `SIO_WR3_AUTO_EN` (Auto Enables) from Channel A (Console) and Channel B (Debug) receiver configurations in `kernel/io/serial.z80`. The SIO transmitter now operates freely without requiring an external active-low assertion on `~CTS`, and the receiver does not require `~DCD`.
+* **Resolved Premature Boot Interrupts:** Removed `DI` and `EI` instructions from `PrintStringLCD` and `PrintNullStringLCD` in `kernel/io/lcd.z80`. Previously, printing the initial memory boot banner triggered `EI` before the Interrupt Vector Table (`I`), `IM 2`, CTC, and SIO vector base were initialized.
+* **Added `SIO_CMD_RST_TX_INT` to `SIO_A_Tx_ISR`:** Added WR0 command `0x28` (`SIO_CMD_RST_TX_INT`) to the `.buffer_empty` handler in `SIO_A_Tx_ISR` to formally reset the SIO's internal transmit interrupt pending latch when the ring buffer runs dry.
+* **Dynamic Tx Interrupt Enabling:** Changed `Init_SIO` and `SetTermMode_Inner` so Channel A starts with Tx interrupts disabled in WR1. `Console_Tx` dynamically enables `SIO_WR1_TX_INT_EN` only when bytes are queued in `PORT_A_TX_RB`, and `SIO_A_Tx_ISR` disables it upon draining.
+* **Disabled Unused Channel B Tx Interrupts:** Cleared `SIO_WR1_TX_INT_EN` from Channel B, as debug output is synchronously polled via `Debug_Tx`.
+
+## 6. Hardware TODOs & Board Rework
+
+* [ ] **Zx50_Serial_RevB RTS/CTS Handshake Support:**
+  * **`DCDA` (Pin 19):** Currently unconnected/floating on `IC2`. Tie to GND or add a 10k pull-down to prevent the receiver from stalling when `Auto Enables` is active.
+  * **`CTSA` (Pin 18):** Currently routed only to header `J4 pin 5` and `J3 pin 7` without a pull-down resistor. Add a 10k pull-down so the transmitter remains enabled when connecting via simple 3-wire serial cables (TX/RX/GND).
+  * **Firmware Auto-Enables:** Once the pull-downs or jumper options are verified on the board, restore `SIO_WR3_AUTO_EN` in `kernel/io/serial.z80` to re-enable optional hardware flow control.

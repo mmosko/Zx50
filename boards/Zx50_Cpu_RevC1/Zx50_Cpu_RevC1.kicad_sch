@@ -11426,6 +11426,16 @@
 	)
 	(bus
 		(pts
+			(xy 83.82 237.49) (xy 87.63 237.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "360054dc-fc6b-4e17-960b-cd64052c6a1b")
+	)
+	(bus
+		(pts
 			(xy 69.85 140.97) (xy 71.12 140.97)
 		)
 		(stroke
@@ -14526,6 +14536,16 @@
 	)
 	(bus
 		(pts
+			(xy 83.82 241.3) (xy 87.63 241.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d054637e-1c88-4a8a-ba92-41fc56fd299f")
+	)
+	(bus
+		(pts
 			(xy 102.87 88.9) (xy 105.41 88.9)
 		)
 		(stroke
@@ -15084,6 +15104,16 @@
 		)
 		(uuid "e8420be7-9b55-4d59-a6fb-f5b6516fae4d")
 	)
+	(bus
+		(pts
+			(xy 83.82 229.87) (xy 87.63 229.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e8580636-6204-47ae-8a6b-7f57b1d768e3")
+	)
 	(wire
 		(pts
 			(xy 195.58 97.79) (xy 195.58 123.19)
@@ -15526,6 +15556,16 @@
 	)
 	(bus
 		(pts
+			(xy 83.82 233.68) (xy 87.63 233.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fa1ac393-4bea-4634-be53-c7ca6f146ad4")
+	)
+	(bus
+		(pts
 			(xy 144.78 68.58) (xy 146.05 68.58)
 		)
 		(stroke
@@ -15623,6 +15663,16 @@
 			(justify left bottom)
 		)
 		(uuid "042d05af-9bee-4f5f-b316-a1943b0509d5")
+	)
+	(label "{Z80_C}"
+		(at 83.82 237.49 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "048b50cd-3f66-4c44-8585-d88a2be63a0d")
 	)
 	(label "A13"
 		(at 109.22 64.77 90)
@@ -16263,6 +16313,16 @@
 			(justify right bottom)
 		)
 		(uuid "5d54c017-8e8b-43f6-b168-cee2cb88e2e5")
+	)
+	(label "{Z80_A}"
+		(at 83.82 229.87 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "61ff8d58-9f4f-4f36-8843-2fd041860cde")
 	)
 	(label "~RFSH~"
 		(at 207.01 99.06 90)
@@ -17164,6 +17224,16 @@
 		)
 		(uuid "dd08e325-6ae5-4010-9c89-7a0056a08059")
 	)
+	(label "{Z80_D}"
+		(at 83.82 233.68 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "dd612ebf-db72-4a8d-9161-f7f5c051d7ae")
+	)
 	(label "BUS.D3"
 		(at 154.94 120.65 270)
 		(effects
@@ -17353,6 +17423,16 @@
 			(justify left bottom)
 		)
 		(uuid "f0e56618-2d09-4639-8fa1-e5cfb4dcbe65")
+	)
+	(label "{SH_C}"
+		(at 83.82 241.3 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "f1d4fec7-670b-4830-96e2-3e6734a859a7")
 	)
 	(label "A6"
 		(at 127 64.7224 90)
@@ -21842,7 +21922,7 @@
 			(uuid "1a95960a-9085-438a-8e00-fa994b8000b8")
 		)
 		(instances
-			(project "Zx50_Cpu_RevB1"
+			(project "Zx50_Cpu_RevC1"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25"
 					(reference "C12")
 					(unit 1)
@@ -22883,7 +22963,7 @@
 			(uuid "a4a20a99-7d13-42c9-99a5-24795fbf251b")
 		)
 		(instances
-			(project "Zx50_Cpu_RevB1"
+			(project "Zx50_Cpu_RevC1"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25"
 					(reference "#PWR045")
 					(unit 1)
@@ -23929,7 +24009,7 @@
 			(uuid "44f5d430-a22a-488c-89c2-b8e1e0745281")
 		)
 		(instances
-			(project "Zx50_Cpu_RevB1"
+			(project "Zx50_Cpu_RevC1"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25"
 					(reference "#PWR044")
 					(unit 1)
@@ -25115,6 +25195,88 @@
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25"
 					(reference "C2")
 					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 87.63 227.33)
+		(size 53.34 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "b98b1677-4c21-433e-bc3e-64f5e8297f28")
+		(property "Sheetname" "CoProcessor"
+			(at 87.63 226.6184 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "coprocessor.kicad_sch"
+			(at 87.63 248.2346 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "{Z80_D}" input
+			(at 87.63 233.68 180)
+			(uuid "2b5e5e58-0b8d-4aaf-82a8-749c984329a0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "{Z80_A}" input
+			(at 87.63 229.87 180)
+			(uuid "4930322c-221f-4ca3-8670-efefa9f1f993")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "{Z80_C}" input
+			(at 87.63 237.49 180)
+			(uuid "e8cf2593-f264-44f2-a21d-cf34c2c496f0")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "{SH_C}" input
+			(at 87.63 241.3 180)
+			(uuid "d9b419d1-4c66-477e-808a-f099eb2ba7dc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "Zx50_Cpu_RevC1"
+				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25"
+					(page "2")
 				)
 			)
 		)
