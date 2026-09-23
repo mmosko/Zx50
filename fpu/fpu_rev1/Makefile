@@ -1,11 +1,11 @@
 .PHONY: run-% view-% syn
 
-FLAGS = -DHW_REV_A11_BUG
+FLAGS = 
 
 # Variables
 VERILOG_COMPILER = iverilog
 SIM_RUNTIME      = vvp
-VIEWER           = gtkwave
+VIEWER           = surfer
 
 # Directories
 SRC_DIR   = ./src
@@ -47,12 +47,15 @@ run-%: $(SIM_DIR)/%_tb.v $(wildcard $(SRC_DIR)/*.v)
 	@echo "--- Running Simulation ---"
 	$(SIM_RUNTIME) $(OUT_DIR)/$*.vvp
 	@echo "--- Simulation Complete. Waves saved to $(WAVES_DIR)/$*.vcd ---"
+	@mkdir -p $(GTK_DIR)
 	@touch $(GTK_DIR)/$*.gtkw
 	@echo "--- Finished Test---\n"
 
 # Helper to view a specific wave (e.g., 'make view-zx50_mmu_sram')
-view-%: $(WAVES_DIR)/%.vcd $(GTK_DIR)/%.gtkw
-	$(VIEWER) $^
+# Should execute command `surfer -s gtkw/zx50_mmu_sram.surf.ron waves/zx50_mmu_sram.vcd``
+# Positional: $< is 1st prereq, $(word 2,$^) is 2nd prereq
+view-%: $(GTK_DIR)/%.surf.ron $(WAVES_DIR)/%.vcd 
+	$(VIEWER) -s $< $(word 2,$^)
 
 # ==============================================================================
 # Cleanup Targets

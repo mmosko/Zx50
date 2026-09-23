@@ -1,11 +1,22 @@
 `timescale 1ns/1ps
 
-// The FPU subsystem wrapper, containing the CPLD, private Flash, and private SRAM
-module zx50_fpu_block (
+/***************************************************************************************
+ * MODULE: zx50_fpu_block
+ * DESCRIPTION:
+ * Top-level wrapper for the isolated math coprocessor cluster.
+ * Connects CPLD (U11), private SRAM (U12), and private Flash ROM (U13).
+ * Accepts optional hex file paths for SRAM and Flash pre-loading in simulation.
+ ***************************************************************************************/
+
+module zx50_fpu_block #(
+    parameter RAM_INIT_FILE = "",
+    parameter ROM_INIT_FILE = ""
+)(
     input  wire        mclk,
     input  wire        zclk,
     input  wire        reset_n,
-    
+    input  wire        clk_spd,     // 1=Fast (40MHz), 0=Slow (20MHz)
+
     // Z80 Backplane Host Bus
     input  wire [15:0] z80_a,
     inout  wire [7:0]  z80_d,
@@ -15,8 +26,8 @@ module zx50_fpu_block (
     input  wire        z80_wr_n,
     input  wire        z80_m1_n,
 
-    output wire        wait_n,
-    output wire        int_n
+    inout  wire        wait_n,
+    inout  wire        int_n
 );
 
     // ==========================================
@@ -36,7 +47,8 @@ module zx50_fpu_block (
         .mclk(mclk), 
         .zclk(zclk),
         .reset_n(reset_n),
-        
+        .clk_spd(clk_spd),
+
         // Host Z80 Connections
         .z80_a(z80_a),
         .z80_d(z80_d),
@@ -62,8 +74,9 @@ module zx50_fpu_block (
     // ==========================================
     // U12: IS61C5128AS 16KB Active Private SRAM
     // ==========================================
-    // Address lines A14-A18 are tied to GND on PCB (pad with 5'b00000)
-    is61c5128as fpu_sram (
+    is61c5128as #(
+        .MEM_INIT_FILE(RAM_INIT_FILE)
+    ) fpu_sram (
         .addr({5'b00000, ca}),
         .data(cd),
         .ce_n(m_ce_n),
@@ -74,9 +87,8 @@ module zx50_fpu_block (
     // ==========================================
     // U13: SST39SF040 16KB Active Private Flash
     // ==========================================
-    // Address lines A14-A18 are tied to GND on PCB (pad with 5'b00000)
     sst39sf040 #(
-        .MEM_INIT_FILE("fpu_rom.hex")
+        .MEM_INIT_FILE(ROM_INIT_FILE)
     ) fpu_flash (
         .addr({5'b00000, ca}),
         .data(cd),

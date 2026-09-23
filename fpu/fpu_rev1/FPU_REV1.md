@@ -6,7 +6,7 @@ This document details the architectural hardware specification and instruction s
 
 ## 1. System Overview & Hardware Architecture
 
-The Rev B1 CPU Card integrates a dedicated CPLD coprocessor cluster on the bottom layer of a 6-layer PCB, positioned under the Clock Mezzanine RF ground shield. It features an **ATF1508AS-7 CPLD** (`U11`) operating on an isolated **16 KB private memory bus**, decoupled from the main Z80 backplane.
+The Rev C1 CPU Card integrates a dedicated CPLD coprocessor cluster on the bottom layer of a 6-layer PCB, positioned under the Clock Mezzanine RF ground shield. It features an **ATF1508AS-7 CPLD** (`U11`) operating on an isolated **16 KB private memory bus**, decoupled from the main Z80 backplane.
 
 ```text
                   +-----------------------------------+
@@ -27,26 +27,15 @@ The Rev B1 CPU Card integrates a dedicated CPLD coprocessor cluster on the botto
             |             |                     |           |
             |             | ~F_CE / ~F_OE / ~F_WE| ~M_CE / ~M_OE / ~M_WE
             +-------------+---------------------+-----------+
-
 ```
 
 ### Key Hardware Specs
 
 * **CPLD Controller (`U11`):** Microchip ATF1508AS-7JX84 (128 macrocells, 7.5 ns $t_{PD}$, 84-pin PLCC).
-
-
 * **Private SRAM (`U12`):** IS61C5128AS (25 ns, SOP-32). Address lines `CA0`–`CA13` (16 KB active); `A14`–`A18` tied to `GND`. Serves as hardware stack storage, scratchpad, and microcode buffer.
-
-
 * **Private Flash (`U13`):** SST39SF040 (55 ns, PLCC-32). Address lines `CA0`–`CA13` (16 KB active); `A14`–`A18` tied to `GND`. Stores Quarter-Square multiplication tables, log/antilog tables, and trigonometric seed constants.
-
-
 * **Dual Clock Domains:** Ingests `MCLK` (20/40 MHz) on `GCLK1` (Pin 83) and `ZCLK` (`CLK`, 5/10 MHz) on `GCLK2` (Pin 2).
-
-
 * **Backplane Protection:** Controlled by transceivers (`U2`, `U3`, `U5`, `U7`), isolating the CPU card from the backplane during autonomous operations or DMA transfers.
-
-
 
 ---
 
@@ -62,14 +51,15 @@ The Rev B1 CPU Card integrates a dedicated CPLD coprocessor cluster on the botto
 | **Handshake / Status** | `~WAIT`, `~INT`, `~RESET`, `~BUSACK` | Pins 70, 69, 1, 84 (tied to GND) | Bus hold, interrupt, reset, and isolation signals |
 | **Clocks** | `MCLK`, `CLK` (`ZCLK`) | Pins 83 (`GCLK1`), 2 (`GCLK2`) | High-speed coprocessor clock and host CPU clock |
 
-### Private Memory Bus Interface
+### Private Memory Bus Interface & Config Pins
 
-| Signal Group | Signal Names | CPLD Pin Assignments | Destination |
+| Signal Group | Signal Names | CPLD Pin Assignments | Destination / Description |
 | --- | --- | --- | --- |
 | **Private Address** | `CA0`–`CA13` | Pins 56, 54, 55, 52, 51, 50, 49, 48, 61, 63, 65, 64, 58, 60 | `U12` SRAM & `U13` Flash (`A0`–`A13`) |
 | **Private Data** | `CD0`–`CD7` | Pins 33, 34, 35, 36, 37, 39, 40, 41 | Bidirectional private memory data bus |
 | **SRAM Control** | `~M_CE`, `~M_OE`, `~M_WE` | Pins 46, 45, 44 | Controls private SRAM (`U12`) |
 | **Flash Control** | `~F_CE`, `~F_OE`, `~F_WE` | Pins 68, 67, 57 | Controls private Flash (`U13`) |
+| **Speed Select** | `MEM_SPD` | Pin 81 | Hardware Memory Pipeline Speed Selector (Jumper `J8`) |
 
 ---
 
@@ -115,7 +105,6 @@ The math stack is hosted in the **first 256 bytes of Private SRAM (`U12`)** at a
 ... | ...                                |   0x10| Stack Level 2                      |
 0x1F| Stack Level 7 (8 Levels Max)       |   0x1F| Stack Level 3 (4 Levels Max)       |
     +------------------------------------+       +------------------------------------+
-
 ```
 
 ---
@@ -124,7 +113,7 @@ The math stack is hosted in the **first 256 bytes of Private SRAM (`U12`)** at a
 
 Opcodes written to port `0x71` are split into two 4-bit fields:
 
-$$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operation Field} = \text{Opcode}[3:0]$$
+$$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operation Field} = \text{Opcode}[3:0] \quad \text{}$$
 
 ### Format Field (`opcode[7:4]`)
 
@@ -184,8 +173,8 @@ $$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operatio
                               |
                               v
                     +--------------------+
-                    |     ST_FETCH_MEM   |  2-Tick SRAM/Flash Access
-                    +--------------------+  Fetch Operands from U12
+                    |     ST_FETCH_MEM   |  1 or 2-Tick SRAM/Flash Access
+                    +--------------------+  Fetch Operands from U12/U13
                               |
              +----------------+----------------+
              |                                 |
@@ -209,19 +198,72 @@ $$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operatio
                     +--------------------+
                     |     ST_RELEASE     |  Deassert ~WAIT
                     +--------------------+  Return Status
-
 ```
 
-### Memory Pipeline Rule
+### Memory Pipeline Rules & Speed Selection (`MEM_SPD`)
 
-To support $25\text{ ns}$ SRAM (`IS61C5128AS`) at 40 MHz `MCLK` without setup violations, all private memory access cycles use a **universal 2-tick access pipeline**:
+Private memory access pipeline timing is hardware-configurable via **Pin 81 (`MEM_SPD` / Jumper `J8`)**:
 
-$$\text{Total Access Time} = 2 \times T_{\text{MCLK}} = 2 \times 25\text{ ns} = \mathbf{50\text{ ns}}$$
+> **Memory Speed Mode (`MEM_SPD` / Pin 81):**
+> * **`HI` (Logic 1 / Pull-up):** **1-Cycle Access** (Single `MCLK` tick per access; ideal for lower clock speeds or ultratight execution windows).
+> * **`LOW` (Logic 0 / Shorted to GND):** **2-Cycle Access** (Two `MCLK` ticks per access; $2 \times 25\text{ ns} = 50\text{ ns}$ access window, safe default for $40\text{ MHz}$ `MCLK` with $25\text{ ns}$ SRAM).
 
-* **Tick 1:** CPLD drives `CA[13:0]` and asserts `~M_CE` / `~M_OE` (or `~F_CE` / `~F_OE`).
-* **Tick 2:** CPLD latches data from `CD[7:0]` into macrocell accumulators on the rising clock edge.
+---
 
-Here is a self-contained Markdown section detailing the bus-snooping extension design, arming mechanisms, interrupt guarding, and cycle performance comparisons.
+# Simulation & Verilog Architecture Setup
+
+## 1. Environment Overview & Module Hierarchy
+
+The simulation model is structured in hierarchical layers to validate timing, bus isolation, and instruction execution—ranging from individual memory chips up to the backplane and clock generators.
+
+```text
+tb_zx50 (Testbench Top)
+ ├── zx50_clock           (Clock Mezzanine BFM: Glitch-free MCLK / ZCLK generation)
+ ├── zx50_backplane       (Passive Backplane: Weak pull-ups for Z80 & Shadow Bus)
+ └── zx50_cpu_card        (Full CPU Rev C1 Board Level Model)
+      ├── z80_cpu_util    (Z80 Bus Functional Model: T-State accurate driver)
+      ├── Bus Drivers     (74ABT245 transceivers, d_dir, wait_gen, firewall logic)
+      └── zx50_fpu_block  (FPU Subsystem Block)
+           ├── zx50_fpu   (U11 - ATF1508AS CPLD Core Engine)
+           ├── is61c5128as(U12 - 16KB Active Private SRAM Model)
+           └── sst39sf040 (U13 - 16KB Active Private Flash ROM Model)
+```
+
+---
+
+## 2. Component Organization & Responsibilities
+
+### System & Testbench Layer
+
+* **`zx50_clock.v` (Clock Mezzanine Model):** Digital twin of the hardware clock generator. Uses a dual flip-flop architecture to produce phase-locked `MCLK` (20/40 MHz) and `ZCLK` (5/10 MHz) with synchronous clock-gating to prevent runt clock pulses.
+* **`zx50_backplane.v` (Passive Backplane):** Implements pull-up primitives on all backplane control, address, and data lines. Prevents floating `Z` states from turning into `X` states during bus handoffs while modeling real bus termination.
+* **`z80_cpu_util.v` (Z80 Bus Functional Model):** Emulates Z80 processor bus cycles. Generates accurate $T$-state timing for memory/IO operations and samples `wait_n` on falling clock edges to stall execution identically to Z80 silicon.
+
+---
+
+### FPU Subsystem Cluster (`zx50_fpu_block.v`)
+
+`zx50_fpu_block.v` acts as the structural wrapper for the isolated math coprocessor cluster. It encapsulates:
+
+* **`zx50_fpu.v` (CPLD Core):** Top-level Verilog for the ATF1508AS CPLD (`U11`). Contains the host register decoder, execution FSM, stack pointer counter, and private memory controller.
+* **`is61c5128as.v` (Private SRAM `U12`):** Verilog model for the 25 ns `IS61C5128AS` SRAM. Features $25\text{ ns}$ read access timing, $8\text{ ns}$ high-Z output disable, and trailing-edge write sampling (`posedge we_n`).
+* **`sst39sf040.v` (Private Flash `U13`):** Verilog model for the 55 ns `SST39SF040` Flash ROM. Supports `$readmemh` initialization for math LUTs (logarithms, trigonometric tables) and models both JEDEC write command sequences and direct testbench writes.
+* **Private Bus Isolation (`CA[13:0]`, `CD[7:0]`):** The wrapper maintains private 14-bit address (`CA[13:0]`) and 8-bit data (`CD[7:0]`) traces between the CPLD, SRAM, and Flash, preventing local math memory traffic from spilling onto the host CPU card bus.
+
+---
+
+## 3. Planned Top-Level Integration (`zx50_cpu_card.v`)
+
+To simulate the complete Zx50 CPU Card (Rev C1 schematic `zx50_cpu_revc1.net`), a top-level board module (`zx50_cpu_card.v`) will be integrated.
+
+### Integrated Submodules & Logic
+
+1. **`zx50_fpu_block` Instance:** Houses the coprocessor cluster described above.
+2. **`z80_cpu_util` Instance:** Drives the internal card bus as the primary CPU core.
+3. **Bus Transceivers & Firewalls:** Behavioral models of the `74ABT245` bidirectional transceivers (`U2`, `U3`, `U5`, `U7`) that isolate the card from the backplane.
+4. **Control Logic (`d_dir`, `wait_gen`):**
+   * **`d_dir` Logic:** Decodes data direction for internal vs. external backplane transfers.
+   * **`wait_gen` Logic:** Combines wait requests from the onboard MMU, main memory, and CPLD `wait_n` line to stall the Z80 BFM during math calculations or slow I/O cycles.
 
 ---
 
@@ -263,14 +305,11 @@ To prevent the CPLD from capturing arbitrary memory reads during normal applicat
                   +-----------------------------------+
                   |   EXECUTE MATH / DISARM ENGINE    |
                   +-----------------------------------+
-
 ```
 
 ### Option A: Explicit Port Write Arming
 
 * **Mechanism:** The Z80 writes an arming command byte to port `0x71` (e.g., opcode `0xF4` = *Arm Snoop 4 Bytes*, `0xF8` = *Arm Snoop 8 Bytes*).
-
-
 * **Execution:** The CPLD sets an internal counter and arms its snoop register. The next $N$ non-`~M1` memory reads on the bus are copied into $TOS$ in private SRAM.
 * **Pros/Cons:** Zero risk of false triggers; trivial CPLD decoding logic.
 
@@ -305,7 +344,6 @@ Any snooped sequence must be wrapped in `DI` (Disable Interrupts) and `EI` (Enab
     LD  DE, (OPERAND_B) ; CPLD snoops bytes 2 & 3 (16 T-states)
     OUT (0x71), C       ; Trigger Math Opcode & Disarm (11 T-states)
     EI                  ; Re-enable interrupts (4 T-states)
-
 ```
 
 ---
@@ -317,9 +355,7 @@ Below are timing calculations comparing standard **Port-Based Block I/O (`OTIR` 
 ### Assumptions
 
 * **Z80 Instruction Timings:** `DI` / `EI` = $4\ T$, `OUT (n), A` = $11\ T$, `LD BC, (nn)` = $16\ T$, `OTIR` = $(N-1) \times 21 + 16\ T$, `INIR` = $(N-1) \times 21 + 16\ T$.
-
 * **CPLD Hardware Hold (`~WAIT`):** $8.5\ T$-states ($34\text{ MCLK ticks}$ at 4:1 clock ratio).
-
 * **Result Readback:** Results are returned via standard `INIR` block read.
 
 ---
@@ -335,7 +371,6 @@ Below are timing calculations comparing standard **Port-Based Block I/O (`OTIR` 
     OUT  (0x71), A      ; Trigger math (11 T)
     ; --- CPLD WAIT Hold: 8.5 T ---
     INIR                ; Read 4 bytes result (79 T)
-
 ```
 
 * **Total Conventional Clock Time:** $7 + 79 + 7 + 11 + 8.5 + 79 = \mathbf{191.5\ T\text{-states}}$
@@ -351,7 +386,6 @@ Below are timing calculations comparing standard **Port-Based Block I/O (`OTIR` 
     EI                  ; Re-enable interrupts (4 T)
     ; --- CPLD WAIT Hold: 8.5 T ---
     INIR                ; Read 4 bytes result (79 T)
-
 ```
 
 * **Total Snooped Clock Time:** $4 + 11 + 16 + 16 + 11 + 4 + 8.5 + 79 = \mathbf{149.5\ T\text{-states}}$
@@ -370,7 +404,6 @@ Below are timing calculations comparing standard **Port-Based Block I/O (`OTIR` 
     OUT  (0x71), A      ; Trigger math (11 T)
     ; --- CPLD WAIT Hold: 8.5 T ---
     INIR                ; Read 4 bytes result (79 T)
-
 ```
 
 * **Total Conventional Clock Time:** $7 + 163 + 7 + 11 + 8.5 + 79 = \mathbf{275.5\ T\text{-states}}$
@@ -388,7 +421,6 @@ Below are timing calculations comparing standard **Port-Based Block I/O (`OTIR` 
     EI                  ; Re-enable interrupts (4 T)
     ; --- CPLD WAIT Hold: 8.5 T ---
     INIR                ; Read 4 bytes result (79 T)
-
 ```
 
 * **Total Snooped Clock Time:** $4 + 11 + 16 + 16 + 16 + 20 + 11 + 4 + 8.5 + 79 = \mathbf{185.5\ T\text{-states}}$

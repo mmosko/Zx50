@@ -1,18 +1,5 @@
 `timescale 1ns/1ps
 
-/***************************************************************************************
- * MODULE: zx50_backplane
- * DESCRIPTION:
- * A purely passive module representing the physical backplane PCB. It contains no 
- * active logic, only weak resistive pull-ups (pullup primitives) for all shared 
- * Z80 and Shadow Bus traces. This prevents floating 'Z' states from becoming 'X' 
- * (unknown) states during bus handoffs, while allowing any active card to safely 
- * pull the lines low without causing a short circuit.
- *
- * NOTE: Clocks (MCLK/ZCLK) and Daisy-Chain lines (IEI/IEO) are excluded as they 
- * are point-to-point or actively driven at all times.
- ***************************************************************************************/
-
 module zx50_backplane (
     // --- Z80 Backplane Buses ---
     inout wire [15:0] z80_addr,
@@ -59,19 +46,19 @@ module zx50_backplane (
     pullup(sh_busy_n);
 
     // --- Address and Data Bus Pull-ups ---
-    genvar i;
+    genvar i, j, k, l;
     generate
         for (i = 0; i < 16; i = i + 1) begin : pu_z80_addr
             pullup(z80_addr[i]);
         end
-        for (i = 0; i < 8; i = i + 1) begin : pu_z80_data
-            pullup(z80_data[i]);
+        for (j = 0; j < 8; j = j + 1) begin : pu_z80_data
+            pullup(z80_data[j]);
         end
-        for (i = 0; i < 16; i = i + 1) begin : pu_sh_addr
-            pullup(sh_addr[i]);
+        for (k = 0; k < 16; k = k + 1) begin : pu_sh_addr
+            pullup(sh_addr[k]);
         end
-        for (i = 0; i < 8; i = i + 1) begin : pu_sh_data
-            pullup(sh_data[i]);
+        for (l = 0; l < 8; l = l + 1) begin : pu_sh_data
+            pullup(sh_data[l]);
         end
     endgenerate
 
