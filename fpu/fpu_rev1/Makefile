@@ -45,15 +45,16 @@ run-%: $(SIM_DIR)/%_tb.v $(wildcard $(SRC_DIR)/*.v)
 	@echo "\n--- Compiling $* ---"
 	$(VERILOG_COMPILER) $(FLAGS) -y $(SRC_DIR) -o $(OUT_DIR)/$*.vvp $<
 	@echo "--- Running Simulation ---"
+	@mkdir -p $(GTK_DIR)
+	@touch $(GTK_DIR)/$*.surf.ron
 	$(SIM_RUNTIME) $(OUT_DIR)/$*.vvp
 	@echo "--- Simulation Complete. Waves saved to $(WAVES_DIR)/$*.vcd ---"
-	@mkdir -p $(GTK_DIR)
-	@touch $(GTK_DIR)/$*.gtkw
 	@echo "--- Finished Test---\n"
 
 # Helper to view a specific wave (e.g., 'make view-zx50_mmu_sram')
 # Should execute command `surfer -s gtkw/zx50_mmu_sram.surf.ron waves/zx50_mmu_sram.vcd``
 # Positional: $< is 1st prereq, $(word 2,$^) is 2nd prereq
+
 view-%: $(GTK_DIR)/%.surf.ron $(WAVES_DIR)/%.vcd 
 	$(VIEWER) -s $< $(word 2,$^)
 

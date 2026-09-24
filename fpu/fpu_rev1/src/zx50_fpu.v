@@ -1,160 +1,205 @@
 `timescale 1ns/1ps
 
-// The ATF1508AS CPLD Core Logic
+/***************************************************************************************
+ * MODULE: zx50_fpu
+ * FILE: src/zx50_fpu.v
+ * DESCRIPTION:
+ * Top-Level CPLD Logic for Microchip ATF1508AS CPLD (U11) on Zx50 CPU Card (Rev C1).
+ * Instantiates zx50_fpu_dispatch for command execution with CDC level synchronizers.
+ ***************************************************************************************/
+
 module zx50_fpu (
-    input  wire        mclk,        // 20MHz or 40MHz Coprocessor Clock
-    input  wire        zclk,        // 5MHz or 10MHz Host Z80 Clock
-    input  wire        reset_n,     // Active-low Global Reset
-    input  wire        clk_spd,     // 1=Fast MCLK (40MHz), 0=Slow MCLK (20MHz)
+    input  wire        mclk,        // 20MHz or 40MHz High-Speed Coprocessor Clock
+    input  wire        zclk,        // 5MHz or 10MHz Host Z80 CPU Clock
+    input  wire        reset_n,     // Global System Reset (Active LOW)
+    input  wire        clk_spd,     // Speed Select Jumper (1=40MHz Fast, 0=20MHz Slow)
 
-    // Z80 Host Bus Interface
-    input  wire [15:0] z80_a,
-    inout  wire [7:0]  z80_d,
-    input  wire        z80_mreq_n,
-    input  wire        z80_iorq_n,
-    input  wire        z80_rd_n,
-    input  wire        z80_wr_n,
-    input  wire        z80_m1_n,
+    // --- Host Z80 Backplane Bus Interface ---
+    input  wire [15:0] z80_a,       // 16-bit Host Address Bus (Port 0x70/0x71 decoding)
+    inout  wire [7:0]  z80_d,       // 8-bit Bidirectional Host Data Bus
+    input  wire        z80_mreq_n,  // Memory Request (~MREQ)
+    input  wire        z80_iorq_n,  // I/O Request (~IORQ)
+    input  wire        z80_rd_n,    // Read Strobe (~RD)
+    input  wire        z80_wr_n,    // Write Strobe (~WR)
+    input  wire        z80_m1_n,    // Machine Cycle 1 (~M1)
 
-    // Shared Open-Drain Bus Lines (Active Low)
-    inout  wire        wait_n,      // Tri-state: 0 = Assert WAIT, Z = Release
-    inout  wire        int_n,       // Tri-state: 0 = Assert INT,  Z = Release
+    // --- Shared Backplane Handshake Lines (Wired-OR Open-Drain) ---
+    inout  wire        wait_n,      // Active-LOW CPU Wait Request
+    inout  wire        int_n,       // Active-LOW CPU Interrupt Request
 
-    // Private Memory Bus Interface (CA[13:0] & CD[7:0])
-    output wire [13:0] ca,
-    inout  wire [7:0]  cd,
+    // --- Private Coprocessor Memory Bus ---
+    output wire [13:0] ca,          // 14-bit Private Address Bus
+    inout  wire [7:0]  cd,          // 8-bit Private Data Bus
 
-    // Local SRAM (U12 - 25ns Fixed) Controls
+    // Local SRAM (U12) Controls
     output wire        m_ce_n,
     output wire        m_oe_n,
     output wire        m_we_n,
     
-    // Local Flash (U13 - 55ns Fixed) Controls
+    // Local Flash ROM (U13) Controls
     output wire        f_ce_n,
     output wire        f_oe_n,
     output wire        f_we_n
 );
 
     // =========================================================================
-    // 1. Registers & Internal Signals
+    // 1. Internal Registers & State Variables
     // =========================================================================
-    reg [7:0] sp;           // 8-bit Stack Pointer (0x0000 - 0x00FF in private SRAM)
-    reg [7:0] opcode_reg;   // Latched opcode written to port 0x71
-    reg [7:0] status_reg;   // [BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]
-    reg       exec_start;   // Trigger pulse for execution state machine
+    reg [7:0] sp;           // 8-bit Hardware Stack Pointer
+    reg [7:0] opcode_reg;   // Latched opcode written to Port 0x71
+    reg [7:0] status_reg;   // Status Register [BUSY, ZERO, SIGN, CARRY, OVF, UNF, ERR, 0]
+    reg       exec_req;     // Level request signal to dispatcher
     
-    // Internal Assertion Flags (1 = Pull bus line LOW, 0 = High-Z)
-    reg       c_wait_req;   
-    reg       c_int_req;
+    reg       c_wait_req;   // Controls wait_n driver
+    reg       c_int_req;    // Controls int_n driver
 
-    // Synchronizer shift registers for Z80 asynchronous signals (mclk domain)
-    reg [2:0] iorq_sync;
-    reg [2:0] rd_sync;
-    reg [2:0] wr_sync;
+    reg       io_wr_busy;   // Write lock flag
+    reg       io_rd_busy;   // Read lock flag
 
-    // Private Memory Request Flags & Pipeline Counters
+    // Private SRAM Pipeline Registers
     reg [7:0] sram_wdata;
+    reg [7:0] sram_addr;
     reg       sram_we_req;
+    reg       sram_we_strobe;
+    reg       sram_we_hold;
     reg       sram_oe_req;
-    reg [1:0] sram_tick_cnt;
 
+    // Private Flash Request Controls
     reg       flash_req;
     reg [1:0] flash_tick_cnt;
-
-    // Dynamic Target Cycle Limits based on clk_spd
-    // SRAM (25ns): Slow MCLK (20MHz/50ns) -> 1 tick (cnt=0); Fast MCLK (40MHz/25ns) -> 2 ticks (cnt=1)
-    wire [1:0] sram_target_ticks  = clk_spd ? 2'd1 : 2'd0;
-
-    // Flash (55ns): Slow MCLK (20MHz/50ns) -> 2 ticks (cnt=1); Fast MCLK (40MHz/25ns) -> 3 ticks (cnt=2)
     wire [1:0] flash_target_ticks = clk_spd ? 2'd2 : 2'd1;
 
+    // Dispatcher Submodule Handshake Nets
+    wire       dispatch_done_ack;
+    wire       dispatch_err;
+    wire [4:0] dispatch_flags;
+
+    // Synchronize done_ack into ZCLK domain
+    reg [1:0] ack_sync;
+    always @(posedge zclk or negedge reset_n) begin
+        if (!reset_n) ack_sync <= 2'b00;
+        else          ack_sync <= {ack_sync[0], dispatch_done_ack};
+    end
+    wire dispatch_done_sync = ack_sync[1];
+
     // =========================================================================
-    // 2. Signal Synchronization & Edge Detection (zclk Domain)
+    // 2. Submodule Instantiation: Command Dispatcher
+    // =========================================================================
+    zx50_fpu_dispatch dispatcher (
+        .mclk(mclk),
+        .reset_n(reset_n),
+        .exec_req(exec_req),
+        .opcode(opcode_reg),
+        .done_ack(dispatch_done_ack),
+        .err_flag(dispatch_err),
+        .status_flags(dispatch_flags)
+    );
+
+    // =========================================================================
+    // 3. Host Z80 Bus Decoding Logic
+    // =========================================================================
+    wire is_io_write = (!z80_iorq_n && !z80_wr_n && z80_m1_n);
+    wire is_io_read  = (!z80_iorq_n && !z80_rd_n && z80_m1_n);
+
+    wire port_70_sel = (z80_a[7:0] == 8'h70);
+    wire port_71_sel = (z80_a[7:0] == 8'h71);
+
+    // =========================================================================
+    // 4. Host Z80 Interface State Machine (ZCLK Domain)
     // =========================================================================
     always @(posedge zclk or negedge reset_n) begin
         if (!reset_n) begin
-            iorq_sync <= 3'b111;
-            rd_sync   <= 3'b111;
-            wr_sync   <= 3'b111;
+            sp          <= 8'h00;
+            opcode_reg  <= 8'h00;
+            status_reg  <= 8'h00;
+            exec_req    <= 1'b0;
+            c_wait_req  <= 1'b0;
+            c_int_req   <= 1'b0;
+            sram_we_req <= 1'b0;
+            sram_oe_req <= 1'b0;
+            sram_wdata  <= 8'h00;
+            sram_addr   <= 8'h00;
+            io_wr_busy  <= 1'b0;
+            io_rd_busy  <= 1'b0;
         end else begin
-            iorq_sync <= {iorq_sync[1:0], z80_iorq_n};
-            rd_sync   <= {rd_sync[1:0],   z80_rd_n};
-            wr_sync   <= {wr_sync[1:0],   z80_wr_n};
+
+            // -----------------------------------------------------------------
+            // Command Execution Completion Handshake (Level Acknowledge)
+            // -----------------------------------------------------------------
+            if (dispatch_done_sync && exec_req) begin
+                status_reg[7]   <= 1'b0;          // Clear BUSY flag
+                status_reg[1]   <= dispatch_err;  // Set/Clear ERR flag
+                status_reg[6:2] <= dispatch_flags; // Update math status flags
+                c_wait_req      <= 1'b0;          // Release wait_n line
+                exec_req        <= 1'b0;          // Clear request flag
+            end
+
+            // -----------------------------------------------------------------
+            // HOST I/O WRITE OPERATIONS (~WR Active Low)
+            // -----------------------------------------------------------------
+            if (is_io_write) begin
+                if (!io_wr_busy) begin
+                    io_wr_busy <= 1'b1;
+
+                    if (port_70_sel) begin
+                        // PORT 0x70 WRITE (DATA_PUSH)
+                        sram_wdata  <= z80_d;
+                        sram_addr   <= sp;
+                        sram_we_req <= 1'b1;
+                        sp          <= sp + 1'b1;
+                    end else if (port_71_sel) begin
+                        // PORT 0x71 WRITE (CMD_EXEC)
+                        opcode_reg    <= z80_d;
+                        status_reg[7] <= 1'b1; // BUSY = 1
+                        status_reg[1] <= 1'b0; // ERR = 0
+                        exec_req      <= 1'b1; // Raise level request
+                        c_wait_req    <= 1'b1; // Pull wait_n LOW
+                    end
+                end else begin
+                    sram_we_req <= 1'b0;
+                end
+            end else begin
+                io_wr_busy  <= 1'b0;
+                sram_we_req <= 1'b0;
+            end
+
+            // -----------------------------------------------------------------
+            // HOST I/O READ OPERATIONS (~RD Active Low)
+            // -----------------------------------------------------------------
+            if (is_io_read && port_70_sel) begin
+                sram_oe_req <= 1'b1;
+                if (!io_rd_busy) begin
+                    io_rd_busy <= 1'b1;
+                    sp         <= sp - 1'b1;
+                end
+            end else begin
+                io_rd_busy  <= 1'b0;
+                sram_oe_req <= 1'b0;
+            end
         end
     end
 
-    // Decoded Z80 I/O Cycle Controls
-    wire is_io_cycle  = (!iorq_sync[1] && z80_m1_n);
-    wire port_70_sel  = is_io_cycle && (z80_a[7:0] == 8'h70);
-    wire port_71_sel  = is_io_cycle && (z80_a[7:0] == 8'h71);
-
-    wire io_wr_strobe = is_io_cycle && (wr_sync[2] && !wr_sync[1]); // Falling edge of ~WR
-    wire io_rd_strobe = is_io_cycle && (rd_sync[2] && !rd_sync[1]); // Falling edge of ~RD
-
     // =========================================================================
-    // 3. Reset & Initialization Block
+    // 5. Private Memory Pipeline & Timing Controller (MCLK Domain)
     // =========================================================================
-    always @(posedge zclk or negedge reset_n) begin
+    always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            sp             <= 8'h00;
-            opcode_reg     <= 8'h00;
-            status_reg     <= 8'h00; // ERR=0, BUSY=0
-            exec_start     <= 1'b0;
-            c_wait_req     <= 1'b0;  // High-Z (Deasserted)
-            c_int_req      <= 1'b0;  // High-Z (Deasserted)
-            sram_we_req    <= 1'b0;
-            sram_oe_req    <= 1'b0;
-            sram_wdata     <= 8'h00;
-            sram_tick_cnt  <= 2'd0;
+            sram_we_strobe <= 1'b0;
+            sram_we_hold   <= 1'b0;
             flash_req      <= 1'b0;
             flash_tick_cnt <= 2'd0;
         end else begin
-            exec_start <= 1'b0; // Default 1-tick pulse clear
-
-            // -----------------------------------------------------------------
-            // Port Writes (0x70 = DATA_PUSH, 0x71 = CMD_EXEC)
-            // -----------------------------------------------------------------
-            if (io_wr_strobe) begin
-                if (port_70_sel) begin
-                    // DATA_PUSH: Store Z80 data at current SP and increment SP
-                    sram_wdata    <= z80_d;
-                    sram_we_req   <= 1'b1;
-                    sram_tick_cnt <= 2'd0;
-                    sp            <= sp + 1'b1;
-                end else if (port_71_sel) begin
-                    // CMD_EXEC: Latch opcode, set BUSY flag, and trigger calculation
-                    opcode_reg    <= z80_d;
-                    status_reg[7] <= 1'b1; // BUSY = 1
-                    status_reg[1] <= 1'b0; // ERR = 0
-                    exec_start    <= 1'b1;
-                    c_wait_req    <= 1'b1; // Pulls ~WAIT line LOW
-                end
+            if (sram_we_req && !sram_we_strobe && !sram_we_hold) begin
+                sram_we_strobe <= 1'b1;
+                sram_we_hold   <= 1'b0;
+            end else if (sram_we_strobe) begin
+                sram_we_strobe <= 1'b0;
+                sram_we_hold   <= 1'b1;
+            end else begin
+                sram_we_strobe <= 1'b0;
+                sram_we_hold   <= 1'b0;
             end
 
-            // SRAM Write Cycle Timing Logic
-            if (sram_we_req) begin
-                if (sram_tick_cnt == sram_target_ticks) begin
-                    sram_we_req   <= 1'b0;
-                    sram_tick_cnt <= 2'd0;
-                end else begin
-                    sram_tick_cnt <= sram_tick_cnt + 1'b1;
-                end
-            end
-
-            // -----------------------------------------------------------------
-            // Port Reads (0x70 = DATA_POP)
-            // -----------------------------------------------------------------
-            if (io_rd_strobe && port_70_sel) begin
-                // DATA_POP: Decrement SP first, then fetch byte from SRAM
-                sp          <= sp - 1'b1;
-                sram_oe_req <= 1'b1;
-            end else if (!port_70_sel || rd_sync[1]) begin
-                sram_oe_req <= 1'b0;
-            end
-
-            // -----------------------------------------------------------------
-            // Private Flash Pipeline Control
-            // -----------------------------------------------------------------
             if (flash_req) begin
                 if (flash_tick_cnt == flash_target_ticks) begin
                     flash_tick_cnt <= 2'd0;
@@ -167,32 +212,28 @@ module zx50_fpu (
     end
 
     // =========================================================================
-    // 4. Host Z80 & Private Bus Output Drivers
+    // 6. Output Drivers & Tri-State Control Logic
     // =========================================================================
-    // Drive Z80 Data Bus during Port 0x71 Status Read or Port 0x70 Data Pop
-    wire z80_drive_status = port_71_sel && !rd_sync[1];
-    wire z80_drive_sram   = port_70_sel && !rd_sync[1];
+    wire z80_drive_status = is_io_read && port_71_sel;
+    wire z80_drive_sram   = is_io_read && port_70_sel;
 
     assign z80_d  = z80_drive_status ? status_reg :
-                    (z80_drive_sram   ? cd : 8'hzz);
+                    (z80_drive_sram   ? cd         : 8'hzz);
 
-    // Private Address Routing: Stack targets lower 256 bytes of U12 SRAM
-    assign ca     = {6'b000000, sp};
+    wire sram_write_active = (sram_we_strobe || sram_we_hold);
 
-    // Private SRAM Controls
-    assign m_ce_n = !(sram_we_req || sram_oe_req);
-    assign m_we_n = !sram_we_req;
+    assign ca     = sram_write_active ? {6'b000000, sram_addr} : {6'b000000, sp};
+
+    assign m_ce_n = !(sram_write_active || sram_oe_req);
+    assign m_we_n = !sram_we_strobe;
     assign m_oe_n = !sram_oe_req;
 
-    // Private Flash Controls
     assign f_ce_n = !flash_req;
     assign f_oe_n = !flash_req;
     assign f_we_n = 1'b1;
 
-    // Private Data Bus Drive (during SRAM Writes)
-    assign cd     = sram_we_req ? sram_wdata : 8'hzz;
+    assign cd     = sram_write_active ? sram_wdata : 8'hzz;
 
-    // Open-Drain Handshake Outputs for Shared Active-Low Buses
     assign wait_n = c_wait_req ? 1'b0 : 1'bz;
     assign int_n  = c_int_req  ? 1'b0 : 1'bz;
 

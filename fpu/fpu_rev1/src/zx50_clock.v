@@ -3,7 +3,7 @@
 /***************************************************************************************
  * MODULE: zx50_clock
  * DESCRIPTION:
- * A digital twin of the physical Clock Mezzanine board[cite: 244].
+ * A digital twin of the physical Clock Mezzanine board.
  * Uses a Dual Flip-Flop architecture to allow async starting (so the simulator 
  * doesn't deadlock) but strict synchronous stopping on the falling edge of ZCLK.
  * This physically prevents runt pulses from crashing the Z80.
@@ -24,16 +24,16 @@ module zx50_clock (
 
     // --- Global Frequency Definitions ---
     // Defined as half-periods in nanoseconds.
-    // MCLK = ~36 MHz -> Period = 27.77ns -> Half = 13.88ns [cite: 246]
-    parameter MCLK_HALF_PERIOD = 13.88; 
+    // MCLK = 40 MHz -> Period = 25ns -> Half = 12.5ns 
+    parameter MCLK_HALF_PERIOD = 12.5; 
 
     // --- 1. The Raw Oscillator ---
     // Represents the physical 36MHz canned crystal oscillator on the PCB.
     reg raw_mclk;
-    always #MCLK_HALF_PERIOD raw_mclk = ~raw_mclk; // [cite: 248]
+    always #MCLK_HALF_PERIOD raw_mclk = ~raw_mclk; // 
 
     initial begin
-        // Explicitly initialize the clock to 0 at simulation start [cite: 247]
+        // Explicitly initialize the clock to 0 at simulation start 
         raw_mclk = 0;
     end
 
