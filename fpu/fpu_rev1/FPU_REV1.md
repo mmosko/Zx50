@@ -1,12 +1,14 @@
-# Zx50 CPU Rev C1 Math & Stack Coprocessor Specification
+# Zx50 CPU Rev C2 Math & Stack Coprocessor Specification
 
-This document details the architectural hardware specification and instruction set architecture (ISA) for the ATF1508AS CPLD Coprocessor Cluster integrated on the Zx50 CPU Card (Rev C1). The Verilog codebase is strictly written in **IEEE 1364-2001 standard Verilog** for direct synthesis compatibility with legacy toolchains (Microchip/Atmel ProChip Designer, WinCUPL, Quartus II 13.0sp1) without SystemVerilog dependencies.
+
+
+This document details the architectural hardware specification and instruction set architecture (ISA) for the ATF1508AS CPLD Coprocessor Cluster integrated on the Zx50 CPU Card (Rev C2). The Verilog codebase is written in standard Verilog for direct synthesis compatibility with old toolchains (Microchip/Atmel ProChip Designer, WinCUPL, Quartus II 13.0sp1) without SystemVerilog dependencies.
 
 ---
 
 ## 1. System Overview & Hardware Architecture
 
-The Rev C1 CPU Card integrates a dedicated CPLD coprocessor cluster on the bottom layer of a 6-layer PCB, positioned under the Clock Mezzanine RF ground shield. It features an **ATF1508AS-7 CPLD** (`U11`) operating on an isolated **16 KB private memory bus**, decoupled from the main Z80 backplane.
+The Rev C2 CPU Card integrates a dedicated CPLD coprocessor cluster on the bottom layer of a 6-layer PCB, positioned under the Clock Mezzanine RF ground shield. It features an **ATF1508AS-7 CPLD** (`U11`) operating on an isolated **32 KB private memory bus**, decoupled from the main Z80 backplane.
 
 ```text
                   +-----------------------------------+
@@ -14,34 +16,60 @@ The Rev C1 CPU Card integrates a dedicated CPLD coprocessor cluster on the botto
                   |   Clocks: 20/40MHz MCLK, 5/10MHz ZCLK|
                   +-----+-----------------------+-----+
                         |                       |
-           CA[13:0]     |                       |  CD[7:0]
+           CA[14:0]     |                       |  CD[7:0]
          Private Address|                       |  Private Data
                         v                       v
             +-----------+-----------------------+-----------+
             |                                               |
             |   +-------------------+   +---------------+   |
-            |   | SST39SF040 Flash  |   | IS61C5128AS   |   |
-            |   | 16KB Active (U13) |   | 16KB Active   |   |
+            |   | SST39SF040 Flash  |   | IS61C256AL    |   |
+            |   | 32KB Active (U13) |   | 32KB Active   |   |
             |   | LUTs / Tables     |   | SRAM (U12)    |   |
             |   +---------+---------+   +-------+-------+   |
             |             |                     |           |
-            |             | ~F_CE / ~F_OE / ~F_WE| ~M_CE / ~M_OE / ~M_WE
-            +-------------+---------------------+-----------+
+            |             |     ~C_OE / ~C_WE   |           |
+            |             +----------+----------+           |
+            |                        |                      |
+            |               ~F_CE <--+--> ~M_CE             |
+            +-----------------------------------------------+
+
 ```
 
 ### Key Hardware Specs
 
-* **CPLD Controller (`U11`):** Microchip ATF1508AS-7JX84 (128 macrocells, 7.5 ns $t_{PD}$, 84-pin PLCC).
-* **Private SRAM (`U12`):** IS61C5128AS (25 ns, SOP-32). Address lines `CA0`–`CA13` (16 KB active); `A14`–`A18` tied to `GND`. Serves as hardware stack storage, scratchpad, and microcode buffer.
-* **Private Flash (`U13`):** SST39SF040 (55 ns, PLCC-32). Address lines `CA0`–`CA13` (16 KB active); `A14`–`A18` tied to `GND`. Stores Quarter-Square multiplication tables, log/antilog tables, and trigonometric seed constants.
+* **CPLD Controller (`U11`):** Microchip ATF1508AS-7JX84 (128 macrocells, 7.5 ns $t_{\text{PD}}$, 84-pin PLCC).
+
+
+* **Private SRAM (`U12`):** ISSI `IS61C256AL-12TLI` (12 ns access time, 28-pin TSOP-I). Address lines `CA0`–`CA14` provide a full **32 KB active private memory space**. Serves as hardware stack storage, scratchpad, and microcode buffer.
+
+
+* **Private Flash (`U13`):** SST39SF040 (55 ns, PLCC-32). Address lines `CA0`–`CA14` (32 KB active); `A15`–`A18` tied to `GND`. Stores Quarter-Square multiplication tables, log/antilog tables, and trigonometric seed constants.
+
+
+* **Consolidated Control Lines:** Memory read enable (`~C_OE`, Pin 45) and write enable (`~C_WE`, Pin 46) are consolidated into a shared pair of control strobes across both private memory ICs. Device targeting is gated by dedicated Chip Enable lines (`~M_CE` on Pin 44 for SRAM; `~F_CE` on Pin 68 for Flash), saving 2 macrocells and 2 package I/O pins on the CPLD.
+
+
+* **High-Speed Single-Cycle Memory Access Timing:**
+* At 40 MHz ($T_{\text{clk}} = 25\text{ ns}$), the **12 ns SRAM access time** ($t_{\text{AA}}$) provides **13 ns of timing margin** per clock cycle.
+
+
+* Eliminates multi-cycle wait states and complex hold pipelines. Reads and writes execute as clean single-cycle transfers synchronized to `posedge mclk`.
+
+
+
+
 * **Dual Clock Architecture & Asynchronous CDC Handshaking:**
-  * **`ZCLK` Domain (5/10 MHz):** Synchronously decodes Z80 I/O read/write cycles, updates the 8-bit Stack Pointer ($SP$), and drives host handshake lines (`wait_n`, `int_n`).
-  * **`MCLK` Domain (20/40 MHz):** Drives high-speed command execution, private SRAM/Flash pipeline timing, and math calculations.
-  * **4-Phase Level CDC Handshake:** Inter-domain requests (`exec_req` from `ZCLK` $\rightarrow$ `MCLK`) and acknowledgments (`done_ack` from `MCLK` $\rightarrow$ `ZCLK`) use level-driven handshaking with 2-stage synchronizers (`req_sync`, `ack_sync`). This guarantees zero pulse-dropping when crossing between asynchronous 5–10 MHz and 20–40 MHz clock domains.
-* **2-Phase Private SRAM Write Pipeline:**
-  * **Phase 1 (Strobe):** `ca = sram_addr`, `cd = sram_wdata`, `m_we_n = 0` (1 MCLK tick).
-  * **Phase 2 (Hold):** `ca = sram_addr`, `cd = sram_wdata`, `m_we_n = 1` (1 MCLK tick).
-  * *Note:* Holding `cd` driven on `posedge m_we_n` satisfies the Data Hold Time ($t_{DH}$) requirement of the IS61C5128AS SRAM, preventing simulation delta-cycle race conditions and physical memory corruption.
+* **`ZCLK` Domain (5/10 MHz):** Synchronously decodes Z80 I/O read/write cycles, updates the 8-bit Stack Pointer ($SP$), and drives host handshake lines (`wait_n`, `int_n`).
+
+
+* **`MCLK` Domain (20/40 MHz):** Drives high-speed command execution, private SRAM/Flash pipeline timing, and math calculations.
+
+
+* **4-Phase Level CDC Handshake:** Inter-domain requests (`exec_req` from `ZCLK` $\rightarrow$ `MCLK`) and acknowledgments (`done_ack` from `MCLK` $\rightarrow$ `ZCLK`) use level-driven handshaking with 2-stage synchronizers (`req_sync`, `ack_sync`). This guarantees zero pulse-dropping when crossing between asynchronous 5–10 MHz and 20–40 MHz clock domains.
+
+
+
+
 
 ---
 
@@ -57,15 +85,15 @@ The Rev C1 CPU Card integrates a dedicated CPLD coprocessor cluster on the botto
 | **Handshake / Status** | `~WAIT`, `~INT`, `~RESET`, `~BUSACK` | Pins 70, 69, 1, 84 (tied to GND) | Open-drain `~WAIT`/`~INT` lines, reset, and isolation signals |
 | **Clocks** | `MCLK`, `CLK` (`ZCLK`) | Pins 83 (`GCLK1`), 2 (`GCLK2`) | High-speed coprocessor clock and host CPU clock |
 
-### Private Memory Bus Interface & Config Pins
+### Private Memory Bus Interface & Config Pins (Rev C2 Netlist)
 
 | Signal Group | Signal Names | CPLD Pin Assignments | Destination / Description |
 | --- | --- | --- | --- |
-| **Private Address** | `CA0`–`CA13` | Pins 56, 54, 55, 52, 51, 50, 49, 48, 61, 63, 65, 64, 58, 60 | `U12` SRAM & `U13` Flash (`A0`–`A13`) |
-| **Private Data** | `CD0`–`CD7` | Pins 33, 34, 35, 36, 37, 39, 40, 41 | Bidirectional private memory data bus |
-| **SRAM Control** | `~M_CE`, `~M_OE`, `~M_WE` | Pins 46, 45, 44 | Controls private SRAM (`U12`) |
-| **Flash Control** | `~F_CE`, `~F_OE`, `~F_WE` | Pins 68, 67, 57 | Controls private Flash (`U13`) |
-| **Speed Select** | `MEM_SPD` | Pin 81 | Hardware Memory Pipeline Speed Selector (Jumper `J8`) |
+| **Private Address** | `CA0`–`CA14` | Pins 56, 54, 55, 52, 51, 50, 49, 48, 61, 63, 65, 64, 57, 58, 60 | `U12` SRAM & `U13` Flash (`A0`–`A14`) |
+| **Private Data** | `CD0`–`CD7` | Pins 37, 36, 35, 34, 33, 41, 40, 39 | Bidirectional private memory data bus |
+| **Shared Control** | `~C_OE`, `~C_WE` | Pins 45, 46 | Consolidated Output Enable and Write Enable strobes |
+| **Chip Enables** | `~M_CE`, `~F_CE` | Pins 44, 68 | Dedicated Chip Enable for SRAM (`U12`) & Flash (`U13`) |
+| **Speed Select** | `CLK_SPD` | Pin 81 | Hardware Memory Pipeline Speed Selector (Jumper `J8`) |
 
 ---
 
@@ -87,7 +115,11 @@ The CPLD decodes host I/O port base address `0x70` and `0x71`.
 | `BUSY` | `ZERO` | `SIGN` | `CARRY` | `OVERFLOW` | `UNDERFLOW` | `ERR` | Reserved (0) |
 
 * **`BUSY` (Bit 7):** Set high during command execution; cleared automatically when `zx50_fpu_dispatch` completes execution.
+
+
 * **`ERR` (Bit 1):** Set high if an illegal opcode, divide-by-zero, or execution fault is encountered.
+
+
 
 ---
 
@@ -111,6 +143,7 @@ The math stack is hosted in the **first 256 bytes of Private SRAM (`U12`)** at a
 ... | ...                                |   0x10| Stack Level 2                      |
 0x1F| Stack Level 7 (8 Levels Max)       |   0x1F| Stack Level 3 (4 Levels Max)       |
     +------------------------------------+       +------------------------------------+
+
 ```
 
 ---
@@ -119,14 +152,15 @@ The math stack is hosted in the **first 256 bytes of Private SRAM (`U12`)** at a
 
 Opcodes written to port `0x71` are split into two 4-bit fields:
 
-$$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operation Field} = \text{Opcode}[3:0]$$
+	Format Field = Opcode[7:4]
+	Operation Field = Opcode[3:0]
 
 ### Format Field (`opcode[7:4]`)
 
 | Value | Identifier | Data Type | Size / Operand | Hardware Acceleration Level |
-| ----- | --------- | --------------------- | -------------- | --------------------------- |
+| --- | --- | --- | --- | --- |
 | `0x0` | `i16` | 16-Bit Signed Integer | 2 Bytes | Native CPLD Hardware (1 Tick Add/Sub) |
-| `0x1` | `i32` | 32-Bit Signed Integer | 4 Bytes | Native CPLD Hardware (1 Tick Add/Sub, 34 Tick Mult/Div) |
+| `0x1` | `i32` | 32-Bit Signed Integer | 4 Bytes | Native CPLD Hardware (Byte-Serial 12ns SRAM) |
 | `0x2` | `i64` | 64-Bit Signed Integer | 8 Bytes | Microcoded / Software Pass-through |
 | `0x3` | `float` / `fx1616` | 32-Bit IEEE-754 / 16.16 Fixed | 4 Bytes | Native CPLD Hardware (16.16 Fixed) / Fast LUT |
 | `0x4` | `dfloat` | 64-Bit IEEE-754 Float | 8 Bytes | Microcoded (Private SRAM) |
@@ -138,10 +172,10 @@ $$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operatio
 
 | Full Opcode | Mnemonic | Description | Latency |
 | --- | --- | --- | --- |
-| **`0xF0`** | `CLR_STK` | Resets Stack Pointer to `0x0000` | $25\text{ ns}$ |
-| **`0xF1`** | `POP_TOS` | Drops $TOS$ (decrements $SP$ by active stride) | $25\text{ ns}$ |
-| **`0xF2`** | `DUP_TOS` | Duplicates $TOS$ entry on stack in SRAM | $100\text{ ns}$ |
-| **`0xFF`** | `RESET` | Soft resets execution state machine & flags | $25\text{ ns}$ |
+| **`0xF0`** | `CLR_STK` | Resets Stack Pointer to `0x0000` | $25\text{ ns}$<br> |
+| **`0xF1`** | `POP_TOS` | Drops $TOS$ (decrements $SP$ by active stride) | $25\text{ ns}$<br> |
+| **`0xF2`** | `DUP_TOS` | Duplicates $TOS$ entry on stack in SRAM | $100\text{ ns}$<br> |
+| **`0xFF`** | `RESET` | Soft resets execution state machine & flags | $25\text{ ns}$<br> |
 
 ---
 
@@ -192,6 +226,7 @@ $$\text{Format Field} = \text{Opcode}[7:4] \quad \text{and} \quad \text{Operatio
                                                    |            ST_RELEASE_ACK             |
                                                    |  Deassert done_ack=0, Return IDLE     |
                                                    +---------------------------------------+
+
 ```
 
 ---
@@ -209,8 +244,9 @@ tb_zx50 (Testbench Top)
  └── zx50_fpu_block       (FPU Subsystem Cluster Wrapper)
       ├── zx50_fpu        (U11 - ATF1508AS CPLD Top Level Logic)
       │    └── zx50_fpu_dispatch (Command Execution Dispatcher Submodule)
-      ├── is61c5128as     (U12 - 16KB Active Private SRAM Model)
-      └── sst39sf040      (U13 - 16KB Active Private Flash ROM Model)
+      ├── is61c256al      (U12 - 32KB Active Private SRAM Model)
+      └── sst39sf040      (U13 - 32KB Active Private Flash ROM Model)
+
 ```
 
 ---
@@ -219,19 +255,42 @@ tb_zx50 (Testbench Top)
 
 ### Synthesis Source Files (`./src/`)
 
-* **`src/zx50_fpu.v`:** Top-level CPLD logic. Manages Z80 I/O port decoding (`0x70`/`0x71`), stack pointer counter ($SP$), 2-phase SRAM write pipeline, open-drain `wait_n`/`int_n` drivers, and CDC request synchronizers.
+* **`src/zx50_fpu.v`:** Top-level CPLD logic. Manages Z80 I/O port decoding (`0x70`/`0x71`), stack pointer counter ($SP$), consolidated memory strobes (`~C_OE`, `~C_WE`), chip enables (`~M_CE`, `~F_CE`), open-drain `wait_n`/`int_n` drivers, and CDC request synchronizers.
+
+
+* **`src/zx50_fpu_mem.v`:** Private memory bus arbiter & strobe generator. Maps 15-bit private addresses (`CA0`–`CA14`) and handles single-cycle read/write strobe timing.
+
+
 * **`src/zx50_fpu_dispatch.v`:** Command dispatcher submodule running on `MCLK`. Decodes opcodes, controls execution state timing, manages level CDC acknowledgment, and outputs arithmetic status flags.
-* **`src/zx50_fpu_block.v`:** Subsystem cluster wrapper. Integrates CPLD (`U11`), SRAM (`U12`), and Flash (`U13`) on private `CA[13:0]` and `CD[7:0]` buses.
-* **`src/is61c5128as.v`:** IS61C5128AS 25 ns SRAM simulation model. Uses explicit sensitivity lists (`always @(read_enable or addr)`) to prevent `iverilog` elaboration array loops.
+
+
+* **`src/zx50_fpu_block.v`:** Subsystem cluster wrapper. Integrates CPLD (`U11`), SRAM (`U12`), and Flash (`U13`) on private `CA[14:0]` and `CD[7:0]` buses.
+
+
+* **`src/is61c256al.v`:** ISSI `IS61C256AL-12TLI` 12 ns SRAM simulation model.
+
+
 * **`src/sst39sf040.v`:** SST39SF040 55 ns Flash ROM simulation model. Features explicit sensitivity lists and `$readmemh` pre-loading for math LUTs.
+
+
 * **`src/zx50_clock.v`:** Glitch-free dual clock generator (`MCLK` / `ZCLK`).
+
+
 * **`src/zx50_backplane.v`:** Backplane pull-up primitives.
+
+
 * **`src/z80_cpu_util.v`:** T-State accurate Z80 Bus Functional Model.
+
+
 
 ### Testbench Suite (`./sim/`)
 
 All testbenches follow pattern-based execution via `make run-<test>` (e.g., `make run-init`):
 
-* **`sim/init_tb.v` (`make run-init`):** Verifies boot reset state, register defaults, private memory chip select isolation, and open-drain High-Z line releases.
-* **`sim/fpu_stack_tb.v` (`make run-fpu_stack`):** Verifies Port `0x70` single-byte, multi-byte 32-bit frame, and interleaved PUSH/POP stack operations, $SP$ tracking, and $t_{DH}$ SRAM data hold timing. Includes a `dump_stack` diagnostic memory task.
+* **`sim/init_tb.v` (`make run-init`):** Verifies boot reset state, register defaults, private memory chip select isolation (`~M_CE`, `~F_CE`), and open-drain High-Z line releases.
+
+
+* **`sim/fpu_stack_tb.v` (`make run-fpu_stack`):** Verifies Port `0x70` single-byte, multi-byte 32-bit frame, and interleaved PUSH/POP stack operations, $SP$ tracking, and single-cycle 12ns SRAM write timing.
+
+
 * **`sim/fpu_cmd_tb.v` (`make run-fpu_cmd`):** Verifies Port `0x71` command execution, `ZCLK`/`MCLK` 4-phase CDC handshaking, automatic Z80 `wait_n` stall and release, and valid/invalid opcode status reporting (`BUSY`, `ERR`).
