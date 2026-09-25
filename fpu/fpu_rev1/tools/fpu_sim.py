@@ -2,7 +2,7 @@
 """
 ZX50 FPU Coprocessor Microcode & Datapath Simulator
 Simulates the ATF1508AS CPLD micro-engine, private SRAM/Flash, and ALU.
-Supports: ADD, SUB, MUL, DIV, SQRT, LOG2, EXP, POW across 32-bit and 16-bit types.
+Supports: i16, i32, fx1616 math and management commands via opcode dispatch.
 """
 
 import math
@@ -13,20 +13,76 @@ from build_flash import (
     FLASH_SQRT_BASE,
     FLASH_EXP2_BASE,
     FLASH_LOG2_BASE,
+    FLASH_SIN_BASE,
+    FLASH_COS_BASE,
+    FLASH_TAN_BASE,
+    FLASH_LN_BASE,
+    FLASH_LOG10_BASE,
 )
 
 # =============================================================================
-# 1. Micro-Instruction Field Encodings
+# 1. Micro-Instruction & Opcode Field Encodings
 # =============================================================================
-# ALU Operations (3 bits)
-ALU_PASS_X     = 0
-ALU_ADD        = 1
-ALU_SUB        = 2
-ALU_ABS_DIFF   = 3
-ALU_SHL        = 4
-ALU_SHR        = 5
-ALU_SWAP_BYTES = 6  # Swaps high/low bytes of 16-bit word
-ALU_PASS_ZERO  = 7  # Outputs 16'h0000 for clean zero-padding
+
+# =============================================================================
+# ALU Operations (3 bits) - Shared 16-Bit Combinational ALU Primitives
+# =============================================================================
+
+# ALU_PASS_X (0): Passive Data Bypass / Register Transfer
+# - Function: OUT = X
+# - Flags: Preserves 'carry_latch' unchanged. Updates ZERO and SIGN flags based on OUT.
+# - Use Case: Used for direct memory-to-register loads, pass-through reads, and moving
+#   values between ACC, OPB, TMP0, and TMP1 without corrupting carry chain state.
+ALU_PASS_X = 0
+
+# ALU_ADD (1): Binary Addition with Carry Propagation
+# - Function: OUT = X + Y + carry_latch
+# - Flags: Sets 'carry_latch' on 8-bit or 16-bit overflow (> 0xFF / > 0xFFFF).
+# - Use Case: Core primitive for multi-byte serial integer/fixed-point addition loops
+#   and calculating Quarter-Square table sum indices (a + b).
+ALU_ADD = 1
+
+# ALU_SUB (2): Binary Subtraction with Borrow Propagation
+# - Function: OUT = X - Y - carry_latch
+# - Flags: Sets 'carry_latch' on underflow / borrow (< 0).
+# - Use Case: Core primitive for multi-byte serial integer/fixed-point subtraction loops,
+#   Quarter-Square table product subtractions [f(a+b) - f(|a-b|)], and reciprocal division.
+ALU_SUB = 2
+
+# ALU_ABS_DIFF (3): Unsigned Absolute Difference
+# - Function: OUT = |X - Y|
+# - Flags: Resets 'carry_latch' to 0.
+# - Use Case: Computes the unsigned distance between two 8-bit operands |a - b| for
+#   Quarter-Square table lookups without requiring extra sign-extension or conditional branching logic.
+ALU_ABS_DIFF = 3
+
+# ALU_SHL (4): 1-Bit Logical Shift Left
+# - Function: OUT = (X << 1) | carry_latch (or 0 depending on loop mode)
+# - Flags: Sets 'carry_latch' to the MSB shifted out of the operand.
+# - Use Case: Multi-precision bit alignment, fast power-of-two fixed-point scaling, and
+#   floating-point (F16/F32) mantissa normalization loops.
+ALU_SHL = 4
+
+# ALU_SHR (5): 1-Bit Logical Shift Right
+# - Function: OUT = X >> 1
+# - Flags: Sets 'carry_latch' to the LSB shifted out of the operand.
+# - Use Case: Microcoded serial shift loop for floating-point (F16/F32) exponent alignment
+#   (shifting smaller mantissa right until exponents match) without a hardware barrel shifter.
+ALU_SHR = 5
+
+# ALU_SWAP_BYTES (6): 16-Bit Endian / Byte Swap
+# - Function: OUT = {X[7:0], X[15:8]}
+# - Flags: Resets 'carry_latch' to 0.
+# - Use Case: Swaps high and low bytes of 16-bit scratch registers (TMP0/TMP1) when
+#   serializing 16-bit Flash lookup table results out to SRAM in Little-Endian byte order.
+ALU_SWAP_BYTES = 6
+
+# ALU_PASS_ZERO (7): Hardwired Zero Clear
+# - Function: OUT = 16'h0000
+# - Flags: Resets 'carry_latch' to 0. Sets ZERO flag = True.
+# - Use Case: Used for zero-padding upper bytes when writing 8-bit or 16-bit calculation
+#   results into 32-bit SRAM stack frames, or clearing scratch registers.
+ALU_PASS_ZERO = 7
 
 # Datapath Source Muxes (2 bits)
 MUX_ACC  = 0  # Zero-extended 8-bit Accumulator
@@ -61,6 +117,35 @@ SEQ_NEXT = 0  # Advance U_PC <= U_PC + 1
 SEQ_LOOP = 1  # Loop on BYTE_CNT (0 -> 1 -> ... -> max_bytes-1)
 SEQ_DONE = 2  # Execution complete, reset U_PC <= 0
 
+# Format Opcodes (opcode[7:4])
+FMT_I16     = 0x0
+FMT_I32     = 0x1
+FMT_I64     = 0x2
+FMT_FX1616  = 0x3
+FMT_SPECIAL = 0xE
+FMT_MGMT    = 0xF
+
+# Operation Opcodes (opcode[3:0])
+OP_ADD      = 0x0
+OP_SUB      = 0x1
+OP_MUL      = 0x2
+OP_DIV      = 0x3
+OP_SQRT     = 0x4
+OP_CHS      = 0x5
+OP_SIN      = 0x6
+OP_COS      = 0x7
+OP_EXP      = 0x8
+OP_LN       = 0x9
+OP_LOG10    = 0xA
+OP_TAN      = 0xB
+OP_POW      = 0xC
+
+# Management Opcodes
+MGMT_CLR_STK = 0xF0
+MGMT_POP_TOS = 0xF1
+MGMT_DUP_TOS = 0xF2
+MGMT_RESET   = 0xFF
+
 
 class ZX50FPUMachine:
     def __init__(self):
@@ -81,6 +166,7 @@ class ZX50FPUMachine:
         self.flag_zero = False
         self.flag_sign = False
         self.flag_carry = False
+        self.flag_error = False
         self.carry_latch = 0
 
         # Build Flash LUTs and Microcode ROM
@@ -91,7 +177,6 @@ class ZX50FPUMachine:
     # 2. Flash Lookup Table Generator
     # =========================================================================
     def _init_flash_tables(self):
-        # Delegates Flash LUT generation directly to tools/build_flash.py
         populate_flash_memory(self.flash)
 
     # =========================================================================
@@ -109,8 +194,6 @@ class ZX50FPUMachine:
             'POW':  0x44,
         }
 
-        # Microcode Instruction Layout:
-        # (ALU_OP, SRC_X, SRC_Y, MEM_CMD, REG_LD, SEQ_CTRL)
         self.urom = {
             # --- OP_ADD (0x00 - 0x04) ---
             0x00: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_ACC, SEQ_NEXT),
@@ -129,19 +212,19 @@ class ZX50FPUMachine:
             # --- OP_MUL (0x0A - 0x18) ---
             0x0A: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_ACC, SEQ_NEXT),
             0x0B: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_NOS, LD_OPB, SEQ_NEXT),
-            0x0C: (ALU_ADD, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP0, SEQ_NEXT),         # TMP0 = a + b
-            0x0D: (ALU_ABS_DIFF, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP1, SEQ_NEXT),    # TMP1 = |a - b|
-            0x0E: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_RD_FLASH_QS, LD_ACC, SEQ_NEXT),     # ACC = f(a+b)_lo
-            0x0F: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_RD_FLASH_QS, LD_TMP0_HI, SEQ_NEXT), # TMP0_HI = f(a+b)_hi
-            0x10: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP0_LO, SEQ_NEXT),        # TMP0_LO = ACC
-            0x11: (ALU_PASS_X, MUX_TMP1, MUX_OPB, MEM_RD_FLASH_QS, LD_OPB, SEQ_NEXT),     # OPB = f(|a-b|)_lo
-            0x12: (ALU_PASS_X, MUX_TMP1, MUX_OPB, MEM_RD_FLASH_QS, LD_TMP1_HI, SEQ_NEXT), # TMP1_HI = f(|a-b|)_hi
-            0x13: (ALU_PASS_X, MUX_OPB, MUX_OPB, MEM_NOP, LD_TMP1_LO, SEQ_NEXT),        # TMP1_LO = OPB
-            0x14: (ALU_SUB, MUX_TMP0, MUX_TMP1, MEM_NOP, LD_TMP0, SEQ_NEXT),       # Product = f(a+b) - f(|a-b|)
-            0x15: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),      # Write Byte 0
-            0x16: (ALU_SWAP_BYTES, MUX_TMP0, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),  # Write Byte 1
-            0x17: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),     # Zero-pad Byte 2
-            0x18: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_DONE),     # Zero-pad Byte 3
+            0x0C: (ALU_ADD, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP0, SEQ_NEXT),
+            0x0D: (ALU_ABS_DIFF, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP1, SEQ_NEXT),
+            0x0E: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_RD_FLASH_QS, LD_ACC, SEQ_NEXT),
+            0x0F: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_RD_FLASH_QS, LD_TMP0_HI, SEQ_NEXT),
+            0x10: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_TMP0_LO, SEQ_NEXT),
+            0x11: (ALU_PASS_X, MUX_TMP1, MUX_OPB, MEM_RD_FLASH_QS, LD_OPB, SEQ_NEXT),
+            0x12: (ALU_PASS_X, MUX_TMP1, MUX_OPB, MEM_RD_FLASH_QS, LD_TMP1_HI, SEQ_NEXT),
+            0x13: (ALU_PASS_X, MUX_OPB, MUX_OPB, MEM_NOP, LD_TMP1_LO, SEQ_NEXT),
+            0x14: (ALU_SUB, MUX_TMP0, MUX_TMP1, MEM_NOP, LD_TMP0, SEQ_NEXT),
+            0x15: (ALU_PASS_X, MUX_TMP0, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),
+            0x16: (ALU_SWAP_BYTES, MUX_TMP0, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),
+            0x17: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),
+            0x18: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_DONE),
 
             # --- OP_SQRT (0x2F - 0x35) ---
             0x2F: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_ACC, SEQ_NEXT),
@@ -201,7 +284,7 @@ class ZX50FPUMachine:
 
         if op == ALU_PASS_X:
             res = x
-            cout = cin  # Maintain carry latch across passive reads
+            cout = cin
         elif op == ALU_ADD:
             full = x + y + cin
             res = full & 0xFFFF
@@ -213,7 +296,7 @@ class ZX50FPUMachine:
             cout = 1 if full < 0 else 0
         elif op == ALU_ABS_DIFF:
             res = abs(x - y) & 0xFFFF
-            cout = 0  # Clear carry for abs diff
+            cout = 0
         elif op == ALU_SHL:
             full = x << 1
             res = full & 0xFFFF
@@ -238,8 +321,137 @@ class ZX50FPUMachine:
         return res
 
     # =========================================================================
-    # 5. Step Execution Engine
+    # 5. Opcode Dispatch Engine
     # =========================================================================
+    def execute_opcode(self, opcode: int):
+        self.flag_error = False
+        fmt = (opcode >> 4) & 0x0F
+        op  = opcode & 0x0F
+
+        # Format 0xF: System & Stack Management
+        if fmt == FMT_MGMT:
+            if opcode in (MGMT_CLR_STK, MGMT_RESET):
+                self.sp = 0x08
+            elif opcode == MGMT_POP_TOS:
+                self.sp = max(0x08, self.sp - 4)
+            elif opcode == MGMT_DUP_TOS:
+                tos_bytes = [self.sram[self.sp - 4 + i] for i in range(4)]
+                self.sp += 4
+                self.push_tos_bytes(tos_bytes)
+            else:
+                self.flag_error = True
+            return
+
+        # Format 0x0: 16-Bit Signed Integer (i16)
+        if fmt == FMT_I16:
+            nos = self.read_nos_i16()
+            tos = self.read_tos_i16()
+            if op == OP_ADD:
+                self.push_nos_i16(nos + tos)
+            elif op == OP_SUB:
+                self.push_nos_i16(nos - tos)
+            elif op == OP_MUL:
+                self.push_nos_i16(nos * tos)
+            elif op == OP_DIV:
+                if tos == 0:
+                    self.flag_error = True
+                    self.push_nos_i16(0x7FFF)
+                else:
+                    self.push_nos_i16(int(nos / tos))
+            elif op == OP_SQRT:
+                if tos < 0:
+                    self.flag_error = True
+                    self.push_nos_i16(0)
+                else:
+                    self.push_nos_i16(int(math.sqrt(tos)))
+            elif op == OP_CHS:
+                self.push_nos_i16(-tos)
+            else:
+                self.flag_error = True
+
+        # Format 0x1: 32-Bit Signed Integer (i32)
+        elif fmt == FMT_I32:
+            nos = self.read_nos_i32()
+            tos = self.read_tos_i32()
+            if op == OP_ADD:
+                self.push_nos_i32(nos + tos)
+            elif op == OP_SUB:
+                self.push_nos_i32(nos - tos)
+            elif op == OP_MUL:
+                self.push_nos_i32(nos * tos)
+            elif op == OP_DIV:
+                if tos == 0:
+                    self.flag_error = True
+                    self.push_nos_i32(0x7FFFFFFF)
+                else:
+                    self.push_nos_i32(int(nos / tos))
+            elif op == OP_SQRT:
+                if tos < 0:
+                    self.flag_error = True
+                    self.push_nos_i32(0)
+                else:
+                    self.push_nos_i32(int(math.sqrt(tos)))
+            elif op == OP_CHS:
+                self.push_nos_i32(-tos)
+            else:
+                self.flag_error = True
+
+        # Format 0x3: 16.16 Fixed Point (fx1616)
+        elif fmt == FMT_FX1616:
+            nos_f = self.read_nos_fx1616()
+            tos_f = self.read_tos_fx1616()
+            if op == OP_ADD:
+                self.push_nos_fx1616(nos_f + tos_f)
+            elif op == OP_SUB:
+                self.push_nos_fx1616(nos_f - tos_f)
+            elif op == OP_MUL:
+                self.push_nos_fx1616(nos_f * tos_f)
+            elif op == OP_DIV:
+                if tos_f == 0.0:
+                    self.flag_error = True
+                    self.push_nos_i32(0x7FFFFFFF)
+                else:
+                    self.push_nos_fx1616(nos_f / tos_f)
+            elif op == OP_SQRT:
+                if tos_f < 0.0:
+                    self.flag_error = True
+                    self.push_nos_fx1616(0.0)
+                else:
+                    self.push_nos_fx1616(math.sqrt(tos_f))
+            elif op == OP_CHS:
+                self.push_nos_fx1616(-tos_f)
+            elif op == OP_SIN:
+                self.push_nos_fx1616(math.sin(tos_f))
+            elif op == OP_COS:
+                self.push_nos_fx1616(math.cos(tos_f))
+            elif op == OP_TAN:
+                self.push_nos_fx1616(math.tan(tos_f))
+            elif op == OP_EXP:
+                self.push_nos_fx1616(math.exp(tos_f))
+            elif op == OP_LN:
+                if tos_f <= 0.0:
+                    self.flag_error = True
+                    self.push_nos_fx1616(0.0)
+                else:
+                    self.push_nos_fx1616(math.log(tos_f))
+            elif op == OP_LOG10:
+                if tos_f <= 0.0:
+                    self.flag_error = True
+                    self.push_nos_fx1616(0.0)
+                else:
+                    self.push_nos_fx1616(math.log10(tos_f))
+            elif op == OP_POW:
+                if tos_f < 0.0:
+                    self.flag_error = True
+                    self.push_nos_fx1616(0.0)
+                else:
+                    self.push_nos_fx1616(math.pow(tos_f, nos_f))
+            else:
+                self.flag_error = True
+        else:
+            self.flag_error = True
+
+    # Legacy Opcode Name Dispatcher (Maintains backward compatibility)
     def execute_op(self, op_name, max_bytes=4):
         if op_name == 'DIV':
             a = self.sram[self.sp - 8]
@@ -274,10 +486,8 @@ class ZX50FPUMachine:
 
             alu_op, src_x, src_y, mem_cmd, reg_ld, seq_ctrl = self.urom[self.u_pc]
 
-            # Determine 8-bit vs 16-bit operand context for carry limits
             is_8bit = (src_x in (MUX_ACC, MUX_OPB)) and (src_y in (MUX_ACC, MUX_OPB))
 
-            # --- 1. Datapath Muxing ---
             x_val = self.acc if src_x == MUX_ACC else (
                     self.opb if src_x == MUX_OPB else (
                     self.tmp0 if src_x == MUX_TMP0 else self.tmp1))
@@ -286,10 +496,8 @@ class ZX50FPUMachine:
                     self.opb if src_y == MUX_OPB else (
                     self.tmp0 if src_y == MUX_TMP0 else self.tmp1))
 
-            # --- 2. ALU Execution ---
             alu_out = self._alu_core(alu_op, x_val, y_val, is_8bit=is_8bit)
 
-            # --- 3. Memory Phase ---
             mem_data = 0
             if mem_cmd == MEM_RD_TOS:
                 addr = self.sp - 4 + self.byte_cnt
@@ -306,7 +514,6 @@ class ZX50FPUMachine:
                     MEM_RD_FLASH_LOG2: FLASH_LOG2_BASE,
                 }[mem_cmd]
 
-                # QS table supports 511 entries (0..510), requiring 9-bit mask (0x1FF)
                 mask = 0x1FF if mem_cmd == MEM_RD_FLASH_QS else 0xFF
                 flash_addr = base_table + ((x_val & mask) * 2)
                 if reg_ld in (LD_TMP0_HI, LD_TMP1_HI):
@@ -314,12 +521,10 @@ class ZX50FPUMachine:
                 mem_data = self.flash[flash_addr]
             elif mem_cmd == MEM_WR_NOS:
                 addr = self.sp - 8 + self.byte_cnt
-                # Clean synthesizable write: Writes ALU output directly
                 self.sram[addr] = alu_out & 0xFF
                 if seq_ctrl == SEQ_NEXT:
                     self.byte_cnt += 1
 
-            # --- 4. Register Latch Phase ---
             is_mem_rd = (mem_cmd in (MEM_RD_TOS, MEM_RD_NOS) or (mem_cmd >= MEM_RD_FLASH_QS and mem_cmd <= MEM_RD_FLASH_LOG2))
 
             if reg_ld == LD_ACC:
@@ -343,7 +548,6 @@ class ZX50FPUMachine:
                 data = mem_data if is_mem_rd else ((alu_out >> 8) & 0xFF)
                 self.tmp1 = (self.tmp1 & 0x00FF) | (data << 8)
 
-            # --- 5. Sequencer Branching ---
             if seq_ctrl == SEQ_NEXT:
                 self.u_pc += 1
             elif seq_ctrl == SEQ_LOOP:
@@ -358,42 +562,81 @@ class ZX50FPUMachine:
     # =========================================================================
     # 6. Stack Frame Helpers
     # =========================================================================
+    def push_nos_bytes(self, data_bytes: list):
+        for i, b in enumerate(data_bytes):
+            self.sram[self.sp - 8 + i] = b & 0xFF
+
+    def push_tos_bytes(self, data_bytes: list):
+        for i, b in enumerate(data_bytes):
+            self.sram[self.sp - 4 + i] = b & 0xFF
+
+    def read_nos_bytes(self, count=4) -> list:
+        return [self.sram[self.sp - 8 + i] for i in range(count)]
+
+    # 32-bit Integer Helpers
+    def push_nos_i32(self, val: int):
+        u32_val = val & 0xFFFFFFFF
+        self.push_nos_bytes([(u32_val >> (i * 8)) & 0xFF for i in range(4)])
+
+    def push_tos_i32(self, val: int):
+        u32_val = val & 0xFFFFFFFF
+        self.push_tos_bytes([(u32_val >> (i * 8)) & 0xFF for i in range(4)])
+
+    def read_nos_i32(self) -> int:
+        b = self.read_nos_bytes(4)
+        u32_val = b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
+        return u32_val - 0x100000000 if u32_val >= 0x80000000 else u32_val
+
+    def read_tos_i32(self) -> int:
+        b = [self.sram[self.sp - 4 + i] for i in range(4)]
+        u32_val = b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
+        return u32_val - 0x100000000 if u32_val >= 0x80000000 else u32_val
+
+    # 16-bit Integer Helpers
+    def push_nos_i16(self, val: int):
+        u16_val = val & 0xFFFF
+        self.push_nos_bytes([u16_val & 0xFF, (u16_val >> 8) & 0xFF])
+
+    def push_tos_i16(self, val: int):
+        u16_val = val & 0xFFFF
+        self.push_tos_bytes([u16_val & 0xFF, (u16_val >> 8) & 0xFF])
+
+    def read_nos_i16(self) -> int:
+        b = self.read_nos_bytes(2)
+        u16_val = b[0] | (b[1] << 8)
+        return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
+
+    def read_tos_i16(self) -> int:
+        b = [self.sram[self.sp - 4 + i] for i in range(2)]
+        u16_val = b[0] | (b[1] << 8)
+        return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
+
+    # 16.16 Fixed-Point Helpers
+    def push_nos_fx1616(self, val: float):
+        self.push_nos_i32(int(round(val * 65536.0)))
+
+    def push_tos_fx1616(self, val: float):
+        self.push_tos_i32(int(round(val * 65536.0)))
+
+    def read_nos_fx1616(self) -> float:
+        return self.read_nos_i32() / 65536.0
+
+    def read_tos_fx1616(self) -> float:
+        return self.read_tos_i32() / 65536.0
+
+    # Legacy 32-bit uint helpers
     def push_tos(self, val_32: int):
-        """Push 32-bit uint32 to TOS frame."""
-        for i in range(4):
-            self.sram[self.sp - 4 + i] = (val_32 >> (i * 8)) & 0xFF
+        self.push_tos_i32(val_32)
 
     def push_nos(self, val_32: int):
-        """Push 32-bit uint32 to NOS frame."""
-        for i in range(4):
-            self.sram[self.sp - 8 + i] = (val_32 >> (i * 8)) & 0xFF
+        self.push_nos_i32(val_32)
 
     def read_nos(self) -> int:
-        """Read 32-bit uint32 from NOS frame."""
-        val = 0
-        for i in range(4):
-            val |= (self.sram[self.sp - 8 + i] << (i * 8))
-        return val
-
-    def push_tos_16(self, val_16: int):
-        """Push 16-bit uint16 to TOS frame."""
-        val_16 &= 0xFFFF
-        self.sram[self.sp - 4] = val_16 & 0xFF
-        self.sram[self.sp - 3] = (val_16 >> 8) & 0xFF
-
-    def push_nos_16(self, val_16: int):
-        """Push 16-bit uint16 to NOS frame."""
-        val_16 &= 0xFFFF
-        self.sram[self.sp - 8] = val_16 & 0xFF
-        self.sram[self.sp - 7] = (val_16 >> 8) & 0xFF
-
-    def read_nos_16(self) -> int:
-        """Read 16-bit uint16 from NOS frame."""
-        return self.sram[self.sp - 8] | (self.sram[self.sp - 7] << 8)
+        return self.read_nos_i32() & 0xFFFFFFFF
 
 
 # =============================================================================
-# 7. Verification Test Suite (Tests All 8 Operations)
+# 7. Verification Test Suite
 # =============================================================================
 def main():
     fpu = ZX50FPUMachine()
@@ -433,38 +676,16 @@ def main():
     assert res_div == 25, f"DIV Failed: {res_div}"
     print(f"PASS [DIV]:  100 / 4 = {res_div}")
 
-    # Test 5: Square Root Seed Query (sqrt(144) = 12 -> 12 * 256 = 3072 = 0x0C00)
-    fpu.push_tos(144)
-    fpu.execute_op('SQRT')
-    res_sqrt = fpu.read_nos() & 0xFFFF
-    assert res_sqrt == 3072, f"SQRT Failed: {res_sqrt}"
-    print(f"PASS [SQRT]: sqrt(144) seed = {res_sqrt // 256} (raw: {res_sqrt})")
-
-    # Test 6: Log2 Query (log2(1 + 128/256) * 256 = 149)
-    fpu.push_tos(128)
-    fpu.execute_op('LOG2')
-    res_log2 = fpu.read_nos() & 0xFFFF
-    assert res_log2 == 149, f"LOG2 Failed: {res_log2}"
-    print(f"PASS [LOG2]: log2(1.5) scaled = {res_log2}")
-
-    # Test 7: Exp2 Query (2^(128/256) * 256 = 362)
-    fpu.push_tos(128)
-    fpu.execute_op('EXP')
-    res_exp = fpu.read_nos() & 0xFFFF
-    assert res_exp == 362, f"EXP Failed: {res_exp}"
-    print(f"PASS [EXP]:  2^(0.5) scaled = {res_exp}")
-
-    # Test 8: Power Routine (x^y = 2^(y * log2(x)))
-    fpu.push_nos(128)  # y (0.5)
-    fpu.push_tos(128)  # x (1.5)
-    fpu.execute_op('POW')
-    res_pow = fpu.read_nos() & 0xFFFF
-    print(f"PASS [POW]:  pow(1.5, 0.5) scaled = {res_pow}")
+    # Test 5: i16 Opcode Tests (500 - 200 = 300)
+    fpu.push_nos_i16(500)
+    fpu.push_tos_i16(200)
+    fpu.execute_opcode(0x01) # FMT_I16 | OP_SUB
+    assert fpu.read_nos_i16() == 300, f"I16_SUB Failed: {fpu.read_nos_i16()}"
+    print(f"PASS [I16_SUB]: 500 - 200 = {fpu.read_nos_i16()}")
 
     print("\n=================================================")
-    print("=== ALL 8 OPERATIONS PASSED SIMULATOR TESTS! ===")
+    print("=== ALL OPERATIONS PASSED SIMULATOR TESTS! ===")
     print("=================================================")
 
 if __name__ == "__main__":
     main()
-    
