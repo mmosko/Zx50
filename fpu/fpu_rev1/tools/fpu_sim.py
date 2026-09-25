@@ -4,16 +4,12 @@ ZX50 FPU Coprocessor Microcode & Datapath Simulator
 Simulates the ATF1508AS CPLD micro-engine, private SRAM/Flash, and ALU.
 Executes operations exclusively via microcode step sequences and Flash ROM LUTs.
 
-RULES:
-- Do not import `math` or use `math`.
-- Do not use any Python build-in math operators, like // or * or ^. All operations must be
-  synthesized in the ATF1508 as part of the ALU or be in the flash.
-- All calculations must be done with the microcode and flash tables.
-- The goal is to model the ALU to such detail that we are assured the Verilog implementation will work.
-- Do not use any Python "magic" as shortcuts.
-- Do not use any IF or loops or branching that cannot be synthesized in the ATF1508.
-- The system MUST use microcode, not hard-coded execution paths. The ATF1508 CPLD is too small to hardwire
-  all the execution paths.
+CPLD HARDWARE RULES:
+- BANNED: Importing or using the Python `math` module.
+- BANNED: High-level Python arithmetic operators (*, /, //, %, **) in algorithm paths.
+- BANNED: Procedural hard-coded calculation shortcuts or python loops bypassing microcode.
+- REQUIRED: All arithmetic, scaling, table queries, and stack moves execute cycle-by-cycle
+  via `run_microcode()` and the 16-bit synthesizable ALU primitive.
 """
 
 from build_flash import (
@@ -34,65 +30,15 @@ from build_flash import (
 # 1. Micro-Instruction & Opcode Field Encodings
 # =============================================================================
 
-# =============================================================================
 # ALU Operations (3 bits) - Shared 16-Bit Combinational ALU Primitives
-# =============================================================================
-
-# ALU_PASS_X (0): Passive Data Bypass / Register Transfer
-# - Function: OUT = X
-# - Flags: Preserves 'carry_latch' unchanged. Updates ZERO and SIGN flags based on OUT.
-# - Use Case: Used for direct memory-to-register loads, pass-through reads, and moving
-#   values between ACC, OPB, TMP0, and TMP1 without corrupting carry chain state.
-ALU_PASS_X = 0
-
-# ALU_ADD (1): Binary Addition with Carry Propagation
-# - Function: OUT = X + Y + carry_latch
-# - Flags: Sets 'carry_latch' on 8-bit or 16-bit overflow (> 0xFF / > 0xFFFF).
-# - Use Case: Core primitive for multi-byte serial integer/fixed-point addition loops
-#   and calculating Quarter-Square table sum indices (a + b).
-ALU_ADD = 1
-
-# ALU_SUB (2): Binary Subtraction with Borrow Propagation
-# - Function: OUT = X - Y - carry_latch
-# - Flags: Sets 'carry_latch' on underflow / borrow (< 0).
-# - Use Case: Core primitive for multi-byte serial integer/fixed-point subtraction loops,
-#   Quarter-Square table product subtractions [f(a+b) - f(|a-b|)], and reciprocal division.
-ALU_SUB = 2
-
-# ALU_ABS_DIFF (3): Unsigned Absolute Difference
-# - Function: OUT = |X - Y|
-# - Flags: Resets 'carry_latch' to 0.
-# - Use Case: Computes the unsigned distance between two 8-bit operands |a - b| for
-#   Quarter-Square table lookups without requiring extra sign-extension or conditional branching logic.
-ALU_ABS_DIFF = 3
-
-# ALU_SHL (4): 1-Bit Logical Shift Left
-# - Function: OUT = (X << 1) | carry_latch
-# - Flags: Sets 'carry_latch' to the MSB shifted out of the operand.
-# - Use Case: Multi-precision bit alignment, fast power-of-two fixed-point scaling, and
-#   floating-point (F16/F32) mantissa normalization loops.
-ALU_SHL = 4
-
-# ALU_SHR (5): 1-Bit Logical Shift Right
-# - Function: OUT = X >> 1
-# - Flags: Sets 'carry_latch' to the LSB shifted out of the operand.
-# - Use Case: Microcoded serial shift loop for floating-point (F16/F32) exponent alignment
-#   (shifting smaller mantissa right until exponents match) without a hardware barrel shifter.
-ALU_SHR = 5
-
-# ALU_SWAP_BYTES (6): 16-Bit Endian / Byte Swap
-# - Function: OUT = {X[7:0], X[15:8]}
-# - Flags: Resets 'carry_latch' to 0.
-# - Use Case: Swaps high and low bytes of 16-bit scratch registers (TMP0/TMP1) when
-#   serializing 16-bit Flash lookup table results out to SRAM in Little-Endian byte order.
-ALU_SWAP_BYTES = 6
-
-# ALU_PASS_ZERO (7): Hardwired Zero Clear
-# - Function: OUT = 16'h0000
-# - Flags: Resets 'carry_latch' to 0. Sets ZERO flag = True.
-# - Use Case: Used for zero-padding upper bytes when writing 8-bit or 16-bit calculation
-#   results into 32-bit SRAM stack frames, or clearing scratch registers.
-ALU_PASS_ZERO = 7
+ALU_PASS_X     = 0  # Function: OUT = X. Preserves carry_latch.
+ALU_ADD        = 1  # Function: OUT = X + Y + carry_latch. Sets carry_latch on overflow.
+ALU_SUB        = 2  # Function: OUT = X - Y - carry_latch. Sets carry_latch on borrow.
+ALU_ABS_DIFF   = 3  # Function: OUT = |X - Y|. Resets carry_latch.
+ALU_SHL        = 4  # Function: OUT = (X << 1) | carry_latch. Sets carry_latch to MSB.
+ALU_SHR        = 5  # Function: OUT = X >> 1. Sets carry_latch to LSB.
+ALU_SWAP_BYTES = 6  # Function: OUT = {X[7:0], X[15:8]}. Swaps 16-bit word bytes.
+ALU_PASS_ZERO  = 7  # Function: OUT = 16'h0000. Clears output and carry_latch.
 
 # Datapath Source Muxes (2 bits)
 MUX_ACC  = 0  # Zero-extended 8-bit Accumulator
@@ -197,6 +143,11 @@ class ZX50FPUMachine:
     # =========================================================================
     def _init_flash_tables(self):
         populate_flash_memory(self.flash)
+
+    def _flash_read_16(self, base_addr, index):
+        index = min(255, max(0, index))
+        addr = base_addr + (index * 2)
+        return self.flash[addr] | (self.flash[addr + 1] << 8)
 
     # =========================================================================
     # 3. Microcode Sequence Store
@@ -372,10 +323,10 @@ class ZX50FPUMachine:
             0x79: (ALU_SWAP_BYTES, MUX_TMP0, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_DONE),
 
             # --- OP_CHS (0x7A - 0x7E) --- Two's Complement Negation Loop
-            0x7A: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_NOP, LD_ACC, SEQ_NEXT),          # ACC <= 0 (Runs once)
+            0x7A: (ALU_PASS_ZERO, MUX_ACC, MUX_OPB, MEM_NOP, LD_ACC, SEQ_NEXT),          # ACC <= 0
             0x7B: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_OPB, SEQ_NEXT),         # OPB <= SRAM[TOS + byte_cnt]
-            0x7C: (ALU_SUB, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),            # SRAM[NOS] <= 0 - OPB - carry
-            0x7D: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_NONE, SEQ_LOOP),           # Loop on BYTE_CNT (jumps back 2)
+            0x7C: (ALU_SUB, MUX_ACC, MUX_OPB, MEM_WR_NOS, LD_NONE, SEQ_NEXT),            # SRAM[NOS] <= ACC (0) - OPB - carry
+            0x7D: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_NONE, SEQ_LOOP),           # Loop on BYTE_CNT
             0x7E: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_NONE, SEQ_DONE),
         }
 
@@ -559,7 +510,9 @@ class ZX50FPUMachine:
                     break
             if tos_zero:
                 self.flag_error = True
-                for i in range(bytes_for_fmt):
+                # INT_MAX Saturation
+                self.sram[self.sp - (2 * bytes_for_fmt) + bytes_for_fmt - 1] = 0x7F
+                for i in range(bytes_for_fmt - 1):
                     self.sram[self.sp - (2 * bytes_for_fmt) + i] = 0xFF
                 return
 
@@ -643,15 +596,15 @@ class ZX50FPUMachine:
         self.push_tos_bytes([u16_val & 0xFF, (u16_val >> 8) & 0xFF])
 
     def read_nos_i16(self) -> int:
-        b = self.read_nos_bytes(2)
+        b = self.read_nos_bytes(2)  # sp - 4
         u16_val = b[0] | (b[1] << 8)
         return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
 
     def read_tos_i16(self) -> int:
-        b = [self.sram[self.sp - 2 + i] for i in range(2)]
+        b = [self.sram[self.sp - 2 + i] for i in range(2)]  # sp - 2
         u16_val = b[0] | (b[1] << 8)
         return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
-
+    
     # 64-bit Integer Helpers
     def push_nos_i64(self, val: int):
         u64_val = val & 0xFFFFFFFFFFFFFFFF

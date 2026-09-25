@@ -469,3 +469,4 @@ def test_management_opcodes():
     fpu.execute_opcode(MGMT_RESET)
     assert fpu.sp == 0x08
     assert not fpu.flag_error
+    
