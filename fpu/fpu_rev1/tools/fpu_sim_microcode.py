@@ -64,14 +64,14 @@ ENTRY_POINTS = {
 }
 
 UROM = {
-    # --- OP_ADD (0x00 - 0x04) --- Multi-byte serial addition loop
+    # --- OP_ADD (0x00 - 0x04) --- 4-byte serial addition loop
     0x00: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_ACC, SEQ_NEXT),
     0x01: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_NOS, LD_OPB, SEQ_NEXT),
     0x02: (ALU_ADD, MUX_OPB, MUX_ACC, MEM_WR_NOS, LD_NONE, SEQ_NEXT),
     0x03: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_NONE, SEQ_LOOP),
     0x04: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_NOP, LD_NONE, SEQ_DONE),
 
-    # --- OP_SUB (0x05 - 0x09) --- Multi-byte serial subtraction loop
+    # --- OP_SUB (0x05 - 0x09) --- 4-byte serial subtraction loop
     0x05: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_TOS, LD_ACC, SEQ_NEXT),
     0x06: (ALU_PASS_X, MUX_ACC, MUX_OPB, MEM_RD_NOS, LD_OPB, SEQ_NEXT),
     0x07: (ALU_SUB, MUX_OPB, MUX_ACC, MEM_WR_NOS, LD_NONE, SEQ_NEXT),

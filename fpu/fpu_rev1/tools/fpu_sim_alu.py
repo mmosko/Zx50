@@ -3,72 +3,22 @@
 tools/fpu_sim_alu.py
 ZX50 FPU Shared 16-Bit Combinational ALU & Field Encodings
 Defines datapath muxes, register load enables, memory commands, opcodes,
-and the hardware ALU primitive (`alu_core`).
+and the synthesizable hardware ALU primitive (`alu_core`).
 """
 
 # =============================================================================
 # 1. Micro-Instruction & Opcode Field Encodings
 # =============================================================================
 
-# =============================================================================
 # ALU Operations (3 bits) - Shared 16-Bit Combinational ALU Primitives
-# =============================================================================
-
-# ALU_PASS_X (0): Passive Data Bypass / Register Transfer
-# - Function: OUT = X
-# - Flags: Preserves 'carry_latch' unchanged. Updates ZERO and SIGN flags based on OUT.
-# - Use Case: Used for direct memory-to-register loads, pass-through reads, and moving
-#   values between ACC, OPB, TMP0, and TMP1 without corrupting carry chain state.
-ALU_PASS_X = 0
-
-# ALU_ADD (1): Binary Addition with Carry Propagation
-# - Function: OUT = X + Y + carry_latch
-# - Flags: Sets 'carry_latch' on 8-bit or 16-bit overflow (> 0xFF / > 0xFFFF).
-# - Use Case: Core primitive for multi-byte serial integer/fixed-point addition loops
-#   and calculating Quarter-Square table sum indices (a + b).
-ALU_ADD = 1
-
-# ALU_SUB (2): Binary Subtraction with Borrow Propagation
-# - Function: OUT = X - Y - carry_latch
-# - Flags: Sets 'carry_latch' on underflow / borrow (< 0).
-# - Use Case: Core primitive for multi-byte serial integer/fixed-point subtraction loops,
-#   Quarter-Square table product subtractions [f(a+b) - f(|a-b|)], and reciprocal division.
-ALU_SUB = 2
-
-# ALU_ABS_DIFF (3): Unsigned Absolute Difference
-# - Function: OUT = |X - Y|
-# - Flags: Resets 'carry_latch' to 0.
-# - Use Case: Computes the unsigned distance between two 8-bit operands |a - b| for
-#   Quarter-Square table lookups without requiring extra sign-extension or conditional branching logic.
-ALU_ABS_DIFF = 3
-
-# ALU_SHL (4): 1-Bit Logical Shift Left
-# - Function: OUT = (X << 1) | carry_latch
-# - Flags: Sets 'carry_latch' to the MSB shifted out of the operand.
-# - Use Case: Multi-precision bit alignment, fast power-of-two fixed-point scaling, and
-#   floating-point (F16/F32) mantissa normalization loops.
-ALU_SHL = 4
-
-# ALU_SHR (5): 1-Bit Logical Shift Right
-# - Function: OUT = X >> 1
-# - Flags: Sets 'carry_latch' to the LSB shifted out of the operand.
-# - Use Case: Microcoded serial shift loop for floating-point (F16/F32) exponent alignment
-#   (shifting smaller mantissa right until exponents match) without a hardware barrel shifter.
-ALU_SHR = 5
-
-# ALU_SWAP_BYTES (6): 16-Bit Endian / Byte Swap
-# - Function: OUT = {X[7:0], X[15:8]}
-# - Flags: Resets 'carry_latch' to 0.
-# - Use Case: Swaps high and low bytes of 16-bit scratch registers (TMP0/TMP1) when
-#   serializing 16-bit Flash lookup table results out to SRAM in Little-Endian byte order.
-ALU_SWAP_BYTES = 6
-
-# ALU_PASS_ZERO (7): Hardwired Zero Clear
-# - Function: OUT = 16'h0000
-# - Flags: Resets 'carry_latch' to 0. Sets ZERO flag = True.
-# - Use Case: Used for zero-padding upper bytes when writing 8-bit or 16-bit calculation
-#   results into 32-bit SRAM stack frames, or clearing scratch registers.
-ALU_PASS_ZERO = 7
+ALU_PASS_X     = 0  # Function: OUT = X. Preserves carry_latch.
+ALU_ADD        = 1  # Function: OUT = X + Y + carry_latch. Sets carry_latch on overflow.
+ALU_SUB        = 2  # Function: OUT = X - Y - carry_latch. Sets carry_latch on borrow.
+ALU_ABS_DIFF   = 3  # Function: OUT = |X - Y|. Resets carry_latch.
+ALU_SHL        = 4  # Function: OUT = (X << 1) | carry_latch. Sets carry_latch to MSB.
+ALU_SHR        = 5  # Function: OUT = X >> 1. Sets carry_latch to LSB.
+ALU_SWAP_BYTES = 6  # Function: OUT = {X[7:0], X[15:8]}. Swaps 16-bit word bytes.
+ALU_PASS_ZERO  = 7  # Function: OUT = 16'h0000. Clears output and carry_latch.
 
 # Datapath Source Muxes (2 bits)
 MUX_ACC  = 0  # Zero-extended 8-bit Accumulator
@@ -78,8 +28,8 @@ MUX_TMP1 = 3  # 16-bit Scratch Register 1
 
 # Memory Commands (4 bits)
 MEM_NOP          = 0
-MEM_RD_TOS       = 1  # Read SRAM[SP - max_bytes + BYTE_CNT]
-MEM_RD_NOS       = 2  # Read SRAM[SP - 2*max_bytes + BYTE_CNT]
+MEM_RD_TOS       = 1  # Read SRAM[SP - 4 + BYTE_CNT]
+MEM_RD_NOS       = 2  # Read SRAM[SP - 8 + BYTE_CNT]
 MEM_RD_FLASH_QS  = 3  # Read Flash Quarter-Square Table
 MEM_RD_FLASH_REC = 4  # Read Flash Reciprocal Table
 MEM_RD_FLASH_SQRT= 5  # Read Flash Square Root Seed Table
@@ -90,7 +40,7 @@ MEM_RD_FLASH_COS = 9  # Read Flash Cosine Table
 MEM_RD_FLASH_TAN = 10 # Read Flash Tangent Table
 MEM_RD_FLASH_LN  = 11 # Read Flash Natural Log Table
 MEM_RD_FLASH_LOG10=12 # Read Flash Base-10 Log Table
-MEM_WR_NOS       = 13 # Write ALU_OUT[7:0] -> SRAM[SP - 2*max_bytes + BYTE_CNT]
+MEM_WR_NOS       = 13 # Write ALU_OUT[7:0] -> SRAM[SP - 8 + BYTE_CNT]
 
 # Register Load Enables (4 bits)
 LD_NONE    = 0
@@ -109,16 +59,10 @@ SEQ_LOOP = 1  # Loop on BYTE_CNT
 SEQ_DONE = 2  # Execution complete, reset U_PC <= 0
 
 # Format Opcodes (opcode[7:4])
-FMT_I16     = 0x0
-FMT_I32     = 0x1
-FMT_I64     = 0x2
-FMT_FX1616  = 0x3
-FMT_CFLOAT  = 0x5
-FMT_F16     = 0x6
-FMT_F32     = 0x7
-FMT_I8      = 0x8
-FMT_SPECIAL = 0xE
-FMT_MGMT    = 0xF
+FMT_I32     = 0x1  # 32-Bit Signed Integer
+FMT_FX1616  = 0x3  # 16.16 Fixed Point
+
+FMT_MGMT    = 0xF  # Stack Management
 
 # Operation Opcodes (opcode[3:0])
 OP_ADD      = 0x0

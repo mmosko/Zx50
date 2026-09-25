@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 """
 ZX50 FPU Coprocessor Microcode & Datapath Simulator
-Main machine driver executing purely via microcode ROM and CPLD ALU primitives.
+Simulates the ATF1508AS CPLD micro-engine, private SRAM/Flash, and ALU.
+Executes operations exclusively via microcode step sequences and Flash ROM LUTs.
+
+CPLD HARDWARE RULES:
+- BANNED: Importing or using the Python `math` module.
+- BANNED: High-level Python arithmetic operators (*, /, //, %, **) in algorithm paths.
+- BANNED: Procedural hard-coded calculation shortcuts or python loops bypassing microcode.
+- REQUIRED: All arithmetic, scaling, table queries, and stack moves execute cycle-by-cycle
+  via `run_microcode()` and the 16-bit synthesizable ALU primitive.
 """
 
 from build_flash import (
@@ -49,14 +57,8 @@ from fpu_sim_alu import (
     SEQ_NEXT,
     SEQ_LOOP,
     SEQ_DONE,
-    FMT_I8,
-    FMT_I16,
     FMT_I32,
-    FMT_I64,
     FMT_FX1616,
-    FMT_CFLOAT,
-    FMT_F16,
-    FMT_F32,
     FMT_MGMT,
     OP_ADD,
     OP_SUB,
@@ -91,7 +93,7 @@ class ZX50FPUMachine:
         self.tmp0 = 0       # 16-bit Scratch Register 0
         self.tmp1 = 0       # 16-bit Scratch Register 1
         self.sp = 0x10      # 8-bit Stack Pointer Base
-        self.byte_cnt = 0   # 3-bit Byte Counter
+        self.byte_cnt = 0   # 2-bit Byte Counter (0..3)
         self.u_pc = 0       # 7-bit Micro-PC Sequencer
 
         # Status Flags
@@ -110,9 +112,10 @@ class ZX50FPUMachine:
         populate_flash_memory(self.flash)
 
     # =========================================================================
-    # Microcode Execution Engine
+    # Microcode Execution Engine (UNIFORM 4-BYTE STACK FRAME: max_bytes = 4)
     # =========================================================================
-    def run_microcode(self, entry_u_pc, max_bytes=4):
+    def run_microcode(self, entry_u_pc):
+        max_bytes = 4
         self.u_pc = entry_u_pc
         self.byte_cnt = 0
         self.carry_latch = 0
@@ -140,10 +143,10 @@ class ZX50FPUMachine:
 
             mem_data = 0
             if mem_cmd == MEM_RD_TOS:
-                addr = self.sp - max_bytes + self.byte_cnt
+                addr = self.sp - 4 + self.byte_cnt
                 mem_data = self.sram[addr]
             elif mem_cmd == MEM_RD_NOS:
-                addr = self.sp - (2 * max_bytes) + self.byte_cnt
+                addr = self.sp - 8 + self.byte_cnt
                 mem_data = self.sram[addr]
             elif MEM_RD_FLASH_QS <= mem_cmd <= MEM_RD_FLASH_LOG10:
                 base_table = {
@@ -165,7 +168,7 @@ class ZX50FPUMachine:
                     flash_addr += 1
                 mem_data = self.flash[flash_addr]
             elif mem_cmd == MEM_WR_NOS:
-                addr = self.sp - (2 * max_bytes) + self.byte_cnt
+                addr = self.sp - 8 + self.byte_cnt
                 self.sram[addr] = alu_out & 0xFF
                 if seq_ctrl == SEQ_NEXT:
                     self.byte_cnt += 1
@@ -227,43 +230,34 @@ class ZX50FPUMachine:
                 self.flag_error = True
             return
 
-        if fmt == FMT_CFLOAT:
-            self.run_microcode(self._map_op_to_entry(op, is_int=False), max_bytes=4)
-            self.sp += 4
-            self.run_microcode(self._map_op_to_entry(op, is_int=False), max_bytes=4)
-            self.sp -= 4
+        if fmt not in (FMT_I32, FMT_FX1616):
+            self.flag_error = True
             return
 
-        bytes_for_fmt = 1 if fmt == FMT_I8 else (2 if fmt in (FMT_I16, FMT_F16) else (8 if fmt == FMT_I64 else 4))
-        is_int_fmt = fmt in (FMT_I8, FMT_I16, FMT_I32, FMT_I64)
-
-        # Pre-execution hardware guards for Division and Logarithms
+        # Pre-execution hardware division-by-zero check on TOS (4-byte frame)
         if op == OP_DIV:
-            tos_zero = True
-            for i in range(bytes_for_fmt):
-                if self.sram[self.sp - bytes_for_fmt + i] != 0:
-                    tos_zero = False
-                    break
-            if tos_zero:
+            if all(self.sram[self.sp - 4 + i] == 0 for i in range(4)):
                 self.flag_error = True
-                # INT_MAX Saturation
-                self.sram[self.sp - (2 * bytes_for_fmt) + bytes_for_fmt - 1] = 0x7F
-                for i in range(bytes_for_fmt - 1):
-                    self.sram[self.sp - (2 * bytes_for_fmt) + i] = 0xFF
+                self.sram[self.sp - 8 + 3] = 0x7F
+                for i in range(3):
+                    self.sram[self.sp - 8 + i] = 0xFF
                 return
 
+        # Pre-execution domain guard for SQRT, LN, LOG10, POW
         elif op in (OP_SQRT, OP_LN, OP_LOG10, OP_POW):
-            msb_byte = self.sram[self.sp - bytes_for_fmt + bytes_for_fmt - 1]
-            tos_zero = all(self.sram[self.sp - bytes_for_fmt + i] == 0 for i in range(bytes_for_fmt))
+            msb_byte = self.sram[self.sp - 4 + 3]
+            tos_zero = all(self.sram[self.sp - 4 + i] == 0 for i in range(4))
             if (msb_byte & 0x80) or (op in (OP_LN, OP_LOG10) and tos_zero):
                 self.flag_error = True
-                for i in range(bytes_for_fmt):
-                    self.sram[self.sp - (2 * bytes_for_fmt) + i] = 0x00
+                for i in range(4):
+                    self.sram[self.sp - 8 + i] = 0x00
                 return
 
-        entry_point = self._map_op_to_entry(op, is_int=is_int_fmt)
+        # Dispatch via Microcode ROM Sequence Entry Points
+        entry_point = self._map_op_to_entry(op, is_int=(fmt == FMT_I32))
+
         if entry_point is not None:
-            self.run_microcode(entry_point, max_bytes=bytes_for_fmt)
+            self.run_microcode(entry_point)
         else:
             self.flag_error = True
 
@@ -288,22 +282,23 @@ class ZX50FPUMachine:
         return mapping.get(op, None)
 
     # =========================================================================
-    # Stack Helpers
+    # Stack Frame Helpers (Uniform 4-Byte Frames)
     # =========================================================================
     def push_nos_bytes(self, data_bytes: list):
-        count = len(data_bytes)
-        for i, b in enumerate(data_bytes):
-            self.sram[self.sp - (2 * count) + i] = b & 0xFF
+        for i in range(4):
+            self.sram[self.sp - 8 + i] = data_bytes[i] & 0xFF
 
     def push_tos_bytes(self, data_bytes: list):
-        count = len(data_bytes)
-        for i, b in enumerate(data_bytes):
-            self.sram[self.sp - count + i] = b & 0xFF
+        for i in range(4):
+            self.sram[self.sp - 4 + i] = data_bytes[i] & 0xFF
 
-    def read_nos_bytes(self, count=4) -> list:
-        return [self.sram[self.sp - (2 * count) + i] for i in range(count)]
+    def read_nos_bytes(self) -> list:
+        return [self.sram[self.sp - 8 + i] for i in range(4)]
 
-    # 32-bit Integer / Fixed Point Helpers
+    def read_tos_bytes(self) -> list:
+        return [self.sram[self.sp - 4 + i] for i in range(4)]
+
+    # 32-bit Integer Helpers
     def push_nos_i32(self, val: int):
         u32_val = val & 0xFFFFFFFF
         self.push_nos_bytes([(u32_val >> (i * 8)) & 0xFF for i in range(4)])
@@ -313,49 +308,14 @@ class ZX50FPUMachine:
         self.push_tos_bytes([(u32_val >> (i * 8)) & 0xFF for i in range(4)])
 
     def read_nos_i32(self) -> int:
-        b = self.read_nos_bytes(4)
+        b = self.read_nos_bytes()
         u32_val = b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
         return u32_val - 0x100000000 if u32_val >= 0x80000000 else u32_val
 
     def read_tos_i32(self) -> int:
-        b = [self.sram[self.sp - 4 + i] for i in range(4)]
+        b = self.read_tos_bytes()
         u32_val = b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
         return u32_val - 0x100000000 if u32_val >= 0x80000000 else u32_val
-
-    # 16-bit Integer Helpers
-    def push_nos_i16(self, val: int):
-        u16_val = val & 0xFFFF
-        self.push_nos_bytes([u16_val & 0xFF, (u16_val >> 8) & 0xFF])
-
-    def push_tos_i16(self, val: int):
-        u16_val = val & 0xFFFF
-        self.push_tos_bytes([u16_val & 0xFF, (u16_val >> 8) & 0xFF])
-
-    def read_nos_i16(self) -> int:
-        b = self.read_nos_bytes(2)
-        u16_val = b[0] | (b[1] << 8)
-        return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
-
-    def read_tos_i16(self) -> int:
-        b = [self.sram[self.sp - 2 + i] for i in range(2)]
-        u16_val = b[0] | (b[1] << 8)
-        return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
-
-    # 64-bit Integer Helpers
-    def push_nos_i64(self, val: int):
-        u64_val = val & 0xFFFFFFFFFFFFFFFF
-        self.push_nos_bytes([(u64_val >> (i * 8)) & 0xFF for i in range(8)])
-
-    def push_tos_i64(self, val: int):
-        u64_val = val & 0xFFFFFFFFFFFFFFFF
-        self.push_tos_bytes([(u64_val >> (i * 8)) & 0xFF for i in range(8)])
-
-    def read_nos_i64(self) -> int:
-        b = self.read_nos_bytes(8)
-        u64_val = 0
-        for i in range(8):
-            u64_val |= (b[i] << (i * 8))
-        return u64_val - 0x10000000000000000 if u64_val >= 0x8000000000000000 else u64_val
 
     # 16.16 Fixed-Point Helpers
     def push_nos_fx1616(self, val: float):
@@ -372,7 +332,7 @@ class ZX50FPUMachine:
 
 
 # =============================================================================
-# 8. Verification Test Suite
+# Verification Test Suite
 # =============================================================================
 def main():
     fpu = ZX50FPUMachine()
@@ -388,15 +348,16 @@ def main():
     assert res_add == 0x124578AB, f"I32_ADD Failed: {hex(res_add)}"
     print(f"PASS [I32_ADD]:     0x12345678 + 0x00112233 = 0x{res_add:08X}")
 
-    # Test 2: I16 Subtraction (500 - 200 = 300) -> Opcode 0x01
-    fpu.push_nos_i16(500)
-    fpu.push_tos_i16(200)
-    fpu.execute_opcode(0x01)  # FMT_I16 | OP_SUB
-    assert fpu.read_nos_i16() == 300, f"I16_SUB Failed: {fpu.read_nos_i16()}"
-    print(f"PASS [I16_SUB]:     500 - 200 = {fpu.read_nos_i16()}")
+    # Test 2: FX1616 Addition (1.5 + 2.5 = 4.0) -> Opcode 0x30
+    fpu.push_nos_fx1616(1.5)
+    fpu.push_tos_fx1616(2.5)
+    fpu.execute_opcode(0x30)  # FMT_FX1616 | OP_ADD
+    res_fx = fpu.read_nos_fx1616()
+    assert abs(res_fx - 4.0) < 1e-4, f"FX1616_ADD Failed: {res_fx}"
+    print(f"PASS [FX1616_ADD]:  1.5 + 2.5 = {res_fx}")
 
     print("=================================================")
-    print("===    ALL PURE CPLD MICROCODE TESTS PASSED   ===")
+    print("===  UNIFORM 32-BIT MICROCODE TESTS PASSED!   ===")
     print("=================================================")
 
 
