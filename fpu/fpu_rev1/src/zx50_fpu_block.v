@@ -73,7 +73,7 @@ module zx50_fpu_block #(
     // ==========================================
     // U12: IS61C256AL 32KB Active Private SRAM
     // ==========================================
-    is61c256al #(
+    is61c256al_12 #(
         .MEM_INIT_FILE(RAM_INIT_FILE)
     ) fpu_sram (
         .addr(ca),

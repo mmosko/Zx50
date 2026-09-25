@@ -132,16 +132,16 @@ module init_tb;
         $display("PASS [INIT]: int_n line cleanly released to High-Z.");
 
         // 4. Validate Private Memory Controls (All deselects must be HIGH/1)
-        if (card0.m_ce_n !== 1'b1 || card0.m_oe_n !== 1'b1 || card0.m_we_n !== 1'b1) begin
-            $display("FAIL [INIT]: Private SRAM controls active during idle! m_ce_n=%b, m_oe_n=%b, m_we_n=%b",
-                     card0.m_ce_n, card0.m_oe_n, card0.m_we_n);
+        if (card0.m_ce_n !== 1'b1 || card0.c_oe_n !== 1'b1 || card0.c_we_n !== 1'b1) begin
+            $display("FAIL [INIT]: Private SRAM controls active during idle! m_ce_n=%b, c_oe_n=%b, c_we_n=%b",
+                     card0.m_ce_n, card0.c_oe_n, card0.c_we_n);
             $fatal(1);
         end
         $display("PASS [INIT]: Private SRAM (U12) control signals deselected.");
 
-        if (card0.f_ce_n !== 1'b1 || card0.f_oe_n !== 1'b1 || card0.f_we_n !== 1'b1) begin
-            $display("FAIL [INIT]: Private Flash controls active during idle! f_ce_n=%b, f_oe_n=%b, f_we_n=%b",
-                     card0.f_ce_n, card0.f_oe_n, card0.f_we_n);
+        if (card0.f_ce_n !== 1'b1 || card0.c_oe_n !== 1'b1 || card0.c_we_n !== 1'b1) begin
+            $display("FAIL [INIT]: Private Flash controls active during idle! f_ce_n=%b, c_oe_n=%b, c_we_n=%b",
+                     card0.f_ce_n, card0.c_oe_n, card0.c_we_n);
             $fatal(1);
         end
         $display("PASS [INIT]: Private Flash (U13) control signals deselected.");
