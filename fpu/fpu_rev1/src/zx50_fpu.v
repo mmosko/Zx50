@@ -4,7 +4,7 @@
  * MODULE: zx50_fpu
  * FILE: src/zx50_fpu.v
  * DESCRIPTION:
- * Top-Level CPLD Logic for the Microchip ATF1508AS CPLD (U11) on Zx50 CPU Card (Rev C1).
+ * Top-Level CPLD Logic for Microchip ATF1508AS CPLD (U11) on Zx50 CPU Card (Rev C2).
  *
  * ARCHITECTURAL CLOCK DOMAINS:
  * 1. ZCLK Domain (Host Z80 Clock - 5MHz or 10MHz):
@@ -38,18 +38,14 @@ module zx50_fpu (
     inout  wire        int_n,       // Active-LOW CPU Interrupt Request (0 = Assert INT, Z = Release)
 
     // --- Private Coprocessor Memory Bus (Decoupled from Backplane) ---
-    output wire [13:0] ca,          // 14-bit Private Address Bus (16KB active addressing)
+    output wire [14:0] ca,          // 15-bit Private Address Bus (32KB active addressing)
     inout  wire [7:0]  cd,          // 8-bit Private Data Bus (SRAM/Flash data)
 
-    // Local SRAM (IS61C5128AS - U12) Control Strobes
+    // Local SRAM (IS61C256AL - U12) & Flash ROM (SST39SF040 - U13) Controls
     output wire        m_ce_n,      // Private SRAM Chip Enable (~CE)
-    output wire        m_oe_n,      // Private SRAM Output Enable (~OE)
-    output wire        m_we_n,      // Private SRAM Write Enable (~WE)
-    
-    // Local Flash ROM (SST39SF040 - U13) Control Strobes
-    output wire        f_ce_n,      // Private Flash Chip Enable (~CE)
-    output wire        f_oe_n,      // Private Flash Output Enable (~OE)
-    output wire        f_we_n       // Private Flash Write Enable (~WE)
+    output wire        c_oe_n,      // Common private ~OE (SRAM/Flash Output Enable)
+    output wire        c_we_n,      // Common private ~WE (SRAM/Flash Write Enable)
+    output wire        f_ce_n       // Private Flash Chip Enable (~CE)
 );
 
     // =========================================================================
@@ -78,7 +74,7 @@ module zx50_fpu (
     wire        eng_mem_we_req;
     wire        eng_mem_oe_req;
     wire        eng_sel_flash;
-    wire [13:0] eng_mem_addr;
+    wire [14:0] eng_mem_addr;
     wire [7:0]  eng_mem_wdata;
     wire [7:0]  mem_rdata;
 
@@ -105,6 +101,7 @@ module zx50_fpu (
     zx50_fpu_mem mem_ctrl (
         .mclk(mclk),
         .reset_n(reset_n),
+        .clk_spd(clk_spd),
         .host_we_req(host_sram_we_req),
         .host_oe_req(host_sram_oe_req),
         .host_addr(host_sram_addr),
@@ -118,11 +115,9 @@ module zx50_fpu (
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),
-        .m_oe_n(m_oe_n),
-        .m_we_n(m_we_n),
-        .f_ce_n(f_ce_n),
-        .f_oe_n(f_oe_n),
-        .f_we_n(f_we_n)
+        .c_oe_n(c_oe_n),
+        .c_we_n(c_we_n),
+        .f_ce_n(f_ce_n)
     );
 
     // --- Command Execution Dispatcher ---
@@ -145,7 +140,7 @@ module zx50_fpu (
 
     // Default engine memory routing (SRAM selected, upper address bits zeroed)
     assign eng_sel_flash = 1'b0;
-    assign eng_mem_addr[13:8] = 6'b000000;
+    assign eng_mem_addr[14:8] = 7'b0000000;
 
     // =========================================================================
     // 3. Host Z80 Bus Decoding Logic
@@ -179,14 +174,14 @@ module zx50_fpu (
             // Command Execution Completion Handshake (Level Acknowledge)
             // -----------------------------------------------------------------
             if (dispatch_done_sync && exec_req) begin
-                status_reg[7]   <= 1'b0;          // Clear BUSY flag
-                status_reg[1]   <= dispatch_err;  // Set/Clear ERR flag
-                status_reg[6:2] <= dispatch_flags; // Update math status flags
+                status_reg[7]   <= 1'b0;            // Clear BUSY flag
+                status_reg[1]   <= dispatch_err;    // Set/Clear ERR flag
+                status_reg[6:2] <= dispatch_flags;  // Update math status flags
                 if (dispatch_sp_write) begin
                     sp          <= dispatch_new_sp; // Commit updated SP from management engine
                 end
-                c_wait_req      <= 1'b0;          // Release wait_n line
-                exec_req        <= 1'b0;          // Clear request level
+                c_wait_req      <= 1'b0;            // Release wait_n line
+                exec_req        <= 1'b0;            // Clear request level
             end
 
             // -----------------------------------------------------------------
@@ -197,21 +192,11 @@ module zx50_fpu (
                     io_wr_busy <= 1'b1;
 
                     if (port_70_sel) begin
-                        // PORT 0x70 WRITE (DATA_PUSH):
-                        // 1. Capture payload z80_d immediately while ~WR is active.
-                        // 2. Latch current SP into host_sram_addr so write targets location N.
-                        // 3. Trigger 1-cycle SRAM write pulse request.
-                        // 4. Auto-increment Stack Pointer (sp <= sp + 1) to point to N+1.
                         host_sram_wdata  <= z80_d;
                         host_sram_addr   <= sp;
                         host_sram_we_req <= 1'b1;
                         sp               <= sp + 1'b1;
                     end else if (port_71_sel) begin
-                        // PORT 0x71 WRITE (CMD_EXEC):
-                        // 1. Latch command opcode from host data bus.
-                        // 2. Set BUSY flag (status_reg[7] <= 1) and clear ERR (status_reg[1] <= 0).
-                        // 3. Assert wait_n (c_wait_req <= 1) to stall Z80 during execution.
-                        // 4. Raise exec_req level signal for CDC dispatcher.
                         opcode_reg    <= z80_d;
                         status_reg[7] <= 1'b1; // BUSY = 1
                         status_reg[1] <= 1'b0; // ERR = 0
@@ -230,10 +215,6 @@ module zx50_fpu (
             // HOST I/O READ OPERATIONS (~RD Active Low)
             // -----------------------------------------------------------------
             if (is_io_read && port_70_sel) begin
-                // PORT 0x70 READ (DATA_POP):
-                // 1. Enable private SRAM output buffers (host_sram_oe_req <= 1).
-                // 2. Point host_sram_addr to TOS (sp - 1) ONLY ONCE at cycle start.
-                // 3. Decrement Stack Pointer ONCE at cycle start (sp <= sp - 1).
                 host_sram_oe_req <= 1'b1;
                 if (!io_rd_busy) begin
                     io_rd_busy     <= 1'b1;

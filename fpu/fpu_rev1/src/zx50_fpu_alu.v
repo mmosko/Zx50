@@ -33,7 +33,7 @@ module zx50_fpu_alu (
     output reg         alu_mem_we_req,  // SRAM write enable request
     output reg         alu_mem_oe_req,  // SRAM / Flash read enable request
     output reg         alu_sel_flash,   // 1 = Flash ROM (LUTs), 0 = SRAM
-    output reg  [13:0] alu_mem_addr,    // 14-bit target private address
+    output reg  [14:0] alu_mem_addr,    // 15-bit target private address (32KB window)
     output reg  [7:0]  alu_mem_wdata,   // Write payload to private memory
     input  wire [7:0]  mem_rdata        // Data read back from private memory bus
 );
@@ -81,7 +81,7 @@ module zx50_fpu_alu (
             alu_mem_we_req <= 1'b0;
             alu_mem_oe_req <= 1'b0;
             alu_sel_flash  <= 1'b0;
-            alu_mem_addr   <= 14'h0000;
+            alu_mem_addr   <= 15'h0000;
             alu_mem_wdata  <= 8'h00;
         end else begin
             done_p         <= 1'b0;
@@ -102,14 +102,14 @@ module zx50_fpu_alu (
                 ST_READ_A_REQ: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
                     state          <= ST_READ_A_WAIT;
                 end
 
                 ST_READ_A_WAIT: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
                     acc            <= mem_rdata; // Latch Operand A byte once settled
                     state          <= ST_READ_B_REQ;
                 end
@@ -118,14 +118,14 @@ module zx50_fpu_alu (
                 ST_READ_B_REQ: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     state          <= ST_READ_B_WAIT;
                 end
 
                 ST_READ_B_WAIT: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     operand_b      <= mem_rdata; // Latch Operand B byte once settled
                     state          <= ST_EXEC;
                 end
@@ -157,7 +157,7 @@ module zx50_fpu_alu (
                 ST_WRITE_PH1: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_we_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     alu_mem_wdata  <= acc;
                     state          <= ST_WRITE_PH2;
                 end
@@ -165,7 +165,7 @@ module zx50_fpu_alu (
                 ST_WRITE_PH2: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_we_req <= 1'b1;
-                    alu_mem_addr   <= {6'b000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
+                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     alu_mem_wdata  <= acc;
 
                     if (byte_cnt == 3'd3) begin

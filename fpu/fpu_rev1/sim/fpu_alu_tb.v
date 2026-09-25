@@ -4,14 +4,14 @@
  * MODULE: fpu_alu_tb
  * FILE: sim/fpu_alu_tb.v
  * DESCRIPTION:
- * Unit test for zx50_fpu_alu (8-Bit Byte-Serial Arithmetic Core).
+ * Unit test for zx50_fpu_alu (8-Bit Byte-Serial Arithmetic Core, CPLD Rev C2).
  *
  * TEST COVERAGE:
  * - 32-bit integer addition (OP_ADD = 0x0) with multi-byte carry propagation.
  * - 32-bit integer addition with carry across byte boundaries.
  * - 32-bit integer subtraction (OP_SUB = 0x1) with multi-byte borrow propagation.
  * - Status flag verification (ZERO, SIGN, CARRY).
- * - Multi-cycle private memory read/write interaction with zx50_fpu_mem and SRAM.
+ * - Private memory read/write interaction with zx50_fpu_mem and 12ns SRAM.
  ***************************************************************************************/
 
 module fpu_alu_tb;
@@ -44,15 +44,15 @@ module fpu_alu_tb;
     wire        alu_mem_we_req;
     wire        alu_mem_oe_req;
     wire        alu_sel_flash;
-    wire [13:0] alu_mem_addr;
+    wire [14:0] alu_mem_addr;
     wire [7:0]  alu_mem_wdata;
     wire [7:0]  mem_rdata;
 
-    // Physical Memory Pins (zx50_fpu_mem to IS61C5128AS)
-    wire [13:0] ca;
+    // Physical Memory Pins (zx50_fpu_mem to IS61C256AL)
+    wire [14:0] ca;
     wire [7:0]  cd;
-    wire        m_ce_n, m_oe_n, m_we_n;
-    wire        f_ce_n, f_oe_n, f_we_n;
+    wire        m_ce_n, f_ce_n;
+    wire        c_oe_n, c_we_n;
 
     // =========================================================================
     // 3. Submodule Instantiations
@@ -94,20 +94,18 @@ module fpu_alu_tb;
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),
-        .m_oe_n(m_oe_n),
-        .m_we_n(m_we_n),
-        .f_ce_n(f_ce_n),
-        .f_oe_n(f_oe_n),
-        .f_we_n(f_we_n)
+        .c_oe_n(c_oe_n),
+        .c_we_n(c_we_n),
+        .f_ce_n(f_ce_n)
     );
 
-    // IS61C5128AS Private SRAM Model (U12)
-    is61c5128as sram_u12 (
-        .addr({5'b00000, ca}),
+    // IS61C256AL Private 12ns SRAM Model (U12)
+    is61c256al_12 sram_u12 (
+        .addr(ca),
         .data(cd),
         .ce_n(m_ce_n),
-        .oe_n(m_oe_n),
-        .we_n(m_we_n)
+        .oe_n(c_oe_n),
+        .we_n(c_we_n)
     );
 
     // =========================================================================

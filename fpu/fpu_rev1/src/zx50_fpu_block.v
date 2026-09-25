@@ -31,14 +31,15 @@ module zx50_fpu_block #(
 );
 
     // ==========================================
-    // Private PCB Traces (CA[13:0] & CD[7:0])
+    // Private PCB Traces (CA[14:0] & CD[7:0])
     // ==========================================
-    wire [13:0] ca;        // Private Address Bus (16KB active)
+    wire [14:0] ca;        // Private Address Bus (32KB active)
     wire [7:0]  cd;        // Private Data Bus
     
     // Private Memory Controls
-    wire        m_ce_n, m_oe_n, m_we_n; // SRAM
-    wire        f_ce_n, f_oe_n, f_we_n; // Flash
+    wire        c_oe_n, c_we_n; // Common OE/WE
+    wire        m_ce_n;         // SRAM Chip Enable
+    wire        f_ce_n;         // Flash Chip Enable
 
     // ==========================================
     // U11: ATF1508AS CPLD Core Controller
@@ -64,37 +65,35 @@ module zx50_fpu_block #(
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),
-        .m_oe_n(m_oe_n),
-        .m_we_n(m_we_n),
-        .f_ce_n(f_ce_n),
-        .f_oe_n(f_oe_n),
-        .f_we_n(f_we_n)
+        .c_oe_n(c_oe_n),
+        .c_we_n(c_we_n),
+        .f_ce_n(f_ce_n)
     );
 
     // ==========================================
-    // U12: IS61C5128AS 16KB Active Private SRAM
+    // U12: IS61C256AL 32KB Active Private SRAM
     // ==========================================
-    is61c5128as #(
+    is61c256al #(
         .MEM_INIT_FILE(RAM_INIT_FILE)
     ) fpu_sram (
-        .addr({5'b00000, ca}),
+        .addr(ca),
         .data(cd),
         .ce_n(m_ce_n),
-        .oe_n(m_oe_n),
-        .we_n(m_we_n)
+        .oe_n(c_oe_n),
+        .we_n(c_we_n)
     );  
 
     // ==========================================
-    // U13: SST39SF040 16KB Active Private Flash
+    // U13: SST39SF040 32KB Active Private Flash ROM
     // ==========================================
     sst39sf040 #(
         .MEM_INIT_FILE(ROM_INIT_FILE)
     ) fpu_flash (
-        .addr({5'b00000, ca}),
+        .addr({4'b0000, ca}), // Upper address pins A15-A18 tied to GND
         .data(cd),
         .ce_n(f_ce_n),
-        .oe_n(f_oe_n),
-        .we_n(f_we_n)
+        .oe_n(c_oe_n),
+        .we_n(c_we_n)
     );
 
 endmodule
