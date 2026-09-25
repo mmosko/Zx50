@@ -1,7 +1,7 @@
 # tools/fpu_sim_test.py
 """
 Pytest Unit Test Suite for ZX50 FPU Microcode Simulator
-Tests 32-bit unsigned/signed integers, 16.16 fixed-point math, Quarter-Square multiplication,
+Tests 16-bit and 32-bit unsigned/signed integers, 16.16 fixed-point math, Quarter-Square multiplication,
 reciprocal division, square root seeds, and transcendental log/exp/pow functions
 across all critical boundary and edge conditions.
 """
@@ -27,6 +27,17 @@ def from_i32(u32_val: int) -> int:
     """Convert 32-bit unsigned int from SRAM back to Python signed int."""
     u32_val &= 0xFFFFFFFF
     return u32_val - 0x100000000 if u32_val >= 0x80000000 else u32_val
+
+
+def to_i16(val: int) -> int:
+    """Convert Python int to 16-bit two's complement uint16 representation."""
+    return val & 0xFFFF
+
+
+def from_i16(u16_val: int) -> int:
+    """Convert 16-bit unsigned int from SRAM back to Python signed int."""
+    u16_val &= 0xFFFF
+    return u16_val - 0x10000 if u16_val >= 0x8000 else u16_val
 
 
 def to_fx1616(val: float) -> int:
@@ -103,7 +114,39 @@ def test_signed_add_32(nos, tos, expected):
 
 
 # =============================================================================
-# 3. 16.16 Fixed-Point Addition Tests (`fx1616`)
+# 3. Signed 16-bit Addition Tests (`i16`)
+# =============================================================================
+@pytest.mark.parametrize(
+    "nos, tos, expected",
+    [
+        # Identity & Zero
+        (0, 0, 0),
+        (100, 0, 100),
+        (0, -100, -100),
+        # Basic Positive / Negative Mixed
+        (500, -200, 300),
+        (-500, 200, -300),
+        (-1000, 1000, 0),  # Zero crossing
+        # Boundary Values (INT16_MAX = 32767, INT16_MIN = -32768)
+        (32767, 0, 32767),
+        (-32768, 0, -32768),
+        (32767, -32768, -1),
+        # Two's Complement Overflow Boundary Wrap-around
+        (32767, 1, -32768),  # Positive Overflow -> MIN
+        (-32768, -1, 32767),  # Negative Overflow -> MAX
+    ],
+)
+def test_signed_add_16(nos, tos, expected):
+    fpu = ZX50FPUMachine()
+    fpu.push_nos_16(to_i16(nos))
+    fpu.push_tos_16(to_i16(tos))
+    fpu.execute_op("ADD", max_bytes=2)
+    result = from_i16(fpu.read_nos_16())
+    assert result == expected
+
+
+# =============================================================================
+# 4. 16.16 Fixed-Point Addition Tests (`fx1616`)
 # =============================================================================
 @pytest.mark.parametrize(
     "nos, tos, expected",
@@ -132,7 +175,7 @@ def test_fixed1616_add(nos, tos, expected):
 
 
 # =============================================================================
-# 4. Unsigned 32-bit Subtraction Tests (`u32`)
+# 5. Unsigned 32-bit Subtraction Tests (`u32`)
 # =============================================================================
 @pytest.mark.parametrize(
     "nos, tos, expected",
@@ -162,7 +205,7 @@ def test_unsigned_sub_32(nos, tos, expected):
 
 
 # =============================================================================
-# 5. Signed 32-bit Subtraction Tests (`i32`)
+# 6. Signed 32-bit Subtraction Tests (`i32`)
 # =============================================================================
 @pytest.mark.parametrize(
     "nos, tos, expected",
@@ -195,7 +238,40 @@ def test_signed_sub_32(nos, tos, expected):
 
 
 # =============================================================================
-# 6. 16.16 Fixed-Point Subtraction Tests (`fx1616`)
+# 7. Signed 16-bit Subtraction Tests (`i16`)
+# =============================================================================
+@pytest.mark.parametrize(
+    "nos, tos, expected",
+    [
+        # Identity
+        (0, 0, 0),
+        (100, 0, 100),
+        (0, 100, -100),
+        # Mixed Positive & Negative
+        (500, 200, 300),
+        (-500, -200, -300),
+        (500, -200, 700),
+        (-500, 200, -700),
+        # Boundary Values
+        (32767, 32767, 0),
+        (-32768, -32768, 0),
+        (32767, 0, 32767),
+        # Two's Complement Overflow / Underflow
+        (-32768, 1, 32767),  # MIN - 1 -> Positive MAX
+        (32767, -1, -32768),  # MAX - (-1) -> Negative MIN
+    ],
+)
+def test_signed_sub_16(nos, tos, expected):
+    fpu = ZX50FPUMachine()
+    fpu.push_nos_16(to_i16(nos))
+    fpu.push_tos_16(to_i16(tos))
+    fpu.execute_op("SUB", max_bytes=2)
+    result = from_i16(fpu.read_nos_16())
+    assert result == expected
+
+
+# =============================================================================
+# 8. 16.16 Fixed-Point Subtraction Tests (`fx1616`)
 # =============================================================================
 @pytest.mark.parametrize(
     "nos, tos, expected",
@@ -222,7 +298,7 @@ def test_fixed1616_sub(nos, tos, expected):
 
 
 # =============================================================================
-# 7. Quarter-Square Hardware Multiplication Tests (`OP_MUL` - 8-bit Operands)
+# 9. Quarter-Square Hardware Multiplication Tests (`OP_MUL` - 8-bit Operands)
 # =============================================================================
 @pytest.mark.parametrize(
     "a, b, expected",
@@ -256,7 +332,7 @@ def test_quarter_square_mul(a, b, expected):
 
 
 # =============================================================================
-# 8. Reciprocal Table Hardware Division Tests (`OP_DIV`)
+# 10. Reciprocal Table Hardware Division Tests (`OP_DIV`)
 # =============================================================================
 @pytest.mark.parametrize(
     "nos, tos, expected",
@@ -287,7 +363,7 @@ def test_reciprocal_div(nos, tos, expected):
 
 
 # =============================================================================
-# 9. Square Root Seed Lookup Tests (`OP_SQRT`)
+# 11. Square Root Seed Lookup Tests (`OP_SQRT`)
 # =============================================================================
 @pytest.mark.parametrize(
     "x, expected_raw",
@@ -316,7 +392,7 @@ def test_sqrt_seed(x, expected_raw):
 
 
 # =============================================================================
-# 10. Base-2 Logarithm Table Lookup Tests (`OP_LOG2`)
+# 12. Base-2 Logarithm Table Lookup Tests (`OP_LOG2`)
 # =============================================================================
 @pytest.mark.parametrize(
     "x, expected_scaled",
@@ -338,7 +414,7 @@ def test_log2_table(x, expected_scaled):
 
 
 # =============================================================================
-# 11. Base-2 Exponentiation Table Lookup Tests (`OP_EXP`)
+# 13. Base-2 Exponentiation Table Lookup Tests (`OP_EXP`)
 # =============================================================================
 @pytest.mark.parametrize(
     "x, expected_scaled",
@@ -360,7 +436,7 @@ def test_exp2_table(x, expected_scaled):
 
 
 # =============================================================================
-# 12. Combined Power Function Tests (`OP_POW`: x^y = 2^(y * log2(x)))
+# 14. Combined Power Function Tests (`OP_POW`: x^y = 2^(y * log2(x)))
 # =============================================================================
 @pytest.mark.parametrize(
     "nos_y, tos_x, expected_scaled",

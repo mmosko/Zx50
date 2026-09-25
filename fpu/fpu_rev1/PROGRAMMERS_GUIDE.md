@@ -9,7 +9,7 @@
 * **`SPORT` (`0x70`):** Stack / Data Port (Read/Write)
 * **`CPORT` (`0x71`):** Command / Status Port (Read/Write)
 
-**Document Revision:** 2.4
+**Document Revision:** 2.6
 
 ---
 
@@ -30,16 +30,22 @@ lowest memory address).
 
 ### Format Field Decoding (`opcode[7:4]`)
 
-| Format ID | Constant Name | Description           | Frame Size | Numerical Range / Precision                       |
-|:----------|:--------------|:----------------------|:-----------|:--------------------------------------------------|
-| **`0x0`** | `FMT_I16`     | 16-Bit Signed Integer | 2 Bytes    | $-32,768$ to $+32,767$                            |
-| **`0x1`** | `FMT_I32`     | 32-Bit Signed Integer | 4 Bytes    | $-2,147,483,648$ to $+2,147,483,647$              |
-| **`0x2`** | `FMT_I64`     | 64-Bit Signed Integer | 8 Bytes    | $-9.22 \times 10^{18}$ to $+9.22 \times 10^{18}$  |
-| **`0x3`** | `FMT_FX1616`  | 16.16 Fixed-Point     | 4 Bytes    | $-32,768.0000$ to $+32,767.9999$ (Res: $1/65536$) |
-| **`0x4`** | `FMT_DFLOAT`  | 64-Bit Double Float   | 8 Bytes    | IEEE-754 Double Precision                         |
-| **`0x5`** | `FMT_CFLOAT`  | 32-Bit Complex Float  | 8 Bytes    | Real & Imaginary Pairs ($a + bi$)                 |
-| **`0xE`** | `FMT_SPECIAL` | Custom Table Access   | Variable   | System Extensions & Direct Flash LUT              |
-| **`0xF`** | `FMT_MGMT`    | Management Control    | N/A        | Stack Pointer & Hardware Reset                    |
+| Format ID | Constant Name | Description           | Frame Size | Hardware Status        | Numerical Range / Precision                                                                    |
+|-----------|---------------|-----------------------|------------|------------------------|------------------------------------------------------------------------------------------------|
+| **`0x0`** | `FMT_I16`     | 16-Bit Signed Integer | 2 Bytes    | Fully Supported        | $-32,768$ to $+32,767$                                                                         |
+| **`0x1`** | `FMT_I32`     | 32-Bit Signed Integer | 4 Bytes    | Fully Supported        | $-2,147,483,648$ to $+2,147,483,647$                                                           |
+| **`0x2`** | `FMT_I64`     | 64-Bit Signed Integer | 8 Bytes    | Supported (Pass-Thru)  | $-9.22 \times 10^{18}$ to $+9.22 \times 10^{18}$                                               |
+| **`0x3`** | `FMT_FX1616`  | 16.16 Fixed-Point     | 4 Bytes    | Primary Real Format    | $-32,768.00000$ to $+32,767.99998$ (Res: $1/65536 \approx 0.000015258$)                        |
+| **`0x4`** | `FMT_DFLOAT`  | 64-Bit Double Float   | 8 Bytes    | **UNSUPPORTED**        | *Not available in CPLD hardware (Exceeds Macrocells)*                                          |
+| **`0x5`** | `FMT_CFLOAT`  | 32-Bit Complex Float  | 8 Bytes    | Microcode Chained      | Real & Imaginary: $-32,768.00000$ to $+32,767.99998$ ($a + bi$)                                |
+| **`0x6`** | `FMT_F16`     | 16-Bit Custom Float   | 2 Bytes    | Supported (Shift-Loop) | $\approx \pm 1.17 \times 10^{-38}$ to $\pm 3.40 \times 10^{38}$ (8-bit Mantissa: ~2.4 digits)  |
+| **`0x7`** | `FMT_F32`     | 32-Bit Custom Float   | 4 Bytes    | Supported (Shift-Loop) | $\approx \pm 1.17 \times 10^{-38}$ to $\pm 3.40 \times 10^{38}$ (24-bit Mantissa: ~7.2 digits) |
+| **`0xE`** | `FMT_SPECIAL` | Custom Table Access   | Variable   | System Extension       | System Extensions & Direct Flash LUT                                                           |
+| **`0xF`** | `FMT_MGMT`    | Management Control    | N/A        | Fully Supported        | Stack Pointer & Hardware Reset Commands                                                        |
+
+> **Hardware Constraint Note:** IEEE-754 64-bit Double Precision (`FMT_DFLOAT` / `F64`) is **not supported** due to the
+> 128-macrocell limit of the ATF1508AS CPLD. Single-cycle 53-bit mantissa barrel shifters exceed available CPLD product
+> terms. Real-number calculations should use `FX1616` or `F32`.
 
 ---
 
@@ -74,7 +80,7 @@ graph TD
 
 ### 3.2 High-Speed Block Transfers (`OTIR` & `INIR`)
 
-While single byte instructions (`OUT (SPORT), A` / `IN A, (SPORT)`) work well for simple routines, Z80 block I/O
+While single-byte instructions (`OUT (SPORT), A` / `IN A, (SPORT)`) work well for simple routines, Z80 block I/O
 instructions (`OTIR` and `INIR`) provide the fastest method for streaming multi-byte operands and results across the
 bus.
 
@@ -115,28 +121,117 @@ SP              Active Stack Pointer Base
 
 ---
 
-## 4. Complete Opcode Matrix (`Format [7:4] | Operation [3:0]`)
+## 4. Function Reference: Input & Output Data Types
 
-An 8-bit command is constructed by combining a Format field with an Operation field (e.g., `0x30` = 16.16 Fixed Point
-Addition):
+This section details the required input operand formats and output result formats for each FPU operation.
 
-### Operation Field Definitions (`opcode[3:0]`)
+---
 
-| Op ID     | Name         | Mnemonic       | Description                                                              |
-|:----------|:-------------|:---------------|:-------------------------------------------------------------------------|
-| **`0x0`** | `OP_ADD`     | Addition       | $\text{NOS} \leftarrow \text{NOS} + \text{TOS}$                          |
-| **`0x1`** | `OP_SUB`     | Subtraction    | $\text{NOS} \leftarrow \text{NOS} - \text{TOS}$                          |
-| **`0x2`** | `OP_MUL`     | Multiplication | $\text{NOS} \leftarrow \text{NOS} \times \text{TOS}$                     |
-| **`0x3`** | `OP_DIV`     | Division       | $\text{NOS} \leftarrow \text{NOS} / \text{TOS}$                          |
-| **`0x4`** | `OP_SQRT`    | Square Root    | $\text{NOS} \leftarrow \sqrt{\text{TOS}}$                                |
-| **`0x5`** | `OP_CHS`     | Change Sign    | $\text{NOS} \leftarrow -\text{TOS}$                                      |
-| **`0x6`** | `OP_SIN`     | Sine           | $\text{NOS} \leftarrow \sin(\text{TOS})$ via Flash LUT                   |
-| **`0x7`** | `OP_COS`     | Cosine         | $\text{NOS} \leftarrow \cos(\text{TOS})$ via Flash LUT                   |
-| **`0x8`** | `OP_EXP`     | Exponential    | $\text{NOS} \leftarrow e^{\text{TOS}}$ or $2^{\text{TOS}}$ via Flash LUT |
-| **`0x9`** | `OP_LN`      | Natural Log    | $\text{NOS} \leftarrow \ln(\text{TOS})$ via Flash LUT                    |
-| **`0xA`** | `OP_LOG10`   | Base-10 Log    | $\text{NOS} \leftarrow \log_{10}(\text{TOS})$ via Flash LUT              |
-| **`0xB`** | `OP_LOG_MUL` | Log Multiply   | Fast log-domain multiplication                                           |
-| **`0xC`** | `OP_LOG_DIV` | Log Divide     | Fast log-domain division                                                 |
+### 4.1 Addition (`OP_ADD = 0x0`)
+
+Calculates $\text{NOS} \leftarrow \text{NOS} + \text{TOS}$.
+
+| Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes                        |
+|:-----------|:-------------|:--------------------|:--------------------|:--------------------|:-------------------------------------|
+| **`0x00`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
+| **`0x10`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
+| **`0x20`** | `FMT_I64`    | `I64` (8 bytes)     | `I64` (8 bytes)     | `I64` (8 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
+| **`0x30`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `CARRY` on fixed-point overflow |
+| **`0x60`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Serial exponent alignment            |
+| **`0x70`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Serial exponent alignment            |
+
+---
+
+### 4.2 Subtraction (`OP_SUB = 0x1`)
+
+Calculates $\text{NOS} \leftarrow \text{NOS} - \text{TOS}$.
+
+| Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes             |
+|:-----------|:-------------|:--------------------|:--------------------|:--------------------|:--------------------------|
+| **`0x01`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `CARRY` on borrow    |
+| **`0x11`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `CARRY` on borrow    |
+| **`0x21`** | `FMT_I64`    | `I64` (8 bytes)     | `I64` (8 bytes)     | `I64` (8 bytes)     | Sets `CARRY` on borrow    |
+| **`0x31`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `CARRY` on borrow    |
+| **`0x61`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Serial exponent alignment |
+| **`0x71`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Serial exponent alignment |
+
+---
+
+### 4.3 Multiplication (`OP_MUL = 0x2`)
+
+Calculates $\text{NOS} \leftarrow \text{NOS} \times \text{TOS}$ using Quarter-Square Flash LUTs.
+
+| Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes                     |
+|:-----------|:-------------|:--------------------|:--------------------|:--------------------|:----------------------------------|
+| **`0x02`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Truncated 16-bit product          |
+| **`0x12`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Multi-pass Quarter-Square         |
+| **`0x32`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Exact $16.16$ fixed-point product |
+| **`0x62`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Exponent add + Mantissa MUL       |
+| **`0x72`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Exponent add + Mantissa MUL       |
+
+---
+
+### 4.4 Division (`OP_DIV = 0x3`)
+
+Calculates $\text{NOS} \leftarrow \text{NOS} / \text{TOS}$ using Reciprocal Flash LUTs.
+
+| Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes               |
+|:-----------|:-------------|:--------------------|:--------------------|:--------------------|:----------------------------|
+| **`0x03`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `ERROR` if TOS = 0     |
+| **`0x13`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `ERROR` if TOS = 0     |
+| **`0x33`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS = 0.0   |
+| **`0x63`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Exponent sub + Mantissa DIV |
+| **`0x73`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Exponent sub + Mantissa DIV |
+
+---
+
+### 4.5 Square Root (`OP_SQRT = 0x4`)
+
+Calculates $\text{NOS} \leftarrow \sqrt{\text{TOS}}$.
+
+| Opcode     | Format       | Input Operand (TOS) | Output Result (NOS) | Flags / Notes             |
+|:-----------|:-------------|:--------------------|:--------------------|:--------------------------|
+| **`0x04`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `ERROR` if TOS < 0   |
+| **`0x14`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `ERROR` if TOS < 0   |
+| **`0x34`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS < 0.0 |
+| **`0x74`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | Sets `ERROR` if TOS < 0.0 |
+
+---
+
+### 4.6 Trigonometric Functions (`OP_SIN = 0x6`, `OP_COS = 0x7`, `OP_TAN = 0x8`)
+
+Evaluates trigonometric operations using Flash ROM lookup tables.
+
+| Opcode     | Format               | Input Operand (TOS)         | Output Result (NOS) | Flags / Notes                   |
+|:-----------|:---------------------|:----------------------------|:--------------------|:--------------------------------|
+| **`0x36`** | `FMT_FX1616` (`SIN`) | `FX1616` (4 bytes, Radians) | `FX1616` (4 bytes)  | Range: $-1.0$ to $+1.0$         |
+| **`0x37`** | `FMT_FX1616` (`COS`) | `FX1616` (4 bytes, Radians) | `FX1616` (4 bytes)  | Range: $-1.0$ to $+1.0$         |
+| **`0x38`** | `FMT_FX1616` (`TAN`) | `FX1616` (4 bytes, Radians) | `FX1616` (4 bytes)  | Sets `ERROR` at poles ($\pi/2$) |
+| **`0x76`** | `FMT_F32` (`SIN`)    | `F32` (4 bytes, Radians)    | `F32` (4 bytes)     | Range: $-1.0$ to $+1.0$         |
+| **`0x77`** | `FMT_F32` (`COS`)    | `F32` (4 bytes, Radians)    | `F32` (4 bytes)     | Range: $-1.0$ to $+1.0$         |
+
+---
+
+### 4.7 Exponentiation & Logarithms (`OP_EXP = 0x8`, `OP_LN = 0x9`, `OP_LOG10 = 0xA`)
+
+| Opcode     | Format                 | Input Operand (TOS) | Output Result (NOS) | Flags / Notes               |
+|:-----------|:-----------------------|:--------------------|:--------------------|:----------------------------|
+| **`0x38`** | `FMT_FX1616` (`EXP`)   | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Evaluates $e^{\text{TOS}}$  |
+| **`0x39`** | `FMT_FX1616` (`LN`)    | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS $\le 0$ |
+| **`0x3A`** | `FMT_FX1616` (`LOG10`) | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS $\le 0$ |
+| **`0x78`** | `FMT_F32` (`EXP`)      | `F32` (4 bytes)     | `F32` (4 bytes)     | Evaluates $e^{\text{TOS}}$  |
+| **`0x79`** | `FMT_F32` (`LN`)       | `F32` (4 bytes)     | `F32` (4 bytes)     | Sets `ERROR` if TOS $\le 0$ |
+
+---
+
+### 4.8 Power Routine (`OP_POW = 0x7`)
+
+Calculates $\text{NOS} \leftarrow \text{TOS}^{\text{NOS}} = 2^{\text{NOS} \cdot \log_2 (\text{TOS})}$.
+
+| Opcode     | Format       | Input Operand (NOS)     | Input Operand (TOS) | Output Result (NOS) | Flags / Notes           |
+|:-----------|:-------------|:------------------------|:--------------------|:--------------------|:------------------------|
+| **`0x37`** | `FMT_FX1616` | Exponent $y$ (`FX1616`) | Base $x$ (`FX1616`) | `FX1616` (4 bytes)  | Sets `ERROR` if $x < 0$ |
+| **`0x77`** | `FMT_F32`    | Exponent $y$ (`F32`)    | Base $x$ (`F32`)    | `F32` (4 bytes)     | Sets `ERROR` if $x < 0$ |
 
 ---
 
@@ -478,12 +573,12 @@ VAL_FOUR_THIRDS:  DB 0x55, 0x55, 0x01, 0x00  ; 1.33333
 
 ## 7. Accuracy & Resolution Summary
 
-| Function          | Opcode Pattern           | Format          | Resolution / Error             |
-|:------------------|:-------------------------|:----------------|:-------------------------------|
-| **`ADD` / `SUB`** | `0x10` / `0x30` / `0x31` | `I32`, `FX1616` | $0.00\%$ Exact                 |
-| **`MUL`**         | `0x12` / `0x32`          | `I32`, `FX1616` | $0.00\%$ Exact Quarter-Square  |
-| **`DIV`**         | `0x13` / `0x33`          | `I32`, `FX1616` | $0.00\%$ 2-Pass Reciprocal     |
-| **`SQRT`**        | `0x34`                   | `FX1616`        | $\le 0.024\%$ Table Seed       |
-| **`SIN` / `COS`** | `0x36` / `0x37`          | `FX1616`        | $\le 0.15\%$ Interpolated LUT  |
-| **`EXP` / `LN`**  | `0x38` / `0x39`          | `FX1616`        | $\le 0.39\%$ 1 LSB Fixed-Point |
-| **`LOG_MUL`**     | `0x3B`                   | `FX1616`        | $\le 0.48\%$ Fast Log-Domain   |
+| Function                   | Opcode Pattern                    | Supported Formats                           | Relative Error / Accuracy      |
+|:---------------------------|:----------------------------------|:--------------------------------------------|:-------------------------------|
+| **`ADD` / `SUB`**          | `0x00` / `0x10` / `0x30` / `0x70` | `I16`, `I32`, `I64`, `FX1616`, `F16`, `F32` | $0.00\%$ Exact                 |
+| **`MUL`**                  | `0x02` / `0x12` / `0x32` / `0x72` | `I16`, `I32`, `FX1616`, `F16`, `F32`        | $0.00\%$ Exact Quarter-Square  |
+| **`DIV`**                  | `0x03` / `0x13` / `0x33` / `0x73` | `I16`, `I32`, `FX1616`, `F16`, `F32`        | $0.00\%$ 2-Pass Reciprocal     |
+| **`SQRT`**                 | `0x04` / `0x14` / `0x34` / `0x74` | `I16`, `I32`, `FX1616`, `F32`               | $\le 0.024\%$ Table Seed       |
+| **`SIN` / `COS` / `TAN`**  | `0x36` / `0x37` / `0x38` / `0x76` | `FX1616`, `F32`                             | $\le 0.15\%$ Interpolated LUT  |
+| **`EXP` / `LN` / `LOG10`** | `0x38` / `0x39` / `0x3A` / `0x78` | `FX1616`, `F32`                             | $\le 0.39\%$ 1 LSB Fixed-Point |
+| **`POW`**                  | `0x37` / `0x77`                   | `FX1616`, `F32`                             | $\le 0.48\%$ Fast Log-Domain   |

@@ -2,7 +2,7 @@
 """
 ZX50 FPU Coprocessor Microcode & Datapath Simulator
 Simulates the ATF1508AS CPLD micro-engine, private SRAM/Flash, and ALU.
-Supports: ADD, SUB, MUL, DIV, SQRT, LOG2, EXP, POW.
+Supports: ADD, SUB, MUL, DIV, SQRT, LOG2, EXP, POW across 32-bit and 16-bit types.
 """
 
 import math
@@ -58,7 +58,7 @@ LD_TMP1_HI = 8  # ALU_OUT[15:8] or mem -> TMP1[15:8]
 
 # Sequence Control (2 bits)
 SEQ_NEXT = 0  # Advance U_PC <= U_PC + 1
-SEQ_LOOP = 1  # Loop on BYTE_CNT (0 -> 1 -> 2 -> 3)
+SEQ_LOOP = 1  # Loop on BYTE_CNT (0 -> 1 -> ... -> max_bytes-1)
 SEQ_DONE = 2  # Execution complete, reset U_PC <= 0
 
 
@@ -358,19 +358,38 @@ class ZX50FPUMachine:
     # =========================================================================
     # 6. Stack Frame Helpers
     # =========================================================================
-    def push_tos(self, val_32):
+    def push_tos(self, val_32: int):
+        """Push 32-bit uint32 to TOS frame."""
         for i in range(4):
             self.sram[self.sp - 4 + i] = (val_32 >> (i * 8)) & 0xFF
 
-    def push_nos(self, val_32):
+    def push_nos(self, val_32: int):
+        """Push 32-bit uint32 to NOS frame."""
         for i in range(4):
             self.sram[self.sp - 8 + i] = (val_32 >> (i * 8)) & 0xFF
 
-    def read_nos(self):
+    def read_nos(self) -> int:
+        """Read 32-bit uint32 from NOS frame."""
         val = 0
         for i in range(4):
             val |= (self.sram[self.sp - 8 + i] << (i * 8))
         return val
+
+    def push_tos_16(self, val_16: int):
+        """Push 16-bit uint16 to TOS frame."""
+        val_16 &= 0xFFFF
+        self.sram[self.sp - 4] = val_16 & 0xFF
+        self.sram[self.sp - 3] = (val_16 >> 8) & 0xFF
+
+    def push_nos_16(self, val_16: int):
+        """Push 16-bit uint16 to NOS frame."""
+        val_16 &= 0xFFFF
+        self.sram[self.sp - 8] = val_16 & 0xFF
+        self.sram[self.sp - 7] = (val_16 >> 8) & 0xFF
+
+    def read_nos_16(self) -> int:
+        """Read 16-bit uint16 from NOS frame."""
+        return self.sram[self.sp - 8] | (self.sram[self.sp - 7] << 8)
 
 
 # =============================================================================
@@ -448,3 +467,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
