@@ -40,7 +40,7 @@ module fpu_alu_tb;
     wire       err_flag;
     wire [4:0] status_flags;
 
-    // Private Memory Master Nets (driven by zx50_fpu_alu into zx50_fpu_mem)
+    // Private Memory Master Nets
     wire        alu_mem_we_req;
     wire        alu_mem_oe_req;
     wire        alu_sel_flash;
@@ -76,7 +76,7 @@ module fpu_alu_tb;
         .alu_mem_addr(alu_mem_addr),
         .alu_mem_wdata(alu_mem_wdata),
         .mem_rdata(mem_rdata),
-        .mem_ready(mem_ready) // Handshake net
+        .mem_ready(mem_ready)
     );
 
     // Private Memory Controller & Arbiter
@@ -94,7 +94,7 @@ module fpu_alu_tb;
         .eng_addr(alu_mem_addr),
         .eng_wdata(alu_mem_wdata),
         .mem_rdata(mem_rdata),
-        .mem_ready(mem_ready), // Handshake net
+        .mem_ready(mem_ready),
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),
@@ -116,7 +116,6 @@ module fpu_alu_tb;
     // 4. Helper Tasks: Direct SRAM Pre-load & Verification
     // =========================================================================
     
-    // Write 32-bit Little-Endian value to specified SRAM base address
     task write_sram32(input [7:0] base_addr, input [31:0] val);
         begin
             sram_u12.memory_array[base_addr + 0] = val[7:0];
@@ -126,7 +125,6 @@ module fpu_alu_tb;
         end
     endtask
 
-    // Read 32-bit Little-Endian value from specified SRAM base address
     function [31:0] read_sram32(input [7:0] base_addr);
         begin
             read_sram32 = {
@@ -138,7 +136,6 @@ module fpu_alu_tb;
         end
     endfunction
 
-    // Trigger ALU execution and wait for completion pulse
     task exec_alu(input [3:0] fmt_in, input [3:0] op_in, input [7:0] sp_val);
         begin
             @(posedge mclk);
@@ -194,7 +191,6 @@ module fpu_alu_tb;
         // TEST 2: 32-Bit Integer Addition without Carry
         // -----------------------------------------------------------------
         $display("\n--- Test 2: 32-Bit Addition (NOS + TOS -> NOS) ---");
-        // NOS (0x00) = 0x00000005, TOS (0x04) = 0x00000003, SP = 0x08
         write_sram32(8'h00, 32'h00000005);
         write_sram32(8'h04, 32'h00000003);
 
@@ -211,7 +207,6 @@ module fpu_alu_tb;
         // TEST 3: 32-Bit Integer Addition with Multi-Byte Carry
         // -----------------------------------------------------------------
         $display("\n--- Test 3: 32-Bit Addition with Multi-Byte Carry ---");
-        // NOS (0x00) = 0x000000FF, TOS (0x04) = 0x00000001
         write_sram32(8'h00, 32'h000000FF);
         write_sram32(8'h04, 32'h00000001);
 
@@ -228,7 +223,6 @@ module fpu_alu_tb;
         // TEST 4: 32-Bit Integer Subtraction with Borrow
         // -----------------------------------------------------------------
         $display("\n--- Test 4: 32-Bit Subtraction with Borrow ---");
-        // NOS (0x00) = 0x00000100, TOS (0x04) = 0x00000001
         write_sram32(8'h00, 32'h00000100);
         write_sram32(8'h04, 32'h00000001);
 
@@ -245,7 +239,6 @@ module fpu_alu_tb;
         // TEST 5: Status Flags (ZERO Flag)
         // -----------------------------------------------------------------
         $display("\n--- Test 5: Status Flag Verification ---");
-        // Calculate 10 - 10 = 0 (ZERO flag expected)
         write_sram32(8'h00, 32'h0000000A);
         write_sram32(8'h04, 32'h0000000A);
 

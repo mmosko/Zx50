@@ -11,8 +11,7 @@
  *   at a time to minimize macrocell count and product-term allocation in the ATF1508AS.
  * - Dynamically handshakes with zx50_fpu_mem using the mem_ready strobe, making memory
  *   accesses 100% resilient across fast 12ns SRAM (IS61C256AL) and slow 55ns Flash ROM.
- * - Holds address, write data, and write request signals stable until mem_ready asserts,
- *   ensuring write hold time requirements (t_HD) are satisfied without bus contention.
+ * - Holds address, write data, and write request signals stable until mem_ready asserts.
  * - Tracks carry and borrow across byte passes for multi-precision calculations.
  ***************************************************************************************/
 
@@ -103,7 +102,6 @@ module zx50_fpu_alu (
                     alu_mem_oe_req <= 1'b1;
                     alu_mem_addr   <= {7'b0000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
                     
-                    // Latch read data off private bus as soon as memory controller signals ready
                     if (mem_ready) begin
                         acc   <= mem_rdata;
                         state <= ST_READ_B;
@@ -116,7 +114,6 @@ module zx50_fpu_alu (
                     alu_mem_oe_req <= 1'b1;
                     alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     
-                    // Latch read data off private bus as soon as memory controller signals ready
                     if (mem_ready) begin
                         operand_b <= mem_rdata;
                         state     <= ST_EXEC;

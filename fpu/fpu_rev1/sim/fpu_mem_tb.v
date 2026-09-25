@@ -4,15 +4,7 @@
  * MODULE: fpu_mem_tb
  * FILE: sim/fpu_mem_tb.v
  * DESCRIPTION:
- * Comprehensive unit test suite for zx50_fpu_mem private memory controller (CPLD Rev C2).
- *
- * TEST COVERAGE:
- * - Test 1: Reset & Idle Controls.
- * - Test 2: Client 0 (Host) Fast 12ns SRAM Write & Single-Cycle Read.
- * - Test 3: Client 1 (Engine) 40 MHz Flash Read (3 Cycles @ 25ns period = 75ns > 55ns).
- * - Test 4: Client 1 (Engine) 20 MHz Flash Read (2 Cycles @ 50ns period = 100ns > 55ns).
- * - Test 5: Dual-Client Arbitration Priority (Engine priority over Host).
- * - Test 6: Consecutive Back-to-Back SRAM Reads.
+ * Unit test pro zx50_fpu_mem (CPLD Rev C2).
  ***************************************************************************************/
 
 module fpu_mem_tb;
@@ -22,7 +14,6 @@ module fpu_mem_tb;
     reg reset_n;
     reg clk_spd;
 
-    // Dynamic Clock Generator
     real clk_half_period = 12.5; // 12.5ns = 40MHz, 25.0ns = 20MHz
     always #(clk_half_period) mclk = ~mclk;
 
@@ -140,7 +131,6 @@ module fpu_mem_tb;
         host_wdata  = 8'hBE;
         host_we_req = 1'b1;
 
-        // Step through Phase 1 (WE LOW) and Phase 2 (WE HIGH hold)
         @(posedge mclk); #1;
         @(posedge mclk); #1;
         if (mem_ready !== 1'b1) begin
@@ -150,10 +140,10 @@ module fpu_mem_tb;
         host_we_req = 1'b0;
         @(posedge mclk); #1;
 
-        // Read back from SRAM address 0x0005 (Single-cycle combinational ready)
+        // Read back from SRAM address 0x0005
         host_oe_req = 1'b1;
         host_addr   = 8'h05;
-        #15; // 12ns SRAM output delay
+        @(posedge mclk); #1; // Exspecta oram ascendentem mclk pro mem_ready
         if (mem_ready !== 1'b1 || mem_rdata !== 8'hBE) begin
             $display("FAIL [SRAM RD]: Expected 0xBE and mem_ready=1, got data=0x%02h, ready=%b", mem_rdata, mem_ready);
             $fatal(1);

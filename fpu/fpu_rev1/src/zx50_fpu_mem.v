@@ -4,15 +4,47 @@
  * MODULE: zx50_fpu_mem
  * FILE: src/zx50_fpu_mem.v
  * DESCRIPTION:
- * Private Memory Controller & Bus Arbiter for Zx50 FPU Coprocessor (CPLD Rev C2).
+ * Private Memory Controller & Bus Arbiter for Zx50 FPU Coprocessor (CPLD Rev C2 Target).
  *
- * TIMING ARCHITECTURE:
- * 1. Private SRAM (IS61C256AL-12TLI, 12ns access time):
- *    - READ : Single-cycle combinational ready (12ns < 25ns/50ns clock period).
- *    - WRITE: 2-phase write strobe generator with address latching across write edge.
- * 2. Private Flash ROM (SST39SF040, 55ns access time):
- *    - READ : Dynamic multi-cycle counter (3 cycles @ 40MHz, 2 cycles @ 20MHz).
- *    - Handshake: Asserts mem_ready pulse when access window clears t_ACC requirement.
+ * =====================================================================================
+ * ARCHITECTURAL CONTRACT & INTEGRATION GUIDE (MEM_READY & TIMING PITFALLS)
+ * =====================================================================================
+ *
+ * 1. MEM_READY HANDSHAKE CONTRACT:
+ *    - `mem_ready` is a SINGLE-CLOCK-CYCLE PULSE (high for exactly 1 MCLK edge).
+ *    - It is NOT a static level. Master engines (e.g., zx50_fpu_alu) MUST NOT treat
+ *      `mem_ready` as an asynchronous level or hold-state indicator.
+ *    - Master modules MUST hold request lines (`eng_oe_req`, `eng_we_req`), target addresses
+ *      (`eng_addr`), and write payloads (`eng_wdata`) STABLE until the rising edge where
+ *      `mem_ready == 1`.
+ *    - Latching read data (`mem_rdata`) MUST occur on the exact `posedge mclk` where `mem_ready == 1`.
+ *
+ * 2. ADDRESS LATCHING & WRITE RACE CONDITION PROTECTION:
+ *    - To prevent delta-cycle glitches and SRAM write-edge corruptions, `zx50_fpu_mem`
+ *      latches `active_addr` into `latched_addr` at the start of every transaction.
+ *    - During Phase 2 of an SRAM write (`c_we_n` transitioning LOW -> HIGH), the physical
+ *      address bus `ca` is driven from `latched_addr`.
+ *    - Pitfall Avoided: If a master updates `eng_addr` on the same clock edge where
+ *      `mem_ready` fires, `latched_addr` holds the physical address stable across the
+ *      SRAM latch edge, preventing data from being written to the *next* cycle's address.
+ *
+ * 3. DYNAMIC FLASH ACCESS & CLK_SPD TIMING:
+ *    - Private SRAM (IS61C256AL-12TLI, 12ns access time):
+ *      * Reads complete in 1 MCLK cycle.
+ *      * Writes execute via a 2-phase pipeline (Phase 1 = WE low, Phase 2 = WE high hold).
+ *    - Private Flash ROM (SST39SF040, 55ns access time):
+ *      * Speed profile scales dynamically via `clk_spd`:
+ *        - `clk_spd = 1` (40 MHz MCLK, 25ns period): 3 cycles required (75ns > 55ns t_ACC).
+ *        - `clk_spd = 0` (20 MHz MCLK, 50ns period): 2 cycles required (100ns > 55ns t_ACC).
+ *      * Cycle 1 is accounted for on the transition from `ST_MEM_IDLE` to `ST_FLASH_RD`
+ *        by initializing `flash_cnt <= 2'd1`.
+ *
+ * 4. BACK-TO-BACK TRANSACTION RELEASE (ST_WAIT_RELEASE):
+ *    - After emitting `mem_ready`, the FSM enters `ST_WAIT_RELEASE`.
+ *    - It returns to `ST_MEM_IDLE` when EITHER:
+ *      a) All request strobes clear (`!eng_oe_req && !eng_we_req && ...`), OR
+ *      b) `active_addr` changes relative to `latched_addr` (detecting back-to-back sequential reads).
+ *    - Pitfall Avoided: Keeps back-to-back byte fetches moving without requiring a dummy idle clock.
  ***************************************************************************************/
 
 module zx50_fpu_mem (
@@ -35,7 +67,7 @@ module zx50_fpu_mem (
 
     // --- Readback Data & Handshake ---
     output wire [7:0]  mem_rdata,       // Continuous read data captured off private cd bus
-    output wire        mem_ready,       // 1 = Read valid or Write complete
+    output reg         mem_ready,       // 1-cycle transaction completion pulse
 
     // --- Physical IS61C256AL (U12) & SST39SF040 (U13) Pin Drivers ---
     output wire [14:0] ca,              // 15-bit Private Address Bus (32KB active region)
@@ -49,6 +81,7 @@ module zx50_fpu_mem (
     // =========================================================================
     // 1. Request Arbitration & Signal Multiplexing
     // =========================================================================
+    // Client 1 (Engine) takes ownership whenever either read or write request is active
     wire eng_active = eng_we_req || eng_oe_req;
 
     // Route 15-bit address: Engine provides full 15 bits; Host provides 8-bit SP
@@ -70,60 +103,88 @@ module zx50_fpu_mem (
     wire [1:0] flash_target = clk_spd ? 2'd3 : 2'd2;
 
     // =========================================================================
-    // 2. SRAM Write Pipeline & Flash Read Counter
+    // 2. Transaction FSM & Pulse Strobe Generator
     // =========================================================================
+    reg [2:0]  mem_state;
+    localparam ST_MEM_IDLE     = 3'd0;
+    localparam ST_SRAM_WR_PH1  = 3'd1;
+    localparam ST_SRAM_WR_PH2  = 3'd2;
+    localparam ST_FLASH_RD     = 3'd3;
+    localparam ST_WAIT_RELEASE = 3'd4;
+
     reg        sram_we_strobe;
     reg        sram_we_hold;
-    reg [14:0] latched_write_addr;
+    reg [14:0] latched_addr;
     reg [1:0]  flash_cnt;
 
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
+            mem_state          <= ST_MEM_IDLE;
             sram_we_strobe     <= 1'b0;
             sram_we_hold       <= 1'b0;
-            latched_write_addr <= 15'h0000;
+            mem_ready          <= 1'b0;
+            latched_addr       <= 15'h0000;
             flash_cnt          <= 2'd0;
         end else begin
-            // --- SRAM Write Pipeline ---
-            if (active_sram_we_req && !sram_we_strobe && !sram_we_hold) begin
-                sram_we_strobe     <= 1'b1;
-                sram_we_hold       <= 1'b0;
-                latched_write_addr <= active_addr;
-            end else if (sram_we_strobe) begin
-                sram_we_strobe     <= 1'b0;
-                sram_we_hold       <= 1'b1;
-            end else begin
-                sram_we_strobe     <= 1'b0;
-                sram_we_hold       <= 1'b0;
-            end
+            mem_ready      <= 1'b0; // Default: clear completion pulse after 1 clock tick
+            sram_we_strobe <= 1'b0;
 
-            // --- Flash Read Cycle Counter ---
-            if (active_flash_oe_req) begin
-                if (flash_cnt < flash_target) begin
-                    flash_cnt <= flash_cnt + 1'b1;
+            case (mem_state)
+                ST_MEM_IDLE: begin
+                    sram_we_hold <= 1'b0;
+                    flash_cnt    <= 2'd0;
+                    latched_addr <= active_addr; // Lock active address to guard hold time
+
+                    if (active_sram_we_req) begin
+                        sram_we_strobe <= 1'b1; // Phase 1: Assert c_we_n LOW
+                        mem_state      <= ST_SRAM_WR_PH2;
+                    end else if (active_sram_oe_req) begin
+                        mem_ready <= 1'b1; // SRAM read complete on 1st clock edge (25ns)
+                        mem_state <= ST_WAIT_RELEASE;
+                    end else if (active_flash_oe_req) begin
+                        flash_cnt <= 2'd1; // Cycle 1 completes on initial FSM transition
+                        mem_state <= ST_FLASH_RD;
+                    end
                 end
-            end else begin
-                flash_cnt <= 2'd0;
-            end
+
+                // SRAM Write Phase 2: Raise WE HIGH & emit 1-cycle completion pulse
+                ST_SRAM_WR_PH2: begin
+                    sram_we_hold <= 1'b1;
+                    mem_ready    <= 1'b1; // Emit 1-cycle completion pulse
+                    mem_state    <= ST_WAIT_RELEASE;
+                end
+
+                // Flash Read: Multi-cycle wait pipeline for 55ns SST39SF040 ROM
+                ST_FLASH_RD: begin
+                    if (flash_cnt + 1'b1 >= flash_target) begin
+                        mem_ready <= 1'b1; // Emit pulse on target cycle (Cycle 3 @ 40MHz, Cycle 2 @ 20MHz)
+                        mem_state <= ST_WAIT_RELEASE;
+                    end else begin
+                        flash_cnt <= flash_cnt + 1'b1;
+                    end
+                end
+
+                // Wait until request clears OR target address changes for back-to-back operations
+                ST_WAIT_RELEASE: begin
+                    sram_we_hold <= 1'b0;
+                    if ((!active_sram_oe_req && !active_sram_we_req && !active_flash_oe_req) ||
+                        (active_addr != latched_addr)) begin
+                        mem_state <= ST_MEM_IDLE;
+                    end
+                end
+
+                default: mem_state <= ST_MEM_IDLE;
+            endcase
         end
     end
 
     // =========================================================================
-    // 3. Ready Handshake Decoding
-    // =========================================================================
-    wire sram_rd_ready  = active_sram_oe_req;
-    wire sram_wr_ready  = sram_we_hold;
-    wire flash_rd_ready = active_flash_oe_req && (flash_cnt == flash_target);
-
-    assign mem_ready = sram_rd_ready || sram_wr_ready || flash_rd_ready;
-
-    // =========================================================================
-    // 4. Physical Pin Assignments & Tri-State Control Logic
+    // 3. Physical Pin Assignments & Tri-State Control Logic
     // =========================================================================
     wire sram_write_active = (sram_we_strobe || sram_we_hold);
 
-    // Drive 15-bit Private Address Bus
-    assign ca = sram_write_active ? latched_write_addr : active_addr;
+    // Drive 15-bit Private Address Bus (Use latched address during active write cycle)
+    assign ca = sram_write_active ? latched_addr : active_addr;
 
     // Private Chip Enable Controls (Active LOW)
     assign m_ce_n = !(sram_write_active || active_sram_oe_req);

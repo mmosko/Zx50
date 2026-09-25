@@ -111,7 +111,7 @@ module is61c256al_12 #(
     // Execute Write on Write-Termination Edge (posedge we_n or posedge ce_n)
     always @(posedge we_n or posedge ce_n) begin
         if (in_write_cycle) begin
-            in_write_cycle = 1'b0; // Clear active write state
+            in_write_cycle = 1'b0;
             t_pwe = $time - t_write_start;
             t_sd  = $time - t_data_change;
             t_aw  = $time - t_addr_change;
