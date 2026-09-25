@@ -4,15 +4,16 @@
  * MODULE: zx50_fpu_alu
  * FILE: src/zx50_fpu_alu.v
  * DESCRIPTION:
- * Byte-Serial Arithmetic Execution Core for Zx50 FPU Coprocessor (ATF1508AS Target).
+ * Byte-Serial Arithmetic Execution Core for Zx50 FPU Coprocessor (CPLD Rev C2 Target).
  *
  * ARCHITECTURAL SPECIFICATION:
  * - Processes multi-byte stack frames (16-bit, 32-bit fixed/float) sequentially 8 bits
- *   at a time to minimize macrocell count and product-term allocation.
- * - Implements 2-cycle read and 2-cycle write memory states to accommodate 25ns SRAM
- *   propagation delays and data hold requirements at 40MHz MCLK.
- * - Drives private memory requests (zx50_fpu_mem) directly during math cycles.
- * - Tracks carry/borrow across byte passes for multi-precision calculations.
+ *   at a time to minimize macrocell count and product-term allocation in the ATF1508AS.
+ * - Dynamically handshakes with zx50_fpu_mem using the mem_ready strobe, making memory
+ *   accesses 100% resilient across fast 12ns SRAM (IS61C256AL) and slow 55ns Flash ROM.
+ * - Holds address, write data, and write request signals stable until mem_ready asserts,
+ *   ensuring write hold time requirements (t_HD) are satisfied without bus contention.
+ * - Tracks carry and borrow across byte passes for multi-precision calculations.
  ***************************************************************************************/
 
 module zx50_fpu_alu (
@@ -35,7 +36,8 @@ module zx50_fpu_alu (
     output reg         alu_sel_flash,   // 1 = Flash ROM (LUTs), 0 = SRAM
     output reg  [14:0] alu_mem_addr,    // 15-bit target private address (32KB window)
     output reg  [7:0]  alu_mem_wdata,   // Write payload to private memory
-    input  wire [7:0]  mem_rdata        // Data read back from private memory bus
+    input  wire [7:0]  mem_rdata,       // Data read back from private memory bus
+    input  wire        mem_ready        // 1 = Memory read valid or write complete
 );
 
     // =========================================================================
@@ -53,17 +55,14 @@ module zx50_fpu_alu (
     localparam OP_DIV = 4'h3;
     localparam OP_CHS = 4'h5;
 
-    // FSM State Definitions
-    reg [3:0] state;
-    localparam ST_IDLE        = 4'd0; // Wait for start trigger
-    localparam ST_READ_A_REQ  = 4'd1; // Assert OE and address for Operand A (TOS frame)
-    localparam ST_READ_A_WAIT = 4'd2; // Wait cycle for 25ns SRAM propagation delay
-    localparam ST_READ_B_REQ  = 4'd3; // Assert OE and address for Operand B (NOS frame)
-    localparam ST_READ_B_WAIT = 4'd4; // Wait cycle for 25ns SRAM propagation delay
-    localparam ST_EXEC        = 4'd5; // Execute 8-bit ALU operation
-    localparam ST_WRITE_PH1   = 4'd6; // SRAM Write Phase 1 (Strobe LOW)
-    localparam ST_WRITE_PH2   = 4'd7; // SRAM Write Phase 2 (Hold data stable)
-    localparam ST_FINISH      = 4'd8; // Assert done_p and update status_flags
+    // Handshaked FSM State Definitions
+    reg [2:0] state;
+    localparam ST_IDLE    = 3'd0; // Wait for start trigger from dispatcher
+    localparam ST_READ_A  = 3'd1; // Read Operand A byte from TOS frame
+    localparam ST_READ_B  = 3'd2; // Read Operand B byte from NOS frame
+    localparam ST_EXEC    = 3'd3; // Execute 8-bit ALU operation & update carry
+    localparam ST_WRITE   = 3'd4; // Write-back 8-bit result to NOS frame in SRAM
+    localparam ST_FINISH  = 3'd5; // Assert done_p pulse and lock final status_flags
 
     // =========================================================================
     // 2. Serial ALU Execution State Machine
@@ -94,43 +93,37 @@ module zx50_fpu_alu (
                     byte_cnt     <= 3'd0;
                     carry_borrow <= 1'b0;
                     if (start_p) begin
-                        state <= ST_READ_A_REQ;
+                        state <= ST_READ_A;
                     end
                 end
 
-                // --- Operand A Fetch (TOS Frame: SP - 4) ---
-                ST_READ_A_REQ: begin
+                // --- Operand A Fetch (TOS Frame: SP - 4 + byte_cnt) ---
+                ST_READ_A: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
                     alu_mem_addr   <= {7'b0000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
-                    state          <= ST_READ_A_WAIT;
+                    
+                    // Latch read data off private bus as soon as memory controller signals ready
+                    if (mem_ready) begin
+                        acc   <= mem_rdata;
+                        state <= ST_READ_B;
+                    end
                 end
 
-                ST_READ_A_WAIT: begin
-                    alu_sel_flash  <= 1'b0;
-                    alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd4 + {5'b00000, byte_cnt})};
-                    acc            <= mem_rdata; // Latch Operand A byte once settled
-                    state          <= ST_READ_B_REQ;
-                end
-
-                // --- Operand B Fetch (NOS Frame: SP - 8) ---
-                ST_READ_B_REQ: begin
+                // --- Operand B Fetch (NOS Frame: SP - 8 + byte_cnt) ---
+                ST_READ_B: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_oe_req <= 1'b1;
                     alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
-                    state          <= ST_READ_B_WAIT;
+                    
+                    // Latch read data off private bus as soon as memory controller signals ready
+                    if (mem_ready) begin
+                        operand_b <= mem_rdata;
+                        state     <= ST_EXEC;
+                    end
                 end
 
-                ST_READ_B_WAIT: begin
-                    alu_sel_flash  <= 1'b0;
-                    alu_mem_oe_req <= 1'b1;
-                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
-                    operand_b      <= mem_rdata; // Latch Operand B byte once settled
-                    state          <= ST_EXEC;
-                end
-
-                // --- 8-Bit Calculation ---
+                // --- 8-Bit Arithmetic Calculation ---
                 ST_EXEC: begin
                     case (op)
                         OP_ADD: begin
@@ -150,35 +143,30 @@ module zx50_fpu_alu (
                         end
                     endcase
 
-                    state <= ST_WRITE_PH1;
+                    state <= ST_WRITE;
                 end
 
-                // --- Result Write-back (NOS Frame: SP - 8) ---
-                ST_WRITE_PH1: begin
-                    alu_sel_flash  <= 1'b0;
-                    alu_mem_we_req <= 1'b1;
-                    alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
-                    alu_mem_wdata  <= acc;
-                    state          <= ST_WRITE_PH2;
-                end
-
-                ST_WRITE_PH2: begin
+                // --- Result Write-back (NOS Frame: SP - 8 + byte_cnt) ---
+                ST_WRITE: begin
                     alu_sel_flash  <= 1'b0;
                     alu_mem_we_req <= 1'b1;
                     alu_mem_addr   <= {7'b0000000, (sp_in - 8'd8 + {5'b00000, byte_cnt})};
                     alu_mem_wdata  <= acc;
 
-                    if (byte_cnt == 3'd3) begin
-                        state <= ST_FINISH;
-                    end else begin
-                        byte_cnt <= byte_cnt + 1'b1;
-                        state    <= ST_READ_A_REQ;
+                    // Maintain write request and address/data stable until mem_ready confirms write latch
+                    if (mem_ready) begin
+                        if (byte_cnt == 3'd3) begin
+                            state <= ST_FINISH;
+                        end else begin
+                            byte_cnt <= byte_cnt + 1'b1;
+                            state    <= ST_READ_A;
+                        end
                     end
                 end
 
+                // --- Completion & Status Register Flag Locking ---
                 ST_FINISH: begin
                     done_p          <= 1'b1;
-                    // Update status flags: [ZERO, SIGN, CARRY, OVF, UNF]
                     status_flags[4] <= (acc == 8'h00);   // ZERO
                     status_flags[3] <= acc[7];           // SIGN
                     status_flags[2] <= carry_borrow;     // CARRY

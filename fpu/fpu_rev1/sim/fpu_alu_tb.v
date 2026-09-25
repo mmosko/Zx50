@@ -11,7 +11,7 @@
  * - 32-bit integer addition with carry across byte boundaries.
  * - 32-bit integer subtraction (OP_SUB = 0x1) with multi-byte borrow propagation.
  * - Status flag verification (ZERO, SIGN, CARRY).
- * - Private memory read/write interaction with zx50_fpu_mem and 12ns SRAM.
+ * - Private memory read/write interaction with zx50_fpu_mem and 12ns SRAM model.
  ***************************************************************************************/
 
 module fpu_alu_tb;
@@ -47,6 +47,7 @@ module fpu_alu_tb;
     wire [14:0] alu_mem_addr;
     wire [7:0]  alu_mem_wdata;
     wire [7:0]  mem_rdata;
+    wire        mem_ready;
 
     // Physical Memory Pins (zx50_fpu_mem to IS61C256AL)
     wire [14:0] ca;
@@ -74,13 +75,15 @@ module fpu_alu_tb;
         .alu_sel_flash(alu_sel_flash),
         .alu_mem_addr(alu_mem_addr),
         .alu_mem_wdata(alu_mem_wdata),
-        .mem_rdata(mem_rdata)
+        .mem_rdata(mem_rdata),
+        .mem_ready(mem_ready) // Handshake net
     );
 
     // Private Memory Controller & Arbiter
     zx50_fpu_mem mem_ctrl (
         .mclk(mclk),
         .reset_n(reset_n),
+        .clk_spd(1'b1), // 40 MHz mode
         .host_we_req(1'b0),
         .host_oe_req(1'b0),
         .host_addr(8'h00),
@@ -91,6 +94,7 @@ module fpu_alu_tb;
         .eng_addr(alu_mem_addr),
         .eng_wdata(alu_mem_wdata),
         .mem_rdata(mem_rdata),
+        .mem_ready(mem_ready), // Handshake net
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),

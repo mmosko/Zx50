@@ -6,13 +6,13 @@
  * DESCRIPTION:
  * Private Memory Controller & Bus Arbiter for Zx50 FPU Coprocessor (CPLD Rev C2).
  *
- * DYNAMIC TIMING SCALING (clk_spd input):
- * 1. clk_spd = 1 (40 MHz MCLK, T_clk = 25ns):
- *    - SRAM Read : 1 Cycle (12ns < 25ns)
- *    - Flash Read: 3 Cycles (75ns > 55ns t_ACC)
- * 2. clk_spd = 0 (20 MHz MCLK, T_clk = 50ns):
- *    - SRAM Read : 1 Cycle (12ns < 50ns)
- *    - Flash Read: 2 Cycles (100ns > 55ns t_ACC)
+ * TIMING ARCHITECTURE:
+ * 1. Private SRAM (IS61C256AL-12TLI, 12ns access time):
+ *    - READ : Single-cycle combinational ready (12ns < 25ns/50ns clock period).
+ *    - WRITE: 2-phase write strobe generator with address latching across write edge.
+ * 2. Private Flash ROM (SST39SF040, 55ns access time):
+ *    - READ : Dynamic multi-cycle counter (3 cycles @ 40MHz, 2 cycles @ 20MHz).
+ *    - Handshake: Asserts mem_ready pulse when access window clears t_ACC requirement.
  ***************************************************************************************/
 
 module zx50_fpu_mem (
@@ -35,7 +35,7 @@ module zx50_fpu_mem (
 
     // --- Readback Data & Handshake ---
     output wire [7:0]  mem_rdata,       // Continuous read data captured off private cd bus
-    output reg         mem_ready,       // 1 = Data valid (Read) or Write Complete (Write)
+    output wire        mem_ready,       // 1 = Read valid or Write complete
 
     // --- Physical IS61C256AL (U12) & SST39SF040 (U13) Pin Drivers ---
     output wire [14:0] ca,              // 15-bit Private Address Bus (32KB active region)
@@ -51,7 +51,7 @@ module zx50_fpu_mem (
     // =========================================================================
     wire eng_active = eng_we_req || eng_oe_req;
 
-    // Route 15-bit address: Engine provides full 15 bits; Host provides 8-bit SP (upper bits cleared)
+    // Route 15-bit address: Engine provides full 15 bits; Host provides 8-bit SP
     wire [14:0] active_addr = eng_active ? eng_addr : {7'b0000000, host_addr};
     
     // SRAM vs Flash request target decoding
@@ -66,71 +66,64 @@ module zx50_fpu_mem (
     // Data payload multiplexer
     wire [7:0] active_wdata = eng_we_req ? eng_wdata : host_wdata;
 
+    // Target Flash cycle count: 3 cycles at 40MHz (clk_spd=1), 2 cycles at 20MHz (clk_spd=0)
+    wire [1:0] flash_target = clk_spd ? 2'd3 : 2'd2;
+
     // =========================================================================
-    // 2. 2-Phase SRAM Write Controller (12ns Fast SRAM)
+    // 2. SRAM Write Pipeline & Flash Read Counter
     // =========================================================================
-    reg sram_we_strobe;
-    reg sram_we_hold;
+    reg        sram_we_strobe;
+    reg        sram_we_hold;
+    reg [14:0] latched_write_addr;
+    reg [1:0]  flash_cnt;
 
     always @(posedge mclk or negedge reset_n) begin
         if (!reset_n) begin
-            sram_we_strobe <= 1'b0;
-            sram_we_hold   <= 1'b0;
+            sram_we_strobe     <= 1'b0;
+            sram_we_hold       <= 1'b0;
+            latched_write_addr <= 15'h0000;
+            flash_cnt          <= 2'd0;
         end else begin
+            // --- SRAM Write Pipeline ---
             if (active_sram_we_req && !sram_we_strobe && !sram_we_hold) begin
-                sram_we_strobe <= 1'b1;
-                sram_we_hold   <= 1'b0;
+                sram_we_strobe     <= 1'b1;
+                sram_we_hold       <= 1'b0;
+                latched_write_addr <= active_addr;
             end else if (sram_we_strobe) begin
-                sram_we_strobe <= 1'b0;
-                sram_we_hold   <= 1'b1;
+                sram_we_strobe     <= 1'b0;
+                sram_we_hold       <= 1'b1;
             end else begin
-                sram_we_strobe <= 1'b0;
-                sram_we_hold   <= 1'b0;
+                sram_we_strobe     <= 1'b0;
+                sram_we_hold       <= 1'b0;
             end
-        end
-    end
 
-    // =========================================================================
-    // 3. Dynamic Flash Read Controller (55ns Slow Flash ROM)
-    // =========================================================================
-    // Target threshold:
-    //   clk_spd = 1 (40 MHz): Target is Cycle 3 (flash_cycle_cnt == 2'd2) -> 75ns > 55ns
-    //   clk_spd = 0 (20 MHz): Target is Cycle 2 (flash_cycle_cnt == 2'd1) -> 100ns > 55ns
-    wire [1:0] flash_target_cycles = clk_spd ? 2'd2 : 2'd1;
-    reg  [1:0] flash_cycle_cnt;
-
-    always @(posedge mclk or negedge reset_n) begin
-        if (!reset_n) begin
-            flash_cycle_cnt <= 2'd0;
-            mem_ready       <= 1'b0;
-        end else begin
+            // --- Flash Read Cycle Counter ---
             if (active_flash_oe_req) begin
-                if (flash_cycle_cnt < flash_target_cycles) begin
-                    flash_cycle_cnt <= flash_cycle_cnt + 1'b1;
-                    mem_ready       <= 1'b0; // Wait state
-                end else begin
-                    mem_ready       <= 1'b1; // Access complete!
+                if (flash_cnt < flash_target) begin
+                    flash_cnt <= flash_cnt + 1'b1;
                 end
-            end else if (active_sram_we_req) begin
-                // SRAM Write: Ready on Phase 2 hold completion
-                mem_ready <= sram_we_hold;
-            end else if (active_sram_oe_req) begin
-                // SRAM Read: Single cycle ready
-                mem_ready <= 1'b1;
             end else begin
-                flash_cycle_cnt <= 2'd0;
-                mem_ready       <= 1'b0;
+                flash_cnt <= 2'd0;
             end
         end
     end
+
+    // =========================================================================
+    // 3. Ready Handshake Decoding
+    // =========================================================================
+    wire sram_rd_ready  = active_sram_oe_req;
+    wire sram_wr_ready  = sram_we_hold;
+    wire flash_rd_ready = active_flash_oe_req && (flash_cnt == flash_target);
+
+    assign mem_ready = sram_rd_ready || sram_wr_ready || flash_rd_ready;
 
     // =========================================================================
     // 4. Physical Pin Assignments & Tri-State Control Logic
     // =========================================================================
     wire sram_write_active = (sram_we_strobe || sram_we_hold);
 
-    // Drive shared 15-bit Private Address Bus
-    assign ca = active_addr;
+    // Drive 15-bit Private Address Bus
+    assign ca = sram_write_active ? latched_write_addr : active_addr;
 
     // Private Chip Enable Controls (Active LOW)
     assign m_ce_n = !(sram_write_active || active_sram_oe_req);
@@ -138,10 +131,10 @@ module zx50_fpu_mem (
 
     // Consolidated Shared Control Strobes (Active LOW)
     assign c_oe_n = !(active_sram_oe_req || active_flash_oe_req);
-    assign c_we_n = !sram_we_strobe; // Active LOW write pulse during Phase 1
+    assign c_we_n = !sram_we_strobe;
 
     // Private Data Bus Routing
     assign cd        = sram_write_active ? active_wdata : 8'hzz;
-    assign mem_rdata = cd; // Sample internal read data from private bus
+    assign mem_rdata = cd;
 
 endmodule
