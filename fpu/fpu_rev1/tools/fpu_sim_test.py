@@ -96,7 +96,7 @@ def test_i32_mul(nos, tos, expected):
     fpu.push_nos_i32(nos)
     fpu.push_tos_i32(tos)
     fpu.execute_opcode(0x12)  # FMT_I32 | OP_MUL
-    assert fpu.read_nos_i32() == expected
+    assert fpu.read_tos_i32() == expected
 
 
 @pytest.mark.parametrize(
