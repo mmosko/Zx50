@@ -41,6 +41,7 @@ MEM_RD_FLASH_TAN = 10 # Read Flash Tangent Table
 MEM_RD_FLASH_LN  = 11 # Read Flash Natural Log Table
 MEM_RD_FLASH_LOG10=12 # Read Flash Base-10 Log Table
 MEM_WR_NOS       = 13 # Write ALU_OUT[7:0] -> SRAM[SP - 8 + BYTE_CNT]
+MEM_WR_TOS       = 14 # Write ALU_OUT[7:0] -> SRAM[SP - 4 + BYTE_CNT] (for unary ops)
 
 # Register Load Enables (4 bits)
 LD_NONE    = 0

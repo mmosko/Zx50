@@ -32,20 +32,11 @@ lowest memory address).
 
 | Format ID | Constant Name | Description           | Frame Size | Hardware Status        | Numerical Range / Precision                                                                    |
 |-----------|---------------|-----------------------|------------|------------------------|------------------------------------------------------------------------------------------------|
-| **`0x0`** | `FMT_I16`     | 16-Bit Signed Integer | 2 Bytes    | Fully Supported        | $-32,768$ to $+32,767$                                                                         |
 | **`0x1`** | `FMT_I32`     | 32-Bit Signed Integer | 4 Bytes    | Fully Supported        | $-2,147,483,648$ to $+2,147,483,647$                                                           |
-| **`0x2`** | `FMT_I64`     | 64-Bit Signed Integer | 8 Bytes    | Supported (Pass-Thru)  | $-9.22 \times 10^{18}$ to $+9.22 \times 10^{18}$                                               |
 | **`0x3`** | `FMT_FX1616`  | 16.16 Fixed-Point     | 4 Bytes    | Primary Real Format    | $-32,768.00000$ to $+32,767.99998$ (Res: $1/65536 \approx 0.000015258$)                        |
-| **`0x4`** | `FMT_DFLOAT`  | 64-Bit Double Float   | 8 Bytes    | **UNSUPPORTED**        | *Not available in CPLD hardware (Exceeds Macrocells)*                                          |
-| **`0x5`** | `FMT_CFLOAT`  | 32-Bit Complex Float  | 8 Bytes    | Microcode Chained      | Real & Imaginary: $-32,768.00000$ to $+32,767.99998$ ($a + bi$)                                |
-| **`0x6`** | `FMT_F16`     | 16-Bit Custom Float   | 2 Bytes    | Supported (Shift-Loop) | $\approx \pm 1.17 \times 10^{-38}$ to $\pm 3.40 \times 10^{38}$ (8-bit Mantissa: ~2.4 digits)  |
 | **`0x7`** | `FMT_F32`     | 32-Bit Custom Float   | 4 Bytes    | Supported (Shift-Loop) | $\approx \pm 1.17 \times 10^{-38}$ to $\pm 3.40 \times 10^{38}$ (24-bit Mantissa: ~7.2 digits) |
-| **`0xE`** | `FMT_SPECIAL` | Custom Table Access   | Variable   | System Extension       | System Extensions & Direct Flash LUT                                                           |
 | **`0xF`** | `FMT_MGMT`    | Management Control    | N/A        | Fully Supported        | Stack Pointer & Hardware Reset Commands                                                        |
 
-> **Hardware Constraint Note:** IEEE-754 64-bit Double Precision (`FMT_DFLOAT` / `F64`) is **not supported** due to the
-> 128-macrocell limit of the ATF1508AS CPLD. Single-cycle 53-bit mantissa barrel shifters exceed available CPLD product
-> terms. Real-number calculations should use `FX1616` or `F32`.
 
 ---
 
@@ -133,11 +124,8 @@ Calculates $\text{NOS} \leftarrow \text{NOS} + \text{TOS}$.
 
 | Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes                        |
 |:-----------|:-------------|:--------------------|:--------------------|:--------------------|:-------------------------------------|
-| **`0x00`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
 | **`0x10`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
-| **`0x20`** | `FMT_I64`    | `I64` (8 bytes)     | `I64` (8 bytes)     | `I64` (8 bytes)     | Sets `CARRY`/`OVERFLOW` on wrap      |
 | **`0x30`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `CARRY` on fixed-point overflow |
-| **`0x60`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Serial exponent alignment            |
 | **`0x70`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Serial exponent alignment            |
 
 ---
@@ -148,11 +136,8 @@ Calculates $\text{NOS} \leftarrow \text{NOS} - \text{TOS}$.
 
 | Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes             |
 |:-----------|:-------------|:--------------------|:--------------------|:--------------------|:--------------------------|
-| **`0x01`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `CARRY` on borrow    |
 | **`0x11`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `CARRY` on borrow    |
-| **`0x21`** | `FMT_I64`    | `I64` (8 bytes)     | `I64` (8 bytes)     | `I64` (8 bytes)     | Sets `CARRY` on borrow    |
 | **`0x31`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `CARRY` on borrow    |
-| **`0x61`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Serial exponent alignment |
 | **`0x71`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Serial exponent alignment |
 
 ---
@@ -163,10 +148,8 @@ Calculates $\text{NOS} \leftarrow \text{NOS} \times \text{TOS}$ using Quarter-Sq
 
 | Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes                     |
 |:-----------|:-------------|:--------------------|:--------------------|:--------------------|:----------------------------------|
-| **`0x02`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Truncated 16-bit product          |
 | **`0x12`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Multi-pass Quarter-Square         |
 | **`0x32`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Exact $16.16$ fixed-point product |
-| **`0x62`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Exponent add + Mantissa MUL       |
 | **`0x72`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Exponent add + Mantissa MUL       |
 
 ---
@@ -177,10 +160,8 @@ Calculates $\text{NOS} \leftarrow \text{NOS} / \text{TOS}$ using Reciprocal Flas
 
 | Opcode     | Format       | Input Operand (NOS) | Input Operand (TOS) | Output Result (NOS) | Flags / Notes               |
 |:-----------|:-------------|:--------------------|:--------------------|:--------------------|:----------------------------|
-| **`0x03`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `ERROR` if TOS = 0     |
 | **`0x13`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `ERROR` if TOS = 0     |
 | **`0x33`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS = 0.0   |
-| **`0x63`** | `FMT_F16`    | `F16` (2 bytes)     | `F16` (2 bytes)     | `F16` (2 bytes)     | Exponent sub + Mantissa DIV |
 | **`0x73`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | `F32` (4 bytes)     | Exponent sub + Mantissa DIV |
 
 ---
@@ -191,7 +172,6 @@ Calculates $\text{NOS} \leftarrow \sqrt{\text{TOS}}$.
 
 | Opcode     | Format       | Input Operand (TOS) | Output Result (NOS) | Flags / Notes             |
 |:-----------|:-------------|:--------------------|:--------------------|:--------------------------|
-| **`0x04`** | `FMT_I16`    | `I16` (2 bytes)     | `I16` (2 bytes)     | Sets `ERROR` if TOS < 0   |
 | **`0x14`** | `FMT_I32`    | `I32` (4 bytes)     | `I32` (4 bytes)     | Sets `ERROR` if TOS < 0   |
 | **`0x34`** | `FMT_FX1616` | `FX1616` (4 bytes)  | `FX1616` (4 bytes)  | Sets `ERROR` if TOS < 0.0 |
 | **`0x74`** | `FMT_F32`    | `F32` (4 bytes)     | `F32` (4 bytes)     | Sets `ERROR` if TOS < 0.0 |

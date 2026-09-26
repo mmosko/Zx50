@@ -45,6 +45,7 @@ from fpu_sim_alu import (
     MEM_RD_FLASH_LN,
     MEM_RD_FLASH_LOG10,
     MEM_WR_NOS,
+    MEM_WR_TOS,
     LD_NONE,
     LD_ACC,
     LD_OPB,
@@ -162,6 +163,7 @@ class ZX50FPUMachine:
                     MEM_RD_FLASH_LOG10: FLASH_LOG10_BASE,
                 }[mem_cmd]
 
+                # 9-bit mask for Quarter-Square table index (0..510), 8-bit for others
                 mask = 0x1FF if mem_cmd == MEM_RD_FLASH_QS else 0xFF
                 flash_addr = base_table + ((x_val & mask) * 2)
                 if reg_ld in (LD_TMP0_HI, LD_TMP1_HI):
@@ -169,6 +171,11 @@ class ZX50FPUMachine:
                 mem_data = self.flash[flash_addr]
             elif mem_cmd == MEM_WR_NOS:
                 addr = self.sp - 8 + self.byte_cnt
+                self.sram[addr] = alu_out & 0xFF
+                if seq_ctrl == SEQ_NEXT:
+                    self.byte_cnt += 1
+            elif mem_cmd == MEM_WR_TOS:
+                addr = self.sp - 4 + self.byte_cnt
                 self.sram[addr] = alu_out & 0xFF
                 if seq_ctrl == SEQ_NEXT:
                     self.byte_cnt += 1
@@ -209,7 +216,7 @@ class ZX50FPUMachine:
                 break
 
     # =========================================================================
-    # Opcode Dispatch Engine
+    # Hardware Microcode Dispatch & Management Handlers
     # =========================================================================
     def execute_opcode(self, opcode: int):
         self.flag_error = False
@@ -223,7 +230,7 @@ class ZX50FPUMachine:
             elif opcode == MGMT_POP_TOS:
                 self.sp = max(0x08, self.sp - 4)
             elif opcode == MGMT_DUP_TOS:
-                tos_bytes = [self.sram[self.sp - 4 + i] for i in range(4)]
+                tos_bytes = self.read_tos_bytes()
                 self.sp += 4
                 self.push_tos_bytes(tos_bytes)
             else:
@@ -282,7 +289,7 @@ class ZX50FPUMachine:
         return mapping.get(op, None)
 
     # =========================================================================
-    # Stack Frame Helpers (Uniform 4-Byte Frames)
+    # Stack Frame Helpers (Uniform 4-Byte Frames for Testbench Conversion)
     # =========================================================================
     def push_nos_bytes(self, data_bytes: list):
         for i in range(4):
