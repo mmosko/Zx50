@@ -27,9 +27,10 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
   - [x] Define stack conventions, operand layout (Little-Endian), and error handling.
   - [x] Provide complete, runnable Z80 assembly examples for four canonical benchmark problems (Manhattan distance, 3D vector norm, sphere volume, quadratic polynomial evaluation) comparing Immediate Blocking, Non-blocking, and Batch modes.
 
-- [ ] **Phase 4: Python Machine Model**
+- [ ] **Phase 4: Python Machine Model (Specification in `FPU_EMULATOR.md`)**
+  - [x] Create architectural specification and emulation guidelines in `FPU_EMULATOR.md`.
   - [ ] Implement bit-accurate hardware building blocks (registers, 32-bit ALU, shifter, micro-sequencer) in Python.
-  - [ ] **Constraint:** Implement execution strictly using microcode steps and basic hardware ALU primitives—NO Python native math/float libraries for computation.
+  - [ ] **Constraint:** Implement execution strictly using byte arrays, microcode steps, and basic hardware ALU primitives—NO Python native math/float libraries for computation.
   - [ ] Validate complete microcode routines against IEEE-754 test vectors and integer arithmetic edge cases.
 
 - [ ] **Phase 5: Verilog Implementation & Unit/Integration Testing**
