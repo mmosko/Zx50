@@ -56,7 +56,7 @@ graph TD
 
 * **Host CPU:** Zilog Z80C @ 10 MHz (`CLK` / `BZCLK`).
 * **Target FPGA:** **Lattice MachXO2-2000HC** (`LCMXO2-2000HC-4TG100I` / `U17`):
-  * **Package:** 100-pin TQFP (14×14 mm, 0.5 mm pitch), 79 User I/Os.
+  * **Package:** 100-pin TQFP (14×14 mm, 0.5 mm pitch), 100% pin allocation (0 spare pins).
   * **Logic Capacity:** 2,112 LUT4s, 2,112 Registers.
   * **SysMEM EBR (Embedded Block RAM):** 8 true dual-port blocks (74 Kb / 9,216 Bytes total).
   * **Distributed RAM:** 16 Kb.
@@ -151,9 +151,9 @@ The dual-port architecture completely separates host I/O from math execution:
 
 ---
 
-## 4. Bus Signal Mapping & Pin Allocation
+## 4. Complete 100-Pin Package Budget & Signal Allocation
 
-The MachXO2-2000 in TQFP-100 provides 79 user I/O pins, allocated as follows:
+On the **Zx50 CPU Card (Rev C4)**, the MachXO2-2000HC in TQFP-100 (`U17`) has 100% of its pins assigned with **0 remaining pins**:
 
 | Signal Group | Signal Names | Pin Count | Direction | Function |
 |---|---|:---:|:---:|---|
@@ -167,13 +167,16 @@ The MachXO2-2000 in TQFP-100 provides 79 user I/O pins, allocated as follows:
 | **External SRAM** | `CA[16:0]` | 17 | Output | Private 17-bit address bus to 128KB SRAM (`U18` `IS61WV1288EEBLL-10HLI`). |
 | | `CD[7:0]` | 8 | Inout | Private 8-bit bidirectional data bus to SRAM. |
 | | `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N` | 3 | Output | Private SRAM chip select, output enable, and write enable strobes. |
-| **Serial QSPI Flash** | `F_CE_N`, `F_SCK` | 2 | Output | Chip select (`CSSPIN`) and serial clock (`CCLK`) for `U19` `IS25LP080D`. |
-| | `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N` | 4 | Inout | Quad-SPI data lines (IO0–IO3). |
-| **Debug & Config** | `DBG[3:0]` | 4 | Inout | Real-time debug / telemetry lines routed to header `J9`. |
-| | `DBG_N` | 1 | Input | Debug enable jumper routed to header `J8`. |
-| **Total User I/O Pins** | | **72** | | **Out of 79 available User I/Os on TQFP-100 (7 spare pins)** |
-| *Dedicated Pins* | `DONE`, `INIT_N`, `PROGRAM_N` | 3 | Output/Input | FPGA status LED (`D4`), initialization, and reconfigure push button (`SW2`). |
-| *Dedicated JTAG* | `TCK`, `TDI`, `TDO`, `TMS`, `JTAGENB` | 5 | Inout | JTAG programming header `J7`. |
+| **Serial QSPI Flash** | `F_CE_N`, `F_SCK` | 2 | Output | Chip select (`CSSPIN` pin 27) and serial clock (`CCLK` pin 31) for `U19` `IS25LP080D`. |
+| | `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N` | 4 | Inout | Quad-SPI data lines (IO0–IO3 on pins 49, 32, 28, 30). |
+| **Debug & Config** | `DBG[3:0]` | 4 | Inout | Real-time debug / telemetry lines routed to header `J9` (pins 24, 25, 35, 36). |
+| | `DBG_N` | 1 | Input | Debug enable jumper routed to header `J8` (pin 88). |
+| **JTAG Programming** | `TCK`, `TDI`, `TDO`, `TMS`, `JTAGENB` | 5 | Inout | Dedicated JTAG interface routed to header `J7` (pins 91, 94, 95, 90, 82). |
+| **FPGA Config / Status**| `DONE`, `INIT_N`, `PROGRAM_N` | 3 | Output/Input | Status LED `D4` (pin 76), Init strobe (pin 77), and reconfiguration switch `SW2` (pin 81). |
+| **Power Supplies** | `VCC` (Core), `VCCIO[5:0]` | 11 | Power | Single +3.3V rail: Pins 5, 11, 23, 26, 46, 50, 55, 73, 80, 93, 100. |
+| **Ground** | `GND` | 8 | Power | Ground returns: Pins 6, 22, 33, 44, 56, 72, 79, 92. |
+| **No Connect** | `NC` | 1 | NC | Pin 89. |
+| **Total Pins Accounted** | | **100** | | **100% of TQFP-100 pins allocated (0 remaining pins)** |
 
 ---
 
