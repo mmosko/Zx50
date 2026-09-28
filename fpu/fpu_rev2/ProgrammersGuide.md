@@ -143,17 +143,17 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b0000_1fff` | `0x08`–`0x0B` | `SUB_fff` | `( a b -- diff )` | $-4$ / $-8$ | 8 / 16 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Borrow ($C=1$) |
 | `0b0001_0fff` | `0x10`–`0x13` | `MUL_fff` | `( a b -- prod )` | $-4$ / $-8$ | 8 / 16 B | 16–32 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Float Underflow ($U=1$) |
 | `0b0001_1fff` | `0x18`–`0x1B` | `DIV_fff` | `( a b -- quot )` | $-4$ / $-8$ | 8 / 16 B | 16–32 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Div-by-Zero ($ERR=1, V=1$), Float Underflow ($U=1$) |
-| `0b0010_0fff` | `0x20`–`0x23` | `SQRT_fff`| `( x -- root )` | $0$ | 4 / 8 B | 16–32 | X | X | 0 | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$), Negative Operand ($ERR=1$) |
-| `0b0010_1fff` | `0x28`–`0x2B` | `POW_fff` | `( base exp -- res )` | $-4$ / $-8$ | 8 / 16 B | ~120 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Exponent Overflow/Underflow |
-| `0b0011_0fff` | `0x30`–`0x33` | `LN_fff`  | `( x -- ln_x )` | $0$ | 4 / 8 B | ~60 | X | X | X | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$), Non-positive Operand $x \le 0$ ($ERR=1$) |
-| `0b0011_1fff` | `0x38`–`0x3B` | `EXP_fff` | `( x -- e_x )` | $0$ | 4 / 8 B | ~60 | X | X | 0 | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Exponent Overflow ($V=1$), Underflow ($U=1$) |
+| `0b0010_00x1` | `0x21`, `0x23` | `SQRT_F32/F64`| `( x -- root )` | $0$ | 4 / 8 B | 16–32 | X | X | 0 | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Negative Operand ($ERR=1$) |
+| `0b0010_10x1` | `0x29`, `0x2B` | `POW_F32/F64` | `( base exp -- res )` | $-4$ / $-8$ | 8 / 16 B | ~120 | X | X | X | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow/Underflow |
+| `0b0011_00x1` | `0x31`, `0x33` | `LN_F32/F64`  | `( x -- ln_x )` | $0$ | 4 / 8 B | ~60 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Non-positive Operand $x \le 0$ ($ERR=1$) |
+| `0b0011_10x1` | `0x39`, `0x3B` | `EXP_F32/F64` | `( x -- e_x )` | $0$ | 4 / 8 B | ~60 | X | X | 0 | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow ($V=1$), Underflow ($U=1$) |
 | `0b0101_0fff` | `0x50`–`0x53` | `CHS_fff` | `( x -- -x )` | $0$ | 4 / 8 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int Negate Overflow ($V=1$) |
 | `0b0101_1fff` | `0x58`–`0x5B` | `ABS_fff` | `( x -- \|x\| )` | $0$ | 4 / 8 B | 1–2 | X | X | 0 | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Int MaxNeg Overflow ($V=1$) |
-| `0b0110_0fff` | `0x60`–`0x63` | `FLOOR_fff`| `( x -- floor )` | $0$ | 4 / 8 B | ~10 | X | X | X | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$) |
-| `0b0110_1fff` | `0x68`–`0x6B` | `CEIL_fff` | `( x -- ceil )` | $0$ | 4 / 8 B | ~10 | X | X | X | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$) |
-| `0b0111_0fff` | `0x70`–`0x73` | `SIN_fff` | `( theta -- sin )` | $0$ | 4 / 8 B | ~36 | X | X | X | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$) |
-| `0b0111_1fff` | `0x78`–`0x7B` | `COS_fff` | `( theta -- cos )` | $0$ | 4 / 8 B | ~36 | X | X | X | 0 | 0 | * | * | Stack Underflow ($U=1, ERR=1$) |
-| `0b1000_0fff` | `0x80`–`0x83` | `TAN_fff` | `( theta -- tan )` | $0$ | 4 / 8 B | ~52 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Asymptote Overflow ($V=1$) |
+| `0b0110_00x1` | `0x61`, `0x63` | `FLOOR_F32/F64`| `( x -- floor )` | $0$ | 4 / 8 B | ~10 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$) |
+| `0b0110_10x1` | `0x69`, `0x6B` | `CEIL_F32/F64` | `( x -- ceil )` | $0$ | 4 / 8 B | ~10 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$) |
+| `0b0111_00x1` | `0x71`, `0x73` | `SIN_F32/F64` | `( theta -- sin )` | $0$ | 4 / 8 B | ~36 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$) |
+| `0b0111_10x1` | `0x79`, `0x7B` | `COS_F32/F64` | `( theta -- cos )` | $0$ | 4 / 8 B | ~36 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$) |
+| `0b1000_00x1` | `0x81`, `0x83` | `TAN_F32/F64` | `( theta -- tan )` | $0$ | 4 / 8 B | ~52 | X | X | X | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Asymptote Overflow ($V=1$) |
 | `0b1010_xxxx` | `0xA0`–`0xAF` | `PUSH_CONST`| `( -- const )` | $+4$ / $+8$ | 0 B | 2–3 | X | 0 | 0 | 0 | * | - | * | Stack Overflow ($V=1, ERR=1$ if $SP + \text{bytes} > 256$) |
 | `0b1100_0000` | `0xC0` | `DUP4` | `( a -- a a )` | $+4$ | 4 B | 2 | X | - | - | - | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_0001` | `0xC1` | `DUP8` | `( a -- a a )` | $+8$ | 8 B | 3 | X | - | - | - | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
@@ -162,6 +162,10 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b1100_1001` | `0xC9` | `CONV_F32_F64`| `( f32 -- f64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_1010` | `0xCA` | `CONV_I64_I32`| `( i64 -- i32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Truncation Overflow ($V=1$) |
 | `0b1100_1011` | `0xCB` | `CONV_F64_F32`| `( f64 -- f32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Exponent Overflow ($V=1$), Underflow ($U=1$) |
+| `0b1100_1100` | `0xCC` | `CONV_I32_F32`| `( i32 -- f32 )` | $0$ | 4 B | ~5 | X | X | X | 0 | 0 | 0 | * | Signed 32-bit int to IEEE-754 single float |
+| `0b1100_1101` | `0xCD` | `CONV_F32_I32`| `( f32 -- i32 )` | $0$ | 4 B | ~5 | X | X | X | 0 | X | 0 | * | IEEE-754 single float to signed 32-bit int (truncate, $V=1$ on overflow) |
+| `0b1100_1110` | `0xCE` | `CONV_I64_F64`| `( i64 -- f64 )` | $0$ | 8 B | ~6 | X | X | X | 0 | 0 | 0 | * | Signed 64-bit int to IEEE-754 double float |
+| `0b1100_1111` | `0xCF` | `CONV_F64_I64`| `( f64 -- i64 )` | $0$ | 8 B | ~6 | X | X | X | 0 | X | 0 | * | IEEE-754 double float to signed 64-bit int (truncate, $V=1$ on overflow) |
 | `0b1101_xxxx` | `0xD0`–`0xDF` | `CP [x], TOS` | `( val -- )` | $-4$ / $-8$ | 4 / 8 B | 2 | X | - | - | - | - | * | * | Stack Underflow ($U=1, ERR=1$) |
 | `0b1110_xxxx` | `0xE0`–`0xEF` | `CP TOS, [x]` | `( -- val )` | $+4$ / $+8$ | 0 B | 2 | X | - | - | - | * | - | * | Stack Overflow ($V=1, ERR=1$ if $SP + \text{bytes} > 256$) |
 | `0b1111_0000` | `0xF0` | `ZERO_MEM` | `( -- )` | $0$ | 0 B | 17 | X | - | - | - | - | - | - | Clears all 16 user memory storage slots to zero |
@@ -345,26 +349,28 @@ Evaluates: Quotient = NOS / TOS  (First pushed operand divided by second pushed 
 
 ```
 ================================================================================
-SQRT_fff — SQUARE ROOT (i32, f32, i64, f64)
+SQRT_F32 / SQRT_F64 — FLOATING-POINT SQUARE ROOT
 ================================================================================
 ```
 
 #### Opcode Encodings & Execution Timing
 | Mnemonic | Hex | Binary | Precision | Required Depth | Net $\Delta SP$ | Latency (@80MHz) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **`SQRT_I32`** | `0x20` | `0b0010_0000` | 32-bit Unsigned/Int| 4 Bytes  | 0 Bytes | 16 Cycles (200 ns)|
 | **`SQRT_F32`** | `0x21` | `0b0010_0001` | 32-bit IEEE Float  | 4 Bytes  | 0 Bytes | ~20 Cycles (250 ns)|
-| **`SQRT_I64`** | `0x22` | `0b0010_0010` | 64-bit Unsigned/Int| 8 Bytes  | 0 Bytes | 32 Cycles (400 ns)|
 | **`SQRT_F64`** | `0x23` | `0b0010_0011` | 64-bit IEEE Double | 8 Bytes  | 0 Bytes | ~32 Cycles (400 ns)|
+
+> **Architectural Note:** Transcendental and root operations (`SQRT`, `POW`, `LN`, `EXP`, `SIN`, `COS`, `TAN`) operate strictly on floating-point data (`F32` and `F64`). Integer variants are not implemented (`0x20` and `0x22` are reserved). To compute the square root of an integer, the programmer must explicitly convert the integer argument via `CONV_I32_F32` (or `CONV_I64_F64`) prior to calling `SQRT_F32` (or `SQRT_F64`), and convert the result back via `CONV_F32_I32` (or `FLOOR_F32`) if an integer result is desired.
 
 #### Forth Stack Diagram
 ```text
-( TOS -- sqrt(TOS) )
+SQRT_F32: ( f32 -- sqrt_f32 )
+SQRT_F64: ( f64 -- sqrt_f64 )
 ```
 
 #### Status Flags & Side Effects
-* **Domain Error ($TOS < 0$):** Attempting square root of a negative number sets **`ERR = 1`** and pushes quiet NaN (`0x7FC00000`).
-* **Stack Underflow:** If $SP < 4$ (32-bit) or $SP < 8$ (64-bit), asserts **`U = 1`** and **`ERR = 1`**.
+* **Domain Error ($TOS < 0$):** Attempting square root of a negative float (except $-0.0$, where $\sqrt{-0.0} = -0.0$) sets **`ERR = 1`**.
+* **Zero Input:** $\sqrt{+0.0} = +0.0$; $\sqrt{-0.0} = -0.0$; does not set `ERR`.
+* **Stack Underflow:** If $SP < 4$ (`SQRT_F32`) or $SP < 8$ (`SQRT_F64`), asserts **`U = 1`** and **`ERR = 1`**.
 
 ---
 
@@ -463,10 +469,15 @@ CONV_xxx_yyy — DATA TYPE CONVERSIONS
 | **`CONV_F32_F64`** | `0xC9` | `0b1100_1001` | Expands IEEE single to double float   | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
 | **`CONV_I64_I32`** | `0xCA` | `0b1100_1010` | Truncates 64-bit int to 32-bit int    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{31}-1$ |
 | **`CONV_F64_F32`** | `0xCB` | `0b1100_1011` | Converts IEEE double to single float  | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW`/`UNDERFLOW` on exp limits |
+| **`CONV_I32_F32`** | `0xCC` | `0b1100_1100` | Converts signed 32-bit int to single  | 4 Bytes | $0$ Bytes  | Normalizes via LZC; no precision loss |
+| **`CONV_F32_I32`** | `0xCD` | `0b1100_1101` | Truncates single to signed 32-bit int | 4 Bytes | $0$ Bytes  | Sets `OVERFLOW = 1` if $|val| \ge 2^{31}$ |
+| **`CONV_I64_F64`** | `0xCE` | `0b1100_1110` | Converts signed 64-bit int to double  | 8 Bytes | $0$ Bytes  | Normalizes via LZC64; no precision loss |
+| **`CONV_F64_I64`** | `0xCF` | `0b1100_1111` | Truncates double to signed 64-bit int | 8 Bytes | $0$ Bytes  | Sets `OVERFLOW = 1` if $|val| \ge 2^{63}$ |
 
 #### Status Flags & Side Effects
 * **Stack Underflow:** Asserts `U = 1` and `ERR = 1` if source operand is missing.
 * **Truncation Overflow in `CONV_I64_I32`:** If upper 32 bits of 64-bit int are not a valid sign extension of lower 32 bits, sets **`OVERFLOW = 1`**.
+* **Float-to-Int Range Overflow (`CONV_F32_I32`, `CONV_F64_I64`):** If the float magnitude exceeds the representable signed integer range, sets **`OVERFLOW = 1`** and clamps to maximum/minimum integer value.
 
 ---
 

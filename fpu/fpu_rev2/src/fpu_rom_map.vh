@@ -17,5 +17,6 @@
   `define FLASH_TAN_BASE    15'h1000
   `define FLASH_LN_BASE     15'h1200
   `define FLASH_LOG10_BASE  15'h1400
+  `define FLASH_CONST_BASE  15'h1600
 
 `endif // FPU_ROM_MAP_VH

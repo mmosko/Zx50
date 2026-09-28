@@ -2,3 +2,5 @@ syn/*
 !syn/*.svf
 !syn/*.fit
 !syn/.git*
+.coverage
+.coveragerc

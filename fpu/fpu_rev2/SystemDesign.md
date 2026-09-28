@@ -104,12 +104,12 @@ To prevent register clobber bugs during complex algorithms (such as multi-cycle 
 > The authoritative software definition, bit layout, and Z80 polling conventions for the `STATUS[7:0]` register are specified in [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/ProgrammersGuide.md#2-status-register-status70). This section documents the internal FPGA hardware signal generation and trigger sources.
 
 ```text
-+--------+--------+--------+--------+-----------+------------+-------+----------+
-| Bit 7  | Bit 6  | Bit 5  | Bit 4  | Bit 3     | Bit 2      | Bit 1 | Bit 0    |
-+--------+--------+--------+--------+-----------+------------+-------+----------+
-| BUSY   | ZERO   | SIGN   | CARRY  | OVERFLOW  | UNDERFLOW  | ERR   | Reserved |
-| (BSY)  | (ZF)   | (SF)   | (CF)   | (VF)      | (UF)       | (EF)  | (0)      |
-+--------+--------+--------+--------+-----------+------------+-------+----------+
++--------+--------+--------+--------+-----------+------------+-------+-----------+
+| Bit 7  | Bit 6  | Bit 5  | Bit 4  | Bit 3     | Bit 2      | Bit 1 | Bit 0     |
++--------+--------+--------+--------+-----------+------------+-------+-----------+
+| BUSY   | ZERO   | SIGN   | CARRY  | OVERFLOW  | UNDERFLOW  | ERR   | DIFF_SIGN |
+| (BSY)  | (ZF)   | (SF)   | (CF)   | (VF)      | (UF)       | (EF)  | (DS)      |
++--------+--------+--------+--------+-----------+------------+-------+-----------+
 ```
 
 #### Internal Hardware Flag Triggers
@@ -203,7 +203,7 @@ graph TD
     ExpALU --> Flags
 ```
 
-### 3.1 32-Bit Parallel Adder / Subtractor (`alu_adder32`)
+### 3.1 Parallel Adder / Subtractor (`alu_adder`)
 * **Architecture:** The physical adder is a 32-bit carry-lookahead unit. The target register is always the accumulator `A` (`AX` or `AL`). Operand width (32-bit vs. 64-bit) and cycle sequencing (1-cycle vs. 2-cycle) are **entirely implicit in the register names**.
 * **Source Selection:** The source operand selects from `BX` or `DX` (for 64-bit operations) or `BL` or `DL` (for 32-bit operations).
 
@@ -224,7 +224,7 @@ graph TD
 
 * **Estimated Complexity:** ~40 LUT4s (utilizing MachXO2 dedicated carry chains `CCU2C`).
 
-### 3.2 32-Bit Bidirectional Barrel Shifter (`alu_shifter32`)
+### 3.2 Bidirectional Barrel Shifter (`alu_shifter`)
 * **Architecture:** Executes single-cycle shifts on `AL` or two-cycle compound shifts on `AX = {AH, AL}`, controlled by register `C[5:0]`. Target is always `A`.
 
 | Instruction Syntax | Operation Width | Cycles | Execution & Flag Updates |
@@ -232,13 +232,15 @@ graph TD
 | **`LSL AL, C`** | 32-bit | 1 | `AL <- AL << C[4:0]`, vacated LSBs filled with `0`. Sets `CF`, `ZF`, `SF`. |
 | **`LSR AL, C`** | 32-bit | 1 | `AL <- AL >> C[4:0]`, vacated MSBs filled with `0`. Sets `CF`, `ZF`, `SF`, sets `STICKY` in `STATUS`. |
 | **`ASR AL, C`** | 32-bit | 1 | `AL <- AL >>> C[4:0]`, MSB sign-extended. Sets `CF`, `ZF`, `SF`. |
+| **`RRC AL`**    | 32-bit | 1 | `AL <- (CARRY << 31) \| (AL >> 1)`. Sets `CF <- AL[0]`, `ZF`, `SF`. |
 | **`LSL AX, C`** | 64-bit | 2 | Cascaded shift left across `{AH, AL}` by `C` bits. Sets `CF`, `ZF`, `SF`. |
 | **`LSR AX, C`** | 64-bit | 2 | Cascaded shift right across `{AH, AL}` by `C` bits. Sets `CF`, `ZF`, `SF`, sets `STICKY`. |
 | **`ASR AX, C`** | 64-bit | 2 | Cascaded arithmetic shift right across `{AH, AL}` by `C` bits with sign extension. |
+| **`RRC AX`**    | 64-bit | 2 | Cascaded rotate right through carry across `{AH, AL}`. Sets `CF <- AX[0]`, `ZF`, `SF`. |
 
-* **Estimated Complexity:** ~96 LUT4s (organized as a 5-stage multiplexer tree).
+* **Estimated Complexity:** ~96 LUT4s (organized as a 5-stage multiplexer tree for 32 bits with 64-bit compound routing).
 
-### 3.3 32-Bit Leading-Zero Counter (`alu_lzc32`)
+### 3.3 Leading-Zero Counter (`alu_lzc`)
 * **Inputs:** Evaluates `AL` (32-bit mantissa) or `AX` (64-bit compound mantissa).
 * **Micro-Operations & Register Transfers:**
   * **`LZC AL`:** Computes leading zero count: `C[5:0] <- LZC(AL)` (range 0..32). If `AL == 0`, sets `ZF <- 1`.
@@ -248,7 +250,7 @@ graph TD
     * `EA <- EA - C` (adjusts exponent to match normalization shift).
 * **Estimated Complexity:** ~32 LUT4s.
 
-### 3.4 Bitwise Logic & Sign Manipulator (`alu_logic32`)
+### 3.4 Bitwise Logic & Sign Manipulator (`alu_logic`)
 * **Target:** Accumulator `A` (`AL` or `AX`). Source selects from `BX`, `DX`, `BL`, or `DL`.
 
 | Instruction Syntax | Operation Width | Cycles | Execution & Flag Updates |
@@ -261,12 +263,12 @@ graph TD
 | **`OR AX, {BX, DX}`**  | 64-bit | 2 | `AL <- AL \| src.L`, `AH <- AH \| src.H`, sets flags |
 | **`XOR AX, {BX, DX}`** | 64-bit | 2 | `AL <- AL ^ src.L`, `AH <- AH ^ src.H`, sets flags |
 | **`NOT AX`**           | 64-bit | 2 | `AL <- ~AL`, `AH <- ~AH`, sets flags |
-| **`CHS`**              | Float Sign | 1 | `AH[31] <- ~AH[31]`, sets `SF <- AH[31]` (`AL` and `EA` unmodified) |
-| **`ABS`**              | Float Sign | 1 | `AH[31] <- 0`, clears `SF <- 0` |
+| **`CHS {AL, AX}`**     | Float Sign | 1/2 | Inverts sign bit (bit 31 or bit 63), sets `SF` |
+| **`ABS {AL, AX}`**     | Float Sign | 1/2 | Clears sign bit (bit 31 or bit 63), clears `SF <- 0` |
 
-* **Estimated Complexity:** ~16 LUT4s.
+* **Estimated Complexity:** ~20 LUT4s.
 
-### 3.5 12-Bit Exponent ALU (`alu_exp12`)
+### 3.5 12-Bit Exponent ALU (`alu_exp`)
 * **Inputs:** Primary exponent `EA[11:0]`, Secondary exponent `EB[11:0]`, Counter `C[5:0]`, Hardwired Biases (`BIAS_F32 = 127`, `BIAS_F64 = 1023`).
 * **Micro-Operations & Register Transfers:**
   * **Exponent Difference (Mantissa Alignment):**
@@ -396,7 +398,8 @@ The table below summarizes all microcode operations. Flag notation follows stand
 | `0x05` | **`MUL AL, BL`**  | 32 | $AX \leftarrow AL \times BL$ | 16 | `AX = {AH, AL}` | Flags | - | X | X | 0 | X | - | - |
 | `0x05` | **`MUL AX, BX`**  | 64 | $\{DX, AX\} \leftarrow AX \times BX$ | 32 | `AX, DX` | Flags | - | X | X | 0 | X | - | - |
 | `0x06` | **`NEG AL`**      | 32 | $AL \leftarrow 0 - AL$ | 1 | `AL` | Flags | - | X | X | X | X | - | - |
-| `0x06` | **`NEG AX`**      | 64 | $AX \leftarrow 0 - AX$ | 2 | `AX = {AH, AL}` | Flags | - | X | X | X | X | - | - |
+| `0x07` | **`RRC AL`**      | 32 | $AL \leftarrow (CARRY \ll 31) \mid (AL \gg 1); CF \leftarrow AL[0]$ | 1 | `AL` | Flags | - | X | X | X | 0 | - | - |
+| `0x07` | **`RRC AX`**      | 64 | $AX \leftarrow (CARRY \ll 63) \mid (AX \gg 1); CF \leftarrow AX[0]$ | 2 | `AX = {AH, AL}` | Flags | - | X | X | X | 0 | - | - |
 | `0x08` | **`LSL AL, C`**   | 32 | $AL \leftarrow AL \ll C$ | 1 | `AL` | Flags | - | X | X | X | 0 | - | - |
 | `0x08` | **`LSL AX, C`**   | 64 | $AX \leftarrow AX \ll C$ | 2 | `AX = {AH, AL}` | Flags | - | X | X | X | 0 | - | - |
 | `0x09` | **`LSR AL, C`**   | 32 | $AL \leftarrow AL \gg C$ (Zero fill) | 1 | `AL` | Flags | - | X | X | X | 0 | - | - |
@@ -410,6 +413,14 @@ The table below summarizes all microcode operations. Flag notation follows stand
 | `0x0E` | **`XOR AL, src`** | 32 | $AL \leftarrow AL \oplus src$ | 1 | `AL` | Flags | - | X | X | 0 | 0 | - | - |
 | `0x10` | **`EXP_ADD EA, EB`** | 12 | $EA \leftarrow EA + EB$ | 1 | `EA` | Flags | - | - | - | - | X | X | - |
 | `0x11` | **`EXP_SUB EA, EB`** | 12 | $EA \leftarrow EA - EB$ | 1 | `EA` | Flags | - | - | - | - | X | X | - |
+| `0x12` | **`EXP_DIFF`**    | 12 | $C \leftarrow \min(|EA - EB|, 63); CF \leftarrow (EA < EB)$ | 1 | `C`, `STATUS` | Flags | - | - | - | X | - | - | - |
+| `0x13` | **`EXP_NORM`**    | 12 | $EA \leftarrow EA - C$ | 1 | `EA` | Flags | - | - | - | - | - | X | - |
+| `0x14` | **`EXP_INC`**     | 12 | $EA \leftarrow EA + 1$ | 1 | `EA` | None | - | - | - | - | - | - | - |
+| `0x15` | **`EXP_DEC`**     | 12 | $EA \leftarrow EA - 1$ | 1 | `EA` | None | - | - | - | - | - | - | - |
+| `0x16` | **`UNPACK_F32 exp, src`** | 32 | Extract $exp \leftarrow src[30:23]$, $src \leftarrow \{hidden, src[22:0]\}$, latch sign | 1 | `exp`, `src`, `Sign` | None | - | - | - | - | - | - | - |
+| `0x16` | **`UNPACK_F64 exp, src`** | 64 | Extract $exp \leftarrow src[62:52]$, $src \leftarrow \{hidden, src[51:0]\}$, latch sign | 2 | `exp`, `src`, `Sign` | None | - | - | - | - | - | - | - |
+| `0x17` | **`PACK_F32 dst, exp`** | 32 | Assemble $dst \leftarrow \{sign, exp[7:0], dst[22:0]\}$ | 1 | `dst` | None | - | - | - | - | - | - | - |
+| `0x17` | **`PACK_F64 dst, exp`** | 64 | Assemble $dst \leftarrow \{sign, exp[10:0], dst[51:0]\}$ | 2 | `dst` | None | - | - | - | - | - | - | - |
 | `0x18` | **`POP reg`**     | 32 | $reg \leftarrow [SP]; SP \leftarrow SP - 4$ | 1 | `reg`, `SP` | Flags | - | - | - | - | - | X | X |
 | `0x18` | **`POP reg64`**   | 64 | $reg64 \leftarrow [SP]; SP \leftarrow SP - 8$ | 2 | `reg64`, `SP` | Flags | - | - | - | - | - | X | X |
 | `0x19` | **`PUSH reg`**    | 32 | $SP \leftarrow SP + 4; [SP] \leftarrow reg$ | 1 | `SP`, EBR Stack | Flags | - | - | - | - | X | - | X |
@@ -420,6 +431,8 @@ The table below summarizes all microcode operations. Flag notation follows stand
 | `0x24` | **`LD reg64, <imm64>`**| 64 | $reg64 \leftarrow \text{Immediate64}$ | 3 | `reg64` | None | - | - | - | - | - | - | - |
 | `0x28` | **`MOV dst, src`**| 32 | $dst \leftarrow src$ | 1 | `dst` | None | - | - | - | - | - | - | - |
 | `0x28` | **`MOV dst64, src64`**| 64 | $dst64 \leftarrow src64$ | 2 | `dst64` | None | - | - | - | - | - | - | - |
+| `0x29` | **`SWAP dst, src`**| 32/12 | $dst \leftrightarrow src$ | 1 | `dst`, `src` | None | - | - | - | - | - | - | - |
+| `0x29` | **`SWAP dst64, src64`**| 64 | $dst64 \leftrightarrow src64$ | 2 | `dst64`, `src64` | None | - | - | - | - | - | - | - |
 | `0x30` | **`JNZ offset`**  | - | If $ZF == 0$: $UPC \leftarrow UPC + \text{offset}$ | 1 | `UPC` | None | - | - | - | - | - | - | - |
 | `0x31` | **`JZ offset`**   | - | If $ZF == 1$: $UPC \leftarrow UPC + \text{offset}$ | 1 | `UPC` | None | - | - | - | - | - | - | - |
 | `0x32` | **`JNZ flag, offset`**| - | If $\text{flag} == 1$: $UPC \leftarrow UPC + \text{offset}$ | 1 | `UPC` | None | - | - | - | - | - | - | - |
@@ -1298,31 +1311,166 @@ mul_i64_error:
 #### 7. Floating-Point ADD `f32` (`0b0000_0001`)
 ```text
 add_f32:
-  POP BL                  ; Pop operand B
-  JNZ UNDERFLOW, add_f32_error
-  POP AL                  ; Pop operand A
-  JNZ UNDERFLOW, add_f32_error
-  ; 1. Unpack sign, exponent, and insert hidden 1 into mantissa:
-  ;    EA <- AL[30:23], EB <- BL[30:23]
-  ; 2. Exponent difference & mantissa alignment:
-  SUB EB, EA              ; Exponent delta
-  ; If delta > 0: swap operands or shift AL right by C
-  LSR BL, C               ; Align smaller mantissa
-  ; 3. Add mantissas:
-  ADD AL, BL
-  ; 4. Normalize result via Leading Zero Counter:
-  LZC C, AL               ; Count leading zeros
-  LSL AL, C               ; Normalize mantissa
-  SUB EA, C               ; Adjust exponent
-  ; 5. Pack IEEE-754 single precision word:
-  PUSH AL
+  POP BL                  ; Pop operand B into BL
+  JNZ UNDERFLOW, f32_error; Underflow trap if stack empty
+  POP AL                  ; Pop operand A into AL
+  JNZ UNDERFLOW, f32_error; Underflow trap if stack empty
+  UNPACK_F32 EB, BL       ; EB <- exp(B), BL <- mantissa left-justified (bit 31), sign_b <- sign(B)
+  UNPACK_F32 EA, AL       ; EA <- exp(A), AL <- mantissa left-justified (bit 31), sign_a <- sign(A)
+  EXP_DIFF                ; C <- min(|EA - EB|, 63), CF <- (EA < EB or tie-break), DIFF_SIGN <- (sign_a ^ sign_b)
+  JZ CARRY, add_f32_align ; If EA >= EB, operand A already has larger exponent
+  SWAP AL, BL             ; Swap mantissas and sign latches (sign_a <-> sign_b)
+  SWAP EA, EB             ; Swap exponents so EA holds the larger exponent
+add_f32_align:
+  LSR BL                  ; Shift smaller mantissa BL right by C bits to align binary points
+  JZ DIFF_SIGN, add_f32_eff_add ; If operand signs match, perform effective addition
+
+  ; --- Effective Subtraction (DIFF_SIGN = 1) ---
+  SUB AL, BL              ; AL <- AL - BL (always non-negative since |A| >= |B|)
+  JNZ ZERO, add_f32_pack  ; If exact cancellation (ZF = 1), jump directly to pack (packs +0.0)
+  LZC AL                  ; C <- count leading zeros of difference
+  LSL AL                  ; AL <- AL << C (restore hidden 1 to bit 31)
+  EXP_NORM                ; EA <- EA - C (normalize exponent)
+  JMP add_f32_pack        ; Jump to pack result
+
+  ; --- Effective Addition (DIFF_SIGN = 0) ---
+add_f32_eff_add:
+  ADD AL, BL              ; AL <- AL + BL
+  JZ CARRY, add_f32_pack  ; If no carry out (CF = 0), mantissa is already normalized
+  RRC AL                  ; Carry out: rotate right 1 bit through carry (bit 31 gets 1)
+  EXP_INC                 ; EA <- EA + 1 (adjust exponent for carry)
+
+add_f32_pack:
+  PACK_F32 AL, EA         ; Pack sign_a, EA[7:0], and AL[30:8] into IEEE-754 single float in AL
+  PUSH AL                 ; Push result to stack
   RET
-add_f32_error:
+
+f32_error:
   SET ERR
   RET
 ```
 
-#### 8. Floating-Point MUL `f32` (`0b0001_0001`)
+#### 8. Floating-Point SUB `f32` (`0b0000_1001`)
+```text
+sub_f32:
+  POP BL                  ; Pop operand B into BL
+  JNZ UNDERFLOW, f32_error; Underflow trap
+  CHS BL                  ; Invert sign of operand B (BL[31] ^= 1)
+  POP AL                  ; Pop operand A into AL
+  JNZ UNDERFLOW, f32_error; Underflow trap
+  UNPACK_F32 EB, BL       ; EB <- exp(B), BL <- mantissa left-justified, sign_b <- sign(-B)
+  UNPACK_F32 EA, AL       ; EA <- exp(A), AL <- mantissa left-justified, sign_a <- sign(A)
+  EXP_DIFF                ; C <- min(|EA - EB|, 63), CF <- borrow, DIFF_SIGN <- (sign_a ^ sign_b)
+  JZ CARRY, sub_f32_align ; If EA >= EB, no swap needed
+  SWAP AL, BL             ; Swap mantissas and sign latches
+  SWAP EA, EB             ; Swap exponents
+sub_f32_align:
+  LSR BL                  ; Shift smaller mantissa BL right by C bits
+  JZ DIFF_SIGN, sub_f32_eff_add ; If effective signs match, add
+
+  ; --- Effective Subtraction ---
+  SUB AL, BL              ; AL <- AL - BL
+  JNZ ZERO, sub_f32_pack  ; If exact cancellation, jump to pack (+0.0)
+  LZC AL                  ; C <- count leading zeros
+  LSL AL                  ; AL <- AL << C
+  EXP_NORM                ; EA <- EA - C
+  JMP sub_f32_pack
+
+  ; --- Effective Addition ---
+sub_f32_eff_add:
+  ADD AL, BL              ; AL <- AL + BL
+  JZ CARRY, sub_f32_pack  ; If no carry out, already normalized
+  RRC AL                  ; Rotate right 1 bit through carry
+  EXP_INC                 ; EA <- EA + 1
+
+sub_f32_pack:
+  PACK_F32 AL, EA         ; Pack result into AL
+  PUSH AL                 ; Push result to stack
+  RET
+```
+
+#### 9. Floating-Point ADD `f64` (`0b0000_0011`)
+```text
+add_f64:
+  POP64 BX                ; Pop operand B into BX
+  JNZ UNDERFLOW, f64_error; Underflow trap if stack empty
+  POP64 AX                ; Pop operand A into AX
+  JNZ UNDERFLOW, f64_error; Underflow trap if stack empty
+  UNPACK_F64 EB, BX       ; EB <- exp(B), BX <- mantissa left-justified (bit 63), sign_b <- sign(B)
+  UNPACK_F64 EA, AX       ; EA <- exp(A), AX <- mantissa left-justified (bit 63), sign_a <- sign(A)
+  EXP_DIFF AX             ; C <- min(|EA - EB|, 63), CF <- (EA < EB or tie-break), DIFF_SIGN <- (sign_a ^ sign_b)
+  JZ CARRY, add_f64_align ; If EA >= EB, operand A already has larger exponent
+  SWAP AX, BX             ; Swap 64-bit mantissas and sign latches (sign_a <-> sign_b)
+  SWAP EA, EB             ; Swap exponents so EA holds the larger exponent
+add_f64_align:
+  LSR64 BX                ; Shift smaller mantissa BX right by C bits to align binary points
+  JZ DIFF_SIGN, add_f64_eff_add ; If operand signs match, perform effective addition
+
+  ; --- Effective Subtraction (DIFF_SIGN = 1) ---
+  SUB64 BX                ; AX <- AX - BX (always non-negative since |A| >= |B|)
+  JNZ ZERO, add_f64_pack  ; If exact cancellation (ZF = 1), jump directly to pack (packs +0.0)
+  LZC64 AX                ; C <- count leading zeros of difference
+  LSL64 AX                ; AX <- AX << C (restore hidden 1 to bit 63)
+  EXP_NORM                ; EA <- EA - C (normalize exponent)
+  JMP add_f64_pack        ; Jump to pack result
+
+  ; --- Effective Addition (DIFF_SIGN = 0) ---
+add_f64_eff_add:
+  ADD64 BX                ; AX <- AX + BX
+  JZ CARRY, add_f64_pack  ; If no carry out (CF = 0), mantissa is already normalized
+  RRC64 AX                ; Carry out: rotate right 1 bit through carry (bit 63 gets 1)
+  EXP_INC                 ; EA <- EA + 1 (adjust exponent for carry)
+
+add_f64_pack:
+  PACK_F64 AX, EA         ; Pack sign_a, EA[10:0], and AX[62:11] into IEEE-754 double in AX
+  PUSH64 AX               ; Push result to stack
+  RET
+
+f64_error:
+  SET ERR
+  RET
+```
+
+#### 10. Floating-Point SUB `f64` (`0b0000_1011`)
+```text
+sub_f64:
+  POP64 BX                ; Pop operand B into BX
+  JNZ UNDERFLOW, f64_error; Underflow trap
+  CHS BX                  ; Invert sign of operand B (BX[63] ^= 1)
+  POP64 AX                ; Pop operand A into AX
+  JNZ UNDERFLOW, f64_error; Underflow trap
+  UNPACK_F64 EB, BX       ; EB <- exp(B), BX <- mantissa left-justified, sign_b <- sign(-B)
+  UNPACK_F64 EA, AX       ; EA <- exp(A), AX <- mantissa left-justified, sign_a <- sign(A)
+  EXP_DIFF AX             ; C <- min(|EA - EB|, 63), CF <- borrow, DIFF_SIGN <- (sign_a ^ sign_b)
+  JZ CARRY, sub_f64_align ; If EA >= EB, no swap needed
+  SWAP AX, BX             ; Swap mantissas and sign latches
+  SWAP EA, EB             ; Swap exponents
+sub_f64_align:
+  LSR64 BX                ; Shift smaller mantissa BX right by C bits
+  JZ DIFF_SIGN, sub_f64_eff_add ; If effective signs match, add
+
+  ; --- Effective Subtraction ---
+  SUB64 BX                ; AX <- AX - BX
+  JNZ ZERO, sub_f64_pack  ; If exact cancellation, jump to pack (+0.0)
+  LZC64 AX                ; C <- count leading zeros
+  LSL64 AX                ; AX <- AX << C
+  EXP_NORM                ; EA <- EA - C
+  JMP sub_f64_pack
+
+  ; --- Effective Addition ---
+sub_f64_eff_add:
+  ADD64 BX                ; AX <- AX + BX
+  JZ CARRY, sub_f64_pack  ; If no carry out, already normalized
+  RRC64 AX                ; Rotate right 1 bit through carry
+  EXP_INC                 ; EA <- EA + 1
+
+sub_f64_pack:
+  PACK_F64 AX, EA         ; Pack result into AX
+  PUSH64 AX               ; Push result to stack
+  RET
+```
+
+#### 11. Floating-Point MUL `f32` (`0b0001_0001`)
 ```text
 mul_f32:
   POP BL
@@ -1342,25 +1490,25 @@ mul_f32_error:
   RET
 ```
 
-#### 9. Floating-Point Square Root `SQRT_F32` (`0b0100_0001`)
+#### 9. Floating-Point Square Root `SQRT_F32` (`0b0010_0001` / `0x21`)
 ```text
 sqrt_f32:
-  POP AL
-  JNZ UNDERFLOW, sqrt_f32_error
-  JNZ SIGN, sqrt_f32_domain_error  ; Sqrt of negative number -> ERR
-  ; Halve exponent: EA <- (EA - 127)/2 + 127
-  ; Non-restoring square root iteration:
-  MOV C, 24               ; 24 mantissa bits
-sqrt_loop:
-  ; Step square root bit-by-bit
-  DJNZ sqrt_loop
-  PUSH AL
-  RET
+  POP AL                          ; 0: Pop 32-bit float
+  JNZ UNDERFLOW, sqrt_f32_error   ; 1: Stack underflow check
+  UNPACK_F32 EA, AL               ; 2: Unpack exponent into EA, mantissa into AL
+  JNZ ZERO, sqrt_f32_zero         ; 3: sqrt(+0.0) = +0.0
+  JNZ SIGN, sqrt_f32_domain_error ; 4: Sqrt of negative number -> ERR
+  SQRT_EXP EA                     ; 5: EA <- (EA - 127)/2 + 127, latch exp odd parity
+  SQRT_CORE AL                    ; 6: Load seed from ROM, run 2x Newton-Raphson iterations
+  PACK_F32 AL, EA                 ; 7: Pack IEEE-754 single float
+sqrt_f32_zero:
+  PUSH AL                         ; 8: Push result
+  RET                             ; 9: Done
 sqrt_f32_domain_error:
-  SET ERR
+  SET ERR                         ; 10: Negative radicand domain error
   RET
 sqrt_f32_error:
-  SET ERR
+  SET ERR                         ; 11: Stack underflow error
   RET
 ```
 
@@ -1663,25 +1811,103 @@ stateDiagram-v2
 
 ## 7. Hardware Resource & Gate Budget Estimation
 
-Based on MachXO2-2000 slice utilization:
+A detailed micro-architectural estimation of the FPGA gate budget on the target **Lattice MachXO2-2000HC-4TG100I** (`U17`) based on the implemented `alu/` primitives, discrete register file, and control plane.
 
-| Subsystem Component | Estimated LUT4s | Estimated FFs | Dedicated EBR |
+### 7.1 Detailed Subsystem Breakdown
+
+#### 7.1.1 ALU Core Modules (`alu/`)
+* **32/64-Bit Adder/Subtractor (`alu/adder.py`):**
+  * *Architecture:* 32-bit ripple-carry adder/subtractor utilizing MachXO2 dedicated carry chains (`CCU2D` arithmetic slices).
+  * *Slice Usage:* 16 `CCU2D` slices (2 bits per slice) = 32 LUT4s for the 32-bit addition/subtraction datapath.
+  * *Control & Flags:* Subtraction inversion control (32 XOR gates integrated into slice inputs), 32-bit zero detection tree (~8 LUT4s), sign, overflow ($V = C_{31} \oplus C_{30}$), and carry flag generation (~4 LUT4s).
+  * *Subtotal:* **44 LUT4s, 0 FFs**.
+* **32/64-Bit Barrel Shifter & Rotator (`alu/shifter.py`):**
+  * *Architecture:* Multi-stage logarithmic barrel shifter supporting `LSL`, `LSR`, and `ASR` (shift steps 1, 2, 4, 8, 16, 32) plus single-bit rotate-through-carry (`RRC`).
+  * *Slice Usage:* 32-bit 5-stage multiplexer network (~80 LUT4s), 64-bit extension staging logic (~28 LUT4s), and carry-in/carry-out steering for `RRC32`/`RRC64` (~4 LUT4s).
+  * *Subtotal:* **112 LUT4s, 0 FFs**.
+* **Radix-4 Modified Booth Multiplier (`alu/booth_mul.py`):**
+  * *Architecture:* Iterative 2-bit/cycle Radix-4 Booth multiplier datapath (16 cycles for 32-bit, 32 cycles for 64-bit).
+  * *Slice Usage:* 3-bit Booth window decoder $\{Q[1], Q[0], q_{-1}\} \rightarrow \{0, \pm M, \pm 2M\}$ (~8 LUT4s), $M/2M$ multiplexer and complementer (~34 LUT4s), 34-bit partial product accumulator adder using `CCU2D` carry chain (17 slices = 34 LUT4s), shift/accumulation steering (~12 LUT4s).
+  * *Registers:* $q_{-1}$ boundary flip-flop, 4-bit iteration counter, and iteration state control (~6 FFs).
+  * *Subtotal:* **88 LUT4s, 6 FFs**.
+* **Leading-Zero Counter (`alu/lzc.py`):**
+  * *Architecture:* 32-bit / 64-bit hierarchical tree priority encoder.
+  * *Slice Usage:* 8 parallel 4-bit leading-zero encoders (Level 1, ~16 LUT4s), 4-to-2 intermediate merge tree (Level 2, ~12 LUT4s), and final 32/64-bit selector and zero-detect flag (Level 3, ~14 LUT4s).
+  * *Subtotal:* **42 LUT4s, 0 FFs**.
+* **Bitwise & Sign Logic (`alu/logic.py`):**
+  * *Architecture:* 32-bit bitwise `AND`, `OR`, `XOR`, `NOT`, floating-point sign negation (`CHS`), absolute value (`ABS`), and two's complement integer `ABS_I32`/`ABS_I64`.
+  * *Slice Usage:* Bitwise logic shares the 32-bit accumulator result multiplexer. Sign bit toggling/clearing requires ~2 LUT4s; integer ABS sequencing logic requires ~30 LUT4s.
+  * *Subtotal:* **32 LUT4s, 0 FFs**.
+* **12-Bit Exponent ALU (`alu/fp_exp.py`):**
+  * *Architecture:* 12-bit signed exponent arithmetic (`EXP_ADD`, `EXP_SUB`, `EXP_DIFF`, bias 127/1023 addition/subtraction, normalizer adjust).
+  * *Slice Usage:* 12-bit `CCU2D` adder/subtractor (6 slices = 12 LUT4s) and bias constant multiplexing / normalizer shift adjustment selector (~18 LUT4s).
+  * *Subtotal:* **30 LUT4s, 0 FFs**.
+* **Square Root Support Datapath (`alu/fp_sqrt.py`):**
+  * *Architecture:* Exponent halving with bias compensation (`sqrt_exp_f32`, `sqrt_exp_f64`), parity detection, seed table address formation, and Newton-Raphson iteration sequencing ($r_{n+1} = 0.5 \cdot r \cdot (3.0 - m \cdot r^2)$).
+  * *Slice Usage:* Exponent halving and parity logic (~10 LUT4s), ROM seed indexing (pure wiring, 0 LUTs), and iteration control FSM (~12 LUT4s, 4 FFs). Reuses Booth multiplier and adder for mantissa convergence.
+  * *Subtotal:* **22 LUT4s, 4 FFs**.
+
+#### 7.1.2 Dedicated Register File (`memory/registers.py`)
+To ensure high-speed, single-cycle operand availability without multi-port RAM read contention, primary datapath registers are built from discrete D-type flip-flops:
+
+| Register Group | Registers Included | Width & Type | Dedicated FFs | Input Mux LUT4s |
+|---|---|:---:|:---:|:---:|
+| **Primary Accumulator (`AX`)** | `AH`, `AL` | 2 $\times$ 32-bit | 64 FFs | 24 LUT4s |
+| **Secondary Operand (`BX`)** | `BH`, `BL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
+| **First-Class Math (`DX`)** | `DH`, `DL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
+| **Pure Scratchpad (`FX`)** | `FH`, `FL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
+| **Working Exponents** | `EA`, `EB` | 2 $\times$ 12-bit | 24 FFs | 8 LUT4s |
+| **Counters & Pointers** | `C` (6-bit), `SP` (6-bit), `OSP` (5-bit) | Scaled counters | 17 FFs | 8 LUT4s |
+| **Status Register** | `STATUS` (`BUSY`, `Z`, `S`, `C`, `V`, `U`, `E`, `MODE`) | 8-bit flags | 8 FFs | 4 LUT4s |
+| **Micro-PC & Stack** | `UPC` (10-bit), 4-level return stack | Sequencer control | 50 FFs | 20 LUT4s |
+| **Subtotal (Registers & Steering)** | — | — | **355 FFs** | **112 LUT4s** |
+
+#### 7.1.3 Control Plane, Sequencer & Host Bus Interface
+* **Micro-Sequencer Logic & Opcode Decoder (`dispatcher.py`, `micro_code.py`):**
+  * *Function:* Micro-instruction fetch, horizontal control-field decoding (ALU op, source reg, dest reg, shift step), conditional branch evaluation (`JNZ`, `JZ`, `JC`), and macro-opcode dispatch table.
+  * *Utilization:* **~125 LUT4s, 24 FFs**.
+* **Host Z80 Bus Interface & Dual-Mode Dispatcher:**
+  * *Function:* Address decoding for ports `0x50`–`0x55` (`BA[7:0]`, `~IORQ`, `~RD`, `~WR`), 8-bit bidirectional data bus transceivers (`BD[7:0]`), blocking/non-blocking mode latch, wait-state generator (`~WAIT~` / `BWAIT_N`), and command queue management (`EXEC_BATCH` loop).
+  * *Utilization:* **~95 LUT4s, 45 FFs**.
+* **Autonomous SPI/QSPI Bootloader Controller:**
+  * *Function:* Reads microcode, seed tables, and constants from external SPI Flash at power-on reset into dual-port SysMEM EBR.
+  * *Utilization:* **~85 LUT4s, 60 FFs**.
+
+#### 7.1.4 On-Chip Memory Subsystem (Lattice SysMEM EBR)
+The MachXO2-2000 provides **8 True Dual-Port SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total capacity):
+
+* **Block 0 (Datapath Scratch & Stacks):**
+  * Hardware Operand Stack: 64 entries $\times$ 32 bits = 256 bytes (`0x0200`–`0x02FF`).
+  * User Storage Memory: 16 slots $\times$ 32 bits = 64 bytes (`0x0300`–`0x033F`).
+  * Command Queue Buffer: 32 bytes (`0x0340`–`0x035F`).
+  * Vector Scratchpad: 256 bytes (`0x0360`–`0x03FF`).
+* **Block 1 & Block 2 (Microcode Store):**
+  * 1,024 words $\times$ 16 bits of micro-instruction memory (`0x0000`–`0x07FF`), loaded at boot.
+* **Blocks 3–6 (Mathematical Constants & Lookup Tables):**
+  * 256-entry Q0.16 Reciprocal Square Root Seed Table (512 bytes, `0x0600`–`0x07FF`).
+  * 256-entry Q0.16 Reciprocal Division Seed Table (512 bytes).
+  * 64-entry CORDIC Hyperbolic & Trigonometric Arctangent Tables (512 bytes).
+  * IEEE-754 F32/F64 Mathematical Constants Table ($\pi$, $e$, $\ln 2$, etc., `0x0080`–`0x00FF`).
+* **Block 7 (Free Headroom):**
+  * 1 unallocated EBR block reserved for user FIR filter coefficients or future expansion.
+
+---
+
+### 7.2 Total Resource Budget vs. MachXO2-2000 Capacity
+
+| Subsystem Component | LUT4s | Flip-Flops (FFs) | SysMEM EBR Blocks |
 |---|:---:|:---:|:---:|
-| **32-Bit Adder/Subtractor (`alu_adder32`)** | 40 | 0 | 0 |
-| **32-Bit Barrel Shifter (`alu_shifter32`)** | 96 | 0 | 0 |
-| **Radix-4 Booth Multiplier (`alu_booth_mul`)** | 52 | 10 | 0 |
-| **Leading-Zero Counter (`alu_lzc32`)** | 32 | 0 | 0 |
-| **Bitwise / Sign Logic (`alu_logic32`)** | 16 | 0 | 0 |
-| **12-Bit Exponent ALU (`alu_exp12`)** | 18 | 0 | 0 |
-| **Dedicated Register File (`AX`, `BX`, `DX`, `FX`, `EA`, `EB`, `C`, `OSP`, `MODES`)** | 40 | 317 | 0 |
-| **ALU Result Multiplexers & Datapath Steering** | 80 | 0 | 0 |
-| **Micro-Sequencer Logic & Opcode Decode** | 120 | 32 | 0 |
-| **Host Z80 Bus Interface (`BA`, `BD`, Port Decoder, Dispatcher)** | 85 | 50 | 0 |
-| **Autonomous QSPI Flash Boot Loader** | 85 | 60 | 0 |
-| **EBR Memory Subsystem (Stack, Microcode, Math Constants)** | 0 | 0 | 7 Blocks |
-| **Total Estimated Utilization** | **~664 LUT4s** | **~469 FFs** | **7 EBR Blocks** |
-| **Available on MachXO2-2000HC** | **2,112 LUT4s** | **2,112 FFs** | **8 EBR Blocks** |
-| **Resource Margin** | **~68% Free** | **~77% Free** | **1 EBR Block Free (~12%)** |
+| **ALU Core Primitives (`alu/`)** | 370 | 10 | 0 |
+| **Dedicated Register File & Steering** | 112 | 355 | 0 |
+| **Micro-Sequencer & Micro-Op Decoder** | 125 | 24 | 0 |
+| **Host Z80 Bus Interface & Dispatcher** | 95 | 45 | 0 |
+| **Autonomous SPI Flash Bootloader** | 85 | 60 | 0 |
+| **On-Chip Memory Subsystem** | 0 | 0 | 7 Blocks |
+| **Total Estimated Utilization** | **~787 LUT4s** | **~494 FFs** | **7 Blocks** |
+| **Available on MachXO2-2000HC** | **2,112 LUT4s** | **2,112 FFs** | **8 Blocks** |
+| **Utilization Percentage** | **37.3%** | **23.4%** | **87.5%** |
+| **Remaining Free Margin** | **~62.7% Free (1,325 LUT4s)** | **~76.6% Free (1,618 FFs)** | **1 Block Free (12.5%)** |
 
 > [!NOTE]
-> The complete coprocessor architecture—encompassing the 32-bit ALU primitives, Radix-4 Booth multiplier, discrete register file with dedicated math (`DX`) and pure scratch (`FX`) registers, hardware stack boundary trapping, batch command queue, and dual-mode dispatcher—consumes only **~664 LUT4s** (~31% of the MachXO2-2000) and **469 FFs** (~22%). This leaves ample headroom for board-level peripherals, memory banking, and QSPI boot controllers.
+> **Resource Analysis & Routing Headroom:**
+> With only **~37.3% LUT4 utilization** and **~23.4% FF utilization**, the design easily meets timing closure at the internal **80 MHz** clock target. The low slice density prevents routing congestion across the MachXO2 switch matrix, leaving ample capacity for backplane bus monitoring, memory banking controllers, or custom peripheral registers.
