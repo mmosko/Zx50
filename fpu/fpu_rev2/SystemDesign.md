@@ -81,7 +81,47 @@ Adding discrete hardware registers for `DX` yields major performance gains for m
      $$X_{i+1} = X_i \mp (Y_i \gg i), \quad Y_{i+1} = Y_i \pm (X_i \gg i), \quad Z_{i+1} = Z_i \mp \theta_i$$
    * Mapping $X \to \text{AX}$, $Y \to \text{BX}$, and the residual angle $Z \to \text{DX}$ enables CORDIC cross-additions to execute at **1 clock cycle per iteration**, completely avoiding EBR memory access bottlenecks during transcendental evaluations.
 
-### 2.4 Coupling with SysMEM Dual-Port EBR
+### 2.4 Status Register (`STATUS[7:0]`)
+
+The 8-bit `STATUS` register reflects the runtime state of the arithmetic core and error flags. It is readable by the Z80 host via I/O Port `0x71`:
+
+```text
++--------+--------+--------+--------+-----------+------------+-------+----------+
+| Bit 7  | Bit 6  | Bit 5  | Bit 4  | Bit 3     | Bit 2      | Bit 1 | Bit 0    |
++--------+--------+--------+--------+-----------+------------+-------+----------+
+| BUSY   | ZERO   | SIGN   | CARRY  | OVERFLOW  | UNDERFLOW  | ERR   | Reserved |
+| (BSY)  | (ZF)   | (SF)   | (CF)   | (VF)      | (UF)       | (EF)  | (0)      |
++--------+--------+--------+--------+-----------+------------+-------+----------+
+```
+
+* **`BUSY` (Bit 7):** Set to `1` by hardware dispatcher upon receiving an execution opcode. Cleared to `0` via microcode (`CLR BUSY`) or hardware when the current operation completes.
+* **`ZERO` (Bit 6, `ZF`):** Set if the ALU result is zero ($R = 0$).
+* **`SIGN` (Bit 5, `SF`):** Set if the ALU result is negative (MSB $= 1$).
+* **`CARRY` (Bit 4, `CF`):** Set on integer arithmetic carry out from addition or borrow from subtraction. Also acts as carry-in for multi-cycle 64-bit addition/subtraction (`ADC` / `SBB`).
+* **`OVERFLOW` (Bit 3, `VF`):** Set on signed 2's complement arithmetic overflow, floating-point overflow to $\pm\infty$, or stack push overflow attempt ($SP + \text{bytes} > 256$).
+* **`UNDERFLOW` (Bit 2, `UF`):** Set on floating-point underflow to zero/denormal, or stack pop underflow attempt ($SP = 0$).
+* **`ERR` (Bit 1, `EF`):** Master error flag. Set high on illegal opcode, divide-by-zero, invalid operand (NaN), or stack boundary violations (underflow/overflow).
+* **`Reserved` (Bit 0):** Always returns `0`.
+
+#### Flag Updates
+1. **ALU Auto-Update:** Arithmetic primitives (`alu_adder32`, `alu_logic32`, `alu_booth_mul`) automatically update `ZF`, `SF`, `CF`, and `VF` based on their outputs.
+2. **Explicit Microcode Control:** Microcode can set or clear flags with no side effects using the `SET <flag>` and `CLR <flag>` $\mu$-ops (e.g. `SET BUSY`, `CLR BUSY`, `SET ERR`).
+3. **Hardware Boundary Monitors:** The stack pointer hardware automatically forces `UNDERFLOW = 1` and `ERR = 1` if a `POP` is executed while $SP = 0$, and `OVERFLOW = 1` and `ERR = 1` if a `PUSH` is executed while the stack is full.
+
+### 2.5 Control & Execution Mode Registers
+
+Two dedicated single flip-flop mode flags control host handshaking and execution scheduling:
+
+* **`BLOCKING` (1 FF):**
+  * `1` (Default): Blocking mode. The FPGA asserts `BWAIT_N` (pulling host `~WAIT~` low) when `BUSY = 1`, holding the Z80 in wait states until completion.
+  * `0`: Non-blocking mode. `BWAIT_N` is never asserted; the Z80 polls Port `0x71` bit 7 (`BUSY`).
+  * Controlled via user management opcodes `SET_BLOCKING` (`0b1111_1110`) and `SET_NONBLOCKING` (`0b1111_1101`).
+* **`IMMEDIATE` (1 FF):**
+  * `1` (Default): Immediate mode. Each opcode written to Port `0x71` triggers immediate microcode dispatch.
+  * `0`: Batch mode. Non-management opcodes written to Port `0x71` are pushed into the Command Stack (`0x0340`–`0x035F`) without executing. Execution begins only when `EXEC_BATCH` is received.
+  * Controlled via user management opcodes `SET_IMMEDIATE` (`0b1111_1100`) and `SET_BATCH` (`0b1111_1011`).
+
+### 2.6 Coupling with SysMEM Dual-Port EBR
 
 The physical registers act as the **fast execution front-end** for the SysMEM EBR storage:
 
@@ -94,7 +134,12 @@ The physical registers act as the **fast execution front-end** for the SysMEM EB
 
 ---
 
-## 3. ALU Hardware Primitives & Execution Datapath
+## 3. Microcode ISA: Arithmetic, Logic & Shifter Micro-Operations
+
+> [!IMPORTANT]
+> **Two-Layer Instruction Architecture:**
+> 1. **User ISA (Host Port 0x71 Language):** The 8-bit macro-opcodes issued by the Z80 host CPU via I/O Port `0x71` (e.g. `ADD_I32`, `MUL_F64`, `SIN`, `PUSH_PI_32`, `EXEC_BATCH`), defined in [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md).
+> 2. **Microcode ISA (Internal Micro-Operations / $\mu$-ops):** The low-level horizontal/vertical micro-instructions executed by the FPGA micro-sequencer on the physical datapath and register file (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `STATUS`, `SP`), defined across Section 3 and Section 4. Every user opcode dispatches to an internal microcode program composed of these $\mu$-ops.
 
 The ALU consists of five independent functional primitives multiplexed into a common result bus, operating directly on the physical register file (`AX`, `BX`, `DX`, `EA`, `EB`, `C`):
 
@@ -276,7 +321,7 @@ graph TD
 
 ---
 
-## 4. Microcode Memory, Stack & Data Movement Architecture
+## 4. Microcode ISA: Data Movement, Memory, Stack & Control Flow Micro-Operations
 
 ### 4.1 Stack Operations & Stack Pointer Semantics (`POP` and `PUSH`)
 
@@ -294,10 +339,14 @@ The execution stack resides in the SysMEM EBR block at `0x0000`–`0x00FF` (256 
 | **`POP BL`**  | 32-bit | 4 | $SP \leftarrow SP - 4$ | `BL <- [SP]`, decrements $SP$ by 4 bytes (1 word) |
 | **`POP AX`**  | 64-bit | 8 | $SP \leftarrow SP - 8$ | `AX <- [SP]`, decrements $SP$ by 8 bytes (2 words) |
 | **`POP BX`**  | 64-bit | 8 | $SP \leftarrow SP - 8$ | `BX <- [SP]`, decrements $SP$ by 8 bytes (2 words) |
+| **`POP DL`**  | 32-bit | 4 | $SP \leftarrow SP - 4$ | `DL <- [SP]`, decrements $SP$ by 4 bytes (1 word) |
+| **`POP DX`**  | 64-bit | 8 | $SP \leftarrow SP - 8$ | `DX <- [SP]`, decrements $SP$ by 8 bytes (2 words) |
 | **`PUSH AL`** | 32-bit | 4 | $SP \leftarrow SP + 4$ | Increments $SP$ by 4 bytes, `[SP] <- AL` |
 | **`PUSH BL`** | 32-bit | 4 | $SP \leftarrow SP + 4$ | Increments $SP$ by 4 bytes, `[SP] <- BL` |
 | **`PUSH AX`** | 64-bit | 8 | $SP \leftarrow SP + 8$ | Increments $SP$ by 8 bytes, `[SP] <- AX` (two 32-bit writes) |
 | **`PUSH BX`** | 64-bit | 8 | $SP \leftarrow SP + 8$ | Increments $SP$ by 8 bytes, `[SP] <- BX` (two 32-bit writes) |
+| **`PUSH DL`** | 32-bit | 4 | $SP \leftarrow SP + 4$ | Increments $SP$ by 4 bytes, `[SP] <- DL` |
+| **`PUSH DX`** | 64-bit | 8 | $SP \leftarrow SP + 8$ | Increments $SP$ by 8 bytes, `[SP] <- DX` (two 32-bit writes) |
 
 #### Standard Microcode Execution Sequences
 
@@ -333,8 +382,8 @@ By adhering strictly to `POP` and `PUSH`, microcode state machines are completel
 #### Stack Boundary Protection
 
 Explicit `POP` and `PUSH` operations simplify hardware limit enforcement:
-* **Underflow Detection:** Any `POP` attempted when $SP = 0$ aborts the instruction and sets `STATUS[6]` (`ERR`) and `STATUS[1]` (`UF`).
-* **Overflow Detection:** Any `PUSH` attempted when $SP + \text{bytes} > 256$ aborts the write and sets `STATUS[6]` (`ERR`) and `STATUS[5]` (`OVF`).
+* **Underflow Detection:** Any `POP` attempted when $SP = 0$ aborts the instruction and sets `STATUS[2]` (`UNDERFLOW`) and `STATUS[1]` (`ERR`).
+* **Overflow Detection:** Any `PUSH` attempted when $SP + \text{bytes} > 256$ aborts the write and sets `STATUS[3]` (`OVERFLOW`) and `STATUS[1]` (`ERR`).
 
 ### 4.2 Scratchpad Operations (`SCR`)
 
@@ -350,8 +399,10 @@ A dedicated 256-byte vector and math scratchpad area is located in SysMEM EBR at
 ### 4.3 Immediate Loads (`LD`)
 
 Loads a 32-bit immediate literal constant embedded in microcode ROM directly into a working register:
-* **`LD {AH, AL, BH, BL}, <imm32>`**
-* *Simplified model:* Direct load into accumulator `LD AL, <imm32>`, followed by `MOV` to secondary registers if needed.
+* **`LD {AH, AL, BH, BL, DH, DL}, <imm32>`**
+* **`LD {AX, BX, DX}, <imm64>`** (Loads compound 64-bit constant in 2 clock cycles)
+* **`LD SP, 0`** (Direct reset of the Stack Pointer)
+* **`LD OSP, 0`** (Direct reset of the Operation Stack Pointer)
 
 ### 4.4 Register-to-Register Moves (`MOV`)
 
@@ -365,11 +416,26 @@ Fast single-cycle data transfers between dedicated registers:
 | **`MOV {AL, BL}, DL`** | 32-bit | Restore low word from spare register `DL` |
 | **`MOV DX, {AX, BX}`** | 64-bit | Compound 64-bit move to spare register `DX` (2 cycles) |
 | **`MOV {AX, BX}, DX`** | 64-bit | Compound 64-bit move from spare register `DX` (2 cycles) |
+| **`MOV C, <imm6>`**    | 6-bit  | Load shift/loop counter `C` directly with immediate literal (0..63) |
 | **`MOV C, AL[5:0]`**   | 6-bit  | Load shift/loop counter `C` from lower 6 bits of `AL` |
 | **`MOV EA, EB`**       | 12-bit | Copy exponent register `EB` to `EA` |
 | **`MOV EB, EA`**       | 12-bit | Copy exponent register `EA` to `EB` |
 
-### 4.5 User Memory Isolation
+### 4.5 Jump, Branch & Flag Micro-Operations (`JNZ`, `JZ`, `LOOP`, `SET`, `CLR`)
+
+Control flow within microcode programs is managed by conditional jumps, loop counters, and explicit flag assertions:
+
+| Micro-Operation | Condition Tested | Action |
+|---|---|---|
+| **`JNZ offset`** | Zero Flag `ZF == 0` | Jump to microcode label/offset if result is non-zero |
+| **`JZ offset`** | Zero Flag `ZF == 1` | Jump to microcode label/offset if result is zero |
+| **`JNZ flag, offset`** | Specified `STATUS` flag `== 1` | Jump to label if flag is set (e.g. `UNDERFLOW`, `OVERFLOW`, `ERR`, `CARRY`, `SIGN`, `BUSY`) |
+| **`JZ flag, offset`** | Specified `STATUS` flag `== 0` | Jump to label if flag is clear |
+| **`LOOP offset`** | Counter `C != 0` | Decrements `C <= C - 1`; if `C != 0` jump to offset, else fall through |
+| **`SET flag`** | None | Assert specified status flag with no side effects (`SET BUSY`, `SET ERR`) |
+| **`CLR flag`** | None | Clear specified status flag with no side effects (`CLR BUSY`, `CLR ERR`, `CLR CARRY`) |
+
+### 4.6 User Memory Isolation
 
 > [!IMPORTANT]
 > **Microcode has zero direct access to user storage memory.**
@@ -380,7 +446,7 @@ Fast single-cycle data transfers between dedicated registers:
 > 
 > Because microcode cannot address this memory, user variables are guaranteed to remain untouched across all arithmetic, transcendental, and CORDIC computations.
 
-### 4.6 Command Stack & Batch Execution Engine (`0x0340`–`0x035F`)
+### 4.7 Command Stack & Batch Execution Engine (`0x0340`–`0x035F`)
 
 To prevent the Z80 host CPU from incurring massive bus-poll overhead (writing an opcode $\to$ polling status register $\to$ checking `BUSY` $\to$ writing next opcode), the FPU incorporates a dedicated 32-byte **Command Stack** in SysMEM EBR managed by the 5-bit **`OSP[4:0]`** (Operation Stack Pointer) register.
 
@@ -388,43 +454,471 @@ To prevent the Z80 host CPU from incurring massive bus-poll overhead (writing an
 
 | Opcode | Mnemonic | Mode / Action |
 |---|---|---|
-| `0b1111_1100` | **`SET_IMMEDIATE`** | **Immediate Mode (Default):** Each opcode written to Port 0x71 is pushed to `[OSP]`, immediately executed by the micro-engine, and popped upon completion. |
-| `0b1111_1011` | **`SET_BATCH`**     | **Batch Mode:** Arriving arithmetic, conversion, and constant opcodes are queued sequentially into the command stack (`[OSP] <- opcode; OSP <- OSP + 1`) without triggering immediate execution. Up to 32 opcodes can be queued. |
+| `0b1111_1100` | **`SET_IMMEDIATE`** | **Immediate Mode (Default):** Sets `IMMEDIATE = 1`. Each opcode written to Port 0x71 is pushed to `[OSP]`, immediately executed by the micro-engine, and popped upon completion. |
+| `0b1111_1011` | **`SET_BATCH`**     | **Batch Mode:** Sets `IMMEDIATE = 0`. Arriving arithmetic, conversion, and constant opcodes are queued sequentially into the command stack (`[OSP] <- opcode; OSP <- OSP + 1`) without triggering immediate execution. Up to 32 opcodes can be queued. |
 | `0b1111_1010` | **`EXEC_BATCH`**    | **Batch Execute:** Micro-engine asserts `BUSY = 1` (and `WAIT_N` if in blocking mode) and executes all queued opcodes back-to-back at 80 MHz from index 0 to `OSP - 1`. Resets $OSP \leftarrow 0$ upon completion. |
 | `0b1100_0110` | **`CLEAR_STACK`**   | Resets both the Operand Stack Pointer $SP \leftarrow 0$ and the Operation Stack Pointer $OSP \leftarrow 0$. |
 
 * **Unified Micro-Pipeline:** Both modes utilize the same queue mechanism: in immediate mode, the queue has a depth of 1 (push $\to$ execute $\to$ pop). In batch mode, the host streams a complete mathematical formula (e.g. via Z80 `OTIR` block I/O), then fires `EXEC_BATCH`, allowing the FPGA to evaluate the sequence entirely in hardware at wire speed.
 
-### 4.7 Mathematical Constants in ROM & Push Opcodes
+### 4.8 Mathematical Constants in Microcode Program & ROM
 
-A dedicated table in SysMEM EBR ROM (`0x0400`–`0x07FF`) stores high-precision mathematical constants formatted as IEEE-754 Single Precision (`f32`) and Double Precision (`f64`). Dedicated opcodes are provided for 32-bit and 64-bit precisions (bit 0 indicates precision: `0` = `_32`, `1` = `_64`):
-
-| Opcode | Mnemonic | Constant & Precision | Hex Value in Internal ROM |
-|---|---|---|:---:|
-| `0b1010_0000` | **`PUSH_PI_32`** | $\pi \approx 3.14159265$ (Single Precision `f32`) | `0x40490FDB` |
-| `0b1010_0001` | **`PUSH_PI_64`** | $\pi \approx 3.141592653589793$ (Double Precision `f64`) | `0x400921FB_54442D18` |
-| `0b1010_0010` | **`PUSH_E_32`** | $e \approx 2.7182818$ (Single Precision `f32`) | `0x402DF854` |
-| `0b1010_0011` | **`PUSH_E_64`** | $e \approx 2.718281828459045$ (Double Precision `f64`) | `0x4005BF0A_8B145769` |
-| `0b1010_0100` | **`PUSH_LN2_32`** | $\ln(2) \approx 0.69314718$ (Single Precision `f32`) | `0x3F317218` |
-| `0b1010_0101` | **`PUSH_LN2_64`** | $\ln(2) \approx 0.693147180559945$ (Double Precision `f64`) | `0x3FE62E42_FEFA39EF` |
-| `0b1010_0110` | **`PUSH_LOG2E_32`** | $\log_2(e) \approx 1.442695$ (Single Precision `f32`) | `0x3FB8AA3B` |
-| `0b1010_0111` | **`PUSH_LOG2E_64`** | $\log_2(e) \approx 1.442695040888963$ (Double Precision `f64`) | `0x3FF71547_652B82FE` |
-| `0b1010_1000` | **`PUSH_LOG2_10_32`** | $\log_2(10) \approx 3.321928$ (Single Precision `f32`) | `0x40549A78` |
-| `0b1010_1001` | **`PUSH_LOG2_10_64`** | $\log_2(10) \approx 3.321928094887362$ (Double Precision `f64`) | `0x400A934F_0979A371` |
-| `0b1010_1010` | **`PUSH_LOG10_2_32`** | $\log_{10}(2) \approx 0.301030$ (Single Precision `f32`) | `0x3E9A209B` |
-| `0b1010_1011` | **`PUSH_LOG10_2_64`** | $\log_{10}(2) \approx 0.301029995663981$ (Double Precision `f64`) | `0x3FD34413_509F79FF` |
-| `0b1010_1100` | **`PUSH_SQRT2_32`** | $\sqrt{2} \approx 1.4142135$ (Single Precision `f32`) | `0x3FB504F3` |
-| `0b1010_1101` | **`PUSH_SQRT2_64`** | $\sqrt{2} \approx 1.414213562373095$ (Double Precision `f64`) | `0x3FF6A09E_667F3BCD` |
-| `0b1010_1110` | **`PUSH_INV_SQRT2_32`** | $1/\sqrt{2} \approx 0.7071068$ (Single Precision `f32`) | `0x3F3504F3` |
-| `0b1010_1111` | **`PUSH_INV_SQRT2_64`** | $1/\sqrt{2} \approx 0.707106781186548$ (Double Precision `f64`) | `0x3FE6A09E_667F3BCD` |
-
-* **Execution Flow:**
-  1. Microcode loads constant words from ROM into `AL` (`f32`) or `AX` (`f64`).
-  2. Executes `PUSH AL` ($SP \leftarrow SP + 4$) or `PUSH AX` ($SP \leftarrow SP + 8$).
+Mathematical constants can be supplied in two ways:
+1. **Embedded Immediate Literals in Microcode:** Because microcode words support immediate loads (`LD DL, <const>` or `LD DX, <const>`), constants can live directly inside the microcode ROM program space as literal values. This avoids consuming address lines or memory cycles for table lookups.
+2. **Dedicated SysMEM EBR ROM Table (`0x0400`–`0x07FF`):** High-precision constants formatted as IEEE-754 Single Precision (`f32`) and Double Precision (`f64`).
 
 ---
 
-## 5. Hardware Resource & Gate Budget Estimation
+## 5. Microcode Implementation of User OpCodes
+
+This section specifies the internal microcode program executed for each user OpCode (as defined in [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md)).
+
+### Execution Contracts & Preconditions
+* **BUSY Verification:** The hardware dispatcher guarantees that `BUSY == 0` before initiating any new macro-opcode. Upon dispatch, `SET BUSY` is asserted.
+* **Underflow Trapping:** Every `POP` primitive tests for stack underflow ($SP = 0$). If an underflow is detected, hardware immediately sets `UNDERFLOW = 1` and `ERR = 1`, and the microcode branches to the error exit.
+* **Overflow Trapping:** Every `PUSH` primitive tests for stack capacity ($SP + \text{bytes} > 256$). If full, hardware sets `OVERFLOW = 1` and `ERR = 1`.
+* **Clean Termination:** Every routine exits by clearing the busy flag (`CLR BUSY`), which immediately deasserts `BWAIT_N` (releasing the host `~WAIT~` line if `BLOCKING = 1`).
+
+---
+
+### 5.1 ALU Arithmetic Operations (60 Operations: 15 Ops $\times$ 4 Formats)
+
+The 15 ALU math operations are implemented across four numeric data types (`i32`, `i64`, `f32`, `f64`).
+
+#### 1. ADD `i32` (`0b0000_0000`)
+```text
+add_i32:
+  SET BUSY
+  POP BL
+  JNZ UNDERFLOW, add_i32_error
+  POP AL
+  JNZ UNDERFLOW, add_i32_error
+  ADD AL, BL
+  PUSH AL
+add_i32_error:
+  CLR BUSY
+```
+
+#### 2. ADD `i64` (`0b0000_0010`)
+```text
+add_i64:
+  SET BUSY
+  POP BX
+  JNZ UNDERFLOW, add_i64_error
+  POP AX
+  JNZ UNDERFLOW, add_i64_error
+  ADD AX, BX
+  PUSH AX
+add_i64_error:
+  CLR BUSY
+```
+
+#### 3. SUB `i32` (`0b0000_1000`)
+```text
+sub_i32:
+  SET BUSY
+  POP BL
+  JNZ UNDERFLOW, sub_i32_error
+  POP AL
+  JNZ UNDERFLOW, sub_i32_error
+  SUB AL, BL
+  PUSH AL
+sub_i32_error:
+  CLR BUSY
+```
+
+#### 4. SUB `i64` (`0b0000_1010`)
+```text
+sub_i64:
+  SET BUSY
+  POP BX
+  JNZ UNDERFLOW, sub_i64_error
+  POP AX
+  JNZ UNDERFLOW, sub_i64_error
+  SUB AX, BX
+  PUSH AX
+sub_i64_error:
+  CLR BUSY
+```
+
+#### 5. MUL `i32` (`0b0001_0000`)
+```text
+mul_i32:
+  SET BUSY
+  POP BL
+  JNZ UNDERFLOW, mul_i32_error
+  POP AL
+  JNZ UNDERFLOW, mul_i32_error
+  MUL AL, BL              ; Radix-4 Booth multiplier computes AL * BL in 16 cycles
+  PUSH AL                 ; Push lower 32-bit product
+mul_i32_error:
+  CLR BUSY
+```
+
+#### 6. MUL `i64` (`0b0001_0010`)
+```text
+mul_i64:
+  SET BUSY
+  POP BX
+  JNZ UNDERFLOW, mul_i64_error
+  POP AX
+  JNZ UNDERFLOW, mul_i64_error
+  MUL AX, BX              ; Booth multiplier computes 64x64 in 32 cycles -> AX
+  PUSH AX
+mul_i64_error:
+  CLR BUSY
+```
+
+#### 7. Floating-Point ADD `f32` (`0b0000_0001`)
+```text
+add_f32:
+  SET BUSY
+  POP BL                  ; Pop operand B
+  JNZ UNDERFLOW, add_f32_error
+  POP AL                  ; Pop operand A
+  JNZ UNDERFLOW, add_f32_error
+  ; 1. Unpack sign, exponent, and insert hidden 1 into mantissa:
+  ;    EA <- AL[30:23], EB <- BL[30:23]
+  ; 2. Exponent difference & mantissa alignment:
+  SUB EB, EA              ; Exponent delta
+  ; If delta > 0: swap operands or shift AL right by C
+  LSR BL, C               ; Align smaller mantissa
+  ; 3. Add mantissas:
+  ADD AL, BL
+  ; 4. Normalize result via Leading Zero Counter:
+  LZC C, AL               ; Count leading zeros
+  LSL AL, C               ; Normalize mantissa
+  SUB EA, C               ; Adjust exponent
+  ; 5. Pack IEEE-754 single precision word:
+  PUSH AL
+add_f32_error:
+  CLR BUSY
+```
+
+#### 8. Floating-Point MUL `f32` (`0b0001_0001`)
+```text
+mul_f32:
+  SET BUSY
+  POP BL
+  JNZ UNDERFLOW, mul_f32_error
+  POP AL
+  JNZ UNDERFLOW, mul_f32_error
+  ; 1. Add exponents: EA <- EA + EB - 127 (bias adjustment)
+  ; 2. Multiply 24-bit mantissas:
+  MUL AL, BL              ; Booth multiplier produces 48-bit product in AX
+  ; 3. Normalize & round:
+  ;    If AH[15] == 1, shift right 1 and increment EA
+  ; 4. Pack into IEEE-754 f32:
+  PUSH AL
+mul_f32_error:
+  CLR BUSY
+```
+
+#### 9. Floating-Point Square Root `SQRT_F32` (`0b0100_0001`)
+```text
+sqrt_f32:
+  SET BUSY
+  POP AL
+  JNZ UNDERFLOW, sqrt_f32_error
+  JNZ SIGN, sqrt_f32_domain_error  ; Sqrt of negative number -> ERR
+  ; Halve exponent: EA <- (EA - 127)/2 + 127
+  ; Non-restoring square root iteration:
+  MOV C, 24               ; 24 mantissa bits
+sqrt_loop:
+  ; Step square root bit-by-bit
+  LOOP sqrt_loop
+  PUSH AL
+  CLR BUSY
+sqrt_f32_domain_error:
+  SET ERR
+sqrt_f32_error:
+  CLR BUSY
+```
+
+#### 10. Trigonometric Sine `SIN_F32` (`0b0101_1001`)
+```text
+sin_f32:
+  SET BUSY
+  POP AL                  ; Input angle theta
+  JNZ UNDERFLOW, sin_f32_error
+  ; Setup CORDIC planar registers:
+  ; AX (X) <- 0x26DD3B6A (1/K constant)
+  ; BX (Y) <- 0
+  ; DX (Z) <- AL (target angle)
+  MOV C, 24               ; 24 rotation stages
+cordic_loop:
+  ; In parallel or 3 cycles:
+  ; X_next = X - (Y >> C)
+  ; Y_next = Y + (X >> C)
+  ; Z_next = Z - atan_table[C]
+  LOOP cordic_loop
+  ; BX now holds sin(theta)
+  PUSH BL
+sin_f32_error:
+  CLR BUSY
+```
+
+---
+
+### 5.2 Stack Operations (10 Operations)
+
+#### 1. DUP4 (`0b1100_0000`)
+```text
+dup_4:
+  SET BUSY
+  POP AL
+  JNZ UNDERFLOW, dup_4_error
+  PUSH AL
+  PUSH AL                 ; Second PUSH duplicates TOS (may flag OVERFLOW)
+dup_4_error:
+  CLR BUSY
+```
+
+#### 2. DUP8 (`0b1100_0001`)
+```text
+dup_8:
+  SET BUSY
+  POP AX
+  JNZ UNDERFLOW, dup_8_error
+  PUSH AX
+  PUSH AX                 ; Second PUSH duplicates 64-bit TOS
+dup_8_error:
+  CLR BUSY
+```
+
+#### 3. CLEAR_STACK (`0b1100_0110`)
+```text
+clear_stack:
+  SET BUSY
+  LD SP, 0                ; Reset Operand Stack Pointer
+  LD OSP, 0               ; Reset Command Queue Pointer
+  CLR BUSY
+```
+
+#### 4. CONV_I32_I64 (`0b1100_1000`)
+```text
+conv_i32_i64:
+  SET BUSY
+  POP AL
+  JNZ UNDERFLOW, conv_i32_i64_error
+  ; Sign-extend 32-bit AL into AH:
+  JNZ SIGN, sign_negative
+  LD AH, 0x00000000
+  JZ conv_i32_i64_push
+sign_negative:
+  LD AH, 0xFFFFFFFF
+conv_i32_i64_push:
+  PUSH AX                 ; Pushes 64-bit signed integer
+conv_i32_i64_error:
+  CLR BUSY
+```
+
+#### 5. CONV_F32_F64 (`0b1100_1001`)
+```text
+conv_f32_f64:
+  SET BUSY
+  POP AL
+  JNZ UNDERFLOW, conv_f32_f64_error
+  ; Re-bias exponent: E_64 <- E_32 - 127 + 1023
+  ; Repack mantissa into 52-bit {AH[19:0], AL}:
+  PUSH AX
+conv_f32_f64_error:
+  CLR BUSY
+```
+
+#### 6. CONV_I64_I32 (`0b1100_1010`)
+```text
+conv_i64_i32:
+  SET BUSY
+  POP AX
+  JNZ UNDERFLOW, conv_i64_i32_error
+  ; Check if upper 32 bits AH represent valid sign extension of AL:
+  ; If not, SET OVERFLOW
+  PUSH AL
+conv_i64_i32_error:
+  CLR BUSY
+```
+
+#### 7. CONV_F64_F32 (`0b1100_1011`)
+```text
+conv_f64_f32:
+  SET BUSY
+  POP AX
+  JNZ UNDERFLOW, conv_f64_f32_error
+  ; Re-bias exponent: E_32 <- E_64 - 1023 + 127
+  ; Truncate/round 52-bit mantissa to 23 bits into AL:
+  PUSH AL
+conv_f64_f32_error:
+  CLR BUSY
+```
+
+#### 8. CP [xxxx], TOS (`0b1101_xxxx`)
+```text
+cp_mem_tos:
+  SET BUSY
+  ; Hardware latch: offset = opcode[3:0]
+  POP DL
+  JNZ UNDERFLOW, cp_mem_tos_error
+  [user_base || offset] = DL
+cp_mem_tos_error:
+  CLR BUSY
+```
+
+#### 9. CP TOS, [xxxx] (`0b1110_xxxx`)
+```text
+cp_tos_mem:
+  SET BUSY
+  ; Hardware latch: offset = opcode[3:0]
+  DL = [user_base || offset]
+  PUSH DL                 ; May result in OVERFLOW if stack full
+  CLR BUSY
+```
+
+#### 10. ZERO_MEM (`0b1111_0000`)
+```text
+zero_mem:
+  SET BUSY
+  MOV C, 16               ; 16 user storage words
+zero_mem_loop:
+  [user_base || C] = 0
+  LOOP zero_mem_loop
+  CLR BUSY
+```
+
+---
+
+### 5.3 Mathematical Constant Push Opcodes
+
+Constants are loaded directly as immediate literals in the microcode program or from ROM, and pushed to the stack:
+
+#### 32-Bit Constant Push Template (`PUSH_X_32`)
+```text
+push_X_32:
+  SET BUSY
+  LD DL, <constant_32>    ; Immediate 32-bit constant literal
+  PUSH DL                 ; Pushes 32-bit float (may flag OVERFLOW)
+  CLR BUSY
+```
+
+#### 64-Bit Constant Push Template (`PUSH_X_64`)
+```text
+push_X_64:
+  SET BUSY
+  LD DX, <constant_64>    ; Immediate 64-bit constant literal
+  PUSH DX                 ; Pushes 64-bit float (may flag OVERFLOW)
+  CLR BUSY
+```
+
+---
+
+### 5.4 Management Operations
+
+#### 1. RESET (`0b1111_1111`)
+```text
+reset:
+  LD SP, 0                ; Clear Operand Stack Pointer
+  LD OSP, 0               ; Clear Command Stack Pointer
+  CLR BUSY                ; Clear all status flags
+  CLR ZERO
+  CLR SIGN
+  CLR CARRY
+  CLR OVERFLOW
+  CLR UNDERFLOW
+  CLR ERR
+```
+
+#### 2. SET_BLOCKING (`0b1111_1110`) & SET_NONBLOCKING (`0b1111_1101`)
+```text
+set_blocking:
+  BLOCKING <= 1           ; Set BLOCKING flip-flop
+  CLR BUSY
+
+set_nonblocking:
+  BLOCKING <= 0           ; Clear BLOCKING flip-flop
+  CLR BUSY
+```
+
+#### 3. SET_IMMEDIATE (`0b1111_1100`) & SET_BATCH (`0b1111_1011`)
+```text
+set_immediate:
+  IMMEDIATE <= 1          ; Set IMMEDIATE flip-flop
+  CLR BUSY
+
+set_batch:
+  IMMEDIATE <= 0          ; Clear IMMEDIATE flip-flop
+  CLR BUSY
+```
+
+#### 4. EXEC_BATCH (`0b1111_1010`)
+```text
+exec_batch:
+  SET BUSY
+  ; Iterate command queue from index 0 to OSP - 1:
+  ; For each opcode in Command_Stack:
+  ;   Dispatch to opcode microcode entry point
+  ;   Execute microcode until CLR BUSY equivalent
+  LD OSP, 0               ; Reset Command Stack Pointer upon completion
+  CLR BUSY
+```
+
+---
+
+## 6. Dispatcher Logic
+
+The Dispatcher is the hardware front-end state machine that bridges the Z80 host bus (Ports `0x70` and `0x71`) to the internal SysMEM EBR and micro-engine:
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    
+    state IDLE {
+        [*] --> CheckPort
+        CheckPort --> Port70_Access : Port 0x70 (Data)
+        CheckPort --> Port71_Write  : Port 0x71 (Cmd)
+        CheckPort --> Port71_Read   : Port 0x71 (Status)
+    }
+
+    Port70_Access --> AutoIncDec_SP : Write: PUSH byte, SP++ / Read: POP byte, SP--
+    AutoIncDec_SP --> IDLE
+
+    Port71_Read --> OutputStatus : Return [BUSY, Z, S, C, V, U, ERR, 0]
+    OutputStatus --> IDLE
+
+    Port71_Write --> CheckMode : Latch OpCode
+    CheckMode --> BatchQueue : IMMEDIATE == 0 & OpCode != MGMT
+    CheckMode --> DirectExec : IMMEDIATE == 1 | OpCode == EXEC_BATCH
+
+    BatchQueue --> PushCommandStack : [0x0340 + OSP] <= OpCode, OSP++
+    PushCommandStack --> IDLE
+
+    DirectExec --> AssertBusy : SET BUSY = 1, Assert ~WAIT if BLOCKING == 1
+    AssertBusy --> MicroSequencer : UPC <= DispatchTable[OpCode]
+    MicroSequencer --> ExecMicrocode : Run microcode @ 80 MHz
+    ExecMicrocode --> DeassertBusy : CLR BUSY = 0, Release ~WAIT
+    DeassertBusy --> IDLE
+```
+
+### 6.1 Port `0x70` Data I/O Handling (`DATA_PUSH` / `DATA_POP`)
+* **Write (Push):** The Z80 writes a data byte to Port `0x70`. The hardware writes the byte into `Stack[SP]` on EBR Port A and automatically increments $SP \leftarrow SP + 1$.
+* **Read (Pop):** The Z80 reads a data byte from Port `0x70`. The hardware reads the byte from `Stack[SP - 1]` and automatically decrements $SP \leftarrow SP - 1$.
+* **Zero Overhead:** Streamed block transfers (`OTIR` / `INIR`) transfer 4-byte or 8-byte numbers directly without requiring opcode dispatches.
+
+### 6.2 Port `0x71` Opcode & Status Handling
+* **Read (Status):** Returns the 8-bit `STATUS` register (`[BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]`). Zero wait states inserted.
+* **Write (Opcode):**
+  1. If `IMMEDIATE == 1`: The opcode is latched, `BUSY` is asserted, and the dispatch table sets the microcode program counter:
+     $$\text{UPC} \leftarrow \text{DispatchTable}[\text{Opcode}]$$
+  2. If `IMMEDIATE == 0` (Batch Mode) and opcode is not a management command: The opcode is written to SysMEM EBR Command Stack at `0x0340 + OSP`, and $OSP \leftarrow OSP + 1$.
+  3. If opcode is `EXEC_BATCH` (`0b1111_1010`): The sequencer iterates through all queued commands in EBR back-to-back at 80 MHz.
+
+### 6.3 Handshaking & `~WAIT` State Management
+* Handshake signal `BWAIT_N` directly drives the open-drain N-channel FET `Q4` connected to host `~WAIT~`:
+  $$\text{BWAIT\_N} = \text{BLOCKING} \ \& \ \text{BUSY}$$
+* When `BLOCKING = 1`, writing any execution opcode to Port `0x71` immediately pulls host `~WAIT~` low on the Z80 clock edge, holding the processor until microcode finishes and clears `BUSY`.
+
+---
+
+## 7. Hardware Resource & Gate Budget Estimation
 
 Based on MachXO2-2000 slice utilization:
 
@@ -436,15 +930,15 @@ Based on MachXO2-2000 slice utilization:
 | **Leading-Zero Counter (`alu_lzc32`)** | 32 | 0 | 0 |
 | **Bitwise / Sign Logic (`alu_logic32`)** | 16 | 0 | 0 |
 | **12-Bit Exponent ALU (`alu_exp12`)** | 18 | 0 | 0 |
-| **Dedicated Register File (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `OSP`)** | 32 | 251 | 0 |
+| **Dedicated Register File (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `OSP`, `MODES`)** | 32 | 253 | 0 |
 | **ALU Result Multiplexers & Datapath Steering** | 76 | 0 | 0 |
 | **Micro-Sequencer Logic & Opcode Decode** | 120 | 32 | 0 |
-| **Host Z80 Bus Interface (`BA`, `BD`, Port Decoder)** | 75 | 45 | 0 |
+| **Host Z80 Bus Interface (`BA`, `BD`, Port Decoder, Dispatcher)** | 85 | 50 | 0 |
 | **Autonomous QSPI Flash Boot Loader** | 85 | 60 | 0 |
 | **EBR Memory Subsystem (Stack, Microcode, Math Constants)** | 0 | 0 | 7 Blocks |
-| **Total Estimated Utilization** | **~642 LUT4s** | **~398 FFs** | **7 EBR Blocks** |
+| **Total Estimated Utilization** | **~652 LUT4s** | **~405 FFs** | **7 EBR Blocks** |
 | **Available on MachXO2-2000HC** | **2,112 LUT4s** | **2,112 FFs** | **8 EBR Blocks** |
-| **Resource Margin** | **~70% Free** | **~81% Free** | **1 EBR Block Free (~12%)** |
+| **Resource Margin** | **~69% Free** | **~80% Free** | **1 EBR Block Free (~12%)** |
 
 > [!NOTE]
-> The complete ALU, Radix-4 multiplier, and expanded register data file (`AX`, `BX`, `DX`, plus `OSP` batch execution control) consumes only **~642 LUT4s** (~30% of the MachXO2-2000) and **398 FFs** (~19%). Having discrete registers for `DX` eliminates EBR memory bottlenecks during 64-bit multiplications, quotient/remainder divisions, and CORDIC planar rotations, while the 32-byte command queue enables streaming full mathematical formulas from the Z80 host at wire speed.
+> The complete coprocessor architecture—encompassing the 32-bit ALU primitives, Radix-4 Booth multiplier, discrete register file with `DX` scratchpad, hardware stack boundary trapping, batch command queue, and dual-mode dispatcher—consumes only **~652 LUT4s** (~31% of the MachXO2-2000) and **405 FFs** (~19%). This leaves ample headroom for board-level peripherals, memory banking, and QSPI boot controllers.
