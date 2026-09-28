@@ -9608,7 +9608,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0097d56e-1033-4988-8599-1cd02322d316")
-		(property "Reference" "#PWR054"
+		(property "Reference" "#PWR?"
 			(at 128.27 154.94 0)
 			(effects
 				(font
@@ -9680,7 +9680,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "09b91a91-ac70-498d-a62a-f37bb709710d")
-		(property "Reference" "C24"
+		(property "Reference" "C?"
 			(at 116.84 157.4801 0)
 			(effects
 				(font
@@ -9750,6 +9750,12 @@
 			(uuid "63d1e497-4f5a-421a-a402-5b2771ab1eb1")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C24")
@@ -9768,7 +9774,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "13aa3cb1-361f-433f-a583-b4140aed1de6")
-		(property "Reference" "#PWR053"
+		(property "Reference" "#PWR?"
 			(at 208.28 154.94 0)
 			(effects
 				(font
@@ -9839,7 +9845,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "20126de5-7d66-47f9-8b2d-f3e8a06bf012")
-		(property "Reference" "U11"
+		(property "Reference" "U?"
 			(at 70.358 146.304 0)
 			(effects
 				(font
@@ -10161,7 +10167,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2238afbb-e212-4772-9321-232e1c859e98")
-		(property "Reference" "#PWR056"
+		(property "Reference" "#PWR?"
 			(at 73.66 34.29 0)
 			(effects
 				(font
@@ -10234,7 +10240,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2d19d438-d851-4e1e-acfb-4b7720968df8")
-		(property "Reference" "#PWR049"
+		(property "Reference" "#PWR?"
 			(at 157.48 80.01 0)
 			(effects
 				(font
@@ -10307,7 +10313,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "303bd784-a16f-4caf-bf8e-885e45a4118a")
-		(property "Reference" "#PWR050"
+		(property "Reference" "#PWR?"
 			(at 220.98 157.48 0)
 			(effects
 				(font
@@ -10380,7 +10386,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "350f8b37-04af-4ccc-b4f7-a5b15b2933d7")
-		(property "Reference" "U13"
+		(property "Reference" "U?"
 			(at 223.1233 76.2 0)
 			(effects
 				(font
@@ -10545,7 +10551,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3b68f5bf-d53c-4336-af1f-610829b6504e")
-		(property "Reference" "C18"
+		(property "Reference" "C?"
 			(at 100.33 21.844 0)
 			(effects
 				(font
@@ -10615,6 +10621,12 @@
 			(uuid "0cc0d93f-4fbd-4735-a15f-095e6dc19e6b")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C18")
@@ -10632,7 +10644,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3c51d2d5-90e5-4587-9c51-8c400e42e034")
-		(property "Reference" "C23"
+		(property "Reference" "C?"
 			(at 137.16 21.844 0)
 			(effects
 				(font
@@ -10702,6 +10714,12 @@
 			(uuid "69282fee-cf99-4fb5-8dfe-29b2869679b0")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C23")
@@ -10720,7 +10738,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4d434aee-936f-407d-a619-76efdd036597")
-		(property "Reference" "#PWR046"
+		(property "Reference" "#PWR?"
 			(at 220.98 71.12 0)
 			(effects
 				(font
@@ -10791,7 +10809,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "4ea2352d-ec8e-49e1-a172-620ca0cdbf44")
-		(property "Reference" "C20"
+		(property "Reference" "C?"
 			(at 115.57 21.844 0)
 			(effects
 				(font
@@ -10861,6 +10879,12 @@
 			(uuid "0c36bd97-e080-40ac-ac72-ef59fe589059")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C20")
@@ -10879,7 +10903,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "54f2647f-1ff3-4e7b-97eb-75cba2d8e775")
-		(property "Reference" "#PWR058"
+		(property "Reference" "#PWR?"
 			(at 109.22 167.64 0)
 			(effects
 				(font
@@ -10928,6 +10952,12 @@
 			(uuid "f55e33af-6364-4653-a201-e7ee16052b45")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "#PWR058")
@@ -10945,7 +10975,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "64350154-56bf-415a-a5cd-3888ace93a7d")
-		(property "Reference" "C22"
+		(property "Reference" "C?"
 			(at 129.54 21.844 0)
 			(effects
 				(font
@@ -11015,6 +11045,12 @@
 			(uuid "435c900a-fd6b-4688-aae4-a8587dd4b141")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C22")
@@ -11032,7 +11068,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "704e6cd8-7207-4c64-9663-cb272d5a36a9")
-		(property "Reference" "R10"
+		(property "Reference" "R?"
 			(at 203.962 154.432 0)
 			(effects
 				(font
@@ -11108,7 +11144,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7502a1b7-5769-4789-9a3f-f907c43da684")
-		(property "Reference" "#PWR051"
+		(property "Reference" "#PWR?"
 			(at 167.64 128.27 0)
 			(effects
 				(font
@@ -11180,7 +11216,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "75f3f7e2-c7c2-46aa-9ede-2595514b31e2")
-		(property "Reference" "C19"
+		(property "Reference" "C?"
 			(at 107.95 21.844 0)
 			(effects
 				(font
@@ -11250,6 +11286,12 @@
 			(uuid "86eef720-8797-4276-bcad-fce6f2950c4b")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C19")
@@ -11267,7 +11309,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "76ae4ec5-be62-459e-930d-d47d28523a47")
-		(property "Reference" "C14"
+		(property "Reference" "C?"
 			(at 91.44 21.082 0)
 			(effects
 				(font
@@ -11361,7 +11403,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7fdc78f7-e331-49e0-802e-d4f82e70f350")
-		(property "Reference" "#PWR055"
+		(property "Reference" "#PWR?"
 			(at 68.58 38.1 0)
 			(effects
 				(font
@@ -11433,7 +11475,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8b70e536-93d8-4fa8-a266-7a9080504ffe")
-		(property "Reference" "#PWR060"
+		(property "Reference" "#PWR?"
 			(at 198.12 129.54 0)
 			(effects
 				(font
@@ -11482,6 +11524,12 @@
 			(uuid "d46f93cc-3ba4-4450-b9a6-0418cc0837ee")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "#PWR060")
@@ -11500,7 +11548,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8cffe012-6619-405f-b59e-d2aaea53323e")
-		(property "Reference" "#PWR048"
+		(property "Reference" "#PWR?"
 			(at 212.09 80.01 0)
 			(effects
 				(font
@@ -11572,7 +11620,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "91a99ffa-4e7d-45e2-bb10-c4be1edf591d")
-		(property "Reference" "C16"
+		(property "Reference" "C?"
 			(at 162.5599 67.31 0)
 			(effects
 				(font
@@ -11665,7 +11713,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "93b05c01-a842-485e-bab0-825402c65423")
-		(property "Reference" "C17"
+		(property "Reference" "C?"
 			(at 215.8999 67.31 0)
 			(effects
 				(font
@@ -11759,7 +11807,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "974fc1dc-bf7c-4d3c-ae71-47bd408c4048")
-		(property "Reference" "#PWR047"
+		(property "Reference" "#PWR?"
 			(at 167.64 71.12 0)
 			(effects
 				(font
@@ -11831,7 +11879,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "999d29f5-8dc8-4c45-8cf8-27be74045cb1")
-		(property "Reference" "R7"
+		(property "Reference" "R?"
 			(at 181.102 69.088 0)
 			(effects
 				(font
@@ -11906,7 +11954,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "99ff7a6a-ab15-4df0-8e5c-5403285df5fb")
-		(property "Reference" "C15"
+		(property "Reference" "C?"
 			(at 149.86 30.6069 0)
 			(effects
 				(font
@@ -11982,7 +12030,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9d512fdd-a443-4758-aafa-01af5385f918")
-		(property "Reference" "#PWR052"
+		(property "Reference" "#PWR?"
 			(at 86.36 157.48 0)
 			(effects
 				(font
@@ -12054,7 +12102,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "ae94a79c-a298-4db4-99aa-1661ce50051d")
-		(property "Reference" "C21"
+		(property "Reference" "C?"
 			(at 123.19 21.844 0)
 			(effects
 				(font
@@ -12124,6 +12172,12 @@
 			(uuid "eae3e206-066c-47d0-a85e-50c14448768e")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "C?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "C21")
@@ -12142,7 +12196,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "dab78746-a6c3-4ad3-89be-18a16a40361b")
-		(property "Reference" "U12"
+		(property "Reference" "U?"
 			(at 166.37 74.93 0)
 			(effects
 				(font
@@ -12322,6 +12376,12 @@
 			(uuid "9ed344ad-d60e-405a-bccb-f83acc03d8fd")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "U?")
+					(unit 1)
+				)
+			)
 			(project ""
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "U12")
@@ -12339,7 +12399,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "df77cedd-a469-4f66-9905-d8d8d08bdcf5")
-		(property "Reference" "R5"
+		(property "Reference" "R?"
 			(at 104.902 154.432 0)
 			(effects
 				(font
@@ -12391,6 +12451,12 @@
 			(uuid "fca44ba6-e7b4-4219-8e35-07d250d0aa95")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "R?")
+					(unit 1)
+				)
+			)
 			(project "Zx50_Cpu_RevC2"
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "R5")
@@ -12408,7 +12474,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "ec89b35e-a723-4578-8919-9af549626640")
-		(property "Reference" "J7"
+		(property "Reference" "J?"
 			(at 120.65 145.796 0)
 			(effects
 				(font
@@ -12472,6 +12538,12 @@
 			(uuid "0282e4e5-9cd6-429f-adf0-2cd06936e4a0")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "J?")
+					(unit 1)
+				)
+			)
 			(project ""
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "J7")
@@ -12489,7 +12561,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "f1474b1b-b4d1-44b0-aaf1-e82c2ba11e01")
-		(property "Reference" "J8"
+		(property "Reference" "J?"
 			(at 120.65 125.7299 0)
 			(effects
 				(font
@@ -12541,6 +12613,12 @@
 			(uuid "79f58371-a179-46c8-97c8-339d8dc8579a")
 		)
 		(instances
+			(project "coprocessor"
+				(path "/3570fc7f-dae7-47bf-90e6-c8479ed556cd"
+					(reference "J?")
+					(unit 1)
+				)
+			)
 			(project ""
 				(path "/d27e6793-29e8-4553-aae0-c58a11de5d25/b98b1677-4c21-433e-bc3e-64f5e8297f28"
 					(reference "J8")

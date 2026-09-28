@@ -190,7 +190,6 @@ Evaluates trigonometric operations using Flash ROM lookup tables.
 | **`0x76`** | `FMT_F32` (`SIN`)    | `F32` (4 bytes, Radians)    | `F32` (4 bytes)     | Range: $-1.0$ to $+1.0$         |
 | **`0x77`** | `FMT_F32` (`COS`)    | `F32` (4 bytes, Radians)    | `F32` (4 bytes)     | Range: $-1.0$ to $+1.0$         |
 
----
 
 ### 4.7 Exponentiation & Logarithms (`OP_EXP = 0x8`, `OP_LN = 0x9`, `OP_LOG10 = 0xA`)
 
@@ -202,7 +201,6 @@ Evaluates trigonometric operations using Flash ROM lookup tables.
 | **`0x78`** | `FMT_F32` (`EXP`)      | `F32` (4 bytes)     | `F32` (4 bytes)     | Evaluates $e^{\text{TOS}}$  |
 | **`0x79`** | `FMT_F32` (`LN`)       | `F32` (4 bytes)     | `F32` (4 bytes)     | Sets `ERROR` if TOS $\le 0$ |
 
----
 
 ### 4.8 Power Routine (`OP_POW = 0x7`)
 
