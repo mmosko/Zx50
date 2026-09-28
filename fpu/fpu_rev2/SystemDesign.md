@@ -46,9 +46,10 @@ To keep hardware resource utilization low while providing sufficient scratchpad 
 | C [5:0]           | Loop Counter & Shift Step Counter (Range 0..63)   | 6 FFs     |
 | STATUS [7:0]      | System Status & Arithmetic Flags (BUSY,Z,S,C,V,U,E| 8 FFs     |
 | SP [5:0]          | Hardware Stack Pointer (Index 0..63 in EBR)       | 6 FFs     |
+| OSP [4:0]         | Operation Stack Pointer for Command Queue (0..31) | 5 FFs     |
 | UPC [9:0]         | Microcode Program Counter (Address in EBR)        | 10 FFs    |
 +-------------------+---------------------------------------------------+-----------+
-Total Dedicated Flip-Flops:                                             246 FFs
+Total Dedicated Flip-Flops:                                             251 FFs
 ```
 
 > [!NOTE]
@@ -379,25 +380,47 @@ Fast single-cycle data transfers between dedicated registers:
 > 
 > Because microcode cannot address this memory, user variables are guaranteed to remain untouched across all arithmetic, transcendental, and CORDIC computations.
 
-### 4.6 Mathematical Constants in ROM & Push Opcodes
+### 4.6 Command Stack & Batch Execution Engine (`0x0340`–`0x035F`)
 
-A dedicated table in SysMEM EBR ROM (`0x0400`–`0x07FF`) stores high-precision mathematical constants formatted as both IEEE-754 Single Precision (`f32`) and Double Precision (`f64`):
+To prevent the Z80 host CPU from incurring massive bus-poll overhead (writing an opcode $\to$ polling status register $\to$ checking `BUSY` $\to$ writing next opcode), the FPU incorporates a dedicated 32-byte **Command Stack** in SysMEM EBR managed by the 5-bit **`OSP[4:0]`** (Operation Stack Pointer) register.
 
-| Constant | Symbol / Value | IEEE-754 Single (`f32`, 32-bit) | IEEE-754 Double (`f64`, 64-bit) | User Push Opcode (`fff` = Format) |
-|---|---|:---:|:---:|:---:|
-| **Pi** | $\pi \approx 3.14159265358979323846$ | `0x40490FDB` | `0x400921FB_54442D18` | **`PUSH_PI`** (`0b1001_0fff`) |
-| **Euler's Number** | $e \approx 2.71828182845904523536$ | `0x402DF854` | `0x4005BF0A_8B145769` | **`PUSH_E`** (`0b1001_1fff`) |
-| **Natural Log of 2** | $\ln(2) \approx 0.69314718055994530942$ | `0x3F317218` | `0x3FE62E42_FEFA39EF` | **`PUSH_LN2`** (`0b1010_0fff`) |
-| **Base-2 Log of e** | $\log_2(e) \approx 1.44269504088896340736$ | `0x3FB8AA3B` | `0x3FF71547_652B82FE` | **`PUSH_LOG2E`** (`0b1010_1fff`) |
-| **Base-2 Log of 10** | $\log_2(10) \approx 3.32192809488736234787$ | `0x40549A78` | `0x400A934F_0979A371` | **`PUSH_LOG2_10`** (`0b1011_0fff`) |
-| **Base-10 Log of 2** | $\log_{10}(2) \approx 0.30102999566398119521$ | `0x3E9A209B` | `0x3FD34413_509F79FF` | **`PUSH_LOG10_2`** (`0b1011_1fff`) |
-| **Square Root of 2** | $\sqrt{2} \approx 1.41421356237309504880$ | `0x3FB504F3` | `0x3FF6A09E_667F3BCD` | **`PUSH_SQRT2`** (`0b1000_1fff`) |
-| **Inverse Sqrt of 2**| $1/\sqrt{2} \approx 0.70710678118654752440$ | `0x3F3504F3` | `0x3FE6A09E_667F3BCD` | **`PUSH_INV_SQRT2`** (`0b1100_0010` / `fff`) |
+#### Operating Modes & Management Commands
 
-* **Execution Flow:** When a `PUSH_<CONST>` opcode is received on Port 0x71:
-  1. Microcode loads constant words from ROM table into `AL` (`f32`) or `AX` (`f64`).
-  2. Adjusts stack pointer: $SP \leftarrow SP + 1$ (for 32-bit `f32`) or $SP \leftarrow SP + 2$ (for 64-bit `f64`).
-  3. Writes value to new top of stack: `LD TOS, AL` or `LD TOS, AX`.
+| Opcode | Mnemonic | Mode / Action |
+|---|---|---|
+| `0b1111_1100` | **`SET_IMMEDIATE`** | **Immediate Mode (Default):** Each opcode written to Port 0x71 is pushed to `[OSP]`, immediately executed by the micro-engine, and popped upon completion. |
+| `0b1111_1011` | **`SET_BATCH`**     | **Batch Mode:** Arriving arithmetic, conversion, and constant opcodes are queued sequentially into the command stack (`[OSP] <- opcode; OSP <- OSP + 1`) without triggering immediate execution. Up to 32 opcodes can be queued. |
+| `0b1111_1010` | **`EXEC_BATCH`**    | **Batch Execute:** Micro-engine asserts `BUSY = 1` (and `WAIT_N` if in blocking mode) and executes all queued opcodes back-to-back at 80 MHz from index 0 to `OSP - 1`. Resets $OSP \leftarrow 0$ upon completion. |
+| `0b1100_0110` | **`CLEAR_STACK`**   | Resets both the Operand Stack Pointer $SP \leftarrow 0$ and the Operation Stack Pointer $OSP \leftarrow 0$. |
+
+* **Unified Micro-Pipeline:** Both modes utilize the same queue mechanism: in immediate mode, the queue has a depth of 1 (push $\to$ execute $\to$ pop). In batch mode, the host streams a complete mathematical formula (e.g. via Z80 `OTIR` block I/O), then fires `EXEC_BATCH`, allowing the FPGA to evaluate the sequence entirely in hardware at wire speed.
+
+### 4.7 Mathematical Constants in ROM & Push Opcodes
+
+A dedicated table in SysMEM EBR ROM (`0x0400`–`0x07FF`) stores high-precision mathematical constants formatted as IEEE-754 Single Precision (`f32`) and Double Precision (`f64`). Dedicated opcodes are provided for 32-bit and 64-bit precisions (bit 0 indicates precision: `0` = `_32`, `1` = `_64`):
+
+| Opcode | Mnemonic | Constant & Precision | Hex Value in Internal ROM |
+|---|---|---|:---:|
+| `0b1010_0000` | **`PUSH_PI_32`** | $\pi \approx 3.14159265$ (Single Precision `f32`) | `0x40490FDB` |
+| `0b1010_0001` | **`PUSH_PI_64`** | $\pi \approx 3.141592653589793$ (Double Precision `f64`) | `0x400921FB_54442D18` |
+| `0b1010_0010` | **`PUSH_E_32`** | $e \approx 2.7182818$ (Single Precision `f32`) | `0x402DF854` |
+| `0b1010_0011` | **`PUSH_E_64`** | $e \approx 2.718281828459045$ (Double Precision `f64`) | `0x4005BF0A_8B145769` |
+| `0b1010_0100` | **`PUSH_LN2_32`** | $\ln(2) \approx 0.69314718$ (Single Precision `f32`) | `0x3F317218` |
+| `0b1010_0101` | **`PUSH_LN2_64`** | $\ln(2) \approx 0.693147180559945$ (Double Precision `f64`) | `0x3FE62E42_FEFA39EF` |
+| `0b1010_0110` | **`PUSH_LOG2E_32`** | $\log_2(e) \approx 1.442695$ (Single Precision `f32`) | `0x3FB8AA3B` |
+| `0b1010_0111` | **`PUSH_LOG2E_64`** | $\log_2(e) \approx 1.442695040888963$ (Double Precision `f64`) | `0x3FF71547_652B82FE` |
+| `0b1010_1000` | **`PUSH_LOG2_10_32`** | $\log_2(10) \approx 3.321928$ (Single Precision `f32`) | `0x40549A78` |
+| `0b1010_1001` | **`PUSH_LOG2_10_64`** | $\log_2(10) \approx 3.321928094887362$ (Double Precision `f64`) | `0x400A934F_0979A371` |
+| `0b1010_1010` | **`PUSH_LOG10_2_32`** | $\log_{10}(2) \approx 0.301030$ (Single Precision `f32`) | `0x3E9A209B` |
+| `0b1010_1011` | **`PUSH_LOG10_2_64`** | $\log_{10}(2) \approx 0.301029995663981$ (Double Precision `f64`) | `0x3FD34413_509F79FF` |
+| `0b1010_1100` | **`PUSH_SQRT2_32`** | $\sqrt{2} \approx 1.4142135$ (Single Precision `f32`) | `0x3FB504F3` |
+| `0b1010_1101` | **`PUSH_SQRT2_64`** | $\sqrt{2} \approx 1.414213562373095$ (Double Precision `f64`) | `0x3FF6A09E_667F3BCD` |
+| `0b1010_1110` | **`PUSH_INV_SQRT2_32`** | $1/\sqrt{2} \approx 0.7071068$ (Single Precision `f32`) | `0x3F3504F3` |
+| `0b1010_1111` | **`PUSH_INV_SQRT2_64`** | $1/\sqrt{2} \approx 0.707106781186548$ (Double Precision `f64`) | `0x3FE6A09E_667F3BCD` |
+
+* **Execution Flow:**
+  1. Microcode loads constant words from ROM into `AL` (`f32`) or `AX` (`f64`).
+  2. Executes `PUSH AL` ($SP \leftarrow SP + 4$) or `PUSH AX` ($SP \leftarrow SP + 8$).
 
 ---
 
@@ -413,15 +436,15 @@ Based on MachXO2-2000 slice utilization:
 | **Leading-Zero Counter (`alu_lzc32`)** | 32 | 0 | 0 |
 | **Bitwise / Sign Logic (`alu_logic32`)** | 16 | 0 | 0 |
 | **12-Bit Exponent ALU (`alu_exp12`)** | 18 | 0 | 0 |
-| **Dedicated Register File (`AX`, `BX`, `DX`, `EA`, `EB`, `C`)** | 32 | 246 | 0 |
+| **Dedicated Register File (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `OSP`)** | 32 | 251 | 0 |
 | **ALU Result Multiplexers & Datapath Steering** | 76 | 0 | 0 |
 | **Micro-Sequencer Logic & Opcode Decode** | 120 | 32 | 0 |
 | **Host Z80 Bus Interface (`BA`, `BD`, Port Decoder)** | 75 | 45 | 0 |
 | **Autonomous QSPI Flash Boot Loader** | 85 | 60 | 0 |
 | **EBR Memory Subsystem (Stack, Microcode, Math Constants)** | 0 | 0 | 7 Blocks |
-| **Total Estimated Utilization** | **~642 LUT4s** | **~393 FFs** | **7 EBR Blocks** |
+| **Total Estimated Utilization** | **~642 LUT4s** | **~398 FFs** | **7 EBR Blocks** |
 | **Available on MachXO2-2000HC** | **2,112 LUT4s** | **2,112 FFs** | **8 EBR Blocks** |
 | **Resource Margin** | **~70% Free** | **~81% Free** | **1 EBR Block Free (~12%)** |
 
 > [!NOTE]
-> The complete ALU, Radix-4 multiplier, and expanded 6-register data file (`AX`, `BX`, `DX`) consumes only **~642 LUT4s** (~30% of the MachXO2-2000) and **393 FFs** (~18%). Having discrete registers for `DX` eliminates EBR memory bottlenecks during 64-bit multiplications, quotient/remainder divisions, and CORDIC planar rotations, while still leaving over 1,470 LUT4s and 1,700 FFs free for transcendental algorithms, edge-case rounding, and the SBC memory controller.
+> The complete ALU, Radix-4 multiplier, and expanded register data file (`AX`, `BX`, `DX`, plus `OSP` batch execution control) consumes only **~642 LUT4s** (~30% of the MachXO2-2000) and **398 FFs** (~19%). Having discrete registers for `DX` eliminates EBR memory bottlenecks during 64-bit multiplications, quotient/remainder divisions, and CORDIC planar rotations, while the 32-byte command queue enables streaming full mathematical formulas from the Z80 host at wire speed.

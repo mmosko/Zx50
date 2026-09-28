@@ -124,6 +124,8 @@ The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total)
 | 0x0000 - 0x01FF   | Hardware Math Stack (64 words x 64-bit / 8B)  | 512 Bytes  |
 | 0x0200 - 0x02FF   | Scratchpad & Vector Registers (64 x 32-bit)   | 256 Bytes  |
 | 0x0300 - 0x033F   | User Word Storage (16 words x 32-bit)         | 64 Bytes   |
+| 0x0340 - 0x035F   | Command Stack / Queue (up to 32 opcodes)       | 32 Bytes   |
+| 0x0360 - 0x03FF   | Reserved / Status & Mode Configuration        | 160 Bytes  |
 | 0x0400 - 0x07FF   | Polynomial Coefficients & Math Headroom       | 1,024 Bytes|
 | 0x0800 - 0x09FF   | Reciprocal / Division Table                   | 512 Bytes  |
 | 0x0A00 - 0x0BFF   | Square Root Seed LUT                          | 512 Bytes  |
@@ -133,16 +135,24 @@ The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total)
 | 0x1200 - 0x19FF   | Runtime Microcode Execution RAM (1K x 16-bit) | 2,048 Bytes|
 | 0x1A00 - 0x23FF   | Unallocated / Extended Buffer Headroom        | 2,560 Bytes|
 +-------------------+-----------------------------------------------+------------+
-Total Allocated:    5,440 Bytes (~5.3 KB)
+Total Allocated:    5,472 Bytes (~5.3 KB)
 Total Available:    9,216 Bytes (8 EBR blocks)
-Free Headroom:      3,776 Bytes (~41% free)
+Free Headroom:      3,744 Bytes (~41% free)
 ```
 
 ### 3.2 User Memory Allocation (Intermediate Storage)
 A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and constant storage:
 * **Organization:** Configured as 16 words of 32 bits (or 8 words of 64 bits), addressed as index `0x0` through `0xF`.
-* **Purpose:** Allows the Z80 to stache and reload intermediate values directly between the Top of Stack ($TOS$) and internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
+* **Purpose:** Allows the Z80 to stash and reload intermediate values directly between the Top of Stack ($TOS$) and internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
 * **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing that user storage words remain untouched and preserved across all arithmetic opcode executions.
+
+### 3.3 Command Stack & Batch Execution Queue (`0x0340`–`0x035F`)
+A 32-byte circular buffer in SysMEM EBR stores up to 32 queued opcodes:
+* **Indexed By:** Dedicated 5-bit register `OSP[4:0]` (Operation Stack Pointer, range 0..31).
+* **Operating Modes:**
+  * **Immediate Mode (`SET_IMMEDIATE`):** Arriving opcodes written to Port 0x71 are pushed to the command queue at `[OSP]`, executed immediately by the micro-engine, and popped upon retirement.
+  * **Batch Mode (`SET_BATCH`):** Arriving opcodes (except management commands) are queued sequentially into the command stack without executing (`[OSP] <- opcode; OSP <- OSP + 1`).
+  * **Batch Execution (`EXEC_BATCH`):** Micro-engine consumes and executes all queued opcodes back-to-back at 80 MHz, resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of opcodes via `OTIR` without slow status polling between individual instructions.
 
 ### 3.3 True Dual-Port Concurrency
 The dual-port architecture completely separates host I/O from math execution:
@@ -287,7 +297,7 @@ ALU opcodes use a 3-bit suffix `fff` to select operand format:
 |---|---|---|
 | `0b1100_0000` | `DUP4` | Duplicate top 4 bytes of stack ($TOS \rightarrow NOS$) |
 | `0b1100_0001` | `DUP8` | Duplicate top 8 bytes of stack |
-| `0b1100_0110` | `CLEAR_STACK` | Reset Stack Pointer $SP$ to empty |
+| `0b1100_0110` | `CLEAR_STACK` | Reset Operand Stack Pointer $SP$ and Operation Stack Pointer $OSP$ to 0 (empty) |
 | `0b1100_1000` | `CONV_I32_I64` | Sign-extend `i32` TOS to `i64` |
 | `0b1100_1001` | `CONV_F32_F64` | Convert single `f32` TOS to double `f64` |
 | `0b1100_1010` | `CONV_I64_I32` | Truncate `i64` TOS to `i32` with overflow check |
@@ -298,26 +308,37 @@ ALU opcodes use a 3-bit suffix `fff` to select operand format:
 
 ### 7.4 Mathematical Constant Push Opcodes
 
-Pushes high-precision mathematical constants from internal ROM directly onto the stack. The format bits `fff` select the target precision (`001` for `f32`, `011` for `f64`):
+Pushes high-precision floating-point constants from internal ROM directly onto the stack. Distinct opcodes are provided for Single (`f32`) and Double (`f64`) precisions (bit 0 indicates precision: `0` = 32-bit float, `1` = 64-bit float):
 
-| Opcode | Mnemonic | Constant Pushed to TOS | Single Precision (`f32`) Hex | Double Precision (`f64`) Hex |
-|---|---|---|:---:|:---:|
-| `0b1001_0fff` | `PUSH_PI` | $\pi \approx 3.14159265358979323846$ | `0x40490FDB` | `0x400921FB_54442D18` |
-| `0b1001_1fff` | `PUSH_E` | $e \approx 2.71828182845904523536$ | `0x402DF854` | `0x4005BF0A_8B145769` |
-| `0b1010_0fff` | `PUSH_LN2` | $\ln(2) \approx 0.69314718055994530942$ | `0x3F317218` | `0x3FE62E42_FEFA39EF` |
-| `0b1010_1fff` | `PUSH_LOG2E` | $\log_2(e) \approx 1.44269504088896340736$ | `0x3FB8AA3B` | `0x3FF71547_652B82FE` |
-| `0b1011_0fff` | `PUSH_LOG2_10` | $\log_2(10) \approx 3.32192809488736234787$ | `0x40549A78` | `0x400A934F_0979A371` |
-| `0b1011_1fff` | `PUSH_LOG10_2` | $\log_{10}(2) \approx 0.30102999566398119521$ | `0x3E9A209B` | `0x3FD34413_509F79FF` |
-| `0b1000_1fff` | `PUSH_SQRT2` | $\sqrt{2} \approx 1.41421356237309504880$ | `0x3FB504F3` | `0x3FF6A09E_667F3BCD` |
-| `0b1100_0010` | `PUSH_INV_SQRT2` | $1/\sqrt{2} \approx 0.70710678118654752440$ | `0x3F3504F3` | `0x3FE6A09E_667F3BCD` |
+| Opcode | Mnemonic | Constant & Precision | Hex Value in Internal ROM |
+|---|---|---|:---:|
+| `0b1010_0000` | `PUSH_PI_32` | $\pi \approx 3.14159265$ (Single Precision `f32`) | `0x40490FDB` |
+| `0b1010_0001` | `PUSH_PI_64` | $\pi \approx 3.141592653589793$ (Double Precision `f64`) | `0x400921FB_54442D18` |
+| `0b1010_0010` | `PUSH_E_32` | $e \approx 2.7182818$ (Single Precision `f32`) | `0x402DF854` |
+| `0b1010_0011` | `PUSH_E_64` | $e \approx 2.718281828459045$ (Double Precision `f64`) | `0x4005BF0A_8B145769` |
+| `0b1010_0100` | `PUSH_LN2_32` | $\ln(2) \approx 0.69314718$ (Single Precision `f32`) | `0x3F317218` |
+| `0b1010_0101` | `PUSH_LN2_64` | $\ln(2) \approx 0.693147180559945$ (Double Precision `f64`) | `0x3FE62E42_FEFA39EF` |
+| `0b1010_0110` | `PUSH_LOG2E_32` | $\log_2(e) \approx 1.442695$ (Single Precision `f32`) | `0x3FB8AA3B` |
+| `0b1010_0111` | `PUSH_LOG2E_64` | $\log_2(e) \approx 1.442695040888963$ (Double Precision `f64`) | `0x3FF71547_652B82FE` |
+| `0b1010_1000` | `PUSH_LOG2_10_32` | $\log_2(10) \approx 3.321928$ (Single Precision `f32`) | `0x40549A78` |
+| `0b1010_1001` | `PUSH_LOG2_10_64` | $\log_2(10) \approx 3.321928094887362$ (Double Precision `f64`) | `0x400A934F_0979A371` |
+| `0b1010_1010` | `PUSH_LOG10_2_32` | $\log_{10}(2) \approx 0.301030$ (Single Precision `f32`) | `0x3E9A209B` |
+| `0b1010_1011` | `PUSH_LOG10_2_64` | $\log_{10}(2) \approx 0.301029995663981$ (Double Precision `f64`) | `0x3FD34413_509F79FF` |
+| `0b1010_1100` | `PUSH_SQRT2_32` | $\sqrt{2} \approx 1.4142135$ (Single Precision `f32`) | `0x3FB504F3` |
+| `0b1010_1101` | `PUSH_SQRT2_64` | $\sqrt{2} \approx 1.414213562373095$ (Double Precision `f64`) | `0x3FF6A09E_667F3BCD` |
+| `0b1010_1110` | `PUSH_INV_SQRT2_32` | $1/\sqrt{2} \approx 0.7071068$ (Single Precision `f32`) | `0x3F3504F3` |
+| `0b1010_1111` | `PUSH_INV_SQRT2_64` | $1/\sqrt{2} \approx 0.707106781186548$ (Double Precision `f64`) | `0x3FE6A09E_667F3BCD` |
 
 ### 7.5 Management Opcodes
 
 | Opcode | Mnemonic | Description |
 |---|---|---|
-| `0b1111_1111` | `RESET` | Soft reset FPU core, clear status flags and stack pointer |
-| `0b1111_1110` | `SET_BLOCKING` | Set execution mode to blocking (`WAIT_N` asserted) |
-| `0b1111_1101` | `SET_NONBLOCKING` | Set execution mode to non-blocking (poll `BUSY` flag) |
+| `0b1111_1111` | `RESET` | Soft reset FPU core, clear status flags, reset $SP \leftarrow 0$ and $OSP \leftarrow 0$ |
+| `0b1111_1110` | `SET_BLOCKING` | Set bus execution mode to blocking (`WAIT_N` asserted during execution) |
+| `0b1111_1101` | `SET_NONBLOCKING` | Set bus execution mode to non-blocking (host polls `BUSY` flag in status register) |
+| `0b1111_1100` | `SET_IMMEDIATE` | Set execution mode to Immediate: every opcode executes immediately upon arrival (default) |
+| `0b1111_1011` | `SET_BATCH` | Set execution mode to Batch: opcodes are queued to Command Stack without executing |
+| `0b1111_1010` | `EXEC_BATCH` | Execute entire queued Command Stack back-to-back at 80 MHz, resetting $OSP \leftarrow 0$ on completion |
 
 ---
 
