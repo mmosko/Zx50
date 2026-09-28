@@ -1,342 +1,347 @@
-# Zx50 CPU Rev C4 Math & Stack Coprocessor Specification
+# Zx50 CPU Rev C4 Math & Stack Coprocessor Specification (FPU Rev 2)
 
-This document details the architectural hardware specification, instruction set architecture (ISA), and microcoded
-execution engine for the Latice MachXO2 Coprocessor FPGA integrated on the Zx50 CPU Card (Rev C4).
+This document specifies the high-level hardware architecture, operating theory, and instruction set architecture (ISA) for the FPGA-based Floating-Point and Stack Coprocessor on the **Zx50 CPU Card (Rev C4)**.
 
-See the ProgrammersGuide.md for details of using the FPU form Z80 assembly code.
+- **High-Level Architecture:** [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md) (this document)
+- **Low-Level System Design & Gate Estimates:** `SystemDesign.md` *(see roadmap in [TODO.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/TODO.md))*
+- **Z80 Assembly Programmer's Guide:** `ProgrammersGuide.md`
 
 ---
 
 ## 1. System Overview & Hardware Architecture
 
-This section gives a brief overview of the system without delving into the minute details.
-
-- CPU: Zilog Z80C 10 MHz
-- Bus: Backplane with AC termination
-- Coprocessor:
-    - Lattice MachXO2-2000 (speed grade 4) direclty on the Z80 CPU bus via level shifters.
-    - Private SRAM
-    - Private FLASH (IS25LP080D, Serial NOR Flash (Quad SPI) 3.3V 8M-bit 1M x 8 8ns)
-- Stack:
-    - Organized in 4-byte words, but may hold 8-byte data (e.g. i64, F64).
-
-### Notation
-
-- SP: Stack pointer (the memory address of the next write)
-- TOS: Top of Statck (the top word on the stack)
-- NOS: Next on Stack (the word just under the TOS)
-
-### Flash organization
-
-The FPGA program is stored on internal flash. The external flash is used for lookup tables, FPU microcode, and
-optional Z80 firmware.
-
-As we have a 1MB flash, we can organize each section in, say, 64KB blocks, for 12 blocks. The specific code used is
-determined by the DBG_N line and the DBG[0:2] values on boot.
-
-If DBG3 is LOW on boot (using internal pull up),
-the FPGA will enable Z80 memory, otherwise, it only exposes the FPU operation. DBG3 only needs to be low during
-power on (or reset), not all the time.
-
-- Normal FPU microcode
-- Debug FPU Microcode
-- Normal Z80 firmware
-- Debug Z80 firmware
-
-### General operation
-
-- The flash contains the FPU programming in one section and the Z80 firmware in another section.
-- There is a jumper for `DBG_EN`. If this is sat, the FPGA copies one set of firmware and program to the SRAM,
-  otherwise, it uses the production version.
-- If DBG3 is low on boot, the FPGA will copy a 64KB block of flash to the SRAM.
-- The FPGA will copy all FPU microcode and lookup tables to the internal FPGA RAM.
-
-### Operating principle
-
-The FPU works on a stack. Unary operations read and write back the TOS. Binary operations consume the TOS and
-NOS, and write back the result to the new TOS.
-
-The stack may hold 4-byte or 8-byte numbers. The stack itself does not know what it holds, it is implied by
-the command given to operate on the stack (e.g. 8-byte add or 4-byte multiplication, etc.). It is up to
-the user to correctly track the format of numbers on the stack and use the correct command.
-
-- Port 0x70 is the stack register. A write is a push and a read is a pop.
-- Port 0x71 is the command register.
-    - A write executes a management command or a stack operation.
-    - A read pulls in the status register.
-- The FPU can operate in blocking or non-blocking mode (set by mgmt command)
-    - Blocking mode (the default): Raises the ~WAIT signal to block the Z80 until done. The user reads the status
-      register to get the operation status, then reads the stack register as needed. On the FPGA, some operations
-      will complete in one or two MCLK cycles, so do not assert ~WAIT.
-    - Non-blocking: The user reads the status register until it is not BUSY.
-
-While the FPGA has dual ported memory, that does not mean that the Z80 should read/write the stack at any time.
-Initially, stack operations are only allowed when the status register BUSY is false.
-
-### Overview of FPU services
-
-Data Types:
-
-- i32 (signed 32-bit)
-- i64 (signed 64-bit)
-- F32 (IEEE 32-bit float)
-- F64 (IEEE 64-bit float)
-
-Management commands:
-
-- Reset FPU.
-- Set BLOCKING mode or NONBLOCKING mode.
-
-Arithmetic Opcodes:
-
-- binary: add, subract, multiply, divide, sqrt, pow, exp, ln,
-- unary: change sign, absolute value, floor, ceil
-- unary (trig): sin, cos, tan
-
-Stack Opcodes:
-
-- Duplicate TOS (4 or 8 bytes)
-- Format conversions
-- Store and Load TOS (uses internal memory for user storage, separte from ALU scratch memory)
-- Clear stack.
-
-The Store and Load commands move data between the stack and a small internal memory. It allows moving 4-byte and 8-byte
-words on and off the stack in a single Z80 IO operation (TODO: work out full set of COMMAND values to make sure
-this is a true statement).
-
-## Hardware Specifcations
-
-- FPGA
-- SRAM
-- Flash
-- Internal RAM and flash
-- level shifters and signal delays
-- Z80 Clock (5 MHz or 10 MHz)
-- Shadow bus MCLK (20 MHz or 40 MHz): leads the Z80 clock by half a MCLK cycle
-
-### Clocking Overview
-
-There are two external clocks: ZCLK is a 5 or 10 MHz Z80 clock and MCLK is a 20 or 40 MHz shadow bus clock. ZCLK
-is synchronous with MCLK and always a half MCLK cycle behind it.
-
-The FPU will use a x4 PLL multiplier on MCLK for the internal FPU operations, i.e. a 80 MHz or 160 Mhz internal
-clock.
-
----
-
-## 2. Bus Signal Mapping
-
----
-
-## 3. Register & I/O Interface Protocol
-
-The CPLD decodes host I/O port base address `0x70` and `0x71`.
-
-| Port Address | Operation | Register Name | Description                                                                                                |
-|--------------|-----------|---------------|------------------------------------------------------------------------------------------------------------|
-| **`0x70`**   | Write     | `DATA_PUSH`   | Pushes 1 byte to Top of Stack ($TOS$) in private SRAM, auto-incrementing byte pointer ($SP$).              |
-| **`0x70`**   | Read      | `DATA_POP`    | Reads 1 byte from Top of Stack ($TOS$) in private SRAM, auto-decrementing byte pointer ($SP$).             |
-| **`0x71`**   | Write     | `CMD_EXEC`    | Latches opcode to execution dispatcher (`zx50_fpu_dispatch`), pulls `~WAIT` low, and executes computation. |
-| **`0x71`**   | Read      | `STATUS`      | Returns status flags: `[BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]`.                            |
-
-### Status Register Bit Flags (`0x71` Read)
-
-| Bit 7  | Bit 6  | Bit 5  | Bit 4   | Bit 3      | Bit 2       | Bit 1 | Bit 0        |
-|--------|--------|--------|---------|------------|-------------|-------|--------------|
-| `BUSY` | `ZERO` | `SIGN` | `CARRY` | `OVERFLOW` | `UNDERFLOW` | `ERR` | Reserved (0) |
-
-* **`BUSY` (Bit 7):** Set high during command execution; cleared automatically when the execution engine completes
-  execution.
-
-
-* **`ERR` (Bit 1):** Set high if an illegal opcode, divide-by-zero, or execution fault is encountered.
-
----
-
-## 4. Stack Memory Architecture
-
-## OpCodes (port 0x71)
-
-There are ALU, Stack, and Management opcode spaces. These are the commands sent to the command port (0x71).
-We structured the commands to use only 1 byte, so all operations are a single Z80 OUT.
-
-### ALU Opcodes
-
-ALU opcodes have a prefix (operation) and suffix (data format)
-
-TODO: is 0b101 needed? One could simply do a format conversion on the f32 to an f64 then, e.g., multiply.
-
-| Bits  | Format     | Notes                      |
-|-------|------------|----------------------------|
-| 0b000 | i32        | i32 operands to i32 result |
-| 0b001 | f32        | f32 operands to f32 result |
-| 0b010 | i64        | i64 operands to i64 result |
-| 0b011 | f64        | f64 operands to f64 result |
-| 0b100 | f32 to f64 | f32 operands to f64 result |
-| 0b101 | reserved   |                            |
-| 0b110 | reserved   |                            |
-| 0b111 | reserved   |                            |
-
-`fff` is the data format bits
-
-| Bits        | Operation       |
-|-------------|-----------------|
-| 0b0000_0fff | ADD             |
-| 0b0000_1fff | SUB             |
-| 0b0001_0fff | MUL             |
-| 0b0001_1fff | DIV             |
-| 0b0010_0fff | SQRT            |
-| 0b0010_1fff | POW             |
-| 0b0011_0fff | LN              |
-| 0b0011_1fff | EXP             |
-| 0b0100_0fff | reserved binary |
-| 0b0100_1fff | reserved binary |
-| 0b0101_0fff | CHS             |
-| 0b0101_1fff | ABS             |
-| 0b0110_0fff | FLOOR           |
-| 0b0110_1fff | CEIL            |
-| 0b0111_0fff | SIN             |
-| 0b0111_1fff | COS             |
-| 0b1000_0fff | TAN             |
-| 0b10xx_xfff | RESERVED        |
-
-So there are 15 x 4 (format) = 60 ALU opcodes (or 15 x 8 = 120 at most)
-
-### Stack Opcodes
-
-There are 16 words (64 bytes) of user memory set aside in the FPGA internal ram for storage. If the user
-is operating on 8-byte words, they must perform two copy (CP) commands.
-
-| Bits        | nmonic         | Operation                          |
-|-------------|----------------|------------------------------------|
-| 0b1100_0000 | DUP4           | Duplicate top 4 bytes of stack     |
-| 0b1100_0001 | DUP8           | Duplicate top 8 bytes of stack     |
-| 0b1100_0110 | Clear stack    | sets SP to empty location          |
-| 0b1100_0111 | reserved       |                                    |
-|             |                |                                    |
-| 0b1100_1000 | i32 to i64     | Pad and sign-extend TOS to 8 bytes |
-| 0b1100_1001 | f32 to f64     | Pad and sign-extend TOS to 8 bytes |
-| 0b1100_1010 | i64 to i32     | Sign-preserving truncation         |
-| 0b1100_1011 | f64 to f32     | Closest approximation              |
-| 0b1100_11xx | Reserved       |                                    |
-|             |                |                                    |
-| 0b1101_xxxx | CP [xxxx], TOS | Copy TOS to user word `xxxx`       |
-| 0b1110_xxxx | CP TOS, [xxxx] | Copy user word `xxxx` to TOS       |
-| 0b1111_0000 | Zero memory    | Zero all user memory               |
-| 0b1111_0xxx | reserved       |                                    |
-
-### Management Opcodes
-
-| Bits        | nmonic      | Operation                 |
-|-------------|-------------|---------------------------|
-| 0b1111_1111 | RESET       | Resets the FPU            |
-| 0b1111_1110 | BLOCKING    | Sets to blocking mode     |
-| 0b1111_1101 | NONBLOCKING | Sets to non-blocking mode |
-| 0b1111_1100 | reserved    |                           |
-| 0b1111_10xx | reserved    |                           |
-
----
-
-## 5. Microcoded Execution
-
-Internally, the FPU uses microcode to process some operations, rather than have fully implements logic for
-every operation.  There are a set of internal registers used by the microcode processor (upc).
-
-
-### Hardware ALU blocks
-
-- 32-bit adder
-- 32-bit multiplier
-- shifter
-- 
-
-### Microcode Machine Model
-
-### Microcode Instruction Set Architecture
-
-
-## 7. Simulation & Verilog Architecture Setup
-
-### 7.1 Environment Overview & Module Hierarchy
-
-The simulation environment uses a modular architecture where the CPLD core (`zx50_fpu.v`) delegates execution logic to
-the microcode engine while handling top-level bus interfacing.
-
-```text
-tb_zx50 (Testbench Top)
- ├── zx50_clock             (Clock Mezzanine BFM: Glitch-free MCLK / ZCLK generation)[cite: 11]
- ├── zx50_backplane         (Passive Backplane: Weak pull-ups for Z80 & Shadow Bus)[cite: 11]
- └── zx50_fpu_block         (FPU Subsystem Cluster Wrapper)[cite: 11]
-      ├── zx50_fpu          (U11 - ATF1508AS CPLD Top Level Logic)[cite: 11]
-      │    ├── zx50_fpu_dispatch    (Command Execution Dispatcher)[cite: 11]
-      │    └── zx50_fpu_microengine (Unified Microcoded Execution Engine)
-      │         └── zx50_fpu_alu_core (Single Shared 16-Bit Core ALU Primitive)
-      ├── is61c256al_12     (U12 - 32KB Active Private SRAM Model)[cite: 11]
-      └── sst39sf040        (U13 - 32KB Active Private Flash ROM Model)[cite: 11]
-
+The Zx50 FPU Rev 2 is an FPGA-based math accelerator and stack processor tightly coupled to the host Zilog Z80 CPU.
+
+```mermaid
+graph TD
+    subgraph HostDomain [Z80 Host CPU Domain - 5.0V]
+        Z80[Z80 CPU @ 10 MHz]
+    end
+
+    subgraph LevelShifters [Voltage Translation - 5.0V to 3.3V]
+        CBT[74CBTD3861 Bus Switches]
+    end
+
+    subgraph FPGASubsystem [Lattice MachXO2-2000HC TQFP-100 - 3.3V]
+        HostIF[Host Bus Interface & Port Decoder]
+        MMU[SBC Memory / MREQ Controller]
+        subgraph SysMEM [Internal SysMEM Dual-Port EBR - 9.2 KB]
+            Stack[Hardware Stack: 64 words x 32/64-bit]
+            Scratch[Scratchpad & Vector Buffers]
+            LUTs[Lookup Tables: QS, Sqrt, Log/Exp, Trig]
+            UCodeRAM[Microcode Execution RAM]
+        end
+        Core[Math Engine & Micro-sequencer]
+        BootLdr[Autonomous QSPI Shadow Loader]
+    end
+
+    subgraph OnBoardMem [On-Board External Storage - 3.3V]
+        ExtSRAM[IS61WV1288EEBLL 128KB High-Speed 8-bit SRAM]
+        QSPI[IS25LP080D 1MB QSPI Serial Flash]
+    end
+
+    Z80 <-->|5V Signals| CBT
+    CBT <-->|3.3V Signals: BA, BD| HostIF
+    CBT <-->|3.3V Signals: BMREQ_N| MMU
+    HostIF <-->|CA, CD: Private SRAM Bus| ExtSRAM
+    MMU -->|M_CS_N, M_OE_N, M_WE_N| ExtSRAM
+    HostIF <-->|Port A: Port 0x70/0x71| Stack
+    Core <-->|Port B: Concurrent Execution| SysMEM
+    BootLdr -->|Cold Boot Shadowing| SysMEM
+    BootLdr -->|Cold Boot SBC BIOS Copy| ExtSRAM
+    QSPI <-->|F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N| BootLdr
 ```
 
-### 7.2 Source & Testbench File Index
+### 1.1 Key Hardware Specifications
 
-#### Synthesis Source Files (`./src/`)
+* **Host CPU:** Zilog Z80C @ 10 MHz (`CLK` / `BZCLK`).
+* **Target FPGA:** **Lattice MachXO2-2000HC** (`LCMXO2-2000HC-4TG100I` / `U17`):
+  * **Package:** 100-pin TQFP (14×14 mm, 0.5 mm pitch), 79 User I/Os.
+  * **Logic Capacity:** 2,112 LUT4s, 2,112 Registers.
+  * **SysMEM EBR (Embedded Block RAM):** 8 true dual-port blocks (74 Kb / 9,216 Bytes total).
+  * **Distributed RAM:** 16 Kb.
+  * **Phase-Locked Loops (PLLs):** 1 on-chip PLL.
+  * **Power Supply:** Single +3.3V rail for core and all I/O banks (`HC` variant).
+* **Companion Flash:** **ISSI `IS25LP080D-JNLE-TR` (`U19`)** (1 MB / 8 Mbit Serial NOR Flash, Quad-SPI, 3.3V, 8 ns).
+  * Signals: `F_CE_N`, `F_SCK`, `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N`.
+* **On-Board External SRAM:** **ISSI `IS61WV1288EEBLL-10HLI` (`U18`)** (128 KB, 128K×8, 10 ns access time with ECC, 3.3V).
+  * Signals: `CA[16:0]`, `CD[7:0]`, `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N`.
+* **Bus Level Translation:** TI `74CBTD3861` (`U12`, `U13`, `U14`) zero-delay bus switches clamping 5.0V Z80 signals to 3.3V (`BA[15:0]`, `BD[7:0]`, control signals). MachXO2 3.3V LVCMOS outputs drive Z80 inputs ($V_{IH} \ge 2.0\text{V}$) directly and safely.
+* **Clocking:**
+  * External bus clock: **`ZCLK` / `BZCLK`** (5 MHz or 10 MHz, buffered via `U15` 74LVC1G17 to FPGA pin 38 `PCLKT2_1`).
+  * External shadow bus clock: **`MCLK` / `BMCLK`** (20 MHz or 40 MHz, buffered via `U16` 74LVC1G17 to FPGA pin 34 `PCLKT2_0`), synchronous with ZCLK.
+  * Internal FPGA core clock: **80 MHz** generated by the on-chip PLL from BMCLK (or up to 160 MHz for internal execution).
 
-* **`src/zx50_fpu.v`:** Top-level CPLD logic. Manages Z80 I/O port decoding (`0x70`/`0x71`), stack pointer counter
-  ($SP$), consolidated memory strobes (`c_oe_n`, `c_we_n`), chip enables (`m_ce_n`, `f_ce_n`), open-drain `wait_n`/
-  `int_n` drivers, and CDC request synchronizers.
+---
 
+## 2. Operating Modes & Boot Flow
 
-* **`src/zx50_fpu_mem.v`:** Private memory bus arbiter & strobe generator. Maps 15-bit private addresses (`CA0`–`CA14`),
-  manages `clk_spd` wait states, and generates 1-cycle `mem_ready` completion pulses.
+The FPGA supports two distinct operational modes determined at power-on reset:
 
+### 2.1 Mode 1: Backplane Coprocessor (NUMA Cluster Mode)
+* Default Zx50 distributed cluster operation (`LOCAL_RAM_EN = 0`).
+* All Z80 memory cycles (`MREQ_N`) pass to the backplane to access NUMA cluster memory.
+* The MachXO2 acts purely as the math coprocessor, decoding I/O ports `0x70` and `0x71` (and optional MMIO).
+* On-board external SRAM is disabled (`M_CS_N = 1`).
 
-* **`src/zx50_fpu_dispatch.v`:** Command dispatcher submodule running on `MCLK`. Decodes opcodes, controls execution
-  state timing, manages level CDC acknowledgment, and outputs arithmetic status flags.
+### 2.2 Mode 2: Standalone Single-Board Computer (SBC Mode)
+* Activated via jumper or debug setting (`LOCAL_RAM_EN = 1` via `DBG3` sampled low at reset).
+* The CPU card functions as an autonomous, self-contained single-board computer without external backplane memory cards.
+* The FPGA acts as the system memory controller, intercepting `BMREQ_N` and driving `M_CS_N`, `M_OE_N`, and `M_WE_N` to provide zero-wait-state memory access to the on-board 128 KB SRAM across `CA[16:0]` and `CD[7:0]`.
 
+### 2.3 Flash Organization & Boot Configuration
+The 1 MB external QSPI Flash is partitioned into 64 KB blocks:
+* Production FPU microcode and math lookup tables.
+* Debug/Diagnostic FPU microcode.
+* Production Z80 BIOS / Monitor firmware.
+* Diagnostic / Standalone CP/M bootloader.
 
-* **`src/zx50_fpu_microengine.v`:** Unified Microcoded Execution Engine. Manages the shared scratchpad register file,
-  drives the microcode step pointer (`U_PC`), and sequences data transfers between memory and the ALU core.
-* **`src/zx50_fpu_alu_core.v`:** Single Shared 16-Bit Arithmetic Primitive. Performs addition, subtraction, absolute
-  difference, and bit shifts for all microcode routines.
-* **`src/zx50_fpu_block.v`:** Subsystem cluster wrapper. Integrates CPLD (`U11`), SRAM (`U12`), and Flash (`U13`) on
-  private `CA[14:0]` and `CD[7:0]` buses.
+Boot mode and image selection are controlled at reset by sampling the debug lines:
+* **`DBG_N` & `DBG[2:0]`:** Select which microcode/table block and Z80 firmware block to load.
+* **`DBG3`:** If sampled LOW on reset, enables on-board Z80 SRAM memory decoding (SBC mode).
 
+### 2.4 Sub-Millisecond Power-On Shadowing
+At power-up reset:
+1. The FPGA holds `Z80_RESET_N` low.
+2. An autonomous QSPI hardware state machine reads the selected microcode and mathematical lookup tables from the `IS25LP080D` Flash in Quad-Output mode into internal SysMEM EBR:
+   $$\text{Transfer Time for 8 KB at 66 MHz QSPI} \approx 248\ \mu\text{s}$$
+3. In Standalone SBC mode, the FPGA copies 8 KB–16 KB of Z80 monitor/BIOS from Flash into the on-board external SRAM starting at `0x0000` (~500 µs).
+4. Once shadowing is complete and verified, the FPGA releases `Z80_RESET_N`.
+5. The Z80 exits reset with the FPU ready for immediate execution.
 
-* **`src/is61c256al_12.v`:** ISSI `IS61C256AL-12TLI` 12 ns SRAM simulation model.
+---
 
+## 3. Internal Memory Subsystem (SysMEM EBR)
 
-* **`src/sst39sf040.v`:** SST39SF040 55 ns Flash ROM simulation model. Features explicit sensitivity lists and
-  `$readmemh` pre-loading for math LUTs.
+The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total).
 
+### 3.1 SysMEM EBR Memory Map
 
-* **`src/fpu_rom_map.vh`:** Auto-generated Verilog header file containing Flash ROM base addresses and lookup table
-  defines.
-* **`src/fpu_microcode.vh`:** Micro-instruction word encodings, control bit masks, and `U_PC` entry point defines.
+```text
++-------------------+-----------------------------------------------+------------+
+| Address Range     | Functional Allocation                         | Size       |
++-------------------+-----------------------------------------------+------------+
+| 0x0000 - 0x01FF   | Hardware Math Stack (64 words x 64-bit / 8B)  | 512 Bytes  |
+| 0x0200 - 0x02FF   | Scratchpad & Vector Registers (64 x 32-bit)   | 256 Bytes  |
+| 0x0300 - 0x033F   | User Word Storage (16 words x 32-bit)         | 64 Bytes   |
+| 0x0400 - 0x07FF   | Quarter-Square Lookup Table (512 x 16-bit)    | 1,024 Bytes|
+| 0x0800 - 0x09FF   | Reciprocal / Division Table                   | 512 Bytes  |
+| 0x0A00 - 0x0BFF   | Square Root Seed LUT                          | 512 Bytes  |
+| 0x0C00 - 0x0DFF   | Base-2 Exponent / Power LUT                   | 512 Bytes  |
+| 0x0E00 - 0x0FFF   | Base-2 Logarithm LUT                          | 512 Bytes  |
+| 0x1000 - 0x11FF   | Trigonometric Constants / CORDIC Tables       | 512 Bytes  |
+| 0x1200 - 0x19FF   | Runtime Microcode Execution RAM (1K x 16-bit) | 2,048 Bytes|
+| 0x1A00 - 0x23FF   | Unallocated / Extended Buffer Headroom        | 2,560 Bytes|
++-------------------+-----------------------------------------------+------------+
+Total Allocated:    6,464 Bytes (~6.3 KB)
+Total Available:    9,216 Bytes (8 EBR blocks)
+Free Headroom:      2,752 Bytes (~30% free)
+```
 
-#### Testbench Suite (`./sim/`)
+### 3.2 User Memory Allocation (Intermediate Storage)
+A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and constant storage:
+* **Organization:** Configured as 16 words of 32 bits (or 8 words of 64 bits), addressed as index `0x0` through `0xF`.
+* **Purpose:** Allows the Z80 to stache and reload intermediate values directly between the Top of Stack ($TOS$) and internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
+* **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing that user storage words remain untouched and preserved across all arithmetic opcode executions.
 
-All testbenches follow pattern-based execution via `make run-<test>` (e.g., `make run-init`):
+### 3.3 True Dual-Port Concurrency
+The dual-port architecture completely separates host I/O from math execution:
+* **Port A (Host Interface):** Servicing Z80 I/O port `0x70` reads and writes. Pushes and pops write directly to or read from `Stack[SP]`.
+* **Port B (Math Engine):** Servicing the internal micro-engine. The core reads operands (`TOS`, `NOS`), accesses internal scratchpad memory, and writes results back to the stack without host bus arbitration conflicts.
 
-* **`sim/init_tb.v` (`make run-init`):** Verifies boot reset state, register defaults, private memory chip select
-  isolation (`m_ce_n`, `f_ce_n`), and open-drain High-Z line releases.
+---
 
+## 4. Bus Signal Mapping & Pin Allocation
 
-* **`sim/fpu_stack_tb.v` (`make run-fpu_stack`):** Verifies Port `0x70` single-byte, multi-byte 32-bit frame, and
-  interleaved PUSH/POP stack operations, $SP$ tracking, and single-cycle 12ns SRAM write timing.
+The MachXO2-2000 in TQFP-100 provides 79 user I/O pins, allocated as follows:
 
+| Signal Group | Signal Names | Pin Count | Direction | Function |
+|---|---|:---:|:---:|---|
+| **Host Address Bus** | `BA[15:0]` | 16 | Input | Buffered Z80 address bus (via `U12`, `U13`, `U14` 74CBTD3861). Port decode (`0x70`/`0x71`) & SBC memory decode. |
+| **Host Data Bus** | `BD[7:0]` | 8 | Inout | Buffered Z80 data bus (via `U13` 74CBTD3861). |
+| **Host Control** | `BIORQ_N`, `BMREQ_N` | 2 | Input | Buffered I/O and Memory cycle requests (`U12`). |
+| | `BRD_N`, `BWR_N`, `BM1_N` | 3 | Input | Buffered Read, Write, and M1 machine cycle indicators (`U12`). |
+| | `BRESET_N` | 1 | Input | Buffered active-low reset signal (`U12`). |
+| | `BWAIT_N` | 1 | Output | Active-high wait request driving gate of N-ch FET `Q4` (2N7002) to pull bus `~WAIT~` low. |
+| **Host Clocks** | `BZCLK`, `BMCLK` | 2 | Input | Buffered Z80 CPU clock (10 MHz) and Master clock (40 MHz) via `U15`/`U16` 74LVC1G17. |
+| **External SRAM** | `CA[16:0]` | 17 | Output | Private 17-bit address bus to 128KB SRAM (`U18` `IS61WV1288EEBLL-10HLI`). |
+| | `CD[7:0]` | 8 | Inout | Private 8-bit bidirectional data bus to SRAM. |
+| | `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N` | 3 | Output | Private SRAM chip select, output enable, and write enable strobes. |
+| **Serial QSPI Flash** | `F_CE_N`, `F_SCK` | 2 | Output | Chip select (`CSSPIN`) and serial clock (`CCLK`) for `U19` `IS25LP080D`. |
+| | `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N` | 4 | Inout | Quad-SPI data lines (IO0–IO3). |
+| **Debug & Config** | `DBG[3:0]` | 4 | Inout | Real-time debug / telemetry lines routed to header `J9`. |
+| | `DBG_N` | 1 | Input | Debug enable jumper routed to header `J8`. |
+| **Total User I/O Pins** | | **72** | | **Out of 79 available User I/Os on TQFP-100 (7 spare pins)** |
+| *Dedicated Pins* | `DONE`, `INIT_N`, `PROGRAM_N` | 3 | Output/Input | FPGA status LED (`D4`), initialization, and reconfigure push button (`SW2`). |
+| *Dedicated JTAG* | `TCK`, `TDI`, `TDO`, `TMS`, `JTAGENB` | 5 | Inout | JTAG programming header `J7`. |
 
-* **`sim/fpu_cmd_tb.v` (`make run-fpu_cmd`):** Verifies Port `0x71` command execution, `ZCLK`/`MCLK` 4-phase CDC
-  handshaking, automatic Z80 `wait_n` stall and release, and valid/invalid opcode status reporting (`BUSY`, `ERR`).
+---
 
+## 5. Register & I/O Interface Protocol
 
-* **`sim/fpu_mem_tb.v` (`make run-fpu_mem`):** Verifies 20 MHz vs 40 MHz Flash ROM timing, SRAM single-cycle reads,
-  2-phase SRAM write hold timing, and dual-client arbitration.
+The FPU occupies host I/O base addresses `0x70` and `0x71`.
 
+| Port Address | Direction | Register Name | Description |
+|---|---|---|---|
+| **`0x70`** | Write | `DATA_PUSH` | Pushes 1 byte to Top of Stack ($TOS$), auto-incrementing byte pointer $SP$. |
+| **`0x70`** | Read | `DATA_POP` | Reads 1 byte from Top of Stack ($TOS$), auto-decrementing byte pointer $SP$. |
+| **`0x71`** | Write | `CMD_EXEC` | Latches opcode to execution dispatcher, triggers math core. |
+| **`0x71`** | Read | `STATUS` | Returns status flags: `[BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]`. |
 
-* **`sim/fpu_microengine_tb.v` (`make run-fpu_microengine`):** Verifies microcode execution routines for addition
-  (`OP_ADD`), subtraction (`OP_SUB`), negation (`OP_CHS`), and Quarter-Square multiplication (`OP_MUL`).
+### 5.1 Status Register Bit Flags (`0x71` Read)
 
-~~~
-~~~
+| Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `BUSY` | `ZERO` | `SIGN` | `CARRY` | `OVERFLOW` | `UNDERFLOW` | `ERR` | Reserved (0) |
 
-# Master Opcode & Flash LUT Inventory
+* **`BUSY` (Bit 7):** High during computation; cleared automatically when the math engine completes.
+* **`ZERO` (Bit 6):** Set if result is equal to 0.
+* **`SIGN` (Bit 5):** Set if result is negative.
+* **`CARRY` (Bit 4):** Set on integer arithmetic carry / borrow.
+* **`OVERFLOW` (Bit 3):** Set if result exceeds dynamic range of the target type (or FP $+\infty$).
+* **`UNDERFLOW` (Bit 2):** Set if floating-point result underflows to denormalized / zero.
+* **`ERR` (Bit 1):** Set high on illegal opcode, divide-by-zero, invalid operand (NaN), or stack underflow/overflow.
 
+### 5.2 Handshaking Modes
+
+1. **Blocking Mode (Default):**
+   * Upon receiving an arithmetic opcode write to `0x71`, the FPGA immediately asserts `BWAIT_N` high (turning on N-ch FET `Q4` to pull host `~WAIT~` low).
+   * The Z80 is held in wait states until the computation finishes.
+   * When finished, the FPGA deasserts `BWAIT_N` low (releasing host `~WAIT~`) and updates `STATUS`.
+   * For operations that complete in 1 or 2 cycles (e.g. integer sign change, stack dup), wait states are not inserted.
+2. **Non-Blocking Mode:**
+   * Configured via management command (`0b1111_1101`).
+   * The FPGA accepts the opcode, sets `BUSY = 1`, and does **not** assert `BWAIT_N`.
+   * The Z80 polls Port `0x71` until bit 7 (`BUSY`) clears, allowing the CPU to perform interleaved tasks during longer calculations (e.g., transcendental functions or 64-bit divisions).
+
+### 5.3 High-Throughput Memory-Mapped I/O Window (Optional MMIO)
+In addition to standard Port I/O, the FPGA can monitor the upper memory map (e.g., `0xFE00`–`0xFE7F`) to support accelerated Z80 block transfers (`LDIR` / `LDDR`):
+* `0xFE00`–`0xFE03`: Direct 32-bit TOS Push/Pop register window.
+* `0xFE08`–`0xFE0F`: Direct 64-bit transfer window (`i64` / `f64`).
+* `0xFE10`: Command trigger register.
+* `0xFE20`–`0xFE7F`: Direct 64-byte vector/scratchpad buffer window.
+
+---
+
+## 6. Stack Memory Architecture & Supported Data Types
+
+The math stack is physically organized in internal SysMEM EBR as 64 words of up to 64 bits (8 bytes) each.
+
+### 6.1 Stack Conventions
+* **`SP` (Stack Pointer):** Pointer to the next stack location.
+* **`TOS` (Top of Stack):** Operand at the current top of the stack.
+* **`NOS` (Next on Stack):** Operand directly underneath TOS.
+* Operations are RPN (Reverse Polish Notation): Unary operations consume and replace `TOS`. Binary operations consume `TOS` and `NOS`, writing the result back to `TOS` and adjusting `SP`.
+
+### 6.2 Data Formats
+The stack memory stores raw byte streams; formatting is determined by the opcode executed:
+* **`i32` (32-bit Signed Integer):** 2's complement, range $-2^{31}$ to $2^{31}-1$.
+* **`f32` (32-bit IEEE-754 Single Precision):** 1 sign bit, 8 exponent bits (bias 127), 23 fraction bits.
+* **`i64` (64-bit Signed Integer):** 2's complement, range $-2^{63}$ to $2^{63}-1$.
+* **`f64` (64-bit IEEE-754 Double Precision):** 1 sign bit, 11 exponent bits (bias 1023), 52 fraction bits.
+
+---
+
+## 7. Instruction Set Architecture (OpCodes: Port `0x71`)
+
+Commands written to Port `0x71` are structured as 1-byte opcodes.
+
+### 7.1 Format Encoding Field (`fff`)
+ALU opcodes use a 3-bit suffix `fff` to select operand format:
+
+| Suffix `fff` | Data Format | Description |
+|:---:|---|---|
+| `0b000` | `i32` | 32-bit signed integer operands $\rightarrow$ 32-bit integer result |
+| `0b001` | `f32` | 32-bit IEEE float operands $\rightarrow$ 32-bit float result |
+| `0b010` | `i64` | 64-bit signed integer operands $\rightarrow$ 64-bit integer result |
+| `0b011` | `f64` | 64-bit IEEE float operands $\rightarrow$ 64-bit float result |
+| `0b100` | `f32_to_f64` | Mixed: 32-bit operands promoted to 64-bit float result |
+| `0b101`..`0b111` | Reserved | Reserved for future extensions |
+
+### 7.2 ALU Operations (`0b0000_0fff` – `0b1000_0fff`)
+
+| Opcode Prefix | Mnemonic | Operation | Arity | Description |
+|---|---|---|:---:|---|
+| `0b0000_0fff` | `ADD` | $TOS \leftarrow NOS + TOS$ | Binary | Addition |
+| `0b0000_1fff` | `SUB` | $TOS \leftarrow NOS - TOS$ | Binary | Subtraction |
+| `0b0001_0fff` | `MUL` | $TOS \leftarrow NOS \times TOS$ | Binary | Multiplication |
+| `0b0001_1fff` | `DIV` | $TOS \leftarrow NOS / TOS$ | Binary | Division |
+| `0b0010_0fff` | `SQRT` | $TOS \leftarrow \sqrt{TOS}$ | Unary | Square root |
+| `0b0010_1fff` | `POW` | $TOS \leftarrow NOS^{TOS}$ | Binary | Power ($y^x$) |
+| `0b0011_0fff` | `LN` | $TOS \leftarrow \ln(TOS)$ | Unary | Natural logarithm |
+| `0b0011_1fff` | `EXP` | $TOS \leftarrow e^{TOS}$ | Unary | Exponential ($e^x$) |
+| `0b0101_0fff` | `CHS` | $TOS \leftarrow -TOS$ | Unary | Change sign (negate) |
+| `0b0101_1fff` | `ABS` | $TOS \leftarrow \|TOS\|$ | Unary | Absolute value |
+| `0b0110_0fff` | `FLOOR` | $TOS \leftarrow \lfloor TOS \rfloor$ | Unary | Round towards $-\infty$ |
+| `0b0110_1fff` | `CEIL` | $TOS \leftarrow \lceil TOS \rceil$ | Unary | Round towards $+\infty$ |
+| `0b0111_0fff` | `SIN` | $TOS \leftarrow \sin(TOS)$ | Unary | Sine (radians) |
+| `0b0111_1fff` | `COS` | $TOS \leftarrow \cos(TOS)$ | Unary | Cosine (radians) |
+| `0b1000_0fff` | `TAN` | $TOS \leftarrow \tan(TOS)$ | Unary | Tangent (radians) |
+
+### 7.3 Stack Manipulation Opcodes
+
+| Opcode | Mnemonic | Description |
+|---|---|---|
+| `0b1100_0000` | `DUP4` | Duplicate top 4 bytes of stack ($TOS \rightarrow NOS$) |
+| `0b1100_0001` | `DUP8` | Duplicate top 8 bytes of stack |
+| `0b1100_0110` | `CLEAR_STACK` | Reset Stack Pointer $SP$ to empty |
+| `0b1100_1000` | `CONV_I32_I64` | Sign-extend `i32` TOS to `i64` |
+| `0b1100_1001` | `CONV_F32_F64` | Convert single `f32` TOS to double `f64` |
+| `0b1100_1010` | `CONV_I64_I32` | Truncate `i64` TOS to `i32` with overflow check |
+| `0b1100_1011` | `CONV_F64_F32` | Convert double `f64` TOS to single `f32` (rounding) |
+| `0b1101_xxxx` | `CP [xxxx], TOS` | Copy TOS to internal user storage word `xxxx` (0–15) |
+| `0b1110_xxxx` | `CP TOS, [xxxx]` | Copy internal user storage word `xxxx` (0–15) to TOS |
+| `0b1111_0000` | `ZERO_MEM` | Zero all 16 user storage words |
+
+### 7.4 Management Opcodes
+
+| Opcode | Mnemonic | Description |
+|---|---|---|
+| `0b1111_1111` | `RESET` | Soft reset FPU core, clear status flags and stack pointer |
+| `0b1111_1110` | `SET_BLOCKING` | Set execution mode to blocking (`WAIT_N` asserted) |
+| `0b1111_1101` | `SET_NONBLOCKING` | Set execution mode to non-blocking (poll `BUSY` flag) |
+
+---
+
+## 8. Execution Philosophy & Micro-Engine Overview
+
+The MachXO2 implementation follows a deterministic hardware execution strategy:
+
+### 8.1 Dedicated Hardware ALU Primitives
+Complex mathematical operations are decomposed into micro-steps executed across dedicated single-cycle datapath blocks:
+* **32-Bit Parallel Adder / Subtractor:** Single-cycle addition, subtraction, and comparison.
+* **32-Bit Barrel Shifter:** Single-cycle arbitrary shifts (0–31 bits) for floating-point exponent alignment and mantissa normalization.
+* **Multiplier:** High-speed Quarter-Square lookup table combined with adder logic, or multi-cycle Karatsuba block for double-precision mantissas.
+* **Leading-Zero Counter (LZC):** Single-cycle normalizer priority encoder.
+
+### 8.2 Micro-Sequencer Concept
+* Simple operations (`ADD`, `SUB`, `CHS`, `ABS`, `DUP`) execute in direct hardware pipelines with minimal latency.
+* Multi-step operations (`DIV`, `SQRT`, transcendental functions) are controlled by an on-chip micro-sequencer fetching micro-instructions from runtime microcode EBR.
+* *Detailed register models, micro-instruction word formats, and resource/gate estimates are specified in `SystemDesign.md`.*
+
+---
+
+## 9. Simulation & Verification Architecture
+
+The FPU verification suite validates the FPGA design against host Z80 bus transactions, QSPI Flash shadowing, and arithmetic accuracy:
+
+```text
+tb_zx50_fpu (Testbench Top)
+ ├── zx50_clock_bfm        (Glitch-free ZCLK 10 MHz / MCLK 40 MHz generator)
+ ├── z80_host_bfm          (Z80 I/O and Memory Cycle Bus Functional Model)
+ ├── is25lp080d_bfm        (ISSI 1MB QSPI Serial Flash Simulation Model)
+ ├── is61wv1288_bfm        (ISSI 128KB High-Speed 8-bit SRAM Simulation Model)
+ └── zx50_fpu_top          (MachXO2 Top-Level FPGA Design Under Test)
+      ├── zx50_host_if     (Z80 Bus Interface & CDC Dispatcher)
+      ├── zx50_qspi_loader (Autonomous Power-on Shadow Engine)
+      ├── zx50_sysmem      (MachXO2 SysMEM Dual-Port EBR Wrapper)
+      ├── zx50_microengine (Microcoded Sequencer & Register File)
+      └── zx50_alu_core    (32-bit Parallel ALU Primitives)
+```
+
+### 9.1 Verification Suites (`sim/`)
+All testbenches follow pattern-based execution via `make`:
+* `make run-init`: Verifies power-on reset, QSPI Flash boot shadowing, and default register states.
+* `make run-stack`: Verifies Port `0x70` single-byte and multi-byte push/pop sequences and stack pointer tracking.
+* `make run-cmd`: Verifies Port `0x71` command decoding, blocking `WAIT_N` handshakes, and status register flags.
+* `make run-math`: Exhaustive test vector suites for integer and IEEE-754 single/double-precision math operations.
