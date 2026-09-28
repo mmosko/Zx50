@@ -12,18 +12,20 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
   - [x] Remove `fpga_arch.md`.
   - [x] Finalize high-level feature set, data types (`i32`, `f32`, `i64`, `f64`), stack model, and host interfaces (Port I/O & optional MMIO).
 
-- [ ] **Phase 2: Low-Level System Design (`SystemDesign.md`)**
+- [x] **Phase 2: Low-Level System Design (`SystemDesign.md`)**
   - [x] Detail hardware ALU primitive blocks (32-bit adder/subtractor, Radix-4 Booth multiplier, barrel shifter, normalizer/LZC, exponent ALU).
-  - [x] Define physical register set (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `STATUS`, `SP`, `UPC`), register pairing, and EBR coupling.
+  - [x] Define physical register set (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `STATUS`, `SP`, `OSP`, `UPC`, `BLOCKING`, `IMMEDIATE`), register pairing, and EBR coupling.
+  - [x] Define microcode instruction set architecture ($\mu$-ops) including arithmetic, shifts, logic, data moves, stack pops/pushes, and control flow (`DJNZ`, `JNZ`, `JZ`, `SET`, `CLR`).
+  - [x] Specify dispatcher FSM logic, Port 0x70/0x71 arbitration, and wait-state handshake circuit (`BWAIT_N` / `Q4`).
+  - [x] Specify microcode programs for all 60 ALU opcodes, 10 stack ops, constants, and management routines.
   - [x] Establish preliminary gate/LUT/EBR resource usage estimates for MachXO2 (`LCMXO2-2000HC`).
-  - [ ] Define micro-sequencer / microcode execution engine (uPC, micro-instruction word format, dispatch table).
-  - [ ] Specify detailed execution flow and cycle breakdown for every Port 0x70/0x71 operation and opcode.
 
-- [ ] **Phase 3: Z80 Programmer's Guide (`ProgrammersGuide.md`)**
-  - [ ] Document assembly programming models (Port 0x70/0x71 protocol, blocking vs. non-blocking wait modes).
-  - [ ] Define stack conventions, operand layout (endianness), and error handling (`STATUS` register).
-  - [ ] Provide end-to-end Z80 assembly examples for real math routines (evaluating polynomials, vector operations, transcendental calls).
-  - [ ] Verify semantic consistency to eliminate edge cases and subtle math bugs.
+- [x] **Phase 3: Z80 Programmer's Guide (`ProgrammersGuide.md`)**
+  - [x] Define single source of truth for Status Register (`STATUS[7:0]`) and Z80 polling conventions.
+  - [x] Define single source of truth for complete User OpCode Set (Port 0x71 Language).
+  - [x] Document assembly programming models (Port 0x70/0x71 protocol, blocking, non-blocking, and batch execution).
+  - [x] Define stack conventions, operand layout (Little-Endian), and error handling.
+  - [x] Provide complete, runnable Z80 assembly examples for four canonical benchmark problems (Manhattan distance, 3D vector norm, sphere volume, quadratic polynomial evaluation) comparing Immediate Blocking, Non-blocking, and Batch modes.
 
 - [ ] **Phase 4: Python Machine Model**
   - [ ] Implement bit-accurate hardware building blocks (registers, 32-bit ALU, shifter, micro-sequencer) in Python.

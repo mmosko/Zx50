@@ -1,10 +1,15 @@
 # Zx50 CPU Rev C4 Math & Stack Coprocessor Specification (FPU Rev 2)
 
-This document specifies the high-level hardware architecture, operating theory, and instruction set architecture (ISA) for the FPGA-based Floating-Point and Stack Coprocessor on the **Zx50 CPU Card (Rev C4)**.
+This document specifies the high-level hardware architecture, operating theory, and instruction set architecture (ISA)
+for the FPGA-based Floating-Point and Stack Coprocessor on the **Zx50 CPU Card (Rev C4)**.
 
-- **High-Level Architecture:** [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md) (this document)
-- **Low-Level System Design & Gate Estimates:** `SystemDesign.md` *(see roadmap in [TODO.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/TODO.md))*
-- **Z80 Assembly Programmer's Guide:** `ProgrammersGuide.md`
+- **High-Level Architecture & Hardware
+  Interface:** [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md) (this document)
+- **Low-Level Micro-Architecture &
+  Implementation:** [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md)
+- **Z80 Assembly Programmer's
+  Guide:** [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/ProgrammersGuide.md)
+- **Development Roadmap:** [TODO.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/TODO.md)
 
 ---
 
@@ -14,63 +19,69 @@ The Zx50 FPU Rev 2 is an FPGA-based math accelerator and stack processor tightly
 
 ```mermaid
 graph TD
-    subgraph HostDomain [Z80 Host CPU Domain - 5.0V]
-        Z80[Z80 CPU @ 10 MHz]
-    end
+subgraph HostDomain [Z80 Host CPU Domain - 5.0V]
+Z80[Z80 CPU @ 10 MHz]
+end
 
-    subgraph LevelShifters [Voltage Translation - 5.0V to 3.3V]
-        CBT[74CBTD3861 Bus Switches]
-    end
+subgraph LevelShifters [Voltage Translation - 5.0V to 3.3V]
+CBT[74CBTD3861 Bus Switches]
+end
 
-    subgraph FPGASubsystem [Lattice MachXO2-2000HC TQFP-100 - 3.3V]
-        HostIF[Host Bus Interface & Port Decoder]
-        MMU[SBC Memory / MREQ Controller]
-        subgraph SysMEM [Internal SysMEM Dual-Port EBR - 9.2 KB]
-            Stack[Hardware Stack: 64 words x 32/64-bit]
-            Scratch[Scratchpad & Vector Buffers]
-            LUTs[Lookup Tables: Sqrt, Log/Exp, CORDIC Trig]
-            UCodeRAM[Microcode Execution RAM]
-        end
-        Core[Math Engine & Micro-sequencer]
-        BootLdr[Autonomous QSPI Shadow Loader]
-    end
+subgraph FPGASubsystem [Lattice MachXO2-2000HC TQFP-100 - 3.3V]
+HostIF[Host Bus Interface & Port Decoder]
+MMU[SBC Memory / MREQ Controller]
+subgraph SysMEM [Internal SysMEM Dual-Port EBR - 9.2 KB]
+Stack[Hardware Stack: 64 words x 32/64-bit]
+Scratch[Scratchpad & Vector Buffers]
+LUTs[Lookup Tables: Sqrt, Log/Exp, CORDIC Trig]
+UCodeRAM[Microcode Execution RAM]
+end
+Core[Math Engine & Micro-sequencer]
+BootLdr[Autonomous QSPI Shadow Loader]
+end
 
-    subgraph OnBoardMem [On-Board External Storage - 3.3V]
-        ExtSRAM[IS61WV1288EEBLL 128KB High-Speed 8-bit SRAM]
-        QSPI[IS25LP080D 1MB QSPI Serial Flash]
-    end
+subgraph OnBoardMem [On-Board External Storage - 3.3V]
+ExtSRAM[IS61WV1288EEBLL 128KB High-Speed 8-bit SRAM]
+QSPI[IS25LP080D 1MB QSPI Serial Flash]
+end
 
-    Z80 <-->|5V Signals| CBT
-    CBT <-->|3.3V Signals: BA, BD| HostIF
-    CBT <-->|3.3V Signals: BMREQ_N| MMU
-    HostIF <-->|CA, CD: Private SRAM Bus| ExtSRAM
-    MMU -->|M_CS_N, M_OE_N, M_WE_N| ExtSRAM
-    HostIF <-->|Port A: Port 0x70/0x71| Stack
-    Core <-->|Port B: Concurrent Execution| SysMEM
-    BootLdr -->|Cold Boot Shadowing| SysMEM
-    BootLdr -->|Cold Boot SBC BIOS Copy| ExtSRAM
-    QSPI <-->|F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N| BootLdr
+Z80 <-->|5V Signals|CBT
+CBT <-->|3 . 3V Signals: BA, BD|HostIF
+CBT <-->|3. 3V Signals: BMREQ_N|MMU
+HostIF <-->|CA, CD: Private SRAM Bus|ExtSRAM
+MMU -->|M_CS_N, M_OE_N, M_WE_N|ExtSRAM
+HostIF <-->|Port A: Port 0x70/0x71|Stack
+Core <-->|Port B: Concurrent Execution|SysMEM
+BootLdr -->|Cold Boot Shadowing|SysMEM
+BootLdr -->|Cold Boot SBC BIOS Copy|ExtSRAM
+QSPI <-->| F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N|BootLdr
 ```
 
 ### 1.1 Key Hardware Specifications
 
 * **Host CPU:** Zilog Z80C @ 10 MHz (`CLK` / `BZCLK`).
 * **Target FPGA:** **Lattice MachXO2-2000HC** (`LCMXO2-2000HC-4TG100I` / `U17`):
-  * **Package:** 100-pin TQFP (14×14 mm, 0.5 mm pitch), 100% pin allocation (0 spare pins).
-  * **Logic Capacity:** 2,112 LUT4s, 2,112 Registers.
-  * **SysMEM EBR (Embedded Block RAM):** 8 true dual-port blocks (74 Kb / 9,216 Bytes total).
-  * **Distributed RAM:** 16 Kb.
-  * **Phase-Locked Loops (PLLs):** 1 on-chip PLL.
-  * **Power Supply:** Single +3.3V rail for core and all I/O banks (`HC` variant).
+    * **Package:** 100-pin TQFP (14×14 mm, 0.5 mm pitch), 100% pin allocation (0 spare pins).
+    * **Logic Capacity:** 2,112 LUT4s, 2,112 Registers.
+    * **SysMEM EBR (Embedded Block RAM):** 8 true dual-port blocks (74 Kb / 9,216 Bytes total).
+    * **Distributed RAM:** 16 Kb.
+    * **Phase-Locked Loops (PLLs):** 1 on-chip PLL.
+    * **Power Supply:** Single +3.3V rail for core and all I/O banks (`HC` variant).
 * **Companion Flash:** **ISSI `IS25LP080D-JNLE-TR` (`U19`)** (1 MB / 8 Mbit Serial NOR Flash, Quad-SPI, 3.3V, 8 ns).
-  * Signals: `F_CE_N`, `F_SCK`, `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N`.
-* **On-Board External SRAM:** **ISSI `IS61WV1288EEBLL-10HLI` (`U18`)** (128 KB, 128K×8, 10 ns access time with ECC, 3.3V).
-  * Signals: `CA[16:0]`, `CD[7:0]`, `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N`.
-* **Bus Level Translation:** TI `74CBTD3861` (`U12`, `U13`, `U14`) zero-delay bus switches clamping 5.0V Z80 signals to 3.3V (`BA[15:0]`, `BD[7:0]`, control signals). MachXO2 3.3V LVCMOS outputs drive Z80 inputs ($V_{IH} \ge 2.0\text{V}$) directly and safely.
+    * Signals: `F_CE_N`, `F_SCK`, `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N`.
+* **On-Board External SRAM:** **ISSI `IS61WV1288EEBLL-10HLI` (`U18`)** (128 KB, 128K×8, 10 ns access time with ECC,
+  3.3V).
+    * Signals: `CA[16:0]`, `CD[7:0]`, `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N`.
+* **Bus Level Translation:** TI `74CBTD3861` (`U12`, `U13`, `U14`) zero-delay bus switches clamping 5.0V Z80 signals to
+  3.3V (`BA[15:0]`, `BD[7:0]`, control signals). MachXO2 3.3V LVCMOS outputs drive Z80 inputs ($V_{IH} \ge 2.0\text{V}$)
+  directly and safely.
 * **Clocking:**
-  * External bus clock: **`ZCLK` / `BZCLK`** (5 MHz or 10 MHz, buffered via `U15` 74LVC1G17 to FPGA pin 38 `PCLKT2_1`).
-  * External shadow bus clock: **`MCLK` / `BMCLK`** (20 MHz or 40 MHz, buffered via `U16` 74LVC1G17 to FPGA pin 34 `PCLKT2_0`), synchronous with ZCLK.
-  * Internal FPGA core clock: **80 MHz** generated by the on-chip PLL from BMCLK (or up to 160 MHz for internal execution).
+    * External bus clock: **`ZCLK` / `BZCLK`** (5 MHz or 10 MHz, buffered via `U15` 74LVC1G17 to FPGA pin 38
+      `PCLKT2_1`).
+    * External shadow bus clock: **`MCLK` / `BMCLK`** (20 MHz or 40 MHz, buffered via `U16` 74LVC1G17 to FPGA pin 34
+      `PCLKT2_0`), synchronous with ZCLK.
+    * Internal FPGA core clock: **80 MHz** generated by the on-chip PLL from BMCLK (or up to 160 MHz for internal
+      execution).
 
 ---
 
@@ -79,33 +90,43 @@ graph TD
 The FPGA supports two distinct operational modes determined at power-on reset:
 
 ### 2.1 Mode 1: Backplane Coprocessor (NUMA Cluster Mode)
+
 * Default Zx50 distributed cluster operation (`LOCAL_RAM_EN = 0`).
 * All Z80 memory cycles (`MREQ_N`) pass to the backplane to access NUMA cluster memory.
 * The MachXO2 acts purely as the math coprocessor, decoding I/O ports `0x70` and `0x71` (and optional MMIO).
 * On-board external SRAM is disabled (`M_CS_N = 1`).
 
 ### 2.2 Mode 2: Standalone Single-Board Computer (SBC Mode)
+
 * Activated via jumper or debug setting (`LOCAL_RAM_EN = 1` via `DBG3` sampled low at reset).
 * The CPU card functions as an autonomous, self-contained single-board computer without external backplane memory cards.
-* The FPGA acts as the system memory controller, intercepting `BMREQ_N` and driving `M_CS_N`, `M_OE_N`, and `M_WE_N` to provide zero-wait-state memory access to the on-board 128 KB SRAM across `CA[16:0]` and `CD[7:0]`.
+* The FPGA acts as the system memory controller, intercepting `BMREQ_N` and driving `M_CS_N`, `M_OE_N`, and `M_WE_N` to
+  provide zero-wait-state memory access to the on-board 128 KB SRAM across `CA[16:0]` and `CD[7:0]`.
 
 ### 2.3 Flash Organization & Boot Configuration
+
 The 1 MB external QSPI Flash is partitioned into 64 KB blocks:
+
 * Production FPU microcode and math lookup tables.
 * Debug/Diagnostic FPU microcode.
 * Production Z80 BIOS / Monitor firmware.
 * Diagnostic / Standalone CP/M bootloader.
 
 Boot mode and image selection are controlled at reset by sampling the debug lines:
+
 * **`DBG_N` & `DBG[2:0]`:** Select which microcode/table block and Z80 firmware block to load.
 * **`DBG3`:** If sampled LOW on reset, enables on-board Z80 SRAM memory decoding (SBC mode).
 
 ### 2.4 Sub-Millisecond Power-On Shadowing
+
 At power-up reset:
+
 1. The FPGA holds `Z80_RESET_N` low.
-2. An autonomous QSPI hardware state machine reads the selected microcode and mathematical lookup tables from the `IS25LP080D` Flash in Quad-Output mode into internal SysMEM EBR:
+2. An autonomous QSPI hardware state machine reads the selected microcode and mathematical lookup tables from the
+   `IS25LP080D` Flash in Quad-Output mode into internal SysMEM EBR:
    $$\text{Transfer Time for 8 KB at 66 MHz QSPI} \approx 248\ \mu\text{s}$$
-3. In Standalone SBC mode, the FPGA copies 8 KB–16 KB of Z80 monitor/BIOS from Flash into the on-board external SRAM starting at `0x0000` (~500 µs).
+3. In Standalone SBC mode, the FPGA copies 8 KB–16 KB of Z80 monitor/BIOS from Flash into the on-board external SRAM
+   starting at `0x0000` (~500 µs).
 4. Once shadowing is complete and verified, the FPGA releases `Z80_RESET_N`.
 5. The Z80 exits reset with the FPU ready for immediate execution.
 
@@ -141,94 +162,119 @@ Free Headroom:      3,744 Bytes (~41% free)
 ```
 
 ### 3.2 User Memory Allocation (Intermediate Storage)
-A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and constant storage:
+
+A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and
+constant storage:
+
 * **Organization:** Configured as 16 words of 32 bits (or 8 words of 64 bits), addressed as index `0x0` through `0xF`.
-* **Purpose:** Allows the Z80 to stash and reload intermediate values directly between the Top of Stack ($TOS$) and internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
-* **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing that user storage words remain untouched and preserved across all arithmetic opcode executions.
+* **Purpose:** Allows the Z80 to stash and reload intermediate values directly between the Top of Stack ($TOS$) and
+  internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the
+  significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during
+  complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
+* **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing
+  that user storage words remain untouched and preserved across all arithmetic opcode executions.
 
 ### 3.3 Command Stack & Batch Execution Queue (`0x0340`–`0x035F`)
+
 A 32-byte circular buffer in SysMEM EBR stores up to 32 queued opcodes:
+
 * **Indexed By:** Dedicated 5-bit register `OSP[4:0]` (Operation Stack Pointer, range 0..31).
 * **Operating Modes:**
-  * **Immediate Mode (`SET_IMMEDIATE`):** Arriving opcodes written to Port 0x71 are pushed to the command queue at `[OSP]`, executed immediately by the micro-engine, and popped upon retirement.
-  * **Batch Mode (`SET_BATCH`):** Arriving opcodes (except management commands) are queued sequentially into the command stack without executing (`[OSP] <- opcode; OSP <- OSP + 1`).
-  * **Batch Execution (`EXEC_BATCH`):** Micro-engine consumes and executes all queued opcodes back-to-back at 80 MHz, resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of opcodes via `OTIR` without slow status polling between individual instructions.
+    * **Immediate Mode (`SET_IMMEDIATE`):** Arriving opcodes written to Port 0x71 are pushed to the command queue at
+      `[OSP]`, executed immediately by the micro-engine, and popped upon retirement.
+    * **Batch Mode (`SET_BATCH`):** Arriving opcodes (except management commands) are queued sequentially into the
+      command stack without executing (`[OSP] <- opcode; OSP <- OSP + 1`).
+    * **Batch Execution (`EXEC_BATCH`):** Micro-engine consumes and executes all queued opcodes back-to-back at 80 MHz,
+      resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of opcodes via `OTIR`
+      without slow status polling between individual instructions.
 
 ### 3.3 True Dual-Port Concurrency
+
 The dual-port architecture completely separates host I/O from math execution:
-* **Port A (Host Interface):** Servicing Z80 I/O port `0x70` reads and writes. Pushes and pops write directly to or read from `Stack[SP]`.
-* **Port B (Math Engine):** Servicing the internal micro-engine. The core reads operands (`TOS`, `NOS`), accesses internal scratchpad memory, and writes results back to the stack without host bus arbitration conflicts.
+
+* **Port A (Host Interface):** Servicing Z80 I/O port `0x70` reads and writes. Pushes and pops write directly to or read
+  from `Stack[SP]`.
+* **Port B (Math Engine):** Servicing the internal micro-engine. The core reads operands (`TOS`, `NOS`), accesses
+  internal scratchpad memory, and writes results back to the stack without host bus arbitration conflicts.
 
 ---
 
 ## 4. Complete 100-Pin Package Budget & Signal Allocation
 
-On the **Zx50 CPU Card (Rev C4)**, the MachXO2-2000HC in TQFP-100 (`U17`) has 100% of its pins assigned with **0 remaining pins**:
+On the **Zx50 CPU Card (Rev C4)**, the MachXO2-2000HC in TQFP-100 (`U17`) has 100% of its pins assigned with **0
+remaining pins**:
 
-| Signal Group | Signal Names | Pin Count | Direction | Function |
-|---|---|:---:|:---:|---|
-| **Host Address Bus** | `BA[15:0]` | 16 | Input | Buffered Z80 address bus (via `U12`, `U13`, `U14` 74CBTD3861). Port decode (`0x70`/`0x71`) & SBC memory decode. |
-| **Host Data Bus** | `BD[7:0]` | 8 | Inout | Buffered Z80 data bus (via `U13` 74CBTD3861). |
-| **Host Control** | `BIORQ_N`, `BMREQ_N` | 2 | Input | Buffered I/O and Memory cycle requests (`U12`). |
-| | `BRD_N`, `BWR_N`, `BM1_N` | 3 | Input | Buffered Read, Write, and M1 machine cycle indicators (`U12`). |
-| | `BRESET_N` | 1 | Input | Buffered active-low reset signal (`U12`). |
-| | `BWAIT_N` | 1 | Output | Active-high wait request driving gate of N-ch FET `Q4` (2N7002) to pull bus `~WAIT~` low. |
-| **Host Clocks** | `BZCLK`, `BMCLK` | 2 | Input | Buffered Z80 CPU clock (10 MHz) and Master clock (40 MHz) via `U15`/`U16` 74LVC1G17. |
-| **External SRAM** | `CA[16:0]` | 17 | Output | Private 17-bit address bus to 128KB SRAM (`U18` `IS61WV1288EEBLL-10HLI`). |
-| | `CD[7:0]` | 8 | Inout | Private 8-bit bidirectional data bus to SRAM. |
-| | `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N` | 3 | Output | Private SRAM chip select, output enable, and write enable strobes. |
-| **Serial QSPI Flash** | `F_CE_N`, `F_SCK` | 2 | Output | Chip select (`CSSPIN` pin 27) and serial clock (`CCLK` pin 31) for `U19` `IS25LP080D`. |
-| | `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N` | 4 | Inout | Quad-SPI data lines (IO0–IO3 on pins 49, 32, 28, 30). |
-| **Debug & Config** | `DBG[3:0]` | 4 | Inout | Real-time debug / telemetry lines routed to header `J9` (pins 24, 25, 35, 36). |
-| | `DBG_N` | 1 | Input | Debug enable jumper routed to header `J8` (pin 88). |
-| **JTAG Programming** | `TCK`, `TDI`, `TDO`, `TMS`, `JTAGENB` | 5 | Inout | Dedicated JTAG interface routed to header `J7` (pins 91, 94, 95, 90, 82). |
-| **FPGA Config / Status**| `DONE`, `INIT_N`, `PROGRAM_N` | 3 | Output/Input | Status LED `D4` (pin 76), Init strobe (pin 77), and reconfiguration switch `SW2` (pin 81). |
-| **Power Supplies** | `VCC` (Core), `VCCIO[5:0]` | 11 | Power | Single +3.3V rail: Pins 5, 11, 23, 26, 46, 50, 55, 73, 80, 93, 100. |
-| **Ground** | `GND` | 8 | Power | Ground returns: Pins 6, 22, 33, 44, 56, 72, 79, 92. |
-| **No Connect** | `NC` | 1 | NC | Pin 89. |
-| **Total Pins Accounted** | | **100** | | **100% of TQFP-100 pins allocated (0 remaining pins)** |
+| Signal Group             | Signal Names                            | Pin Count |  Direction   | Function                                                                                                        |
+|--------------------------|-----------------------------------------|:---------:|:------------:|-----------------------------------------------------------------------------------------------------------------|
+| **Host Address Bus**     | `BA[15:0]`                              |    16     |    Input     | Buffered Z80 address bus (via `U12`, `U13`, `U14` 74CBTD3861). Port decode (`0x70`/`0x71`) & SBC memory decode. |
+| **Host Data Bus**        | `BD[7:0]`                               |     8     |    Inout     | Buffered Z80 data bus (via `U13` 74CBTD3861).                                                                   |
+| **Host Control**         | `BIORQ_N`, `BMREQ_N`                    |     2     |    Input     | Buffered I/O and Memory cycle requests (`U12`).                                                                 |
+|                          | `BRD_N`, `BWR_N`, `BM1_N`               |     3     |    Input     | Buffered Read, Write, and M1 machine cycle indicators (`U12`).                                                  |
+|                          | `BRESET_N`                              |     1     |    Input     | Buffered active-low reset signal (`U12`).                                                                       |
+|                          | `BWAIT_N`                               |     1     |    Output    | Active-high wait request driving gate of N-ch FET `Q4` (2N7002) to pull bus `~WAIT~` low.                       |
+| **Host Clocks**          | `BZCLK`, `BMCLK`                        |     2     |    Input     | Buffered Z80 CPU clock (10 MHz) and Master clock (40 MHz) via `U15`/`U16` 74LVC1G17.                            |
+| **External SRAM**        | `CA[16:0]`                              |    17     |    Output    | Private 17-bit address bus to 128KB SRAM (`U18` `IS61WV1288EEBLL-10HLI`).                                       |
+|                          | `CD[7:0]`                               |     8     |    Inout     | Private 8-bit bidirectional data bus to SRAM.                                                                   |
+|                          | `M_CS_N` (`M_CE_N`), `M_OE_N`, `M_WE_N` |     3     |    Output    | Private SRAM chip select, output enable, and write enable strobes.                                              |
+| **Serial QSPI Flash**    | `F_CE_N`, `F_SCK`                       |     2     |    Output    | Chip select (`CSSPIN` pin 27) and serial clock (`CCLK` pin 31) for `U19` `IS25LP080D`.                          |
+|                          | `F_SI`, `F_SO`, `F_WP_N`, `F_HOLD_N`    |     4     |    Inout     | Quad-SPI data lines (IO0–IO3 on pins 49, 32, 28, 30).                                                           |
+| **Debug & Config**       | `DBG[3:0]`                              |     4     |    Inout     | Real-time debug / telemetry lines routed to header `J9` (pins 24, 25, 35, 36).                                  |
+|                          | `DBG_N`                                 |     1     |    Input     | Debug enable jumper routed to header `J8` (pin 88).                                                             |
+| **JTAG Programming**     | `TCK`, `TDI`, `TDO`, `TMS`, `JTAGENB`   |     5     |    Inout     | Dedicated JTAG interface routed to header `J7` (pins 91, 94, 95, 90, 82).                                       |
+| **FPGA Config / Status** | `DONE`, `INIT_N`, `PROGRAM_N`           |     3     | Output/Input | Status LED `D4` (pin 76), Init strobe (pin 77), and reconfiguration switch `SW2` (pin 81).                      |
+| **Power Supplies**       | `VCC` (Core), `VCCIO[5:0]`              |    11     |    Power     | Single +3.3V rail: Pins 5, 11, 23, 26, 46, 50, 55, 73, 80, 93, 100.                                             |
+| **Ground**               | `GND`                                   |     8     |    Power     | Ground returns: Pins 6, 22, 33, 44, 56, 72, 79, 92.                                                             |
+| **No Connect**           | `NC`                                    |     1     |      NC      | Pin 89.                                                                                                         |
+| **Total Pins Accounted** |                                         |  **100**  |              | **100% of TQFP-100 pins allocated (0 remaining pins)**                                                          |
 
 ---
 
 ## 5. Register & I/O Interface Protocol
 
-The FPU occupies host I/O base addresses `0x70` and `0x71`.
+The FPU occupies host I/O base addresses `0x70` and `0x71` in the Z80 I/O map:
 
-| Port Address | Direction | Register Name | Description |
-|---|---|---|---|
-| **`0x70`** | Write | `DATA_PUSH` | Pushes 1 byte to Top of Stack ($TOS$), auto-incrementing byte pointer $SP$. |
-| **`0x70`** | Read | `DATA_POP` | Reads 1 byte from Top of Stack ($TOS$), auto-decrementing byte pointer $SP$. |
-| **`0x71`** | Write | `CMD_EXEC` | Latches opcode to execution dispatcher, triggers math core. |
-| **`0x71`** | Read | `STATUS` | Returns status flags: `[BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]`. |
+| Port Address | Direction | Register Name | Hardware Interface Description                                                                |
+|--------------|-----------|---------------|-----------------------------------------------------------------------------------------------|
+| **`0x70`**   | Write     | `DATA_PUSH`   | Writes 1 byte to Top of Stack ($TOS$) on EBR Port A, auto-incrementing byte pointer $SP$.     |
+| **`0x70`**   | Read      | `DATA_POP`    | Reads 1 byte from Top of Stack ($TOS$) on EBR Port A, auto-decrementing byte pointer $SP$.    |
+| **`0x71`**   | Write     | `CMD_EXEC`    | Latches 8-bit user opcode to execution dispatcher, triggering the math core or batch queue.   |
+| **`0x71`**   | Read      | `STATUS`      | Returns 8-bit status flags (`BUSY`, `ZERO`, `SIGN`, `CARRY`, `OVERFLOW`, `UNDERFLOW`, `ERR`). |
 
-### 5.1 Status Register Bit Flags (`0x71` Read)
+### 5.1 Status Register Interface
 
-| Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `BUSY` | `ZERO` | `SIGN` | `CARRY` | `OVERFLOW` | `UNDERFLOW` | `ERR` | Reserved (0) |
+The 8-bit `STATUS` register provides runtime core state and arithmetic flag feedback. It is readable on Port `0x71` with
+zero wait states.
 
-* **`BUSY` (Bit 7):** High during computation; cleared automatically when the math engine completes.
-* **`ZERO` (Bit 6):** Set if result is equal to 0.
-* **`SIGN` (Bit 5):** Set if result is negative.
-* **`CARRY` (Bit 4):** Set on integer arithmetic carry / borrow.
-* **`OVERFLOW` (Bit 3):** Set if result exceeds dynamic range of the target type (or FP $+\infty$).
-* **`UNDERFLOW` (Bit 2):** Set if floating-point result underflows to denormalized / zero.
-* **`ERR` (Bit 1):** Set high on illegal opcode, divide-by-zero, invalid operand (NaN), or stack underflow/overflow.
+> [!IMPORTANT]
+> The authoritative bit definitions, flag behaviors, and Z80 polling conventions are defined
+in [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/ProgrammersGuide.md#2-status-register-status70).
+The internal FPGA signal generation and trigger circuits are defined
+in [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md#24-status-register-status70).
 
-### 5.2 Handshaking Modes
+### 5.2 Wait State & Handshake Circuitry
 
-1. **Blocking Mode (Default):**
-   * Upon receiving an arithmetic opcode write to `0x71`, the FPGA immediately asserts `BWAIT_N` high (turning on N-ch FET `Q4` to pull host `~WAIT~` low).
-   * The Z80 is held in wait states until the computation finishes.
-   * When finished, the FPGA deasserts `BWAIT_N` low (releasing host `~WAIT~`) and updates `STATUS`.
-   * For operations that complete in 1 or 2 cycles (e.g. integer sign change, stack dup), wait states are not inserted.
-2. **Non-Blocking Mode:**
-   * Configured via management command (`0b1111_1101`).
-   * The FPGA accepts the opcode, sets `BUSY = 1`, and does **not** assert `BWAIT_N`.
-   * The Z80 polls Port `0x71` until bit 7 (`BUSY`) clears, allowing the CPU to perform interleaved tasks during longer calculations (e.g., transcendental functions or 64-bit divisions).
+The CPU Card (Rev C4) incorporates dedicated hardware handshaking between the FPGA and the Z80 host:
+
+1. **Wait Generation (`BWAIT_N` / `Q4`):**
+    * FPGA pin 19 (`BWAIT_N`) drives the gate of N-channel MOSFET `Q4` (2N7002).
+    * When asserted high, `Q4` pulls the open-drain host `~WAIT~` line low on the CPU bus.
+    * Internal gating logic generates wait states according to:
+      $$\text{BWAIT\_N} = \text{BLOCKING} \ \& \ \text{BUSY}$$
+2. **Blocking Mode (Default):**
+    * Upon receiving an arithmetic opcode write to Port `0x71`, the dispatcher immediately asserts `BWAIT_N` on the Z80
+      clock edge.
+    * The Z80 is held in wait states while the micro-engine executes at 80 MHz.
+    * When execution finishes, `BUSY` is cleared, releasing `~WAIT~` and allowing the Z80 to resume synchronously on the
+      next cycle.
+3. **Non-Blocking Mode:**
+    * Configured via management command. The FPGA accepts opcodes and asserts `BUSY = 1`, but leaves `BWAIT_N = 0`.
+    * The Z80 is free to perform parallel background tasks, querying Port `0x71` to poll the `BUSY` flag.
 
 ### 5.3 High-Throughput Memory-Mapped I/O Window (Optional MMIO)
-In addition to standard Port I/O, the FPGA can monitor the upper memory map (e.g., `0xFE00`–`0xFE7F`) to support accelerated Z80 block transfers (`LDIR` / `LDDR`):
+
+In addition to Port I/O, the FPGA can optionally monitor an upper memory range (e.g. `0xFE00`–`0xFE7F`) to support
+accelerated Z80 block transfers (`LDIR` / `LDDR`):
+
 * `0xFE00`–`0xFE03`: Direct 32-bit TOS Push/Pop register window.
 * `0xFE08`–`0xFE0F`: Direct 64-bit transfer window (`i64` / `f64`).
 * `0xFE10`: Command trigger register.
@@ -238,131 +284,93 @@ In addition to standard Port I/O, the FPGA can monitor the upper memory map (e.g
 
 ## 6. Stack Memory Architecture & Supported Data Types
 
-The math stack is physically organized in internal SysMEM EBR as 64 words of up to 64 bits (8 bytes) each.
+The math stack is physically organized in internal SysMEM EBR as 64 words of up to 64 bits (8 bytes) each (located at
+`0x0000`–`0x01FF`).
 
-### 6.1 Stack Conventions
-* **`SP` (Stack Pointer):** Pointer to the next stack location.
-* **`TOS` (Top of Stack):** Operand at the current top of the stack.
+### 6.1 Stack Architecture
+
+* **`SP` (Stack Pointer):** 8-bit pointer addressing byte offsets within the 256-byte stack EBR block.
+* **`TOS` (Top of Stack):** Operand at the current top of the stack (`[SP]`).
 * **`NOS` (Next on Stack):** Operand directly underneath TOS.
-* Operations are RPN (Reverse Polish Notation): Unary operations consume and replace `TOS`. Binary operations consume `TOS` and `NOS`, writing the result back to `TOS` and adjusting `SP`.
+* **Operand Discipline:** All stack reads are explicit `POP` operations ($SP \leftarrow SP - \text{bytes}$). All stack
+  writes are explicit `PUSH` operations ($SP \leftarrow SP + \text{bytes}$).
 
-### 6.2 Data Formats
-The stack memory stores raw byte streams; formatting is determined by the opcode executed:
-* **`i32` (32-bit Signed Integer):** 2's complement, range $-2^{31}$ to $2^{31}-1$.
-* **`f32` (32-bit IEEE-754 Single Precision):** 1 sign bit, 8 exponent bits (bias 127), 23 fraction bits.
-* **`i64` (64-bit Signed Integer):** 2's complement, range $-2^{63}$ to $2^{63}-1$.
-* **`f64` (64-bit IEEE-754 Double Precision):** 1 sign bit, 11 exponent bits (bias 1023), 52 fraction bits.
+### 6.2 Supported Data Types
+
+The stack memory stores raw byte streams in **Little-Endian** format. Interpretation is determined by the executed
+opcode:
+
+* **`i32`:** 32-bit signed 2's-complement integer (4 bytes).
+* **`f32`:** 32-bit IEEE-754 single-precision floating point (4 bytes).
+* **`i64`:** 64-bit signed 2's-complement integer (8 bytes).
+* **`f64`:** 64-bit IEEE-754 double-precision floating point (8 bytes).
+
+> [!NOTE]
+> For binary layouts, dynamic ranges, and endianness diagrams,
+see [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/ProgrammersGuide.md#3-supported-data-formats--byte-ordering).
 
 ---
 
-## 7. Instruction Set Architecture (OpCodes: Port `0x71`)
+## 7. Instruction Set Architecture & Software Conventions
 
-Commands written to Port `0x71` are structured as 1-byte opcodes.
+The user instruction set consists of 8-bit macro-opcodes written to Port `0x71`.
 
-### 7.1 Format Encoding Field (`fff`)
-ALU opcodes use a 3-bit suffix `fff` to select operand format:
+### 7.1 Instruction Categories
 
-| Suffix `fff` | Data Format | Description |
-|:---:|---|---|
-| `0b000` | `i32` | 32-bit signed integer operands $\rightarrow$ 32-bit integer result |
-| `0b001` | `f32` | 32-bit IEEE float operands $\rightarrow$ 32-bit float result |
-| `0b010` | `i64` | 64-bit signed integer operands $\rightarrow$ 64-bit integer result |
-| `0b011` | `f64` | 64-bit IEEE float operands $\rightarrow$ 64-bit float result |
-| `0b100` | `f32_to_f64` | Mixed: 32-bit operands promoted to 64-bit float result |
-| `0b101`..`0b111` | Reserved | Reserved for future extensions |
+* **Arithmetic & Transcendental Operations:** Complete 60-operation arithmetic matrix covering addition, subtraction,
+  multiplication, division, powers, roots, logs, exponentials, and trigonometric functions ($\sin, \cos, \tan$) across
+  `i32`, `f32`, `i64`, and `f64`.
+* **Stack & Format Conversion:** Word duplication (`DUP4`, `DUP8`), stack pointer clearance (`CLEAR_STACK`), and type
+  conversions (`CONV_I32_I64`, `CONV_F32_F64`, etc.).
+* **User Memory Caching:** Direct zero-bus-overhead stashing and reloading of intermediate variables between $TOS$ and
+  internal SysMEM EBR slots (`CP [xxxx], TOS`, `CP TOS, [xxxx]`, `ZERO_MEM`).
+* **Mathematical Constants:** High-speed single-instruction injection of fundamental mathematical constants
+  ($\pi, e, \ln (2), \log_2 (e), \sqrt{2}, 1/\sqrt{2}$) in `f32` and `f64` directly from internal ROM onto the stack.
+* **Operating Mode & Queue Management:** Dynamic configuration of blocking mode (`SET_BLOCKING` / `SET_NONBLOCKING`),
+  immediate mode (`SET_IMMEDIATE`), batch queuing (`SET_BATCH`), and batch execution (`EXEC_BATCH`).
 
-### 7.2 ALU Operations (`0b0000_0fff` – `0b1000_0fff`)
-
-| Opcode Prefix | Mnemonic | Operation | Arity | Description |
-|---|---|---|:---:|---|
-| `0b0000_0fff` | `ADD` | $TOS \leftarrow NOS + TOS$ | Binary | Addition |
-| `0b0000_1fff` | `SUB` | $TOS \leftarrow NOS - TOS$ | Binary | Subtraction |
-| `0b0001_0fff` | `MUL` | $TOS \leftarrow NOS \times TOS$ | Binary | Multiplication |
-| `0b0001_1fff` | `DIV` | $TOS \leftarrow NOS / TOS$ | Binary | Division |
-| `0b0010_0fff` | `SQRT` | $TOS \leftarrow \sqrt{TOS}$ | Unary | Square root |
-| `0b0010_1fff` | `POW` | $TOS \leftarrow NOS^{TOS}$ | Binary | Power ($y^x$) |
-| `0b0011_0fff` | `LN` | $TOS \leftarrow \ln(TOS)$ | Unary | Natural logarithm |
-| `0b0011_1fff` | `EXP` | $TOS \leftarrow e^{TOS}$ | Unary | Exponential ($e^x$) |
-| `0b0101_0fff` | `CHS` | $TOS \leftarrow -TOS$ | Unary | Change sign (negate) |
-| `0b0101_1fff` | `ABS` | $TOS \leftarrow \|TOS\|$ | Unary | Absolute value |
-| `0b0110_0fff` | `FLOOR` | $TOS \leftarrow \lfloor TOS \rfloor$ | Unary | Round towards $-\infty$ |
-| `0b0110_1fff` | `CEIL` | $TOS \leftarrow \lceil TOS \rceil$ | Unary | Round towards $+\infty$ |
-| `0b0111_0fff` | `SIN` | $TOS \leftarrow \sin(TOS)$ | Unary | Sine (radians) |
-| `0b0111_1fff` | `COS` | $TOS \leftarrow \cos(TOS)$ | Unary | Cosine (radians) |
-| `0b1000_0fff` | `TAN` | $TOS \leftarrow \tan(TOS)$ | Unary | Tangent (radians) |
-
-### 7.3 Stack Manipulation Opcodes
-
-| Opcode | Mnemonic | Description |
-|---|---|---|
-| `0b1100_0000` | `DUP4` | Duplicate top 4 bytes of stack ($TOS \rightarrow NOS$) |
-| `0b1100_0001` | `DUP8` | Duplicate top 8 bytes of stack |
-| `0b1100_0110` | `CLEAR_STACK` | Reset Operand Stack Pointer $SP$ and Operation Stack Pointer $OSP$ to 0 (empty) |
-| `0b1100_1000` | `CONV_I32_I64` | Sign-extend `i32` TOS to `i64` |
-| `0b1100_1001` | `CONV_F32_F64` | Convert single `f32` TOS to double `f64` |
-| `0b1100_1010` | `CONV_I64_I32` | Truncate `i64` TOS to `i32` with overflow check |
-| `0b1100_1011` | `CONV_F64_F32` | Convert double `f64` TOS to single `f32` (rounding) |
-| `0b1101_xxxx` | `CP [xxxx], TOS` | Copy TOS to internal user storage word `xxxx` (0–15) |
-| `0b1110_xxxx` | `CP TOS, [xxxx]` | Copy internal user storage word `xxxx` (0–15) to TOS |
-| `0b1111_0000` | `ZERO_MEM` | Zero all 16 user storage words |
-
-### 7.4 Mathematical Constant Push Opcodes
-
-Pushes high-precision floating-point constants from internal ROM directly onto the stack. Distinct opcodes are provided for Single (`f32`) and Double (`f64`) precisions (bit 0 indicates precision: `0` = 32-bit float, `1` = 64-bit float):
-
-| Opcode | Mnemonic | Constant & Precision | Hex Value in Internal ROM |
-|---|---|---|:---:|
-| `0b1010_0000` | `PUSH_PI_32` | $\pi \approx 3.14159265$ (Single Precision `f32`) | `0x40490FDB` |
-| `0b1010_0001` | `PUSH_PI_64` | $\pi \approx 3.141592653589793$ (Double Precision `f64`) | `0x400921FB_54442D18` |
-| `0b1010_0010` | `PUSH_E_32` | $e \approx 2.7182818$ (Single Precision `f32`) | `0x402DF854` |
-| `0b1010_0011` | `PUSH_E_64` | $e \approx 2.718281828459045$ (Double Precision `f64`) | `0x4005BF0A_8B145769` |
-| `0b1010_0100` | `PUSH_LN2_32` | $\ln(2) \approx 0.69314718$ (Single Precision `f32`) | `0x3F317218` |
-| `0b1010_0101` | `PUSH_LN2_64` | $\ln(2) \approx 0.693147180559945$ (Double Precision `f64`) | `0x3FE62E42_FEFA39EF` |
-| `0b1010_0110` | `PUSH_LOG2E_32` | $\log_2(e) \approx 1.442695$ (Single Precision `f32`) | `0x3FB8AA3B` |
-| `0b1010_0111` | `PUSH_LOG2E_64` | $\log_2(e) \approx 1.442695040888963$ (Double Precision `f64`) | `0x3FF71547_652B82FE` |
-| `0b1010_1000` | `PUSH_LOG2_10_32` | $\log_2(10) \approx 3.321928$ (Single Precision `f32`) | `0x40549A78` |
-| `0b1010_1001` | `PUSH_LOG2_10_64` | $\log_2(10) \approx 3.321928094887362$ (Double Precision `f64`) | `0x400A934F_0979A371` |
-| `0b1010_1010` | `PUSH_LOG10_2_32` | $\log_{10}(2) \approx 0.301030$ (Single Precision `f32`) | `0x3E9A209B` |
-| `0b1010_1011` | `PUSH_LOG10_2_64` | $\log_{10}(2) \approx 0.301029995663981$ (Double Precision `f64`) | `0x3FD34413_509F79FF` |
-| `0b1010_1100` | `PUSH_SQRT2_32` | $\sqrt{2} \approx 1.4142135$ (Single Precision `f32`) | `0x3FB504F3` |
-| `0b1010_1101` | `PUSH_SQRT2_64` | $\sqrt{2} \approx 1.414213562373095$ (Double Precision `f64`) | `0x3FF6A09E_667F3BCD` |
-| `0b1010_1110` | `PUSH_INV_SQRT2_32` | $1/\sqrt{2} \approx 0.7071068$ (Single Precision `f32`) | `0x3F3504F3` |
-| `0b1010_1111` | `PUSH_INV_SQRT2_64` | $1/\sqrt{2} \approx 0.707106781186548$ (Double Precision `f64`) | `0x3FE6A09E_667F3BCD` |
-
-### 7.5 Management Opcodes
-
-| Opcode | Mnemonic | Description |
-|---|---|---|
-| `0b1111_1111` | `RESET` | Soft reset FPU core, clear status flags, reset $SP \leftarrow 0$ and $OSP \leftarrow 0$ |
-| `0b1111_1110` | `SET_BLOCKING` | Set bus execution mode to blocking (`WAIT_N` asserted during execution) |
-| `0b1111_1101` | `SET_NONBLOCKING` | Set bus execution mode to non-blocking (host polls `BUSY` flag in status register) |
-| `0b1111_1100` | `SET_IMMEDIATE` | Set execution mode to Immediate: every opcode executes immediately upon arrival (default) |
-| `0b1111_1011` | `SET_BATCH` | Set execution mode to Batch: opcodes are queued to Command Stack without executing |
-| `0b1111_1010` | `EXEC_BATCH` | Execute entire queued Command Stack back-to-back at 80 MHz, resetting $OSP \leftarrow 0$ on completion |
+> [!IMPORTANT]
+> **Definitive Instruction Reference & Programming Guide:**
+> The complete numerical opcode map, encoding tables, cycle timings, and end-to-end Z80 assembly programming examples
+are documented
+in [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/ProgrammersGuide.md#4-user-opcode-reference-port-0x71-language).
 
 ---
 
 ## 8. Execution Philosophy & Micro-Engine Overview
 
-The MachXO2 implementation follows a deterministic hardware execution strategy:
+The Lattice MachXO2 implementation follows a deterministic hardware execution strategy:
 
 ### 8.1 Dedicated Hardware ALU Primitives
-Complex mathematical operations are decomposed into micro-steps executed across dedicated single-cycle datapath blocks:
-* **32-Bit Parallel Adder / Subtractor:** Single-cycle addition, subtraction, and comparison.
-* **32-Bit Barrel Shifter:** Single-cycle arbitrary shifts (0–31 bits) for floating-point exponent alignment and mantissa normalization.
-* **Radix-4 Booth Multiplier:** High-throughput iterative multiplier retiring 2 bits per clock cycle (16 cycles for 32-bit, 27 cycles for 53-bit double mantissa), natively supporting 2's complement with 0 EBR usage.
+
+Arithmetic operations are executed using single-cycle dedicated datapath blocks:
+
+* **32-Bit Parallel Adder / Subtractor:** Single-cycle addition, subtraction, and comparison with carry-lookahead
+  chains.
+* **32-Bit Barrel Shifter:** Single-cycle arbitrary shifts (0–31 bits) for floating-point alignment and normalization.
+* **Radix-4 Booth Multiplier:** High-throughput iterative multiplier retiring 2 bits per clock cycle (16 cycles for
+  32-bit, 27 cycles for 53-bit double mantissa), natively supporting 2's complement with 0 EBR usage.
 * **Leading-Zero Counter (LZC):** Single-cycle normalizer priority encoder.
 
-### 8.2 Micro-Sequencer Concept
-* Simple operations (`ADD`, `SUB`, `CHS`, `ABS`, `DUP`) execute in direct hardware pipelines with minimal latency.
-* Multi-step operations (`DIV`, `SQRT`, transcendental functions) are controlled by an on-chip micro-sequencer fetching micro-instructions from runtime microcode EBR.
-* *Detailed register models, micro-instruction word formats, and resource/gate estimates are specified in `SystemDesign.md`.*
+### 8.2 Micro-Sequencer Architecture
+
+* Multi-cycle operations (division, square roots, transcendental functions, 64-bit expansions) are coordinated by an
+  internal horizontal micro-sequencer fetching micro-instructions ($\mu$-ops) from runtime microcode RAM.
+* The microcode engine operates on a dedicated physical register file (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `SP`, `OSP`,
+  `UPC`).
+
+> [!IMPORTANT]
+> **Internal Implementation Reference:**
+> For the internal register models, microcode ISA ($\mu$-ops), dispatcher state machine, microcode programs for each
+user opcode, and FPGA gate budget calculations, refer
+to [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md).
 
 ---
 
 ## 9. Simulation & Verification Architecture
 
-The FPU verification suite validates the FPGA design against host Z80 bus transactions, QSPI Flash shadowing, and arithmetic accuracy:
+The FPU verification suite validates the FPGA design against host Z80 bus transactions, QSPI Flash shadowing, and
+arithmetic accuracy:
 
 ```text
 tb_zx50_fpu (Testbench Top)
@@ -379,7 +387,9 @@ tb_zx50_fpu (Testbench Top)
 ```
 
 ### 9.1 Verification Suites (`sim/`)
+
 All testbenches follow pattern-based execution via `make`:
+
 * `make run-init`: Verifies power-on reset, QSPI Flash boot shadowing, and default register states.
 * `make run-stack`: Verifies Port `0x70` single-byte and multi-byte push/pop sequences and stack pointer tracking.
 * `make run-cmd`: Verifies Port `0x71` command decoding, blocking `WAIT_N` handshakes, and status register flags.
