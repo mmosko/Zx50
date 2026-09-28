@@ -13,10 +13,11 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
   - [x] Finalize high-level feature set, data types (`i32`, `f32`, `i64`, `f64`), stack model, and host interfaces (Port I/O & optional MMIO).
 
 - [ ] **Phase 2: Low-Level System Design (`SystemDesign.md`)**
-  - [ ] Define internal register set, micro-sequencer / microcode execution engine (uPC, micro-instruction word format).
-  - [ ] Detail hardware ALU primitive blocks (32-bit adder/subtractor, 32-bit multiplier / QS LUT, barrel shifter, normalizer/LZC).
+  - [x] Detail hardware ALU primitive blocks (32-bit adder/subtractor, Radix-4 Booth multiplier, barrel shifter, normalizer/LZC, exponent ALU).
+  - [x] Define physical register set (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `STATUS`, `SP`, `UPC`), register pairing, and EBR coupling.
+  - [x] Establish preliminary gate/LUT/EBR resource usage estimates for MachXO2 (`LCMXO2-2000HC`).
+  - [ ] Define micro-sequencer / microcode execution engine (uPC, micro-instruction word format, dispatch table).
   - [ ] Specify detailed execution flow and cycle breakdown for every Port 0x70/0x71 operation and opcode.
-  - [ ] Establish gate/LUT/EBR resource usage estimates for MachXO2 (`LCMXO2-1200HC` / `LCMXO2-2000HC`) to verify architectural feasibility.
 
 - [ ] **Phase 3: Z80 Programmer's Guide (`ProgrammersGuide.md`)**
   - [ ] Document assembly programming models (Port 0x70/0x71 protocol, blocking vs. non-blocking wait modes).

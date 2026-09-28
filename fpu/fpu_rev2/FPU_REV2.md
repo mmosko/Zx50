@@ -28,7 +28,7 @@ graph TD
         subgraph SysMEM [Internal SysMEM Dual-Port EBR - 9.2 KB]
             Stack[Hardware Stack: 64 words x 32/64-bit]
             Scratch[Scratchpad & Vector Buffers]
-            LUTs[Lookup Tables: QS, Sqrt, Log/Exp, Trig]
+            LUTs[Lookup Tables: Sqrt, Log/Exp, CORDIC Trig]
             UCodeRAM[Microcode Execution RAM]
         end
         Core[Math Engine & Micro-sequencer]
@@ -124,7 +124,7 @@ The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total)
 | 0x0000 - 0x01FF   | Hardware Math Stack (64 words x 64-bit / 8B)  | 512 Bytes  |
 | 0x0200 - 0x02FF   | Scratchpad & Vector Registers (64 x 32-bit)   | 256 Bytes  |
 | 0x0300 - 0x033F   | User Word Storage (16 words x 32-bit)         | 64 Bytes   |
-| 0x0400 - 0x07FF   | Quarter-Square Lookup Table (512 x 16-bit)    | 1,024 Bytes|
+| 0x0400 - 0x07FF   | Polynomial Coefficients & Math Headroom       | 1,024 Bytes|
 | 0x0800 - 0x09FF   | Reciprocal / Division Table                   | 512 Bytes  |
 | 0x0A00 - 0x0BFF   | Square Root Seed LUT                          | 512 Bytes  |
 | 0x0C00 - 0x0DFF   | Base-2 Exponent / Power LUT                   | 512 Bytes  |
@@ -133,9 +133,9 @@ The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total)
 | 0x1200 - 0x19FF   | Runtime Microcode Execution RAM (1K x 16-bit) | 2,048 Bytes|
 | 0x1A00 - 0x23FF   | Unallocated / Extended Buffer Headroom        | 2,560 Bytes|
 +-------------------+-----------------------------------------------+------------+
-Total Allocated:    6,464 Bytes (~6.3 KB)
+Total Allocated:    5,440 Bytes (~5.3 KB)
 Total Available:    9,216 Bytes (8 EBR blocks)
-Free Headroom:      2,752 Bytes (~30% free)
+Free Headroom:      3,776 Bytes (~41% free)
 ```
 
 ### 3.2 User Memory Allocation (Intermediate Storage)
@@ -296,7 +296,22 @@ ALU opcodes use a 3-bit suffix `fff` to select operand format:
 | `0b1110_xxxx` | `CP TOS, [xxxx]` | Copy internal user storage word `xxxx` (0–15) to TOS |
 | `0b1111_0000` | `ZERO_MEM` | Zero all 16 user storage words |
 
-### 7.4 Management Opcodes
+### 7.4 Mathematical Constant Push Opcodes
+
+Pushes high-precision mathematical constants from internal ROM directly onto the stack. The format bits `fff` select the target precision (`001` for `f32`, `011` for `f64`):
+
+| Opcode | Mnemonic | Constant Pushed to TOS | Single Precision (`f32`) Hex | Double Precision (`f64`) Hex |
+|---|---|---|:---:|:---:|
+| `0b1001_0fff` | `PUSH_PI` | $\pi \approx 3.14159265358979323846$ | `0x40490FDB` | `0x400921FB_54442D18` |
+| `0b1001_1fff` | `PUSH_E` | $e \approx 2.71828182845904523536$ | `0x402DF854` | `0x4005BF0A_8B145769` |
+| `0b1010_0fff` | `PUSH_LN2` | $\ln(2) \approx 0.69314718055994530942$ | `0x3F317218` | `0x3FE62E42_FEFA39EF` |
+| `0b1010_1fff` | `PUSH_LOG2E` | $\log_2(e) \approx 1.44269504088896340736$ | `0x3FB8AA3B` | `0x3FF71547_652B82FE` |
+| `0b1011_0fff` | `PUSH_LOG2_10` | $\log_2(10) \approx 3.32192809488736234787$ | `0x40549A78` | `0x400A934F_0979A371` |
+| `0b1011_1fff` | `PUSH_LOG10_2` | $\log_{10}(2) \approx 0.30102999566398119521$ | `0x3E9A209B` | `0x3FD34413_509F79FF` |
+| `0b1000_1fff` | `PUSH_SQRT2` | $\sqrt{2} \approx 1.41421356237309504880$ | `0x3FB504F3` | `0x3FF6A09E_667F3BCD` |
+| `0b1100_0010` | `PUSH_INV_SQRT2` | $1/\sqrt{2} \approx 0.70710678118654752440$ | `0x3F3504F3` | `0x3FE6A09E_667F3BCD` |
+
+### 7.5 Management Opcodes
 
 | Opcode | Mnemonic | Description |
 |---|---|---|
@@ -314,7 +329,7 @@ The MachXO2 implementation follows a deterministic hardware execution strategy:
 Complex mathematical operations are decomposed into micro-steps executed across dedicated single-cycle datapath blocks:
 * **32-Bit Parallel Adder / Subtractor:** Single-cycle addition, subtraction, and comparison.
 * **32-Bit Barrel Shifter:** Single-cycle arbitrary shifts (0–31 bits) for floating-point exponent alignment and mantissa normalization.
-* **Multiplier:** High-speed Quarter-Square lookup table combined with adder logic, or multi-cycle Karatsuba block for double-precision mantissas.
+* **Radix-4 Booth Multiplier:** High-throughput iterative multiplier retiring 2 bits per clock cycle (16 cycles for 32-bit, 27 cycles for 53-bit double mantissa), natively supporting 2's complement with 0 EBR usage.
 * **Leading-Zero Counter (LZC):** Single-cycle normalizer priority encoder.
 
 ### 8.2 Micro-Sequencer Concept
