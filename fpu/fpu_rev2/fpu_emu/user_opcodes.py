@@ -26,6 +26,18 @@ class UserOpcode(Enum):
     SQRT_F32 = 0x21
     SQRT_F64 = 0x23
 
+    # Floating-Point Power
+    POW_F32 = 0x29
+    POW_F64 = 0x2B
+
+    # Natural Logarithm
+    LN_F32 = 0x31
+    LN_F64 = 0x33
+
+    # Exponential (e^x)
+    EXP_F32 = 0x39
+    EXP_F64 = 0x3B
+
     # Absolute Value
     ABS_I32 = 0x58
     ABS_F32 = 0x59

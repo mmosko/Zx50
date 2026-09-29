@@ -33,12 +33,13 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
   - [x] Single-source flash image builder (`tools/build_flash.py`) generating `fpu_flash.bin` with automated SHA256 drift-prevention unit test.
   - [x] Implement execution strictly using byte arrays, microcode steps, and hardware ALU primitives:
     - Dedicated register file (`AX, BX, DX, FX, EA, EB, C, STATUS, SP, OSP`).
-    - Fixed-point & floating-point datapaths (`adder`, `shifter`, `booth_mul`, `lzc`, `logic`, `fp_exp`, `fp_sqrt`, `fp_mul_div`).
+    - Fixed-point & floating-point datapaths (`adder`, `shifter`, `booth_mul`, `lzc`, `logic`, `ieee754_exp`, `fp_sqrt`, `fp_mul_div`, `fp_ln`, `fp_exp`, `fp_pow`).
     - Microcode engine & dual-mode dispatcher (`~BWAIT`, immediate blocking, non-blocking, and batch queues).
-  - [x] Validate complete microcode routines against IEEE-754 test vectors, integer arithmetic, and stack edge cases (455 unit tests passing with 99% test coverage).
+  - [x] Validate complete microcode routines against IEEE-754 test vectors, integer arithmetic, and stack edge cases (519 unit tests passing with 99% test coverage).
   - [x] Implement the 4 canonical benchmark programs in `tests/example_test.py` verifying full end-to-end execution.
   - [x] Perform detailed second-pass FPGA resource estimation in `SystemDesign.md` (~787 LUT4s, 494 FFs, 7 EBR blocks, ~62.7% free logic).
-  - [ ] Implement CORDIC transcendental microcode routines (`sin`, `cos`, `tan`, `atan`, `exp`, `ln`).
+  - [x] Implement transcendental ALU modules: natural logarithm (`fp_ln.py`), exponential (`fp_exp.py`), and power (`fp_pow.py`).
+  - [ ] Implement CORDIC trigonometric microcode routines (`sin`, `cos`, `tan`, `atan`).
   - [ ] Implement combinatorial Z80 SRAM memory mapping/decoding and strobe qualification model.
   - [ ] Implement autonomous SPI Flash bootloader copy simulation.
 

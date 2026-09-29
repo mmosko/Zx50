@@ -8,9 +8,12 @@ from fpu_emu.alu import shifter
 from fpu_emu.alu import lzc
 from fpu_emu.alu import logic
 from fpu_emu.alu import booth_mul
-from fpu_emu.alu import fp_exp
+from fpu_emu.alu import ieee754_exp
 from fpu_emu.alu import fp_sqrt
 from fpu_emu.alu import fp_mul_div
+from fpu_emu.alu import fp_ln
+from fpu_emu.alu import fp_exp
+from fpu_emu.alu import fp_pow
 
 
 class Alu:
@@ -153,31 +156,31 @@ class Alu:
         fp_mul_div.div_f64(self._hw, dst, src)
 
     # -------------------------------------------------------------------------
-    # 12-Bit Exponent ALU API (alu_exp12)
+    # 12-Bit Exponent ALU API (alu_exp12 / ieee754_exp)
     # -------------------------------------------------------------------------
     def exp_add(self):
-        fp_exp.exp_add(self._hw)
+        ieee754_exp.exp_add(self._hw)
 
     def exp_sub(self):
-        fp_exp.exp_sub(self._hw)
+        ieee754_exp.exp_sub(self._hw)
 
     def exp_diff(self, reg: Reg = Reg.AL):
-        fp_exp.exp_diff(self._hw, reg=reg)
+        ieee754_exp.exp_diff(self._hw, reg=reg)
 
-    def exp_add_mul(self, bias: int = fp_exp.BIAS_F32):
-        fp_exp.exp_add_mul(self._hw, bias=bias)
+    def exp_add_mul(self, bias: int = ieee754_exp.BIAS_F32):
+        ieee754_exp.exp_add_mul(self._hw, bias=bias)
 
-    def exp_sub_div(self, bias: int = fp_exp.BIAS_F32):
-        fp_exp.exp_sub_div(self._hw, bias=bias)
+    def exp_sub_div(self, bias: int = ieee754_exp.BIAS_F32):
+        ieee754_exp.exp_sub_div(self._hw, bias=bias)
 
     def exp_adj_norm(self, shift_count: Optional[int] = None):
-        fp_exp.exp_adj_norm(self._hw, shift_count=shift_count)
+        ieee754_exp.exp_adj_norm(self._hw, shift_count=shift_count)
 
     def exp_inc(self):
-        fp_exp.exp_inc(self._hw)
+        ieee754_exp.exp_inc(self._hw)
 
     def exp_dec(self):
-        fp_exp.exp_dec(self._hw)
+        ieee754_exp.exp_dec(self._hw)
 
     def unpack_f32(
         self,
@@ -185,7 +188,7 @@ class Alu:
         dst_mantissa: Reg = Reg.AL,
         dst_exp: Reg = Reg.EA,
     ) -> int:
-        return fp_exp.unpack_f32(self._hw, src=src, dst_mantissa=dst_mantissa, dst_exp=dst_exp)
+        return ieee754_exp.unpack_f32(self._hw, src=src, dst_mantissa=dst_mantissa, dst_exp=dst_exp)
 
     def pack_f32(
         self,
@@ -194,7 +197,7 @@ class Alu:
         src_exp: Reg = Reg.EA,
         dst: Reg = Reg.AL,
     ):
-        fp_exp.pack_f32(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
+        ieee754_exp.pack_f32(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
 
     def unpack_f64(
         self,
@@ -202,7 +205,7 @@ class Alu:
         dst_mantissa: Reg = Reg.AX,
         dst_exp: Reg = Reg.EA,
     ) -> int:
-        return fp_exp.unpack_f64(self._hw, src=src, dst_mantissa=dst_mantissa, dst_exp=dst_exp)
+        return ieee754_exp.unpack_f64(self._hw, src=src, dst_mantissa=dst_mantissa, dst_exp=dst_exp)
 
     def pack_f64(
         self,
@@ -211,10 +214,10 @@ class Alu:
         src_exp: Reg = Reg.EA,
         dst: Reg = Reg.AX,
     ):
-        fp_exp.pack_f64(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
+        ieee754_exp.pack_f64(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
 
     def swap(self, reg_a: Reg, reg_b: Reg):
-        fp_exp.swap(self._hw, reg_a=reg_a, reg_b=reg_b)
+        ieee754_exp.swap(self._hw, reg_a=reg_a, reg_b=reg_b)
 
     # -------------------------------------------------------------------------
     # Floating-Point Square Root API
@@ -248,3 +251,24 @@ class Alu:
         from fpu_emu.memory.registers import Registers
         res = fp_sqrt.sqrt_mantissa_core_f64(self._hw, is_odd=is_odd)
         self._hw.reg.set(dst, Registers.from_int(res, 8))
+
+    # -------------------------------------------------------------------------
+    # Floating-Point Natural Log, Exponential, and Power API
+    # -------------------------------------------------------------------------
+    def ln_f32(self):
+        fp_ln.ln_f32(self._hw)
+
+    def ln_f64(self):
+        fp_ln.ln_f64(self._hw)
+
+    def exp_f32(self):
+        fp_exp.exp_f32(self._hw)
+
+    def exp_f64(self):
+        fp_exp.exp_f64(self._hw)
+
+    def pow_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
+        fp_pow.pow_f32(self._hw, dst=dst, src=src)
+
+    def pow_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
+        fp_pow.pow_f64(self._hw, dst=dst, src=src)

@@ -80,6 +80,20 @@ class Rom:
         addr = FLASH_SQRT_BASE + (index * 2)
         return self.load_u16(addr)
 
+    def load_ln_seed(self, index: int) -> int:
+        """Loads 16-bit word from Natural Log table for index 0..255."""
+        if not (0 <= index < 256):
+            raise IndexError(f"LN seed index {index} out of range (0..255)")
+        addr = FLASH_LN_BASE + (index * 2)
+        return self.load_u16(addr)
+
+    def load_exp2_seed(self, index: int) -> int:
+        """Loads 16-bit word from Exp2 table for index 0..255."""
+        if not (0 <= index < 256):
+            raise IndexError(f"Exp2 seed index {index} out of range (0..255)")
+        addr = FLASH_EXP2_BASE + (index * 2)
+        return self.load_u16(addr)
+
     def load_const32(self, opcode: int) -> bytearray:
         """Loads 4-byte little-endian IEEE-754 single precision constant for opcode 0xA0..0xAF."""
         if not (0xA0 <= opcode <= 0xAF):

@@ -518,6 +518,76 @@ class MicroCode:
             MicroInstruction(op=MicroOp.TRAP),
         ],
 
+        # LN_F32:
+        UserOpcode.LN_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.LN_F32),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=6),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
+        # LN_F64:
+        UserOpcode.LN_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.LN_F64),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=6),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
+        # EXP_F32:
+        UserOpcode.EXP_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.EXP_F32),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=6),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
+        # EXP_F64:
+        UserOpcode.EXP_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.EXP_F64),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=6),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
+        # POW_F32:
+        UserOpcode.POW_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=8),
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=8),
+            MicroInstruction(op=MicroOp.POW_F32, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=8),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
+        # POW_F64:
+        UserOpcode.POW_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.BX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=8),
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=8),
+            MicroInstruction(op=MicroOp.POW_F64, dst=Reg.AX, src=Reg.BX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=8),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+
         UserOpcode.ZERO_MEM: [
             MicroInstruction(op=MicroOp.ZERO_MEM),
             MicroInstruction(op=MicroOp.RET),

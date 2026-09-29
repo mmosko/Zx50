@@ -64,6 +64,12 @@ class MicroOp(Enum):
     DIV_F32 = auto()    # Single-precision float divide (AL <- AL / BL)
     MUL_F64 = auto()    # Double-precision float multiply (AX <- AX * BX)
     DIV_F64 = auto()    # Double-precision float divide (AX <- AX / BX)
+    LN_F32 = auto()     # Single-precision float natural log (AL <- ln(AL))
+    LN_F64 = auto()     # Double-precision float natural log (AX <- ln(AX))
+    EXP_F32 = auto()    # Single-precision float exp (AL <- exp(AL))
+    EXP_F64 = auto()    # Double-precision float exp (AX <- exp(AX))
+    POW_F32 = auto()    # Single-precision float pow (AL <- AL ** BL)
+    POW_F64 = auto()    # Double-precision float pow (AX <- AX ** BX)
 
     # Constant & User Storage Operations
     LOAD_CONST = auto() # FL/FX <- ROM constant by opcode (imm = opcode 0xA0..0xAF)

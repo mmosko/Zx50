@@ -8,7 +8,7 @@ import math
 from typing import Tuple
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg
-from fpu_emu.alu.fp_exp import BIAS_F32, BIAS_F64
+from fpu_emu.alu.ieee754_exp import BIAS_F32, BIAS_F64
 
 # Convergence iterations: 2 iterations give >= 32 bits (F32), 3 iterations give >= 64 bits (F64)
 NR_ITERATIONS_F32 = 2

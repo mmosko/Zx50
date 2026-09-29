@@ -595,6 +595,58 @@ def test_more_dispatcher_user_opcodes():
     stack.pop32(hw, Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.BL)) == 0x12345678
 
+    # LN_F32: ln(e) = 1.0
+    hw.reg.set(Reg.AL, Registers.from_f32(math.e))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.LN_F32)
+    assert hw.reg.sp == 8
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(hw.reg.get(Reg.AL)), rel=1e-5) == 1.0
+
+    # EXP_F32: exp(1.0) = e
+    hw.reg.set(Reg.AL, Registers.from_f32(1.0))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.EXP_F32)
+    assert hw.reg.sp == 8
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(hw.reg.get(Reg.AL)), rel=1e-5) == math.e
+
+    # POW_F32: (2.0, 3.0) -> 8.0
+    hw.reg.set(Reg.AL, Registers.from_f32(2.0))
+    stack.push32(hw, Reg.AL)
+    hw.reg.set(Reg.AL, Registers.from_f32(3.0))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.POW_F32)
+    assert hw.reg.sp == 8
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(hw.reg.get(Reg.AL)), rel=1e-5) == 8.0
+
+    # LN_F64: ln(e) = 1.0
+    hw.reg.set(Reg.AX, Registers.from_f64(math.e))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.LN_F64)
+    assert hw.reg.sp == 12
+    stack.pop64(hw, Reg.AX)
+    assert pytest.approx(Registers.to_f64(hw.reg.get(Reg.AX)), rel=1e-10) == 1.0
+
+    # EXP_F64: exp(1.0) = e
+    hw.reg.set(Reg.AX, Registers.from_f64(1.0))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.EXP_F64)
+    assert hw.reg.sp == 12
+    stack.pop64(hw, Reg.AX)
+    assert pytest.approx(Registers.to_f64(hw.reg.get(Reg.AX)), rel=1e-10) == math.e
+
+    # POW_F64: (2.0, 4.0) -> 16.0
+    hw.reg.set(Reg.AX, Registers.from_f64(2.0))
+    stack.push64(hw, Reg.AX)
+    hw.reg.set(Reg.AX, Registers.from_f64(4.0))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.POW_F64)
+    assert hw.reg.sp == 12
+    stack.pop64(hw, Reg.AX)
+    assert pytest.approx(Registers.to_f64(hw.reg.get(Reg.AX)), rel=1e-10) == 16.0
+
     # Unimplemented microcode lookup
     from fpu_emu.micro_code import MicroCode
     with pytest.raises(NotImplementedError):

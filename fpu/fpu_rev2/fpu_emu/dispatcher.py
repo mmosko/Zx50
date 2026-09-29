@@ -315,6 +315,22 @@ class Dispatcher:
                     dst = inst.dst if inst.dst is not None else Reg.AX
                     src = inst.src if inst.src is not None else Reg.BX
                     self._alu.div_f64(dst=dst, src=src)
+                case MicroOp.LN_F32:
+                    self._alu.ln_f32()
+                case MicroOp.LN_F64:
+                    self._alu.ln_f64()
+                case MicroOp.EXP_F32:
+                    self._alu.exp_f32()
+                case MicroOp.EXP_F64:
+                    self._alu.exp_f64()
+                case MicroOp.POW_F32:
+                    dst = inst.dst if inst.dst is not None else Reg.AL
+                    src = inst.src if inst.src is not None else Reg.BL
+                    self._alu.pow_f32(dst=dst, src=src)
+                case MicroOp.POW_F64:
+                    dst = inst.dst if inst.dst is not None else Reg.AX
+                    src = inst.src if inst.src is not None else Reg.BX
+                    self._alu.pow_f64(dst=dst, src=src)
                 case MicroOp.LOAD_CONST:
                     opcode = inst.imm
                     if opcode is not None:
