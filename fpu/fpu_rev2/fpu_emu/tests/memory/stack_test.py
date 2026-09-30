@@ -4,11 +4,13 @@ import pytest
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 def test_push_pop_32():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x12345678, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0x12345678, 4))
 
     assert hw.reg.sp == 0
     assert hw.clock.cycles == 0
@@ -20,12 +22,13 @@ def test_push_pop_32():
     stack.pop32(hw, Reg.BL)
     assert hw.reg.sp == 0
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.BL)) == 0x12345678
+    assert Registers.to_int(reg.peek(Reg.BL)) == 0x12345678
 
 
 def test_push_pop_64():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x1122334455667788, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0x1122334455667788, 8))
 
     stack.push64(hw, Reg.AX)
     assert hw.reg.sp == 8
@@ -34,7 +37,7 @@ def test_push_pop_64():
     stack.pop64(hw, Reg.BX)
     assert hw.reg.sp == 0
     assert hw.clock.cycles == 4
-    assert Registers.to_int(hw.reg.get(Reg.BX)) == 0x1122334455667788
+    assert Registers.to_int(reg.peek(Reg.BX)) == 0x1122334455667788
 
 
 def test_stack_underflow():

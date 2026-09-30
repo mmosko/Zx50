@@ -63,6 +63,30 @@ FACTS_F64 = [
 ]
 
 
+def _read32(hw: Hardware, reg: Reg) -> int:
+    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+
+
+def _read64(hw: Hardware, reg: Reg) -> int:
+    lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
+    hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
+    return Registers.to_int(bytearray(lo) + bytearray(hi))
+
+
+def _write32(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+
+
+def _write64(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    lo_name = reg.name[0] + "L"
+    hi_name = reg.name[0] + "H"
+    hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+
+
 def _int_to_f32(hw: Hardware, val: int) -> int:
     """Converts a signed integer to IEEE-754 single precision bit pattern using LZC and Shifter."""
     if val == 0:
@@ -70,7 +94,7 @@ def _int_to_f32(hw: Hardware, val: int) -> int:
     sign = 1 if val < 0 else 0
     abs_val = (-val if val < 0 else val) & 0xFFFFFFFF
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(abs_val, 4))
+    _write32(hw, Reg.AL, abs_val)
     lz_count = lzc32(hw, Reg.AL)
     msb_pos = 31 - lz_count
 
@@ -81,7 +105,7 @@ def _int_to_f32(hw: Hardware, val: int) -> int:
         shift = 23 - msb_pos
         lsl32(hw, shift=shift, reg=Reg.AL)
 
-    mant = Registers.to_int(hw.reg.get(Reg.AL)) & 0x7FFFFF
+    mant = _read32(hw, Reg.AL) & 0x7FFFFF
     exp = 127 + msb_pos
     return (sign << 31) | (exp << 23) | mant
 
@@ -93,7 +117,7 @@ def _int_to_f64(hw: Hardware, val: int) -> int:
     sign = 1 if val < 0 else 0
     abs_val = (-val if val < 0 else val) & 0xFFFFFFFFFFFFFFFF
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(abs_val, 8))
+    _write64(hw, Reg.AX, abs_val)
     lz_count = lzc64(hw, Reg.AX)
     msb_pos = 63 - lz_count
 
@@ -104,58 +128,57 @@ def _int_to_f64(hw: Hardware, val: int) -> int:
         shift = 52 - msb_pos
         lsl64(hw, shift=shift, reg=Reg.AX)
 
-    mant = Registers.to_int(hw.reg.get(Reg.AX)) & 0x000FFFFFFFFFFFFF
+    mant = _read64(hw, Reg.AX) & 0x000FFFFFFFFFFFFF
     exp = 1023 + msb_pos
     return (sign << 63) | (exp << 52) | mant
 
 
-
 def _eval_exp_frac_f32(hw: Hardware, f_raw: int) -> int:
     """Evaluates 2^f = exp(f * ln(2)) via ALU primitives (32-bit)."""
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(f_raw, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(LN2_F32, 4))
+    _write32(hw, Reg.AL, f_raw)
+    _write32(hw, Reg.BL, LN2_F32)
     mul_f32(hw, Reg.AL, Reg.BL)
-    u_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    u_raw = _read32(hw, Reg.AL)
 
     term_raw = ONE_F32
     acc_raw = ONE_F32
     for n_raw in FACTS_F32:
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(term_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(u_raw, 4))
+        _write32(hw, Reg.AL, term_raw)
+        _write32(hw, Reg.BL, u_raw)
         mul_f32(hw, Reg.AL, Reg.BL)
 
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(n_raw, 4))
+        _write32(hw, Reg.BL, n_raw)
         div_f32(hw, Reg.AL, Reg.BL)
-        term_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        term_raw = _read32(hw, Reg.AL)
 
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(acc_raw, 4))
+        _write32(hw, Reg.BL, acc_raw)
         add_f32(hw, Reg.AL, Reg.BL)
-        acc_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        acc_raw = _read32(hw, Reg.AL)
 
     return acc_raw
 
 
 def _eval_exp_frac_f64(hw: Hardware, f_raw: int) -> int:
     """Evaluates 2^f = exp(f * ln(2)) via ALU primitives (64-bit)."""
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(f_raw, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(LN2_F64, 8))
+    _write64(hw, Reg.AX, f_raw)
+    _write64(hw, Reg.BX, LN2_F64)
     mul_f64(hw, Reg.AX, Reg.BX)
-    u_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    u_raw = _read64(hw, Reg.AX)
 
     term_raw = ONE_F64
     acc_raw = ONE_F64
     for n_raw in FACTS_F64:
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(term_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(u_raw, 8))
+        _write64(hw, Reg.AX, term_raw)
+        _write64(hw, Reg.BX, u_raw)
         mul_f64(hw, Reg.AX, Reg.BX)
 
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(n_raw, 8))
+        _write64(hw, Reg.BX, n_raw)
         div_f64(hw, Reg.AX, Reg.BX)
-        term_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        term_raw = _read64(hw, Reg.AX)
 
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(acc_raw, 8))
+        _write64(hw, Reg.BX, acc_raw)
         add_f64(hw, Reg.AX, Reg.BX)
-        acc_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        acc_raw = _read64(hw, Reg.AX)
 
     return acc_raw
 
@@ -184,7 +207,7 @@ def exp_f32(hw: Hardware):
       - Fraction evaluation: 2^f = exp(f * ln(2)) via ALU operations.
       - Scale by 2^k: exponent addition exp_acc + k.
     """
-    raw = Registers.to_int(hw.reg.get(Reg.AL))
+    raw = _read32(hw, Reg.AL)
     sign = (raw >> 31) & 1
     exp = (raw >> 23) & 0xFF
     frac = raw & 0x7FFFFF
@@ -193,20 +216,20 @@ def exp_f32(hw: Hardware):
         hw.clock.tick(2)
         if frac != 0:
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(NAN_F32, 4))
+            _write32(hw, Reg.AL, NAN_F32)
             return
         if sign == 0:
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(POS_INF_F32, 4))
+            _write32(hw, Reg.AL, POS_INF_F32)
         else:
             hw.reg.set_flag(StatusFlag.ZERO, True)
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+            _write32(hw, Reg.AL, 0)
         return
 
     if exp == 0 and frac == 0:
         hw.clock.tick(2)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(ONE_F32, 4))
+        _write32(hw, Reg.AL, ONE_F32)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -215,9 +238,9 @@ def exp_f32(hw: Hardware):
         return
 
     # Range reduction: t = x * log2(e)
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(LOG2E_F32, 4))
+    _write32(hw, Reg.BL, LOG2E_F32)
     mul_f32(hw, Reg.AL, Reg.BL)
-    t_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    t_raw = _read32(hw, Reg.AL)
 
     sign_t = (t_raw >> 31) & 1
     exp_t = (t_raw >> 23) & 0xFF
@@ -230,10 +253,10 @@ def exp_f32(hw: Hardware):
             f_raw = t_raw
         else:
             k = -1
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(t_raw, 4))
-            hw.reg.testharness_set(Reg.BL, Registers.from_int(ONE_F32, 4))
+            _write32(hw, Reg.AL, t_raw)
+            _write32(hw, Reg.BL, ONE_F32)
             add_f32(hw, Reg.AL, Reg.BL)
-            f_raw = Registers.to_int(hw.reg.get(Reg.AL))
+            f_raw = _read32(hw, Reg.AL)
     else:
         mant = frac_t | 0x800000
         if unbiased >= 23:
@@ -247,22 +270,22 @@ def exp_f32(hw: Hardware):
         else:
             k = mag
         k_f32_raw = _int_to_f32(hw, k)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(t_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(k_f32_raw, 4))
+        _write32(hw, Reg.AL, t_raw)
+        _write32(hw, Reg.BL, k_f32_raw)
         sub_f32(hw, Reg.AL, Reg.BL)
-        f_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        f_raw = _read32(hw, Reg.AL)
 
     # Overflow / Underflow bounds check for F32
     if k > 127:
         hw.clock.tick(3)
         hw.reg.set_flag(StatusFlag.OVERFLOW, True)
         hw.reg.set_flag(StatusFlag.ERR, True)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(POS_INF_F32, 4))
+        _write32(hw, Reg.AL, POS_INF_F32)
         return
     if k < -126:
         hw.clock.tick(3)
         hw.reg.set_flag(StatusFlag.UNDERFLOW, True)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+        _write32(hw, Reg.AL, 0)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         return
 
@@ -280,16 +303,16 @@ def exp_f32(hw: Hardware):
     if new_exp >= 255:
         hw.reg.set_flag(StatusFlag.OVERFLOW, True)
         hw.reg.set_flag(StatusFlag.ERR, True)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(POS_INF_F32, 4))
+        _write32(hw, Reg.AL, POS_INF_F32)
         return
     if new_exp <= 0:
         hw.reg.set_flag(StatusFlag.UNDERFLOW, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+        _write32(hw, Reg.AL, 0)
         return
 
     res_raw = (acc_raw & 0x807FFFFF) | (new_exp << 23)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(res_raw, 4))
+    _write32(hw, Reg.AL, res_raw)
     hw.reg.set_flag(StatusFlag.ERR, False)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
@@ -308,7 +331,7 @@ def exp_f64(hw: Hardware):
       - Fraction evaluation: 2^f = exp(f * ln(2)) via ALU operations.
       - Scale by 2^k: exponent addition exp_acc + k.
     """
-    raw = Registers.to_int(hw.reg.get(Reg.AX))
+    raw = _read64(hw, Reg.AX)
     sign = (raw >> 63) & 1
     exp = (raw >> 52) & 0x7FF
     frac = raw & 0x000FFFFFFFFFFFFF
@@ -317,20 +340,20 @@ def exp_f64(hw: Hardware):
         hw.clock.tick(3)
         if frac != 0:
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(NAN_F64, 8))
+            _write64(hw, Reg.AX, NAN_F64)
             return
         if sign == 0:
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(POS_INF_F64, 8))
+            _write64(hw, Reg.AX, POS_INF_F64)
         else:
             hw.reg.set_flag(StatusFlag.ZERO, True)
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(0, 8))
+            _write64(hw, Reg.AX, 0)
         return
 
     if exp == 0 and frac == 0:
         hw.clock.tick(3)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(ONE_F64, 8))
+        _write64(hw, Reg.AX, ONE_F64)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -339,9 +362,9 @@ def exp_f64(hw: Hardware):
         return
 
     # Range reduction: t = x * log2(e)
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(LOG2E_F64, 8))
+    _write64(hw, Reg.BX, LOG2E_F64)
     mul_f64(hw, Reg.AX, Reg.BX)
-    t_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    t_raw = _read64(hw, Reg.AX)
 
     sign_t = (t_raw >> 63) & 1
     exp_t = (t_raw >> 52) & 0x7FF
@@ -354,10 +377,10 @@ def exp_f64(hw: Hardware):
             f_raw = t_raw
         else:
             k = -1
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(t_raw, 8))
-            hw.reg.testharness_set(Reg.BX, Registers.from_int(ONE_F64, 8))
+            _write64(hw, Reg.AX, t_raw)
+            _write64(hw, Reg.BX, ONE_F64)
             add_f64(hw, Reg.AX, Reg.BX)
-            f_raw = Registers.to_int(hw.reg.get(Reg.AX))
+            f_raw = _read64(hw, Reg.AX)
     else:
         mant = frac_t | 0x0010000000000000
         if unbiased >= 52:
@@ -371,22 +394,22 @@ def exp_f64(hw: Hardware):
         else:
             k = mag
         k_f64_raw = _int_to_f64(hw, k)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(t_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(k_f64_raw, 8))
+        _write64(hw, Reg.AX, t_raw)
+        _write64(hw, Reg.BX, k_f64_raw)
         sub_f64(hw, Reg.AX, Reg.BX)
-        f_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        f_raw = _read64(hw, Reg.AX)
 
     # Overflow / Underflow bounds check for F64
     if k > 1023:
         hw.clock.tick(4)
         hw.reg.set_flag(StatusFlag.OVERFLOW, True)
         hw.reg.set_flag(StatusFlag.ERR, True)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(POS_INF_F64, 8))
+        _write64(hw, Reg.AX, POS_INF_F64)
         return
     if k < -1022:
         hw.clock.tick(4)
         hw.reg.set_flag(StatusFlag.UNDERFLOW, True)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(0, 8))
+        _write64(hw, Reg.AX, 0)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         return
 
@@ -404,16 +427,16 @@ def exp_f64(hw: Hardware):
     if new_exp >= 2047:
         hw.reg.set_flag(StatusFlag.OVERFLOW, True)
         hw.reg.set_flag(StatusFlag.ERR, True)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(POS_INF_F64, 8))
+        _write64(hw, Reg.AX, POS_INF_F64)
         return
     if new_exp <= 0:
         hw.reg.set_flag(StatusFlag.UNDERFLOW, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(0, 8))
+        _write64(hw, Reg.AX, 0)
         return
 
     res_raw = (acc_raw & 0x800FFFFFFFFFFFFF) | (new_exp << 52)
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(res_raw, 8))
+    _write64(hw, Reg.AX, res_raw)
     hw.reg.set_flag(StatusFlag.ERR, False)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)

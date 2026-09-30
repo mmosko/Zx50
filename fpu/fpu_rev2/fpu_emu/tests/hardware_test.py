@@ -36,6 +36,9 @@ class TestClock(unittest.TestCase):
             clk.tick(-1)
 
 
+from fpu_emu.tests.testharness import RegTestHarness
+
+
 class TestHardware(unittest.TestCase):
     """Test suite for Hardware container."""
 
@@ -51,15 +54,16 @@ class TestHardware(unittest.TestCase):
 
     def test_hardware_reset(self):
         hw = Hardware()
+        reg = RegTestHarness(hw.reg)
         hw.clock.tick(50)
-        hw.reg.testharness_set(Reg.AL, bytearray([1, 2, 3, 4]))
+        reg.set(Reg.AL, bytearray([1, 2, 3, 4]))
         hw.mem.store(0x100, bytearray([0xAA, 0xBB]))
 
         # Reset without clear_mem
         hw.reset(clear_mem=False)
         self.assertEqual(hw.clock.cycles, 0)
         self.assertEqual(hw.reg.status, 0x40)  # ZERO flag asserted per reset spec
-        self.assertEqual(hw.reg.get(Reg.AL), bytearray(4))
+        self.assertEqual(reg.peek(Reg.AL), bytearray(4))
         self.assertEqual(hw.mem.load(0x100, 2), bytearray([0xAA, 0xBB]))
 
         # Reset with clear_mem

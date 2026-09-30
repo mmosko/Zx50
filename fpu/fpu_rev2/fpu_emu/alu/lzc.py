@@ -38,7 +38,7 @@ VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 
 from typing import Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
 from fpu_emu.fpga_resource import fpga_resource
 
 # Width constants
@@ -78,7 +78,15 @@ def lzc_core(val_bytes: bytearray, width_bytes: int = WIDTH_32_BYTES) -> Tuple[i
 def lzc32(hw: Hardware, reg: Reg = Reg.AL) -> int:
     """Executes single-cycle LZC on 32-bit register (default AL), loading result into C."""
     hw.clock.tick(1)
-    val_bytes = hw.reg.get(reg)
+    if reg in (Reg.AL, Reg.AH):
+        half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+        hw.reg.set_ha_bus_mux(half)
+        val_bytes = hw.reg.read_ha_bus()
+    else:
+        half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+        hw.reg.set_hb_bus_mux(half, reg)
+        val_bytes = hw.reg.read_hb_bus()
+
     count, zf = lzc_core(val_bytes, width_bytes=WIDTH_32_BYTES)
 
     hw.reg.c = count
@@ -90,7 +98,20 @@ def lzc32(hw: Hardware, reg: Reg = Reg.AL) -> int:
 def lzc64(hw: Hardware, reg: Reg = Reg.AX) -> int:
     """Executes single-cycle LZC on 64-bit register (default AX), loading result into C."""
     hw.clock.tick(1)
-    val_bytes = hw.reg.get(reg)
+    if reg == Reg.AX:
+        lo_bytes = bytearray(hw.reg._al)
+        hi_bytes = bytearray(hw.reg._ah)
+    elif reg == Reg.BX:
+        lo_bytes = bytearray(hw.reg._bl)
+        hi_bytes = bytearray(hw.reg._bh)
+    elif reg == Reg.DX:
+        lo_bytes = bytearray(hw.reg._dl)
+        hi_bytes = bytearray(hw.reg._dh)
+    else:
+        lo_bytes = bytearray(hw.reg._fl)
+        hi_bytes = bytearray(hw.reg._fh)
+
+    val_bytes = lo_bytes + hi_bytes
     count, zf = lzc_core(val_bytes, width_bytes=WIDTH_64_BYTES)
 
     hw.reg.c = count

@@ -52,6 +52,30 @@ DENOMS_F64 = [
 ]
 
 
+def _read32(hw: Hardware, reg: Reg) -> int:
+    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+
+
+def _read64(hw: Hardware, reg: Reg) -> int:
+    lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
+    hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
+    return Registers.to_int(bytearray(lo) + bytearray(hi))
+
+
+def _write32(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+
+
+def _write64(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    lo_name = reg.name[0] + "L"
+    hi_name = reg.name[0] + "H"
+    hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+
+
 def _int_to_f32(hw: Hardware, val: int) -> int:
     """Converts a signed integer to IEEE-754 single precision bit pattern using LZC and Shifter."""
     if val == 0:
@@ -59,7 +83,7 @@ def _int_to_f32(hw: Hardware, val: int) -> int:
     sign = 1 if val < 0 else 0
     abs_val = (-val if val < 0 else val) & 0xFFFFFFFF
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(abs_val, 4))
+    _write32(hw, Reg.AL, abs_val)
     lz_count = lzc32(hw, Reg.AL)
     msb_pos = 31 - lz_count
 
@@ -70,7 +94,7 @@ def _int_to_f32(hw: Hardware, val: int) -> int:
         shift = 23 - msb_pos
         lsl32(hw, shift=shift, reg=Reg.AL)
 
-    mant = Registers.to_int(hw.reg.get(Reg.AL)) & 0x7FFFFF
+    mant = _read32(hw, Reg.AL) & 0x7FFFFF
     exp = 127 + msb_pos
     return (sign << 31) | (exp << 23) | mant
 
@@ -82,7 +106,7 @@ def _int_to_f64(hw: Hardware, val: int) -> int:
     sign = 1 if val < 0 else 0
     abs_val = (-val if val < 0 else val) & 0xFFFFFFFFFFFFFFFF
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(abs_val, 8))
+    _write64(hw, Reg.AX, abs_val)
     lz_count = lzc64(hw, Reg.AX)
     msb_pos = 63 - lz_count
 
@@ -93,10 +117,9 @@ def _int_to_f64(hw: Hardware, val: int) -> int:
         shift = 52 - msb_pos
         lsl64(hw, shift=shift, reg=Reg.AX)
 
-    mant = Registers.to_int(hw.reg.get(Reg.AX)) & 0x000FFFFFFFFFFFFF
+    mant = _read64(hw, Reg.AX) & 0x000FFFFFFFFFFFFF
     exp = 1023 + msb_pos
     return (sign << 63) | (exp << 52) | mant
-
 
 
 def ln_seed_index_f32(mantissa_u32: int) -> int:
@@ -111,43 +134,43 @@ def ln_seed_index_f64(mantissa_u64: int) -> int:
 
 def _eval_ln_m_f32(hw: Hardware, m_raw: int) -> int:
     """Evaluates ln(M) for M in [1.0, 2.0) via ALU primitives (32-bit)."""
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(m_raw, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(ONE_F32, 4))
+    _write32(hw, Reg.AL, m_raw)
+    _write32(hw, Reg.BL, ONE_F32)
     sub_f32(hw, Reg.AL, Reg.BL)
-    num_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    num_raw = _read32(hw, Reg.AL)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(m_raw, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(ONE_F32, 4))
+    _write32(hw, Reg.AL, m_raw)
+    _write32(hw, Reg.BL, ONE_F32)
     add_f32(hw, Reg.AL, Reg.BL)
-    den_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    den_raw = _read32(hw, Reg.AL)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(num_raw, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(den_raw, 4))
+    _write32(hw, Reg.AL, num_raw)
+    _write32(hw, Reg.BL, den_raw)
     div_f32(hw, Reg.AL, Reg.BL)
-    z_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    z_raw = _read32(hw, Reg.AL)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(z_raw, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(z_raw, 4))
+    _write32(hw, Reg.AL, z_raw)
+    _write32(hw, Reg.BL, z_raw)
     mul_f32(hw, Reg.AL, Reg.BL)
-    z2_raw = Registers.to_int(hw.reg.get(Reg.AL))
+    z2_raw = _read32(hw, Reg.AL)
 
     term_raw = z_raw
     acc_raw = z_raw
     for d_raw in DENOMS_F32:
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(term_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(z2_raw, 4))
+        _write32(hw, Reg.AL, term_raw)
+        _write32(hw, Reg.BL, z2_raw)
         mul_f32(hw, Reg.AL, Reg.BL)
-        term_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        term_raw = _read32(hw, Reg.AL)
 
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(term_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(d_raw, 4))
+        _write32(hw, Reg.AL, term_raw)
+        _write32(hw, Reg.BL, d_raw)
         div_f32(hw, Reg.AL, Reg.BL)
-        term_k_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        term_k_raw = _read32(hw, Reg.AL)
 
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(acc_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(term_k_raw, 4))
+        _write32(hw, Reg.AL, acc_raw)
+        _write32(hw, Reg.BL, term_k_raw)
         add_f32(hw, Reg.AL, Reg.BL)
-        acc_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        acc_raw = _read32(hw, Reg.AL)
 
     if acc_raw != 0:
         exp_acc = (acc_raw >> 23) & 0xFF
@@ -157,43 +180,43 @@ def _eval_ln_m_f32(hw: Hardware, m_raw: int) -> int:
 
 def _eval_ln_m_f64(hw: Hardware, m_raw: int) -> int:
     """Evaluates ln(M) for M in [1.0, 2.0) via ALU primitives (64-bit)."""
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(m_raw, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(ONE_F64, 8))
+    _write64(hw, Reg.AX, m_raw)
+    _write64(hw, Reg.BX, ONE_F64)
     sub_f64(hw, Reg.AX, Reg.BX)
-    num_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    num_raw = _read64(hw, Reg.AX)
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(m_raw, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(ONE_F64, 8))
+    _write64(hw, Reg.AX, m_raw)
+    _write64(hw, Reg.BX, ONE_F64)
     add_f64(hw, Reg.AX, Reg.BX)
-    den_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    den_raw = _read64(hw, Reg.AX)
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(num_raw, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(den_raw, 8))
+    _write64(hw, Reg.AX, num_raw)
+    _write64(hw, Reg.BX, den_raw)
     div_f64(hw, Reg.AX, Reg.BX)
-    z_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    z_raw = _read64(hw, Reg.AX)
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(z_raw, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(z_raw, 8))
+    _write64(hw, Reg.AX, z_raw)
+    _write64(hw, Reg.BX, z_raw)
     mul_f64(hw, Reg.AX, Reg.BX)
-    z2_raw = Registers.to_int(hw.reg.get(Reg.AX))
+    z2_raw = _read64(hw, Reg.AX)
 
     term_raw = z_raw
     acc_raw = z_raw
     for d_raw in DENOMS_F64:
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(term_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(z2_raw, 8))
+        _write64(hw, Reg.AX, term_raw)
+        _write64(hw, Reg.BX, z2_raw)
         mul_f64(hw, Reg.AX, Reg.BX)
-        term_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        term_raw = _read64(hw, Reg.AX)
 
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(term_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(d_raw, 8))
+        _write64(hw, Reg.AX, term_raw)
+        _write64(hw, Reg.BX, d_raw)
         div_f64(hw, Reg.AX, Reg.BX)
-        term_k_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        term_k_raw = _read64(hw, Reg.AX)
 
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(acc_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(term_k_raw, 8))
+        _write64(hw, Reg.AX, acc_raw)
+        _write64(hw, Reg.BX, term_k_raw)
         add_f64(hw, Reg.AX, Reg.BX)
-        acc_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        acc_raw = _read64(hw, Reg.AX)
 
     if acc_raw != 0:
         exp_acc = (acc_raw >> 52) & 0x7FF
@@ -225,7 +248,7 @@ def ln_f32(hw: Hardware):
       - ln(M) evaluation via area hyperbolic tangent series using ALU primitives.
       - E * ln(2) + ln(M) combined via float multiply and add.
     """
-    raw = Registers.to_int(hw.reg.get(Reg.AL))
+    raw = _read32(hw, Reg.AL)
     sign = (raw >> 31) & 1
     exp = (raw >> 23) & 0xFF
     frac = raw & 0x7FFFFF
@@ -234,18 +257,18 @@ def ln_f32(hw: Hardware):
         hw.clock.tick(2)
         hw.reg.set_flag(StatusFlag.ERR, True)
         if exp == 0 and frac == 0:
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(NEG_INF_F32, 4))
+            _write32(hw, Reg.AL, NEG_INF_F32)
             hw.reg.set_flag(StatusFlag.SIGN, True)
             hw.reg.set_flag(StatusFlag.ZERO, False)
         else:
-            hw.reg.testharness_set(Reg.AL, Registers.from_int(NAN_F32, 4))
+            _write32(hw, Reg.AL, NAN_F32)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             hw.reg.set_flag(StatusFlag.ZERO, False)
         return
 
     if raw == ONE_F32:
         hw.clock.tick(2)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+        _write32(hw, Reg.AL, 0)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -265,19 +288,19 @@ def ln_f32(hw: Hardware):
 
     if e_int != 0:
         e_f32_raw = _int_to_f32(hw, e_int)
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(e_f32_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(LN2_F32, 4))
+        _write32(hw, Reg.AL, e_f32_raw)
+        _write32(hw, Reg.BL, LN2_F32)
         mul_f32(hw, Reg.AL, Reg.BL)
-        e_ln2_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        e_ln2_raw = _read32(hw, Reg.AL)
 
-        hw.reg.testharness_set(Reg.AL, Registers.from_int(e_ln2_raw, 4))
-        hw.reg.testharness_set(Reg.BL, Registers.from_int(ln_m_raw, 4))
+        _write32(hw, Reg.AL, e_ln2_raw)
+        _write32(hw, Reg.BL, ln_m_raw)
         add_f32(hw, Reg.AL, Reg.BL)
-        res_raw = Registers.to_int(hw.reg.get(Reg.AL))
+        res_raw = _read32(hw, Reg.AL)
     else:
         res_raw = ln_m_raw
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(res_raw, 4))
+    _write32(hw, Reg.AL, res_raw)
     res_sign = (res_raw >> 31) & 1
     res_exp = (res_raw >> 23) & 0xFF
     res_frac = res_raw & 0x7FFFFF
@@ -298,7 +321,7 @@ def ln_f64(hw: Hardware):
       - ln(M) evaluation via area hyperbolic tangent series using ALU primitives.
       - E * ln(2) + ln(M) combined via float multiply and add.
     """
-    raw = Registers.to_int(hw.reg.get(Reg.AX))
+    raw = _read64(hw, Reg.AX)
     sign = (raw >> 63) & 1
     exp = (raw >> 52) & 0x7FF
     frac = raw & 0x000FFFFFFFFFFFFF
@@ -307,18 +330,18 @@ def ln_f64(hw: Hardware):
         hw.clock.tick(3)
         hw.reg.set_flag(StatusFlag.ERR, True)
         if exp == 0 and frac == 0:
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(NEG_INF_F64, 8))
+            _write64(hw, Reg.AX, NEG_INF_F64)
             hw.reg.set_flag(StatusFlag.SIGN, True)
             hw.reg.set_flag(StatusFlag.ZERO, False)
         else:
-            hw.reg.testharness_set(Reg.AX, Registers.from_int(NAN_F64, 8))
+            _write64(hw, Reg.AX, NAN_F64)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             hw.reg.set_flag(StatusFlag.ZERO, False)
         return
 
     if raw == ONE_F64:
         hw.clock.tick(3)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(0, 8))
+        _write64(hw, Reg.AX, 0)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -336,19 +359,19 @@ def ln_f64(hw: Hardware):
 
     if e_int != 0:
         e_f64_raw = _int_to_f64(hw, e_int)
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(e_f64_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(LN2_F64, 8))
+        _write64(hw, Reg.AX, e_f64_raw)
+        _write64(hw, Reg.BX, LN2_F64)
         mul_f64(hw, Reg.AX, Reg.BX)
-        e_ln2_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        e_ln2_raw = _read64(hw, Reg.AX)
 
-        hw.reg.testharness_set(Reg.AX, Registers.from_int(e_ln2_raw, 8))
-        hw.reg.testharness_set(Reg.BX, Registers.from_int(ln_m_raw, 8))
+        _write64(hw, Reg.AX, e_ln2_raw)
+        _write64(hw, Reg.BX, ln_m_raw)
         add_f64(hw, Reg.AX, Reg.BX)
-        res_raw = Registers.to_int(hw.reg.get(Reg.AX))
+        res_raw = _read64(hw, Reg.AX)
     else:
         res_raw = ln_m_raw
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(res_raw, 8))
+    _write64(hw, Reg.AX, res_raw)
     res_sign = (res_raw >> 63) & 1
     res_exp = (res_raw >> 52) & 0x7FF
     res_frac = res_raw & 0x000FFFFFFFFFFFFF

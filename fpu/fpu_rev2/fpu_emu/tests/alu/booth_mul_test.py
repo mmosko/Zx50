@@ -11,6 +11,7 @@ from fpu_emu.alu.booth_mul import (
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -134,47 +135,50 @@ def test_booth_core_64(m, q, expected_res128, expected_cf, expected_zf, expected
 @pytest.mark.parametrize("src", [Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH])
 def test_mul32_all_source_registers(src):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(3, 4))
-    hw.reg.testharness_set(src, Registers.from_int(7, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(3, 4))
+    reg.set(src, Registers.from_int(7, 4))
 
     mul32(hw, src)
 
     assert hw.clock.cycles == CYCLES_32  # Exactly 16 cycles
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 21
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0  # Upper 32 bits
-    assert not hw.reg.get_flag(StatusFlag.CARRY)
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert Registers.to_int(reg.peek(Reg.AL)) == 21
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0  # Upper 32 bits
+    assert not reg.get_flag(StatusFlag.CARRY)
+    assert not reg.get_flag(StatusFlag.ZERO)
+    assert not reg.get_flag(StatusFlag.SIGN)
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
 
 
 def test_mul32_overflow_sets_flags():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # 0x40000000 * 2 = 0x80000000 (overflows signed 32-bit)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x40000000, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(2, 4))
+    reg.set(Reg.AL, Registers.from_int(0x40000000, 4))
+    reg.set(Reg.BL, Registers.from_int(2, 4))
 
     mul32(hw, Reg.BL)
 
     assert hw.clock.cycles == CYCLES_32
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x80000000
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0x00000000
-    assert hw.reg.get_flag(StatusFlag.OVERFLOW) is True
-    assert not hw.reg.get_flag(StatusFlag.SIGN)  # MSB of product AH is 0
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x80000000
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0x00000000
+    assert reg.get_flag(StatusFlag.OVERFLOW) is True
+    assert not reg.get_flag(StatusFlag.SIGN)  # MSB of product AH is 0
 
 
 @pytest.mark.parametrize("src", [Reg.BX, Reg.DX, Reg.FX])
 def test_mul64_all_source_registers(src):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(10, 8))
-    hw.reg.testharness_set(src, Registers.from_int(20, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(10, 8))
+    reg.set(src, Registers.from_int(20, 8))
 
     mul64(hw, src)
 
     assert hw.clock.cycles == CYCLES_64  # Exactly 32 cycles
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 200
-    assert Registers.to_int(hw.reg.get(Reg.DX)) == 0  # Upper 64 bits to DX
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 200
+    assert Registers.to_int(reg.peek(Reg.DX)) == 0  # Upper 64 bits to DX
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
 
 
 def test_invalid_source_registers():
@@ -188,10 +192,11 @@ def test_invalid_source_registers():
 def test_alu_class_booth_delegation():
     hw = Hardware()
     alu = Alu(hw)
+    reg = RegTestHarness(hw.reg)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(6, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(7, 4))
+    reg.set(Reg.AL, Registers.from_int(6, 4))
+    reg.set(Reg.BL, Registers.from_int(7, 4))
 
     alu.mul32(Reg.BL)
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 42
+    assert Registers.to_int(reg.peek(Reg.AL)) == 42
     assert hw.clock.cycles == CYCLES_32

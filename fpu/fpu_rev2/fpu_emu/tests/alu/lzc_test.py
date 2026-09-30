@@ -5,6 +5,7 @@ from fpu_emu.alu.alu import Alu
 from fpu_emu.alu.lzc import lzc_core, lzc32, lzc64
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -62,51 +63,55 @@ def test_lzc_core_64(val, expected_count, expected_zf, desc):
 # =============================================================================
 def test_lzc32_hardware_integration():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # Put 0x00010000 in AL (bit 16 set -> 15 leading zeros)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00010000, 4))
-    hw.reg.set_flag(StatusFlag.SIGN, True)  # Pre-set sign to verify it gets cleared
+    reg.set(Reg.AL, Registers.from_int(0x00010000, 4))
+    reg.set_flag(StatusFlag.SIGN, True)  # Pre-set sign to verify it gets cleared
 
     count = lzc32(hw)
 
     assert count == 15
     assert hw.reg.c == 15
     assert hw.clock.cycles == 1  # 1 cycle execution
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)  # Cleared by LZC
+    assert not reg.get_flag(StatusFlag.ZERO)
+    assert not reg.get_flag(StatusFlag.SIGN)  # Cleared by LZC
 
 
 def test_lzc32_zero_operand():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0, 4))
 
     count = lzc32(hw)
 
     assert count == 32
     assert hw.reg.c == 32
     assert hw.clock.cycles == 1
-    assert hw.reg.get_flag(StatusFlag.ZERO) is True
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert reg.get_flag(StatusFlag.ZERO) is True
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_lzc64_hardware_integration():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # 0x0000000000000008 -> 60 leading zeros
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x8, 8))
+    reg.set(Reg.AX, Registers.from_int(0x8, 8))
 
     count = lzc64(hw)
 
     assert count == 60
     assert hw.reg.c == 60
     assert hw.clock.cycles == 1  # 1 cycle priority tree
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert not reg.get_flag(StatusFlag.ZERO)
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_alu_class_lzc_delegation():
     hw = Hardware()
     alu = Alu(hw)
+    reg = RegTestHarness(hw.reg)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00000001, 4))
+    reg.set(Reg.AL, Registers.from_int(0x00000001, 4))
     count = alu.lzc32()
 
     assert count == 31

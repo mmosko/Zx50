@@ -16,6 +16,7 @@ from fpu_emu.alu.shifter import (
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -102,90 +103,111 @@ def test_shifter_core_64(val, shift, op, expected_res, exp_cf, exp_zf, exp_sf, e
 # =============================================================================
 def test_lsl32_with_counter_c():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x0000000F, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0x0000000F, 4))
     hw.reg.c = 4  # Shift by 4
 
     lsl32(hw)
 
     assert hw.clock.cycles == 1  # 1 cycle for 32-bit shift
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x000000F0
-    assert not hw.reg.get_flag(StatusFlag.CARRY)
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x000000F0
+    assert not reg.get_flag(StatusFlag.CARRY)
+    assert not reg.get_flag(StatusFlag.ZERO)
+    assert not reg.get_flag(StatusFlag.SIGN)
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
 
 
 def test_lsr32_with_counter_c():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x000000F1, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0x000000F1, 4))
     hw.reg.c = 1  # Shift by 1 -> bit 0 shifted out
 
     lsr32(hw)
 
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x00000078
-    assert hw.reg.get_flag(StatusFlag.CARRY) is True
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x00000078
+    assert reg.get_flag(StatusFlag.CARRY) is True
 
 
 def test_asr32_negative():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x80000000, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0x80000000, 4))
     hw.reg.c = 2
 
     asr32(hw)
 
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0xE0000000
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0xE0000000
+    assert reg.get_flag(StatusFlag.SIGN) is True
 
 
 def test_64bit_shifts_take_2_cycles():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
     hw.reg.c = 4
 
     lsl64(hw)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x0000001000000000
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x0000001000000000
 
     lsr64(hw, shift=4)
     assert hw.clock.cycles == 4
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x0000000100000000
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x0000000100000000
 
     asr64(hw, shift=4)
     assert hw.clock.cycles == 6
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x0000000010000000
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x0000000010000000
 
 
 def test_alu_class_shifter_delegation():
     hw = Hardware()
     alu = Alu(hw)
+    reg = RegTestHarness(hw.reg)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x10, 4))
+    reg.set(Reg.AL, Registers.from_int(0x10, 4))
     alu.lsl32(shift=2)
 
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x40
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x40
     assert hw.clock.cycles == 1
+
+
+def test_rrc32():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    reg.set_flag(StatusFlag.CARRY, True)
+    reg.set(Reg.AL, Registers.from_int(0x00000001, 4))
+
+    rrc32(hw)
+
+    assert hw.clock.cycles == 1
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x80000000
+    assert reg.get_flag(StatusFlag.CARRY) is True
+    assert reg.get_flag(StatusFlag.SIGN) is True
+    assert not reg.get_flag(StatusFlag.ZERO)
 
 
 def test_rrc64():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # In carry = 1, AX = 0x0000000000000001 (bit 0 is 1)
-    hw.reg.set_flag(StatusFlag.CARRY, True)
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000000000001, 8))
+    reg.set_flag(StatusFlag.CARRY, True)
+    reg.set(Reg.AX, Registers.from_int(0x0000000000000001, 8))
 
     rrc64(hw)
 
     assert hw.clock.cycles == 2
     # Result should have bit 63 set (from in_carry), bit 0 shifted out
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x8000000000000000
-    assert hw.reg.get_flag(StatusFlag.CARRY) is True  # Out carry is 1
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x8000000000000000
+    assert reg.get_flag(StatusFlag.CARRY) is True  # Out carry is 1
+    assert reg.get_flag(StatusFlag.SIGN) is True
+    assert not reg.get_flag(StatusFlag.ZERO)
 
     # Next rotate with carry = 1, bit 0 is 0
     rrc64(hw)
     assert hw.clock.cycles == 4
     # Result should be 0xC000000000000000
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0xC000000000000000
-    assert hw.reg.get_flag(StatusFlag.CARRY) is False  # Out carry was 0
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0xC000000000000000
+    assert reg.get_flag(StatusFlag.CARRY) is False  # Out carry was 0

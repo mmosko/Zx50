@@ -58,28 +58,6 @@ def sqrt_exp_f64(ea: int) -> Tuple[int, bool]:
     return (e_res + BIAS_F64, is_odd)
 
 
-def sqrt_seed_index_f32(is_odd: bool, mantissa_u32: int) -> int:
-    """Computes the 8-bit ROM seed table index for single-precision float.
-
-    Index structure:
-      Bit 7: Exponent parity bit (0: even, 1: odd)
-      Bits 6..0: Top 7 fraction bits of mantissa (AL[30:24]).
-    """
-    idx = (128 if is_odd else 0) | ((mantissa_u32 >> 24) & 0x7F)
-    return idx
-
-
-def sqrt_seed_index_f64(is_odd: bool, mantissa_u64: int) -> int:
-    """Computes the 8-bit ROM seed table index for double-precision float.
-
-    Index structure:
-      Bit 7: Exponent parity bit (0: even, 1: odd)
-      Bits 6..0: Top 7 fraction bits of mantissa (AX[62:56]).
-    """
-    idx = (128 if is_odd else 0) | ((mantissa_u64 >> 56) & 0x7F)
-    return idx
-
-
 def sqrt_mantissa_core_f32(hw: Hardware, is_odd: bool) -> int:
     """Performs reciprocal square root Newton-Raphson iteration for 32-bit float.
 
@@ -100,11 +78,11 @@ def sqrt_mantissa_core_f32(hw: Hardware, is_odd: bool) -> int:
     :param is_odd: Parity of unbiased exponent.
     :return: 32-bit left-justified normalized mantissa (bit 31 = 1).
     """
-    mant32 = Registers.to_int(hw.reg.get(Reg.AL))
+    mant32 = Registers.to_int(hw.reg._al)
     mant29 = mant32 >> 2
 
     # 1. Fetch seed from Flash ROM table (2 cycles)
-    idx = sqrt_seed_index_f32(is_odd, mant32)
+    idx = _sqrt_seed_index_f32(is_odd, mant32)
     seed = hw.rom.load_sqrt_seed(idx)
     hw.clock.tick(2)
 
@@ -191,11 +169,11 @@ def sqrt_mantissa_core_f64(hw: Hardware, is_odd: bool) -> int:
     :param is_odd: Parity of unbiased exponent.
     :return: 64-bit left-justified normalized mantissa (bit 63 = 1).
     """
-    mant64 = Registers.to_int(hw.reg.get(Reg.AX))
+    mant64 = Registers.to_int(bytearray(hw.reg._al) + bytearray(hw.reg._ah))
     mant61 = mant64 >> 2
 
     # 1. Fetch seed from Flash ROM table (2 cycles)
-    idx = sqrt_seed_index_f64(is_odd, mant64)
+    idx = _sqrt_seed_index_f64(is_odd, mant64)
     seed = hw.rom.load_sqrt_seed(idx)
     hw.clock.tick(2)
 
@@ -257,3 +235,27 @@ def sqrt_mantissa_core_f64(hw: Hardware, is_odd: bool) -> int:
         root_mant = 0x8000000000000000
 
     return root_mant
+
+
+def _sqrt_seed_index_f32(is_odd: bool, mantissa_u32: int) -> int:
+    """Computes the 8-bit ROM seed table index for single-precision float.
+
+    Index structure:
+      Bit 7: Exponent parity bit (0: even, 1: odd)
+      Bits 6..0: Top 7 fraction bits of mantissa (AL[30:24]).
+    """
+    idx = (128 if is_odd else 0) | ((mantissa_u32 >> 24) & 0x7F)
+    return idx
+
+
+def _sqrt_seed_index_f64(is_odd: bool, mantissa_u64: int) -> int:
+    """Computes the 8-bit ROM seed table index for double-precision float.
+
+    Index structure:
+      Bit 7: Exponent parity bit (0: even, 1: odd)
+      Bits 6..0: Top 7 fraction bits of mantissa (AX[62:56]).
+    """
+    idx = (128 if is_odd else 0) | ((mantissa_u64 >> 56) & 0x7F)
+    return idx
+
+

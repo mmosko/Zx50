@@ -30,6 +30,7 @@ from fpu_emu.alu.ieee754_exp import (
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -260,40 +261,43 @@ def test_exp_adj_norm_hardware():
 # =============================================================================
 def test_f32_unpack_and_pack_positive():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # 1.0f in IEEE-754: 0x3F800000 (sign=0, exp=127, mantissa=0)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1.0))
+    reg.set(Reg.AL, Registers.from_f32(1.0))
 
     sign = unpack_f32(hw, src=Reg.AL, dst_mantissa=Reg.AL, dst_exp=Reg.EA)
 
     assert sign == 0
     assert hw.reg.ea == 127
     # Mantissa left-justified with hidden bit at bit 31: (1 << 23) << 8 = 0x80000000
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x80000000
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x80000000
 
     # Pack back
     pack_f32(hw, sign=sign, src_mantissa=Reg.AL, src_exp=Reg.EA, dst=Reg.AL)
-    assert Registers.to_f32(hw.reg.get(Reg.AL)) == 1.0
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 1.0
 
 
 def test_f32_unpack_and_pack_negative():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # -2.5f in IEEE-754: 0xC0200000 (sign=1, exp=128, mantissa=0x200000)
-    hw.reg.testharness_set(Reg.BL, Registers.from_f32(-2.5))
+    reg.set(Reg.BL, Registers.from_f32(-2.5))
 
     sign = unpack_f32(hw, src=Reg.BL, dst_mantissa=Reg.BL, dst_exp=Reg.EB)
 
     assert sign == 1
     assert hw.reg.eb == 128
     # Hidden bit inserted and left-justified: (0x800000 | 0x200000) << 8 = 0xA0000000
-    assert Registers.to_int(hw.reg.get(Reg.BL)) == 0xA0000000
+    assert Registers.to_int(reg.peek(Reg.BL)) == 0xA0000000
 
     pack_f32(hw, sign=sign, src_mantissa=Reg.BL, src_exp=Reg.EB, dst=Reg.BL)
-    assert Registers.to_f32(hw.reg.get(Reg.BL)) == -2.5
+    assert Registers.to_f32(reg.peek(Reg.BL)) == -2.5
 
 
 def test_f64_unpack_and_pack():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(-3.141592653589793))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(-3.141592653589793))
 
     sign = unpack_f64(hw, src=Reg.AX, dst_mantissa=Reg.AX, dst_exp=Reg.EA)
 
@@ -302,7 +306,7 @@ def test_f64_unpack_and_pack():
 
     # Pack back
     pack_f64(hw, sign=sign, src_mantissa=Reg.AX, src_exp=Reg.EA, dst=Reg.AX)
-    assert Registers.to_f64(hw.reg.get(Reg.AX)) == -3.141592653589793
+    assert Registers.to_f64(reg.peek(Reg.AX)) == -3.141592653589793
 
 
 # =============================================================================
@@ -338,10 +342,11 @@ def test_exp_diff_tie_breaking_and_diff_sign(
 ):
     """Verify that when EA == EB, exp_diff compares mantissas so |A| >= |B| holds after swap, and sets DIFF_SIGN."""
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     hw.reg.ea = ea
     hw.reg.eb = eb
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(mant_a, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(mant_b, 4))
+    reg.set(Reg.AL, Registers.from_int(mant_a, 4))
+    reg.set(Reg.BL, Registers.from_int(mant_b, 4))
     hw.reg.sign_a = sign_a
     hw.reg.sign_b = sign_b
 
@@ -363,14 +368,15 @@ def test_exp_diff_tie_breaking_and_diff_sign(
 def test_pack_f32_default_sign_from_sign_a(val_float, expected_sign_bit):
     """Verify pack_f32 without explicit sign argument defaults to hw.reg.sign_a."""
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val_float))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(val_float))
     unpack_f32(hw, src=Reg.AL, dst_mantissa=Reg.AL, dst_exp=Reg.EA)
 
     assert hw.reg.sign_a == expected_sign_bit
 
     # Pack without explicit sign parameter (as microcode does)
     pack_f32(hw, src_mantissa=Reg.AL, src_exp=Reg.EA, dst=Reg.AL)
-    result = Registers.to_f32(hw.reg.get(Reg.AL))
+    result = Registers.to_f32(reg.peek(Reg.AL))
     assert result == val_float
 
 
@@ -386,14 +392,15 @@ def test_pack_f32_default_sign_from_sign_a(val_float, expected_sign_bit):
 def test_pack_f64_default_sign_from_sign_a(val_float, expected_sign_bit):
     """Verify pack_f64 without explicit sign argument defaults to hw.reg.sign_a."""
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(val_float))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(val_float))
     unpack_f64(hw, src=Reg.AX, dst_mantissa=Reg.AX, dst_exp=Reg.EA)
 
     assert hw.reg.sign_a == expected_sign_bit
 
     # Pack without explicit sign parameter
     pack_f64(hw, src_mantissa=Reg.AX, src_exp=Reg.EA, dst=Reg.AX)
-    result = Registers.to_f64(hw.reg.get(Reg.AX))
+    result = Registers.to_f64(reg.peek(Reg.AX))
     assert result == val_float
 
 
@@ -412,10 +419,11 @@ def test_exp_diff_tie_breaking_64bit(
 ):
     """Verify that when EA == EB in 64-bit mode, exp_diff compares AX vs BX."""
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     hw.reg.ea = ea
     hw.reg.eb = eb
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(mant_a, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(mant_b, 8))
+    reg.set(Reg.AX, Registers.from_int(mant_a, 8))
+    reg.set(Reg.BX, Registers.from_int(mant_b, 8))
     hw.reg.sign_a = sign_a
     hw.reg.sign_b = sign_b
 

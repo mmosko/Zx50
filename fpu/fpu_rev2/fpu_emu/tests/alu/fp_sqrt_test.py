@@ -6,6 +6,7 @@ from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -73,25 +74,27 @@ class TestSqrtDispatcher:
     )
     def test_sqrt_f32_success(self, setup_dispatcher, val: float):
         hw, dispatcher = setup_dispatcher
+        reg = RegTestHarness(hw.reg)
         # Push 32-bit float onto operand stack
         raw = Registers.from_f32(val)
-        hw.reg.testharness_set(Reg.AL, raw)
+        reg.set(Reg.AL, raw)
         stack.push32(hw, Reg.AL)
 
         dispatcher.execute(UserOpcode.SQRT_F32)
 
         assert not hw.reg.get_flag(StatusFlag.ERR), "ERR flag should not be asserted"
         stack.pop32(hw, Reg.AL)
-        res_bytes = hw.reg.get(Reg.AL)
+        res_bytes = reg.peek(Reg.AL)
         res_f32 = Registers.to_f32(res_bytes)
         expected = math.sqrt(val)
         assert res_f32 == pytest.approx(expected, rel=1e-6)
 
     def test_sqrt_f32_negative_domain_error(self, setup_dispatcher):
         hw, dispatcher = setup_dispatcher
+        reg = RegTestHarness(hw.reg)
         # Push negative float
         raw = Registers.from_f32(-4.0)
-        hw.reg.testharness_set(Reg.AL, raw)
+        reg.set(Reg.AL, raw)
         stack.push32(hw, Reg.AL)
 
         dispatcher.execute(UserOpcode.SQRT_F32)
@@ -126,25 +129,27 @@ class TestSqrtDispatcher:
     )
     def test_sqrt_f64_success(self, setup_dispatcher, val: float):
         hw, dispatcher = setup_dispatcher
+        reg = RegTestHarness(hw.reg)
         # Push 64-bit double onto operand stack
         raw = Registers.from_f64(val)
-        hw.reg.testharness_set(Reg.AX, raw)
+        reg.set(Reg.AX, raw)
         stack.push64(hw, Reg.AX)
 
         dispatcher.execute(UserOpcode.SQRT_F64)
 
         assert not hw.reg.get_flag(StatusFlag.ERR), "ERR flag should not be asserted"
         stack.pop64(hw, Reg.AX)
-        res_bytes = hw.reg.get(Reg.AX)
+        res_bytes = reg.peek(Reg.AX)
         res_f64 = Registers.to_f64(res_bytes)
         expected = math.sqrt(val)
         assert res_f64 == pytest.approx(expected, rel=1e-12)
 
     def test_sqrt_f64_negative_domain_error(self, setup_dispatcher):
         hw, dispatcher = setup_dispatcher
+        reg = RegTestHarness(hw.reg)
         # Push negative double
         raw = Registers.from_f64(-9.0)
-        hw.reg.testharness_set(Reg.AX, raw)
+        reg.set(Reg.AX, raw)
         stack.push64(hw, Reg.AX)
 
         dispatcher.execute(UserOpcode.SQRT_F64)

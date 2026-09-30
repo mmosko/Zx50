@@ -6,6 +6,7 @@ from fpu_emu.alu.alu import Alu
 from fpu_emu.alu.fp_ln import ln_f32, ln_f64, ln_mantissa_core
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 @pytest.mark.parametrize(
@@ -23,10 +24,11 @@ from fpu_emu.memory.registers import Reg, Registers, StatusFlag
 )
 def test_ln_f32_normal_values(x, expected, tol):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(x))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(x))
     ln_f32(hw)
 
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert math.isclose(res, expected, rel_tol=tol, abs_tol=tol)
     assert not hw.reg.get_flag(StatusFlag.ERR)
     assert hw.clock.cycles >= 2
@@ -47,10 +49,11 @@ def test_ln_f32_normal_values(x, expected, tol):
 )
 def test_ln_f64_normal_values(x, expected, tol):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(x))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(x))
     ln_f64(hw)
 
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert math.isclose(res, expected, rel_tol=tol, abs_tol=tol)
     assert not hw.reg.get_flag(StatusFlag.ERR)
     assert hw.clock.cycles >= 3
@@ -58,51 +61,54 @@ def test_ln_f64_normal_values(x, expected, tol):
 
 def test_ln_f32_domain_errors():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # ln(0) -> -inf, ERR=True
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(0.0))
+    reg.set(Reg.AL, Registers.from_f32(0.0))
     ln_f32(hw)
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert math.isinf(res) and res < 0
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # ln(-1.0) -> NaN, ERR=True
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(-1.0))
+    reg.set(Reg.AL, Registers.from_f32(-1.0))
     ln_f32(hw)
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert math.isnan(res)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
 
 def test_ln_f64_domain_errors():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # ln(0) -> -inf, ERR=True
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(0.0))
+    reg.set(Reg.AX, Registers.from_f64(0.0))
     ln_f64(hw)
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert math.isinf(res) and res < 0
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # ln(-5.0) -> NaN, ERR=True
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(-5.0))
+    reg.set(Reg.AX, Registers.from_f64(-5.0))
     ln_f64(hw)
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert math.isnan(res)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
 
 def test_alu_ln_delegation():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(math.e))
+    reg.set(Reg.AL, Registers.from_f32(math.e))
     alu.ln_f32()
-    assert math.isclose(Registers.to_f32(hw.reg.get(Reg.AL)), 1.0, rel_tol=1e-5)
+    assert math.isclose(Registers.to_f32(reg.peek(Reg.AL)), 1.0, rel_tol=1e-5)
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(math.e))
+    reg.set(Reg.AX, Registers.from_f64(math.e))
     alu.ln_f64()
-    assert math.isclose(Registers.to_f64(hw.reg.get(Reg.AX)), 1.0, rel_tol=1e-10)
+    assert math.isclose(Registers.to_f64(reg.peek(Reg.AX)), 1.0, rel_tol=1e-10)
 
 
 def test_ln_mantissa_core():

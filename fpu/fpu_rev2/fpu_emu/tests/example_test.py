@@ -14,6 +14,7 @@ from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.tests.testharness import RegTestHarness
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -22,26 +23,30 @@ from fpu_emu.user_opcodes import UserOpcode
 # =============================================================================
 def push_i32(hw: Hardware, val: int):
     """Pushes a 32-bit signed integer onto the operand stack."""
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(val, 4, signed=True))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(val, 4, signed=True))
     stack.push32(hw, Reg.AL)
 
 
 def pop_i32(hw: Hardware) -> int:
     """Pops a 32-bit signed integer from the operand stack."""
+    reg = RegTestHarness(hw.reg)
     stack.pop32(hw, Reg.AL)
-    return Registers.to_int(hw.reg.get(Reg.AL), signed=True)
+    return Registers.to_int(reg.peek(Reg.AL), signed=True)
 
 
 def push_f32(hw: Hardware, val: float):
     """Pushes an IEEE-754 32-bit float onto the operand stack."""
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(val))
     stack.push32(hw, Reg.AL)
 
 
 def pop_f32(hw: Hardware) -> float:
     """Pops an IEEE-754 32-bit float from the operand stack."""
+    reg = RegTestHarness(hw.reg)
     stack.pop32(hw, Reg.AL)
-    return Registers.to_f32(hw.reg.get(Reg.AL))
+    return Registers.to_f32(reg.peek(Reg.AL))
 
 
 # =============================================================================

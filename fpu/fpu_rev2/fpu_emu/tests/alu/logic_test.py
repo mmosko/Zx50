@@ -18,6 +18,7 @@ from fpu_emu.alu.logic import (
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -90,57 +91,61 @@ def test_logic_core_64(a, b, op, expected_res, expected_zf, expected_sf, desc):
 @pytest.mark.parametrize("src", [Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH])
 def test_and32_all_sources(src):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0xFFFFFFFF, 4))
-    hw.reg.testharness_set(src, Registers.from_int(0x12345678, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0xFFFFFFFF, 4))
+    reg.set(src, Registers.from_int(0x12345678, 4))
 
     and32(hw, src)
 
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x12345678
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x12345678
     assert hw.clock.cycles == 1
-    assert not hw.reg.get_flag(StatusFlag.CARRY)
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert not reg.get_flag(StatusFlag.CARRY)
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
 
 
 def test_or32_flags():
     hw = Hardware()
-    hw.reg.set_flag(StatusFlag.CARRY, True)
-    hw.reg.set_flag(StatusFlag.OVERFLOW, True)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00000000, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(0x80000000, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set_flag(StatusFlag.CARRY, True)
+    reg.set_flag(StatusFlag.OVERFLOW, True)
+    reg.set(Reg.AL, Registers.from_int(0x00000000, 4))
+    reg.set(Reg.BL, Registers.from_int(0x80000000, 4))
 
     or32(hw, Reg.BL)
 
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x80000000
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x80000000
     assert hw.clock.cycles == 1
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
-    assert not hw.reg.get_flag(StatusFlag.CARRY)     # Cleared
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)  # Cleared
+    assert reg.get_flag(StatusFlag.SIGN) is True
+    assert not reg.get_flag(StatusFlag.ZERO)
+    assert not reg.get_flag(StatusFlag.CARRY)     # Cleared
+    assert not reg.get_flag(StatusFlag.OVERFLOW)  # Cleared
 
 
 def test_xor32_zero():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0xABCD1234, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(0xABCD1234, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0xABCD1234, 4))
+    reg.set(Reg.BL, Registers.from_int(0xABCD1234, 4))
 
     xor32(hw, Reg.BL)
 
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0
     assert hw.clock.cycles == 1
-    assert hw.reg.get_flag(StatusFlag.ZERO) is True
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert reg.get_flag(StatusFlag.ZERO) is True
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_not32():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00000000, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(0x00000000, 4))
 
     not32(hw)
 
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0xFFFFFFFF
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0xFFFFFFFF
     assert hw.clock.cycles == 1
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
+    assert reg.get_flag(StatusFlag.SIGN) is True
+    assert not reg.get_flag(StatusFlag.ZERO)
 
 
 # =============================================================================
@@ -149,24 +154,26 @@ def test_not32():
 @pytest.mark.parametrize("src", [Reg.BX, Reg.DX, Reg.FX])
 def test_and64_sources(src):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0xFFFFFFFFFFFFFFFF, 8))
-    hw.reg.testharness_set(src, Registers.from_int(0x0123456789ABCDEF, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0xFFFFFFFFFFFFFFFF, 8))
+    reg.set(src, Registers.from_int(0x0123456789ABCDEF, 8))
 
     and64(hw, src)
 
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x0123456789ABCDEF
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x0123456789ABCDEF
     assert hw.clock.cycles == 2
 
 
 def test_not64():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000000000000, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0x0000000000000000, 8))
 
     not64(hw)
 
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
     assert hw.clock.cycles == 2
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
+    assert reg.get_flag(StatusFlag.SIGN) is True
 
 
 # =============================================================================
@@ -174,63 +181,67 @@ def test_not64():
 # =============================================================================
 def test_chs_toggles_sign_bit():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # AH = 0x3F800000 (positive float 1.0)
-    hw.reg.testharness_set(Reg.AH, Registers.from_int(0x3F800000, 4))
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x11223344, 4))  # AL must be unmodified
+    reg.set(Reg.AH, Registers.from_int(0x3F800000, 4))
+    reg.set(Reg.AL, Registers.from_int(0x11223344, 4))  # AL must be unmodified
 
     chs(hw)
 
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0xBF800000  # Sign bit toggled
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x11223344  # AL intact
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0xBF800000  # Sign bit toggled
+    assert reg.get_flag(StatusFlag.SIGN) is True
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x11223344  # AL intact
 
     chs(hw)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0x3F800000  # Sign bit toggled back
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000  # Sign bit toggled back
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_abs_clears_sign_bit():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     # AH = 0xBF800000 (negative float -1.0)
-    hw.reg.testharness_set(Reg.AH, Registers.from_int(0xBF800000, 4))
-    hw.reg.set_flag(StatusFlag.SIGN, True)
+    reg.set(Reg.AH, Registers.from_int(0xBF800000, 4))
+    reg.set_flag(StatusFlag.SIGN, True)
 
     abs_val(hw)
 
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0x3F800000  # Sign cleared
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000  # Sign cleared
+    assert not reg.get_flag(StatusFlag.SIGN)
 
     # Calling ABS on already positive value
     abs_val(hw)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.AH)) == 0x3F800000
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_chs_64bit_register():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(0x3FF0000000000000, 8))  # +1.0 double
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.BX, Registers.from_int(0x3FF0000000000000, 8))  # +1.0 double
     chs(hw, reg=Reg.BX)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.BX)) == 0xBFF0000000000000  # -1.0 double
-    assert hw.reg.get_flag(StatusFlag.SIGN) is True
+    assert Registers.to_int(reg.peek(Reg.BX)) == 0xBFF0000000000000  # -1.0 double
+    assert reg.get_flag(StatusFlag.SIGN) is True
 
     chs(hw, reg=Reg.BX)
     assert hw.clock.cycles == 4
-    assert Registers.to_int(hw.reg.get(Reg.BX)) == 0x3FF0000000000000  # +1.0 double
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.BX)) == 0x3FF0000000000000  # +1.0 double
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 def test_abs_64bit_register():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0xBFF0000000000000, 8))  # -1.0 double
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0xBFF0000000000000, 8))  # -1.0 double
     abs_val(hw, reg=Reg.AX)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x3FF0000000000000  # +1.0 double
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x3FF0000000000000  # +1.0 double
+    assert not reg.get_flag(StatusFlag.SIGN)
 
 
 # =============================================================================
@@ -247,12 +258,13 @@ def test_invalid_source_registers():
 def test_alu_class_logic_delegation():
     hw = Hardware()
     alu = Alu(hw)
+    reg = RegTestHarness(hw.reg)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x0F0F0F0F, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(0xFF00FF00, 4))
+    reg.set(Reg.AL, Registers.from_int(0x0F0F0F0F, 4))
+    reg.set(Reg.BL, Registers.from_int(0xFF00FF00, 4))
 
     alu.and32(Reg.BL)
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x0F000F00
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0x0F000F00
     assert hw.clock.cycles == 1
 
     alu.chs()
@@ -267,64 +279,66 @@ from fpu_emu.alu.logic import abs_int32, abs_int64, _apply_logic32, _apply_logic
 
 def test_abs_int32():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # Positive integer: unchanged
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(42, 4))
+    reg.set(Reg.AL, Registers.from_int(42, 4))
     abs_int32(hw, Reg.AL)
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 42
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
+    assert Registers.to_int(reg.peek(Reg.AL)) == 42
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
+    assert not reg.get_flag(StatusFlag.SIGN)
+    assert not reg.get_flag(StatusFlag.ZERO)
 
     # Zero
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
+    reg.set(Reg.AL, Registers.from_int(0, 4))
     abs_int32(hw, Reg.AL)
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 0
-    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert Registers.to_int(reg.peek(Reg.AL)) == 0
+    assert reg.get_flag(StatusFlag.ZERO)
 
     # Negative integer (-42 -> 42)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(-42, 4, signed=True))
+    reg.set(Reg.AL, Registers.from_int(-42, 4, signed=True))
     abs_int32(hw, Reg.AL)
-    assert Registers.to_int(hw.reg.get(Reg.AL)) == 42
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AL)) == 42
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
+    assert not reg.get_flag(StatusFlag.SIGN)
 
     # Min int32: -2147483648 (0x80000000) -> OVERFLOW
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x80000000, 4))
+    reg.set(Reg.AL, Registers.from_int(0x80000000, 4))
     abs_int32(hw, Reg.AL)
-    assert hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert hw.reg.get_flag(StatusFlag.SIGN)
+    assert reg.get_flag(StatusFlag.OVERFLOW)
+    assert reg.get_flag(StatusFlag.SIGN)
 
 
 def test_abs_int64():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # Positive integer: unchanged
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(123456789, 8))
+    reg.set(Reg.AX, Registers.from_int(123456789, 8))
     abs_int64(hw, Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 123456789
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
-    assert not hw.reg.get_flag(StatusFlag.ZERO)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 123456789
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
+    assert not reg.get_flag(StatusFlag.SIGN)
+    assert not reg.get_flag(StatusFlag.ZERO)
 
     # Zero
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0, 8))
+    reg.set(Reg.AX, Registers.from_int(0, 8))
     abs_int64(hw, Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0
-    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0
+    assert reg.get_flag(StatusFlag.ZERO)
 
     # Negative integer (-123456789 -> 123456789)
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(-123456789, 8, signed=True))
+    reg.set(Reg.AX, Registers.from_int(-123456789, 8, signed=True))
     abs_int64(hw, Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 123456789
-    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert not hw.reg.get_flag(StatusFlag.SIGN)
+    assert Registers.to_int(reg.peek(Reg.AX)) == 123456789
+    assert not reg.get_flag(StatusFlag.OVERFLOW)
+    assert not reg.get_flag(StatusFlag.SIGN)
 
     # Min int64: (1 << 63) -> OVERFLOW
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(1 << 63, 8))
+    reg.set(Reg.AX, Registers.from_int(1 << 63, 8))
     abs_int64(hw, Reg.AX)
-    assert hw.reg.get_flag(StatusFlag.OVERFLOW)
-    assert hw.reg.get_flag(StatusFlag.SIGN)
+    assert reg.get_flag(StatusFlag.OVERFLOW)
+    assert reg.get_flag(StatusFlag.SIGN)
 
 
 # =============================================================================
@@ -352,14 +366,15 @@ def test_logic_invalid_dst_registers():
 
 def test_or64_xor64_not64():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x00000000FFFFFFFF, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(0xFFFFFFFF00000000, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0x00000000FFFFFFFF, 8))
+    reg.set(Reg.BX, Registers.from_int(0xFFFFFFFF00000000, 8))
 
     or64(hw, src=Reg.BX, dst=Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
 
     xor64(hw, src=Reg.BX, dst=Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x00000000FFFFFFFF
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x00000000FFFFFFFF
 
     not64(hw, dst=Reg.AX)
-    assert Registers.to_int(hw.reg.get(Reg.AX)) == 0xFFFFFFFF00000000
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFF00000000

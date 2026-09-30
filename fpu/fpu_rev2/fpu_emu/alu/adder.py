@@ -47,11 +47,11 @@ VALID_64BIT_SRCS = {
 def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
     """Sets the HB_BUS multiplexer according to the source register and half."""
     if half is not None:
-        hw.reg.set_hb_mux(half, src)
+        hw.reg.set_hb_bus_mux(half, src)
     elif src in (Reg.AL, Reg.BL, Reg.DL, Reg.FL):
-        hw.reg.set_hb_mux(HalfSelect.LO, src)
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
     elif src in (Reg.AH, Reg.BH, Reg.DH, Reg.FH):
-        hw.reg.set_hb_mux(HalfSelect.HI, src)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, src)
     else:
         raise ValueError(f"Invalid source register for HB_BUS: {src}")
 

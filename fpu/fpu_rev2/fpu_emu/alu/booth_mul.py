@@ -44,7 +44,7 @@ VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 
 from typing import Set, Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
 from fpu_emu.fpga_resource import fpga_resource
 
 # Width constants
@@ -158,30 +158,64 @@ def booth_core(
 def mul32(hw: Hardware, src: Reg = Reg.BL):
     """MUL AL, src — 32-bit signed multiply yielding 64-bit product in AX (16 cycles)."""
     _validate_src32(src)
-    hw.clock.tick(CYCLES_32)
 
-    m_bytes = hw.reg.get(src)
-    q_bytes = hw.reg.get(Reg.AL)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    q_bytes = hw.reg.read_ha_bus()
+
+    half = HalfSelect.LO if src in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+    hw.reg.set_hb_bus_mux(half, src)
+    m_bytes = hw.reg.read_hb_bus()
 
     prod_bytes, cf, zf, sf, vf = booth_core(m_bytes, q_bytes, width_bytes=WIDTH_32_BYTES)
 
-    hw.reg.testharness_set(Reg.AX, prod_bytes)
+    # 16 cycles: 14 compute cycles + 2 writeback cycles (AL, AH)
+    hw.clock.tick(CYCLES_32 - 2)
+
+    # Cycle 15: write AL
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.AL, prod_bytes[0:4])
+
+    # Cycle 16: write AH
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.AH, prod_bytes[4:8])
+
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
 def mul64(hw: Hardware, src: Reg = Reg.BX):
     """MUL AX, src — 64-bit signed multiply yielding 128-bit product in {DX, AX} (32 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(CYCLES_64)
 
-    m_bytes = hw.reg.get(src)
-    q_bytes = hw.reg.get(Reg.AX)
+    q_bytes = bytearray(hw.reg._al) + bytearray(hw.reg._ah)
+
+    if src == Reg.BX:
+        m_bytes = bytearray(hw.reg._bl) + bytearray(hw.reg._bh)
+    elif src == Reg.DX:
+        m_bytes = bytearray(hw.reg._dl) + bytearray(hw.reg._dh)
+    else:
+        m_bytes = bytearray(hw.reg._fl) + bytearray(hw.reg._fh)
 
     prod_bytes, cf, zf, sf, vf = booth_core(m_bytes, q_bytes, width_bytes=WIDTH_64_BYTES)
 
-    # Lower 64 bits to AX, upper 64 bits to DX
-    hw.reg.testharness_set(Reg.AX, prod_bytes[0:8])
-    hw.reg.testharness_set(Reg.DX, prod_bytes[8:16])
+    # 32 cycles: 28 compute cycles + 4 writeback cycles (AL, AH, DL, DH)
+    hw.clock.tick(CYCLES_64 - 4)
+
+    # Cycle 29: write AL
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.AL, prod_bytes[0:4])
+
+    # Cycle 30: write AH
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.AH, prod_bytes[4:8])
+
+    # Cycle 31: write DL
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.DL, prod_bytes[8:12])
+
+    # Cycle 32: write DH
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg.DH, prod_bytes[12:16])
+
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 

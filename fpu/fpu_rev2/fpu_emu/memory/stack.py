@@ -23,7 +23,7 @@ def push32(hw: Hardware, src: Reg):
         hw.reg.set_flag(StatusFlag.ERR, True)
         return
 
-    data = hw.reg.get(src)
+    data = bytearray(getattr(hw.reg, f"_{src.name.lower()}"))
     hw.mem.store(STACK_BASE + sp, data)
     hw.reg.sp = sp + 4
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -40,7 +40,7 @@ def pop32(hw: Hardware, dst: Reg):
 
     new_sp = sp - 4
     data = hw.mem.load(STACK_BASE + new_sp, 4)
-    hw.reg.testharness_set(dst, data)
+    hw.reg.set_res_bus(dst, data)
     hw.reg.sp = new_sp
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 
@@ -54,7 +54,9 @@ def push64(hw: Hardware, src: Reg):
         hw.reg.set_flag(StatusFlag.ERR, True)
         return
 
-    data = hw.reg.get(src)
+    lo = getattr(hw.reg, f"_{src.name[0].lower()}l")
+    hi = getattr(hw.reg, f"_{src.name[0].lower()}h")
+    data = bytearray(lo) + bytearray(hi)
     hw.mem.store(STACK_BASE + sp, data)
     hw.reg.sp = sp + 8
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -62,7 +64,7 @@ def push64(hw: Hardware, src: Reg):
 
 def pop64(hw: Hardware, dst: Reg):
     """Pops a 64-bit value from the stack into dst register (2 memory cycles)."""
-    hw.clock.tick(2)
+    hw.clock.tick(1)
     sp = hw.reg.sp
     if sp < 8:
         hw.reg.set_flag(StatusFlag.UNDERFLOW, True)
@@ -71,7 +73,11 @@ def pop64(hw: Hardware, dst: Reg):
 
     new_sp = sp - 8
     data = hw.mem.load(STACK_BASE + new_sp, 8)
-    hw.reg.testharness_set(dst, data)
+    dst_lo = Reg[dst.name[0] + "L"]
+    dst_hi = Reg[dst.name[0] + "H"]
+    hw.reg.set_res_bus(dst_lo, data[0:4])
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(dst_hi, data[4:8])
     hw.reg.sp = new_sp
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 

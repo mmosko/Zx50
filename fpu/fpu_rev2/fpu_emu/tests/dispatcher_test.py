@@ -6,6 +6,7 @@ from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -48,13 +49,14 @@ def test_dispatcher_mode_commands():
 
 def test_add_i32_immediate_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push 15 and 25 onto stack
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(15, 4))
+    reg.set(Reg.AL, Registers.from_int(15, 4))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(25, 4))
+    reg.set(Reg.AL, Registers.from_int(25, 4))
     stack.push32(hw, Reg.AL)
     assert hw.reg.sp == 8
 
@@ -64,55 +66,58 @@ def test_add_i32_immediate_execution():
     # Stack should now have 1 item (result = 40)
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.DL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.DL)) == 40
+    assert Registers.to_int(reg.peek(Reg.DL)) == 40
     assert not hw.reg.get_flag(StatusFlag.BUSY)
     assert not hw.reg.get_flag(StatusFlag.ERR)
 
 
 def test_sub_i32_immediate_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Stack: Push 50 (first operand), then Push 20 (second operand)
     # Result: 50 - 20 = 30
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(50, 4))
+    reg.set(Reg.AL, Registers.from_int(50, 4))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(20, 4))
+    reg.set(Reg.AL, Registers.from_int(20, 4))
     stack.push32(hw, Reg.AL)
 
     disp.execute(UserOpcode.SUB_I32)
 
     stack.pop32(hw, Reg.DL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.DL)) == 30
+    assert Registers.to_int(reg.peek(Reg.DL)) == 30
 
 
 def test_add_i64_immediate_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     val_a = 0x00000001FFFFFFFF
     val_b = 0x0000000000000001
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(val_a, 8))
+    reg.set(Reg.AX, Registers.from_int(val_a, 8))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(val_b, 8))
+    reg.set(Reg.AX, Registers.from_int(val_b, 8))
     stack.push64(hw, Reg.AX)
 
     disp.execute(UserOpcode.ADD_I64)
 
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.DX)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.DX)) == 0x0000000200000000
+    assert Registers.to_int(reg.peek(Reg.DX)) == 0x0000000200000000
 
 
 def test_underflow_triggers_trap():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Only 1 item on stack; ADD_I32 requires 2 operands
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(10, 4))
+    reg.set(Reg.AL, Registers.from_int(10, 4))
     stack.push32(hw, Reg.AL)
 
     disp.execute(UserOpcode.ADD_I32)
@@ -123,16 +128,17 @@ def test_underflow_triggers_trap():
 
 def test_batch_mode_queue_and_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Put operands on stack: 10, 20, 30
     # Operations: ADD_I32 (10+20=30), then ADD_I32 (30+30=60)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(10, 4))
+    reg.set(Reg.AL, Registers.from_int(10, 4))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(20, 4))
+    reg.set(Reg.AL, Registers.from_int(20, 4))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(30, 4))
+    reg.set(Reg.AL, Registers.from_int(30, 4))
     stack.push32(hw, Reg.AL)
 
     # Enable batch mode
@@ -155,43 +161,45 @@ def test_batch_mode_queue_and_execution():
     # Final result on stack should be 60
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 60
+    assert Registers.to_int(reg.peek(Reg.AL)) == 60
 
 
 def test_mul_i32_immediate_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push 6 and 7 onto stack -> 6 * 7 = 42
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(6, 4))
+    reg.set(Reg.AL, Registers.from_int(6, 4))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(7, 4))
+    reg.set(Reg.AL, Registers.from_int(7, 4))
     stack.push32(hw, Reg.AL)
 
     disp.execute(UserOpcode.MUL_I32)
 
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.DL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.DL)) == 42
+    assert Registers.to_int(reg.peek(Reg.DL)) == 42
 
 
 def test_mul_i64_immediate_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push 1000 and -2000 onto stack -> -2000000
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(1000, 8))
+    reg.set(Reg.AX, Registers.from_int(1000, 8))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(-2000 & 0xFFFFFFFFFFFFFFFF, 8))
+    reg.set(Reg.AX, Registers.from_int(-2000 & 0xFFFFFFFFFFFFFFFF, 8))
     stack.push64(hw, Reg.AX)
 
     disp.execute(UserOpcode.MUL_I64)
 
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.DX)
-    res = Registers.to_int(hw.reg.testharness_peek(Reg.DX))
+    res = Registers.to_int(reg.peek(Reg.DX))
     expected = (-2000000) & 0xFFFFFFFFFFFFFFFF
     assert res == expected
 
@@ -218,20 +226,21 @@ def test_mul_i64_immediate_execution():
 )
 def test_add_f32_execution(val_a, val_b, expected, desc):
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push operand A, then operand B
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val_a))
+    reg.set(Reg.AL, Registers.from_f32(val_a))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val_b))
+    reg.set(Reg.AL, Registers.from_f32(val_b))
     stack.push32(hw, Reg.AL)
 
     disp.execute(UserOpcode.ADD_F32)
 
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    result = Registers.to_f32(hw.reg.testharness_peek(Reg.AL))
+    result = Registers.to_f32(reg.peek(Reg.AL))
     assert pytest.approx(result, rel=1e-5) == expected, f"Failed {desc}: got {result}, expected {expected}"
     assert not hw.reg.get_flag(StatusFlag.ERR)
 
@@ -254,20 +263,21 @@ def test_add_f32_execution(val_a, val_b, expected, desc):
 )
 def test_sub_f32_execution(val_a, val_b, expected, desc):
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push operand A, then operand B -> result is A - B
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val_a))
+    reg.set(Reg.AL, Registers.from_f32(val_a))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val_b))
+    reg.set(Reg.AL, Registers.from_f32(val_b))
     stack.push32(hw, Reg.AL)
 
     disp.execute(UserOpcode.SUB_F32)
 
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    result = Registers.to_f32(hw.reg.testharness_peek(Reg.AL))
+    result = Registers.to_f32(reg.peek(Reg.AL))
     assert pytest.approx(result, rel=1e-5) == expected, f"Failed {desc}: got {result}, expected {expected}"
     assert not hw.reg.get_flag(StatusFlag.ERR)
 
@@ -296,20 +306,21 @@ def test_sub_f32_execution(val_a, val_b, expected, desc):
 )
 def test_add_f64_execution(val_a, val_b, expected, desc):
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push operand A, then operand B
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(val_a))
+    reg.set(Reg.AX, Registers.from_f64(val_a))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(val_b))
+    reg.set(Reg.AX, Registers.from_f64(val_b))
     stack.push64(hw, Reg.AX)
 
     disp.execute(UserOpcode.ADD_F64)
 
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
-    result = Registers.to_f64(hw.reg.testharness_peek(Reg.AX))
+    result = Registers.to_f64(reg.peek(Reg.AX))
     assert pytest.approx(result, rel=1e-12) == expected, f"Failed {desc}: got {result}, expected {expected}"
     assert not hw.reg.get_flag(StatusFlag.ERR)
 
@@ -333,20 +344,21 @@ def test_add_f64_execution(val_a, val_b, expected, desc):
 )
 def test_sub_f64_execution(val_a, val_b, expected, desc):
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Push operand A, then operand B -> result is A - B
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(val_a))
+    reg.set(Reg.AX, Registers.from_f64(val_a))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(val_b))
+    reg.set(Reg.AX, Registers.from_f64(val_b))
     stack.push64(hw, Reg.AX)
 
     disp.execute(UserOpcode.SUB_F64)
 
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
-    result = Registers.to_f64(hw.reg.testharness_peek(Reg.AX))
+    result = Registers.to_f64(reg.peek(Reg.AX))
     assert pytest.approx(result, rel=1e-12) == expected, f"Failed {desc}: got {result}, expected {expected}"
     assert not hw.reg.get_flag(StatusFlag.ERR)
 
@@ -410,49 +422,51 @@ def test_batch_execution_error_early_halt():
 
 def test_mul_f64_and_div_f64_execution():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # MUL_F64: 2.5 * 4.0 = 10.0
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(2.5))
+    reg.set(Reg.AX, Registers.from_f64(2.5))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(4.0))
+    reg.set(Reg.AX, Registers.from_f64(4.0))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.MUL_F64)
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
-    assert Registers.to_f64(hw.reg.testharness_peek(Reg.AX)) == 10.0
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 10.0
 
     # DIV_F64: 10.0 / 2.0 = 5.0
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(10.0))
+    reg.set(Reg.AX, Registers.from_f64(10.0))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(2.0))
+    reg.set(Reg.AX, Registers.from_f64(2.0))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.DIV_F64)
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
-    assert Registers.to_f64(hw.reg.testharness_peek(Reg.AX)) == 5.0
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 5.0
 
 
 def test_abs_i64_and_constants():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # ABS_I64: -100 -> 100
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(-100, 8, signed=True))
+    reg.set(Reg.AX, Registers.from_int(-100, 8, signed=True))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.ABS_I64)
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == 100
+    assert Registers.to_int(reg.peek(Reg.AX)) == 100
 
     # PUSH_PI_64
     disp.execute(UserOpcode.PUSH_PI_64)
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
     import math
-    assert pytest.approx(Registers.to_f64(hw.reg.testharness_peek(Reg.AX)), rel=1e-12) == math.pi
+    assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == math.pi
 
 
 def test_user_memory_slot_errors_and_zero_mem():
@@ -480,14 +494,15 @@ def test_user_memory_slot_errors_and_zero_mem():
 
 def test_micro_ops_direct_run():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # Test ADD/ADC/SUB/SBB/CMP 32 & 64, logic, shifts, exp, and sqrt
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(10, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(5, 4))
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(100, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(50, 8))
+    reg.set(Reg.AL, Registers.from_int(10, 4))
+    reg.set(Reg.BL, Registers.from_int(5, 4))
+    reg.set(Reg.AX, Registers.from_int(100, 8))
+    reg.set(Reg.BX, Registers.from_int(50, 8))
 
     ucode = [
         MicroInstruction(MicroOp.ADC, src=Reg.BL),
@@ -544,46 +559,47 @@ def test_batch_invalid_opcode_error():
 
 def test_more_dispatcher_user_opcodes():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
     # ABS_I32: -42 -> 42
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(-42, 4, signed=True))
+    reg.set(Reg.AL, Registers.from_int(-42, 4, signed=True))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.ABS_I32)
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 42
+    assert Registers.to_int(reg.peek(Reg.AL)) == 42
 
     # MUL_F32: 1.5 * 2.0 = 3.0
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1.5))
+    reg.set(Reg.AL, Registers.from_f32(1.5))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(2.0))
+    reg.set(Reg.AL, Registers.from_f32(2.0))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.MUL_F32)
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    assert Registers.to_f32(hw.reg.testharness_peek(Reg.AL)) == 3.0
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 3.0
 
     # DIV_F32: 6.0 / 2.0 = 3.0
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(6.0))
+    reg.set(Reg.AL, Registers.from_f32(6.0))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(2.0))
+    reg.set(Reg.AL, Registers.from_f32(2.0))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.DIV_F32)
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
-    assert Registers.to_f32(hw.reg.testharness_peek(Reg.AL)) == 3.0
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 3.0
 
     # PUSH_PI_32 (LOAD_CONST 32-bit)
     disp.execute(UserOpcode.PUSH_PI_32)
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
     import math
-    assert pytest.approx(Registers.to_f32(hw.reg.testharness_peek(Reg.AL)), rel=1e-6) == math.pi
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == math.pi
 
     # Successful CP_MEM0_TOS and CP_TOS_MEM0
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x12345678, 4))
+    reg.set(Reg.AL, Registers.from_int(0x12345678, 4))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.CP_MEM0_TOS)
     # Check that memory slot 0 has 0x12345678
@@ -593,59 +609,59 @@ def test_more_dispatcher_user_opcodes():
     disp.execute(UserOpcode.CP_TOS_MEM0)
     assert hw.reg.sp == 8
     stack.pop32(hw, Reg.BL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.BL)) == 0x12345678
+    assert Registers.to_int(reg.peek(Reg.BL)) == 0x12345678
 
     # LN_F32: ln(e) = 1.0
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(math.e))
+    reg.set(Reg.AL, Registers.from_f32(math.e))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.LN_F32)
     assert hw.reg.sp == 8
     stack.pop32(hw, Reg.AL)
-    assert pytest.approx(Registers.to_f32(hw.reg.testharness_peek(Reg.AL)), rel=1e-5) == 1.0
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == 1.0
 
     # EXP_F32: exp(1.0) = e
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1.0))
+    reg.set(Reg.AL, Registers.from_f32(1.0))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.EXP_F32)
     assert hw.reg.sp == 8
     stack.pop32(hw, Reg.AL)
-    assert pytest.approx(Registers.to_f32(hw.reg.testharness_peek(Reg.AL)), rel=1e-5) == math.e
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == math.e
 
     # POW_F32: (2.0, 3.0) -> 8.0
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(2.0))
+    reg.set(Reg.AL, Registers.from_f32(2.0))
     stack.push32(hw, Reg.AL)
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(3.0))
+    reg.set(Reg.AL, Registers.from_f32(3.0))
     stack.push32(hw, Reg.AL)
     disp.execute(UserOpcode.POW_F32)
     assert hw.reg.sp == 8
     stack.pop32(hw, Reg.AL)
-    assert pytest.approx(Registers.to_f32(hw.reg.testharness_peek(Reg.AL)), rel=1e-5) == 8.0
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == 8.0
 
     # LN_F64: ln(e) = 1.0
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(math.e))
+    reg.set(Reg.AX, Registers.from_f64(math.e))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.LN_F64)
     assert hw.reg.sp == 12
     stack.pop64(hw, Reg.AX)
-    assert pytest.approx(Registers.to_f64(hw.reg.testharness_peek(Reg.AX)), rel=1e-10) == 1.0
+    assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-10) == 1.0
 
     # EXP_F64: exp(1.0) = e
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1.0))
+    reg.set(Reg.AX, Registers.from_f64(1.0))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.EXP_F64)
     assert hw.reg.sp == 12
     stack.pop64(hw, Reg.AX)
-    assert pytest.approx(Registers.to_f64(hw.reg.testharness_peek(Reg.AX)), rel=1e-10) == math.e
+    assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-10) == math.e
 
     # POW_F64: (2.0, 4.0) -> 16.0
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(2.0))
+    reg.set(Reg.AX, Registers.from_f64(2.0))
     stack.push64(hw, Reg.AX)
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(4.0))
+    reg.set(Reg.AX, Registers.from_f64(4.0))
     stack.push64(hw, Reg.AX)
     disp.execute(UserOpcode.POW_F64)
     assert hw.reg.sp == 12
     stack.pop64(hw, Reg.AX)
-    assert pytest.approx(Registers.to_f64(hw.reg.testharness_peek(Reg.AX)), rel=1e-10) == 16.0
+    assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-10) == 16.0
 
     # Unimplemented microcode lookup
     from fpu_emu.micro_code import MicroCode

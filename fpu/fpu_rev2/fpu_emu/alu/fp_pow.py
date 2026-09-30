@@ -28,20 +28,44 @@ NEG_INF_F32 = 0xFF800000
 NEG_INF_F64 = 0xFFF0000000000000
 
 
+def _read32(hw: Hardware, reg: Reg) -> int:
+    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+
+
+def _read64(hw: Hardware, reg: Reg) -> int:
+    lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
+    hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
+    return Registers.to_int(bytearray(lo) + bytearray(hi))
+
+
+def _write32(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+
+
+def _write64(hw: Hardware, reg: Reg, val: int) -> None:
+    hw.clock.tick(1)
+    lo_name = reg.name[0] + "L"
+    hi_name = reg.name[0] + "H"
+    hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+
+
 def pow_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
     """Computes dst <- dst ** src for single-precision floats.
 
     Chains synthesizable primitives: ln_f32 -> mul_f32 -> exp_f32.
     Latency: ~24 clock cycles.
     """
-    x_raw = Registers.to_int(hw.reg.get(dst))
-    y_raw = Registers.to_int(hw.reg.get(src))
+    x_raw = _read32(hw, dst)
+    y_raw = _read32(hw, src)
 
     hw.clock.tick(24)
 
     # 1. Any number to power 0.0 is 1.0 (IEEE-754)
     if (y_raw & 0x7FFFFFFF) == 0:
-        hw.reg.testharness_set(dst, Registers.from_int(ONE_F32, 4))
+        _write32(hw, dst, ONE_F32)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -51,7 +75,7 @@ def pow_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
 
     # 2. 1.0 to any power is 1.0
     if x_raw == ONE_F32:
-        hw.reg.testharness_set(dst, Registers.from_int(ONE_F32, 4))
+        _write32(hw, dst, ONE_F32)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -63,9 +87,9 @@ def pow_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
             # Division by zero: 0^(-k)
             hw.reg.set_flag(StatusFlag.ERR, True)
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
-            hw.reg.testharness_set(dst, Registers.from_int(POS_INF_F32, 4))
+            _write32(hw, dst, POS_INF_F32)
         else:
-            hw.reg.testharness_set(dst, Registers.from_int(0, 4))
+            _write32(hw, dst, 0)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             hw.reg.set_flag(StatusFlag.ERR, False)
@@ -80,7 +104,7 @@ def pow_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         if exp_y < 127:
             # |y| < 1.0 and non-zero -> non-integer exponent
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(dst, Registers.from_int(NAN_F32, 4))
+            _write32(hw, dst, NAN_F32)
             return
         elif exp_y >= 150:
             # 150 = 127 + 23: all fractional bits shifted beyond bit 0, integer is even multiple
@@ -91,25 +115,25 @@ def pow_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
             if (mant_y & ((1 << shift) - 1)) != 0:
                 # Fractional bits are present
                 hw.reg.set_flag(StatusFlag.ERR, True)
-                hw.reg.testharness_set(dst, Registers.from_int(NAN_F32, 4))
+                _write32(hw, dst, NAN_F32)
                 return
             is_odd = bool((mant_y >> shift) & 1)
 
     # 5. Compute |x|^y = exp(y * ln(|x|))
-    hw.reg.testharness_set(dst, Registers.from_int(x_raw & 0x7FFFFFFF, 4))
+    _write32(hw, dst, x_raw & 0x7FFFFFFF)
     ln_f32(hw)
 
-    hw.reg.testharness_set(src, Registers.from_int(y_raw, 4))
+    _write32(hw, src, y_raw)
     mul_f32(hw, dst, src)
 
     exp_f32(hw)
 
-    res_raw = Registers.to_int(hw.reg.get(dst))
+    res_raw = _read32(hw, dst)
 
     # Apply sign for negative base
     if is_odd and (res_raw & 0x7F800000) != 0:
         res_raw |= 0x80000000
-        hw.reg.testharness_set(dst, Registers.from_int(res_raw, 4))
+        _write32(hw, dst, res_raw)
         hw.reg.set_flag(StatusFlag.SIGN, True)
 
 
@@ -119,14 +143,14 @@ def pow_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
     Chains synthesizable primitives: ln_f64 -> mul_f64 -> exp_f64.
     Latency: ~36 clock cycles.
     """
-    x_raw = Registers.to_int(hw.reg.get(dst))
-    y_raw = Registers.to_int(hw.reg.get(src))
+    x_raw = _read64(hw, dst)
+    y_raw = _read64(hw, src)
 
     hw.clock.tick(36)
 
     # 1. Any number to power 0.0 is 1.0 (IEEE-754)
     if (y_raw & 0x7FFFFFFFFFFFFFFF) == 0:
-        hw.reg.testharness_set(dst, Registers.from_int(ONE_F64, 8))
+        _write64(hw, dst, ONE_F64)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -136,7 +160,7 @@ def pow_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
 
     # 2. 1.0 to any power is 1.0
     if x_raw == ONE_F64:
-        hw.reg.testharness_set(dst, Registers.from_int(ONE_F64, 8))
+        _write64(hw, dst, ONE_F64)
         hw.reg.set_flag(StatusFlag.ZERO, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.ERR, False)
@@ -147,9 +171,9 @@ def pow_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         if (y_raw >> 63) & 1:
             hw.reg.set_flag(StatusFlag.ERR, True)
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
-            hw.reg.testharness_set(dst, Registers.from_int(POS_INF_F64, 8))
+            _write64(hw, dst, POS_INF_F64)
         else:
-            hw.reg.testharness_set(dst, Registers.from_int(0, 8))
+            _write64(hw, dst, 0)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             hw.reg.set_flag(StatusFlag.ERR, False)
@@ -163,7 +187,7 @@ def pow_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         frac_y = y_raw & 0x000FFFFFFFFFFFFF
         if exp_y < 1023:
             hw.reg.set_flag(StatusFlag.ERR, True)
-            hw.reg.testharness_set(dst, Registers.from_int(NAN_F64, 8))
+            _write64(hw, dst, NAN_F64)
             return
         elif exp_y >= 1075:
             # 1075 = 1023 + 52
@@ -173,23 +197,23 @@ def pow_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
             mant_y = frac_y | 0x0010000000000000
             if (mant_y & ((1 << shift) - 1)) != 0:
                 hw.reg.set_flag(StatusFlag.ERR, True)
-                hw.reg.testharness_set(dst, Registers.from_int(NAN_F64, 8))
+                _write64(hw, dst, NAN_F64)
                 return
             is_odd = bool((mant_y >> shift) & 1)
 
     # 5. Compute |x|^y = exp(y * ln(|x|))
-    hw.reg.testharness_set(dst, Registers.from_int(x_raw & 0x7FFFFFFFFFFFFFFF, 8))
+    _write64(hw, dst, x_raw & 0x7FFFFFFFFFFFFFFF)
     ln_f64(hw)
 
-    hw.reg.testharness_set(src, Registers.from_int(y_raw, 8))
+    _write64(hw, src, y_raw)
     mul_f64(hw, dst, src)
 
     exp_f64(hw)
 
-    res_raw = Registers.to_int(hw.reg.get(dst))
+    res_raw = _read64(hw, dst)
 
     # Apply sign for negative base
     if is_odd and (res_raw & 0x7FF0000000000000) != 0:
         res_raw |= 0x8000000000000000
-        hw.reg.testharness_set(dst, Registers.from_int(res_raw, 8))
+        _write64(hw, dst, res_raw)
         hw.reg.set_flag(StatusFlag.SIGN, True)

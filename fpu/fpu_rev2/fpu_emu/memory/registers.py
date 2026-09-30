@@ -193,7 +193,7 @@ class Registers:
         cycles=1,
         shared_unit="bus_hb_mux",
     )
-    def set_hb_mux(
+    def set_hb_bus_mux(
         self,
         half: Union[HalfSelect, str, int],
         src: Union[Reg, str],
@@ -408,145 +408,6 @@ class Registers:
         self._status[0] = 0
 
     # -------------------------------------------------------------------------
-    # Public Access & Test Bench Backdoors
-    # -------------------------------------------------------------------------
-    # def get(self, reg: Union[Reg, str]) -> bytearray:
-    #     """Gets register contents (delegates to peek)."""
-    #     return self.peek(reg)
-    #
-    # def set(
-    #     self,
-    #     reg: Union[Reg, str],
-    #     val: Union[bytes, bytearray, int],
-    # ) -> None:
-    #     """Sets register contents (delegates to load_test_vector)."""
-    #     self.load_test_vector(reg, val)
-
-    def testharness_set(
-        self,
-        reg: Union[Reg, str],
-        val: Union[bytes, bytearray, int],
-    ) -> None:
-        """Sets register contents (delegates to load_test_vector)."""
-        self.load_test_vector(reg, val)
-
-    # -------------------------------------------------------------------------
-    # Test Fixture Backdoors (Explicitly labeled for non-hardware test code)
-    # -------------------------------------------------------------------------
-    def testharness_peek(self, reg: Union[Reg, str]) -> bytearray:
-        """Test fixture backdoor: inspects raw register bytes bypassing bus muxes."""
-        if isinstance(reg, str):
-            reg = Reg[reg.upper()]
-
-        if reg == Reg.AL:
-            return bytearray(self._al)
-        elif reg == Reg.AH:
-            return bytearray(self._ah)
-        elif reg == Reg.BL:
-            return bytearray(self._bl)
-        elif reg == Reg.BH:
-            return bytearray(self._bh)
-        elif reg == Reg.DL:
-            return bytearray(self._dl)
-        elif reg == Reg.DH:
-            return bytearray(self._dh)
-        elif reg == Reg.FL:
-            return bytearray(self._fl)
-        elif reg == Reg.FH:
-            return bytearray(self._fh)
-        elif reg == Reg.AX:
-            return bytearray(self._al + self._ah)
-        elif reg == Reg.BX:
-            return bytearray(self._bl + self._bh)
-        elif reg == Reg.DX:
-            return bytearray(self._dl + self._dh)
-        elif reg == Reg.FX:
-            return bytearray(self._fl + self._fh)
-        elif reg == Reg.EA:
-            return bytearray(self._ea)
-        elif reg == Reg.EB:
-            return bytearray(self._eb)
-        elif reg == Reg.C:
-            return bytearray(self._c)
-        elif reg == Reg.STATUS:
-            return bytearray(self._status)
-        elif reg == Reg.SP:
-            return bytearray(self._sp)
-        elif reg == Reg.OSP:
-            return bytearray(self._osp)
-        elif reg == Reg.UPC:
-            return bytearray(self._upc)
-        else:
-            raise ValueError(f"Unsupported register: {reg}")
-
-    def load_test_vector(
-        self,
-        reg: Union[Reg, str],
-        val: Union[bytes, bytearray, int],
-    ) -> None:
-        """Test fixture backdoor: sets register state directly bypassing bus timing."""
-        if isinstance(reg, str):
-            reg = Reg[reg.upper()]
-
-        if isinstance(val, int):
-            length = reg.byte_length
-            val = val.to_bytes(length, byteorder="little", signed=(val < 0))
-
-        if not isinstance(val, (bytes, bytearray)):
-            raise TypeError(f"val must be bytes, bytearray, or int, got {type(val).__name__}")
-
-        expected_len = reg.byte_length
-        if len(val) != expected_len:
-            raise ValueError(
-                f"Expected {expected_len} bytes for register {reg.name}, got {len(val)}"
-            )
-
-        if reg == Reg.AL:
-            self._al[:] = val
-        elif reg == Reg.AH:
-            self._ah[:] = val
-        elif reg == Reg.BL:
-            self._bl[:] = val
-        elif reg == Reg.BH:
-            self._bh[:] = val
-        elif reg == Reg.DL:
-            self._dl[:] = val
-        elif reg == Reg.DH:
-            self._dh[:] = val
-        elif reg == Reg.FL:
-            self._fl[:] = val
-        elif reg == Reg.FH:
-            self._fh[:] = val
-        elif reg == Reg.AX:
-            self._al[:] = val[0:4]
-            self._ah[:] = val[4:8]
-        elif reg == Reg.BX:
-            self._bl[:] = val[0:4]
-            self._bh[:] = val[4:8]
-        elif reg == Reg.DX:
-            self._dl[:] = val[0:4]
-            self._dh[:] = val[4:8]
-        elif reg == Reg.FX:
-            self._fl[:] = val[0:4]
-            self._fh[:] = val[4:8]
-        elif reg == Reg.EA:
-            self._ea[:] = val
-        elif reg == Reg.EB:
-            self._eb[:] = val
-        elif reg == Reg.C:
-            self._c[0] = val[0] & 0x3F
-        elif reg == Reg.STATUS:
-            self._status[0] = val[0]
-        elif reg == Reg.SP:
-            self._sp[0] = val[0]
-        elif reg == Reg.OSP:
-            self._osp[0] = val[0]
-        elif reg == Reg.UPC:
-            self.upc = val[0] | (val[1] << 8)
-        else:
-            raise ValueError(f"Unsupported register: {reg}")
-
-    # -------------------------------------------------------------------------
     # Hardware Reset
     # -------------------------------------------------------------------------
     def reset(self):
@@ -644,10 +505,10 @@ class Registers:
 
         return (
             f"=== Register File Dump ===\n"
-            f"AX: 0x{self.to_int(self.testharness_peek(Reg.AX)):016X}  (AH: 0x{self.to_int(self.testharness_peek(Reg.AH)):08X}, AL: 0x{self.to_int(self.testharness_peek(Reg.AL)):08X})\n"
-            f"BX: 0x{self.to_int(self.testharness_peek(Reg.BX)):016X}  (BH: 0x{self.to_int(self.testharness_peek(Reg.BH)):08X}, BL: 0x{self.to_int(self.testharness_peek(Reg.BL)):08X})\n"
-            f"DX: 0x{self.to_int(self.testharness_peek(Reg.DX)):016X}  (DH: 0x{self.to_int(self.testharness_peek(Reg.DH)):08X}, DL: 0x{self.to_int(self.testharness_peek(Reg.DL)):08X})\n"
-            f"FX: 0x{self.to_int(self.testharness_peek(Reg.FX)):016X}  (FH: 0x{self.to_int(self.testharness_peek(Reg.FH)):08X}, FL: 0x{self.to_int(self.testharness_peek(Reg.FL)):08X})\n"
+            f"AX: 0x{self.to_int(self._al + self._ah):016X}  (AH: 0x{self.to_int(self._ah):08X}, AL: 0x{self.to_int(self._al):08X})\n"
+            f"BX: 0x{self.to_int(self._bl + self._bh):016X}  (BH: 0x{self.to_int(self._bh):08X}, BL: 0x{self.to_int(self._bl):08X})\n"
+            f"DX: 0x{self.to_int(self._dl + self._dh):016X}  (DH: 0x{self.to_int(self._dh):08X}, DL: 0x{self.to_int(self._dl):08X})\n"
+            f"FX: 0x{self.to_int(self._fl + self._fh):016X}  (FH: 0x{self.to_int(self._fh):08X}, FL: 0x{self.to_int(self._fl):08X})\n"
             f"EA: 0x{self.ea:03X}  EB: 0x{self.eb:03X}  C: 0x{self.c:02X}\n"
             f"SP: 0x{self.sp:02X}  OSP: 0x{self.osp:02X}  UPC: 0x{self.upc:03X}\n"
             f"STATUS: 0x{self.status:02X} [{flg_str}]\n"

@@ -43,7 +43,7 @@ VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 from enum import Enum, auto
 from typing import Optional, Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
 from fpu_emu.fpga_resource import fpga_resource
 
 
@@ -118,11 +118,19 @@ def shifter_core(
 def _apply_shift32(hw: Hardware, op: ShiftOp, shift: Optional[int], reg: Reg):
     """Executes a 32-bit shift on `reg` (default AL) taking 1 clock cycle."""
     hw.clock.tick(1)
+    if reg in (Reg.AL, Reg.AH):
+        half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+        hw.reg.set_ha_bus_mux(half)
+        val_bytes = hw.reg.read_ha_bus()
+    else:
+        half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+        hw.reg.set_hb_bus_mux(half, reg)
+        val_bytes = hw.reg.read_hb_bus()
+
     shift_count = shift if shift is not None else hw.reg.c
-    val_bytes = hw.reg.get(reg)
     res_bytes, cf, zf, sf, vf = shifter_core(val_bytes, shift_count, op, width_bytes=4)
 
-    hw.reg.testharness_set(reg, res_bytes)
+    hw.reg.set_res_bus(reg, res_bytes)
     hw.reg.set_flag(StatusFlag.CARRY, cf)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
@@ -131,12 +139,34 @@ def _apply_shift32(hw: Hardware, op: ShiftOp, shift: Optional[int], reg: Reg):
 
 def _apply_shift64(hw: Hardware, op: ShiftOp, shift: Optional[int], reg: Reg):
     """Executes a 64-bit compound shift on `reg` (default AX) taking 2 clock cycles."""
-    hw.clock.tick(2)
+    if reg == Reg.AX:
+        lo_bytes = bytearray(hw.reg._al)
+        hi_bytes = bytearray(hw.reg._ah)
+    elif reg == Reg.BX:
+        lo_bytes = bytearray(hw.reg._bl)
+        hi_bytes = bytearray(hw.reg._bh)
+    elif reg == Reg.DX:
+        lo_bytes = bytearray(hw.reg._dl)
+        hi_bytes = bytearray(hw.reg._dh)
+    else:
+        lo_bytes = bytearray(hw.reg._fl)
+        hi_bytes = bytearray(hw.reg._fh)
+
+    val_bytes = lo_bytes + hi_bytes
     shift_count = shift if shift is not None else hw.reg.c
-    val_bytes = hw.reg.get(reg)
     res_bytes, cf, zf, sf, vf = shifter_core(val_bytes, shift_count, op, width_bytes=8)
 
-    hw.reg.testharness_set(reg, res_bytes)
+    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
+    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
+
+    # Cycle 1: Latch LO
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(lo_reg, res_bytes[:4])
+
+    # Cycle 2: Latch HI
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(hi_reg, res_bytes[4:])
+
     hw.reg.set_flag(StatusFlag.CARRY, cf)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
@@ -180,11 +210,20 @@ def rrc32(hw: Hardware, reg: Reg = Reg.AL):
     Sets outgoing CF <- reg[0].
     """
     hw.clock.tick(1)
-    val = Registers.to_int(hw.reg.get(reg))
+    if reg in (Reg.AL, Reg.AH):
+        half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+        hw.reg.set_ha_bus_mux(half)
+        val_bytes = hw.reg.read_ha_bus()
+    else:
+        half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+        hw.reg.set_hb_bus_mux(half, reg)
+        val_bytes = hw.reg.read_hb_bus()
+
+    val = Registers.to_int(val_bytes)
     in_carry = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
     out_carry = bool(val & 1)
     res = (in_carry << 31) | (val >> 1)
-    hw.reg.testharness_set(reg, Registers.from_int(res, 4))
+    hw.reg.set_res_bus(reg, Registers.from_int(res, 4))
     hw.reg.set_flag(StatusFlag.CARRY, out_carry)
     hw.reg.set_flag(StatusFlag.ZERO, res == 0)
     hw.reg.set_flag(StatusFlag.SIGN, bool(res & 0x80000000))
@@ -196,12 +235,36 @@ def rrc64(hw: Hardware, reg: Reg = Reg.AX):
     Shifts 64-bit reg right by 1 bit, with incoming CF shifting into bit 63.
     Sets outgoing CF <- reg[0].
     """
-    hw.clock.tick(2)
-    val = Registers.to_int(hw.reg.get(reg))
+    if reg == Reg.AX:
+        lo_bytes = bytearray(hw.reg._al)
+        hi_bytes = bytearray(hw.reg._ah)
+    elif reg == Reg.BX:
+        lo_bytes = bytearray(hw.reg._bl)
+        hi_bytes = bytearray(hw.reg._bh)
+    elif reg == Reg.DX:
+        lo_bytes = bytearray(hw.reg._dl)
+        hi_bytes = bytearray(hw.reg._dh)
+    else:
+        lo_bytes = bytearray(hw.reg._fl)
+        hi_bytes = bytearray(hw.reg._fh)
+
+    val = Registers.to_int(lo_bytes + hi_bytes)
     in_carry = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
     out_carry = bool(val & 1)
     res = (in_carry << 63) | (val >> 1)
-    hw.reg.testharness_set(reg, Registers.from_int(res, 8))
+    res_bytes = Registers.from_int(res, 8)
+
+    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
+    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
+
+    # Cycle 1: Latch LO
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(lo_reg, res_bytes[:4])
+
+    # Cycle 2: Latch HI
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(hi_reg, res_bytes[4:])
+
     hw.reg.set_flag(StatusFlag.CARRY, out_carry)
     hw.reg.set_flag(StatusFlag.ZERO, res == 0)
     hw.reg.set_flag(StatusFlag.SIGN, bool(res & 0x8000000000000000))

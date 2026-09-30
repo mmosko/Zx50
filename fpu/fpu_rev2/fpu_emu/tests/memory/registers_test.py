@@ -13,27 +13,24 @@ from fpu_emu.memory.registers import (
 )
 
 
+from fpu_emu.tests.testharness import RegTestHarness
+
+
 class TestRegisters(unittest.TestCase):
     """Test suite for physical FPU register file and bus timing rules."""
 
     def setUp(self):
         self.clock = Clock()
         self.regs = Registers(clock=self.clock)
+        self.harness = RegTestHarness(self.regs)
 
     def test_initial_state(self):
         """Verify registers are initialized to zero and status flags are reset."""
         for r in (Reg.AL, Reg.AH, Reg.BL, Reg.BH, Reg.DL, Reg.DH, Reg.FL, Reg.FH):
-            self.assertEqual(self.regs.testharness_peek(r), bytearray(4))
-        self.assertEqual(self.regs.testharness_peek(Reg.EA), bytearray(2))
-        self.assertEqual(self.regs.testharness_peek(Reg.EB), bytearray(2))
-        self.assertEqual(self.regs.testharness_peek(Reg.C), bytearray(1))
-
-        # Allowed getters
-        self.assertEqual(self.regs.get(Reg.STATUS), bytearray(1))
-        self.assertEqual(self.regs.get(Reg.SP), bytearray(1))
-        self.assertEqual(self.regs.get(Reg.OSP), bytearray(1))
-        self.assertEqual(self.regs.get(Reg.UPC), bytearray(2))
-        self.assertEqual(self.regs.get(Reg.C), bytearray(1))
+            self.assertEqual(self.harness.peek(r), bytearray(4))
+        self.assertEqual(self.harness.peek(Reg.EA), bytearray(2))
+        self.assertEqual(self.harness.peek(Reg.EB), bytearray(2))
+        self.assertEqual(self.harness.peek(Reg.C), bytearray(1))
 
         self.assertEqual(self.regs.status, 0)
         self.assertEqual(self.regs.sp, 0)
@@ -48,8 +45,8 @@ class TestRegisters(unittest.TestCase):
 
     def test_ha_bus_mux_and_read(self):
         """Test HA_BUS selecting AL (LO) vs AH (HI)."""
-        self.regs.load_test_vector(Reg.AL, 0x11223344)
-        self.regs.load_test_vector(Reg.AH, 0x55667788)
+        self.harness.load_test_vector(Reg.AL, 0x11223344)
+        self.harness.load_test_vector(Reg.AH, 0x55667788)
 
         # Before configuring HA_BUS MUX, read raises HardwareBusError
         with self.assertRaises(HardwareBusError):
@@ -66,31 +63,31 @@ class TestRegisters(unittest.TestCase):
 
     def test_hb_bus_mux_and_read(self):
         """Test HB_BUS selecting halves of BX, DX, FX, AX, EA, EB, C."""
-        self.regs.load_test_vector(Reg.BX, 0x0102030405060708)
-        self.regs.load_test_vector(Reg.DX, 0x0A0B0C0D0E0F1011)
+        self.harness.load_test_vector(Reg.BX, 0x0102030405060708)
+        self.harness.load_test_vector(Reg.DX, 0x0A0B0C0D0E0F1011)
 
         # Before configuring HB_BUS MUX, read raises HardwareBusError
         with self.assertRaises(HardwareBusError):
             self.regs.read_hb_bus()
 
         # Read BL (BX, LO)
-        self.regs.set_hb_mux(HalfSelect.LO, Reg.BX)
+        self.regs.set_hb_bus_mux(HalfSelect.LO, Reg.BX)
         self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x05060708)
 
         # Advance cycle, read BH (BX, HI)
         self.clock.tick(1)
-        self.regs.set_hb_mux(HalfSelect.HI, Reg.BX)
+        self.regs.set_hb_bus_mux(HalfSelect.HI, Reg.BX)
         self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x01020304)
 
         # Advance cycle, read DL
         self.clock.tick(1)
-        self.regs.set_hb_mux(HalfSelect.LO, Reg.DX)
+        self.regs.set_hb_bus_mux(HalfSelect.LO, Reg.DX)
         self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x0E0F1011)
 
         # Read EA (zero-extended 12 bits)
         self.clock.tick(1)
         self.regs.ea = 0x3FF
-        self.regs.set_hb_mux(HalfSelect.LO, Reg.EA)
+        self.regs.set_hb_bus_mux(HalfSelect.LO, Reg.EA)
         self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x3FF)
 
     def test_ha_bus_timing_conflict(self):
@@ -105,19 +102,19 @@ class TestRegisters(unittest.TestCase):
 
     def test_hb_bus_timing_conflict(self):
         """Verify calling set_hb_mux twice in same clock cycle raises HardwareTimingConflictError."""
-        self.regs.set_hb_mux(HalfSelect.LO, Reg.BX)
+        self.regs.set_hb_bus_mux(HalfSelect.LO, Reg.BX)
         with self.assertRaises(HardwareTimingConflictError):
-            self.regs.set_hb_mux(HalfSelect.HI, Reg.BX)
+            self.regs.set_hb_bus_mux(HalfSelect.HI, Reg.BX)
 
         # Advances cycle -> should succeed
         self.clock.tick(1)
-        self.regs.set_hb_mux(HalfSelect.HI, Reg.DX)
+        self.regs.set_hb_bus_mux(HalfSelect.HI, Reg.DX)
 
     def test_res_bus_writeback_and_timing_conflict(self):
         """Verify set_res_bus writes to destination and forbids multiple writes per cycle."""
         # Cycle 0: write AL
         self.regs.set_res_bus(Reg.AL, 0xAABBCCDD)
-        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AL)), 0xAABBCCDD)
+        self.assertEqual(Registers.to_int(self.harness.peek(Reg.AL)), 0xAABBCCDD)
 
         # Second write in cycle 0 raises HardwareTimingConflictError
         with self.assertRaises(HardwareTimingConflictError):
@@ -126,7 +123,7 @@ class TestRegisters(unittest.TestCase):
         # Advance cycle -> write AH
         self.clock.tick(1)
         self.regs.set_res_bus(Reg.AH, 0x11223344)
-        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AH)), 0x11223344)
+        self.assertEqual(Registers.to_int(self.harness.peek(Reg.AH)), 0x11223344)
 
     def test_status_flags(self):
         """Test status flag manipulation."""
@@ -156,11 +153,11 @@ class TestRegisters(unittest.TestCase):
 
     def test_reset(self):
         """Test hardware reset clears all registers and timing tracking."""
-        self.regs.load_test_vector(Reg.AL, 0xFFFFFFFF)
+        self.harness.load_test_vector(Reg.AL, 0xFFFFFFFF)
         self.regs.set_ha_bus_mux(HalfSelect.LO)
         self.regs.reset()
 
-        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AL)), 0)
+        self.assertEqual(Registers.to_int(self.harness.peek(Reg.AL)), 0)
         # HA bus MUX should be reset
         with self.assertRaises(HardwareBusError):
             self.regs.read_ha_bus()

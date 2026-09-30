@@ -2,7 +2,8 @@
 
 from typing import Optional
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg
+from fpu_emu.memory.registers import Reg, Registers
+
 from fpu_emu.alu import adder
 from fpu_emu.alu import shifter
 from fpu_emu.alu import lzc
@@ -236,7 +237,6 @@ class Alu:
     # Floating-Point Square Root API
     # -------------------------------------------------------------------------
     def sqrt_exp32(self, exp_reg: Reg = Reg.EA) -> bool:
-        from fpu_emu.memory.registers import Registers
         ea = self._hw.reg.ea if exp_reg == Reg.EA else self._hw.reg.eb
         new_ea, is_odd = fp_sqrt.sqrt_exp_f32(ea)
         if exp_reg == Reg.EA:
@@ -246,7 +246,6 @@ class Alu:
         return is_odd
 
     def sqrt_exp64(self, exp_reg: Reg = Reg.EA) -> bool:
-        from fpu_emu.memory.registers import Registers
         ea = self._hw.reg.ea if exp_reg == Reg.EA else self._hw.reg.eb
         new_ea, is_odd = fp_sqrt.sqrt_exp_f64(ea)
         if exp_reg == Reg.EA:
@@ -256,14 +255,17 @@ class Alu:
         return is_odd
 
     def sqrt_core32(self, is_odd: bool, dst: Reg = Reg.AL):
-        from fpu_emu.memory.registers import Registers
         res = fp_sqrt.sqrt_mantissa_core_f32(self._hw, is_odd=is_odd)
-        self._hw.reg.testharness_set(dst, Registers.from_int(res, 4))
+        self._hw.clock.tick(1)
+        self._hw.reg.set_res_bus(dst, Registers.from_int(res, 4))
 
     def sqrt_core64(self, is_odd: bool, dst: Reg = Reg.AX):
-        from fpu_emu.memory.registers import Registers
         res = fp_sqrt.sqrt_mantissa_core_f64(self._hw, is_odd=is_odd)
-        self._hw.reg.testharness_set(dst, Registers.from_int(res, 8))
+        res_bytes = Registers.from_int(res, 8)
+        self._hw.clock.tick(1)
+        self._hw.reg.set_res_bus(Reg.AL, res_bytes[0:4])
+        self._hw.clock.tick(1)
+        self._hw.reg.set_res_bus(Reg.AH, res_bytes[4:8])
 
     # -------------------------------------------------------------------------
     # Floating-Point Natural Log, Exponential, and Power API

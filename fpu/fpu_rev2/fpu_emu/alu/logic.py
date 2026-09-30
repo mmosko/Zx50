@@ -47,7 +47,7 @@ VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 from enum import Enum, auto
 from typing import Optional, Set, Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
 from fpu_emu.fpga_resource import fpga_resource
 
 # Supported width constants
@@ -121,20 +121,43 @@ def logic_core(
     return Registers.from_int(res, width_bytes), zf, sf
 
 
+def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
+    if src in (Reg.BX, Reg.DX, Reg.FX):
+        if half is None:
+            raise ValueError(f"64-bit source {src} requires half selection")
+        hw.reg.set_hb_bus_mux(half, src)
+    elif src in (Reg.BL, Reg.DL, Reg.FL):
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
+    elif src in (Reg.BH, Reg.DH, Reg.FH):
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, src)
+    else:
+        raise ValueError(f"Invalid source register for HB_BUS: {src}")
+
+
 def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     """Executes a 32-bit bitwise logic operation taking 1 clock cycle."""
+    if dst == Reg.AL:
+        ha_half = HalfSelect.LO
+    elif dst == Reg.AH:
+        ha_half = HalfSelect.HI
+    else:
+        raise ValueError(f"Invalid 32-bit logic destination register: {dst}")
+
     hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(ha_half)
+    a_bytes = hw.reg.read_ha_bus()
+
     if op != LogicOp.NOT:
         if src is None or src not in VALID_SRC_32:
             raise ValueError(f"Invalid 32-bit logic source register: {src}")
-        b_bytes = hw.reg.get(src)
+        _select_hb(hw, src)
+        b_bytes = hw.reg.read_hb_bus()
     else:
         b_bytes = None
 
-    a_bytes = hw.reg.get(dst)
     res_bytes, zf, sf = logic_core(a_bytes, b_bytes, op, width_bytes=WIDTH_32_BYTES)
 
-    hw.reg.testharness_set(dst, res_bytes)
+    hw.reg.set_res_bus(dst, res_bytes)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
     hw.reg.set_flag(StatusFlag.CARRY, False)
@@ -143,20 +166,37 @@ def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
 
 def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     """Executes a 64-bit bitwise logic operation taking 2 clock cycles."""
-    hw.clock.tick(2)
+    if dst != Reg.AX:
+        raise ValueError(f"Invalid 64-bit logic destination register: {dst}")
+    if op != LogicOp.NOT and (src is None or src not in VALID_SRC_64):
+        raise ValueError(f"Invalid 64-bit logic source register: {src}")
+
+    # Cycle 1: AL = AL op src_lo
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    a_lo = hw.reg.read_ha_bus()
     if op != LogicOp.NOT:
-        if src is None or src not in VALID_SRC_64:
-            raise ValueError(f"Invalid 64-bit logic source register: {src}")
-        b_bytes = hw.reg.get(src)
+        _select_hb(hw, src, HalfSelect.LO)
+        b_lo = hw.reg.read_hb_bus()
     else:
-        b_bytes = None
+        b_lo = None
+    res_lo, zf_lo, _ = logic_core(a_lo, b_lo, op, width_bytes=WIDTH_32_BYTES)
+    hw.reg.set_res_bus(Reg.AL, res_lo)
 
-    a_bytes = hw.reg.get(dst)
-    res_bytes, zf, sf = logic_core(a_bytes, b_bytes, op, width_bytes=WIDTH_64_BYTES)
+    # Cycle 2: AH = AH op src_hi
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    a_hi = hw.reg.read_ha_bus()
+    if op != LogicOp.NOT:
+        _select_hb(hw, src, HalfSelect.HI)
+        b_hi = hw.reg.read_hb_bus()
+    else:
+        b_hi = None
+    res_hi, zf_hi, sf_hi = logic_core(a_hi, b_hi, op, width_bytes=WIDTH_32_BYTES)
+    hw.reg.set_res_bus(Reg.AH, res_hi)
 
-    hw.reg.testharness_set(dst, res_bytes)
-    hw.reg.set_flag(StatusFlag.ZERO, zf)
-    hw.reg.set_flag(StatusFlag.SIGN, sf)
+    hw.reg.set_flag(StatusFlag.ZERO, zf_lo and zf_hi)
+    hw.reg.set_flag(StatusFlag.SIGN, sf_hi)
     hw.reg.set_flag(StatusFlag.CARRY, False)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
 
@@ -217,16 +257,31 @@ def chs(hw: Hardware, reg: Reg = Reg.AH):
     Sets SF <- sign bit.
     """
     if reg in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
-        hw.clock.tick(2)
-        val = Registers.to_int(hw.reg.get(reg))
-        val ^= (1 << 63)
-        hw.reg.testharness_set(reg, Registers.from_int(val, 8))
-        hw.reg.set_flag(StatusFlag.SIGN, bool(val & (1 << 63)))
+        hw.clock.tick(1)
+        hw.clock.tick(1)
+        if reg == Reg.AX:
+            hw.reg.set_ha_bus_mux(HalfSelect.HI)
+            val_bytes = hw.reg.read_ha_bus()
+            hi_reg = Reg.AH
+        else:
+            hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+            val_bytes = hw.reg.read_hb_bus()
+            hi_reg = Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH)
+        val = Registers.to_int(val_bytes) ^ 0x80000000
+        hw.reg.set_res_bus(hi_reg, Registers.from_int(val, 4))
+        hw.reg.set_flag(StatusFlag.SIGN, bool(val & 0x80000000))
     else:
         hw.clock.tick(1)
-        val = Registers.to_int(hw.reg.get(reg))
-        val ^= 0x80000000
-        hw.reg.testharness_set(reg, Registers.from_int(val, 4))
+        if reg in (Reg.AL, Reg.AH):
+            half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+            hw.reg.set_ha_bus_mux(half)
+            val_bytes = hw.reg.read_ha_bus()
+        else:
+            half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+            hw.reg.set_hb_bus_mux(half, reg)
+            val_bytes = hw.reg.read_hb_bus()
+        val = Registers.to_int(val_bytes) ^ 0x80000000
+        hw.reg.set_res_bus(reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, bool(val & 0x80000000))
 
 
@@ -237,16 +292,31 @@ def abs_val(hw: Hardware, reg: Reg = Reg.AH):
     Clears SF <- 0.
     """
     if reg in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
-        hw.clock.tick(2)
-        val = Registers.to_int(hw.reg.get(reg))
-        val &= 0x7FFFFFFFFFFFFFFF
-        hw.reg.testharness_set(reg, Registers.from_int(val, 8))
+        hw.clock.tick(1)
+        hw.clock.tick(1)
+        if reg == Reg.AX:
+            hw.reg.set_ha_bus_mux(HalfSelect.HI)
+            val_bytes = hw.reg.read_ha_bus()
+            hi_reg = Reg.AH
+        else:
+            hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+            val_bytes = hw.reg.read_hb_bus()
+            hi_reg = Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH)
+        val = Registers.to_int(val_bytes) & 0x7FFFFFFF
+        hw.reg.set_res_bus(hi_reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
         hw.clock.tick(1)
-        val = Registers.to_int(hw.reg.get(reg))
-        val &= 0x7FFFFFFF
-        hw.reg.testharness_set(reg, Registers.from_int(val, 4))
+        if reg in (Reg.AL, Reg.AH):
+            half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+            hw.reg.set_ha_bus_mux(half)
+            val_bytes = hw.reg.read_ha_bus()
+        else:
+            half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+            hw.reg.set_hb_bus_mux(half, reg)
+            val_bytes = hw.reg.read_hb_bus()
+        val = Registers.to_int(val_bytes) & 0x7FFFFFFF
+        hw.reg.set_res_bus(reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, False)
 
 
@@ -256,14 +326,23 @@ def abs_int32(hw: Hardware, reg: Reg = Reg.AL):
     If val < 0, computes -val. If val == 0x80000000 (-2147483648), sets OVERFLOW = 1.
     """
     hw.clock.tick(1)
-    val = Registers.to_int(hw.reg.get(reg))
+    if reg in (Reg.AL, Reg.AH):
+        half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
+        hw.reg.set_ha_bus_mux(half)
+        val_bytes = hw.reg.read_ha_bus()
+    else:
+        half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
+        hw.reg.set_hb_bus_mux(half, reg)
+        val_bytes = hw.reg.read_hb_bus()
+
+    val = Registers.to_int(val_bytes)
     if val & 0x80000000:
         if val == 0x80000000:
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
             hw.reg.set_flag(StatusFlag.SIGN, True)
         else:
             val = ((~val) + 1) & 0xFFFFFFFF
-            hw.reg.testharness_set(reg, Registers.from_int(val, 4))
+            hw.reg.set_res_bus(reg, Registers.from_int(val, 4))
             hw.reg.set_flag(StatusFlag.OVERFLOW, False)
             hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
@@ -279,18 +358,42 @@ def abs_int64(hw: Hardware, reg: Reg = Reg.AX):
 
     If val < 0, computes -val. If val == 0x80000000_00000000, sets OVERFLOW = 1.
     """
-    hw.clock.tick(2)
-    val = Registers.to_int(hw.reg.get(reg))
+    # Sample current 64-bit value:
+    if reg == Reg.AX:
+        lo_bytes = bytearray(hw.reg._al)
+        hi_bytes = bytearray(hw.reg._ah)
+    elif reg == Reg.BX:
+        lo_bytes = bytearray(hw.reg._bl)
+        hi_bytes = bytearray(hw.reg._bh)
+    elif reg == Reg.DX:
+        lo_bytes = bytearray(hw.reg._dl)
+        hi_bytes = bytearray(hw.reg._dh)
+    else:
+        lo_bytes = bytearray(hw.reg._fl)
+        hi_bytes = bytearray(hw.reg._fh)
+
+    val = Registers.to_int(lo_bytes + hi_bytes)
+    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
+    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
+
     if val & (1 << 63):
         if val == (1 << 63):
+            hw.clock.tick(1)
+            hw.clock.tick(1)
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
             hw.reg.set_flag(StatusFlag.SIGN, True)
         else:
-            val = ((~val) + 1) & 0xFFFFFFFFFFFFFFFF
-            hw.reg.testharness_set(reg, Registers.from_int(val, 8))
+            neg_val = ((~val) + 1) & 0xFFFFFFFFFFFFFFFF
+            res_bytes = Registers.from_int(neg_val, 8)
+            hw.clock.tick(1)
+            hw.reg.set_res_bus(lo_reg, res_bytes[:4])
+            hw.clock.tick(1)
+            hw.reg.set_res_bus(hi_reg, res_bytes[4:])
             hw.reg.set_flag(StatusFlag.OVERFLOW, False)
             hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
+        hw.clock.tick(1)
+        hw.clock.tick(1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)
 

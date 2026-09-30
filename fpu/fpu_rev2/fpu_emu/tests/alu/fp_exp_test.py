@@ -6,6 +6,7 @@ from fpu_emu.alu.alu import Alu
 from fpu_emu.alu.fp_exp import exp_f32, exp_f64, exp2_frac_core
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 @pytest.mark.parametrize(
@@ -23,10 +24,11 @@ from fpu_emu.memory.registers import Reg, Registers, StatusFlag
 )
 def test_exp_f32_normal_values(x, expected, tol):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(x))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(x))
     exp_f32(hw)
 
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert math.isclose(res, expected, rel_tol=tol, abs_tol=tol)
     assert not hw.reg.get_flag(StatusFlag.ERR)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
@@ -49,10 +51,11 @@ def test_exp_f32_normal_values(x, expected, tol):
 )
 def test_exp_f64_normal_values(x, expected, tol):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(x))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(x))
     exp_f64(hw)
 
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert math.isclose(res, expected, rel_tol=tol, abs_tol=tol)
     assert not hw.reg.get_flag(StatusFlag.ERR)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
@@ -62,10 +65,11 @@ def test_exp_f64_normal_values(x, expected, tol):
 
 def test_exp_f32_overflow():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(100.0))  # e^100 overflows float32
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(100.0))  # e^100 overflows float32
     exp_f32(hw)
 
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert math.isinf(res) and res > 0
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -73,10 +77,11 @@ def test_exp_f32_overflow():
 
 def test_exp_f64_overflow():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1000.0))  # e^1000 overflows float64
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(1000.0))  # e^1000 overflows float64
     exp_f64(hw)
 
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert math.isinf(res) and res > 0
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -84,10 +89,11 @@ def test_exp_f64_overflow():
 
 def test_exp_f32_underflow():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(-150.0))  # e^(-150) underflows float32
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_f32(-150.0))  # e^(-150) underflows float32
     exp_f32(hw)
 
-    res = Registers.to_f32(hw.reg.get(Reg.AL))
+    res = Registers.to_f32(reg.peek(Reg.AL))
     assert res == 0.0
     assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
     assert hw.reg.get_flag(StatusFlag.ZERO)
@@ -95,10 +101,11 @@ def test_exp_f32_underflow():
 
 def test_exp_f64_underflow():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(-1100.0))  # e^(-1100) underflows float64
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_f64(-1100.0))  # e^(-1100) underflows float64
     exp_f64(hw)
 
-    res = Registers.to_f64(hw.reg.get(Reg.AX))
+    res = Registers.to_f64(reg.peek(Reg.AX))
     assert res == 0.0
     assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
     assert hw.reg.get_flag(StatusFlag.ZERO)
@@ -106,61 +113,64 @@ def test_exp_f64_underflow():
 
 def test_exp_special_values_f32():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # NaN
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(float("nan")))
+    reg.set(Reg.AL, Registers.from_f32(float("nan")))
     exp_f32(hw)
-    assert math.isnan(Registers.to_f32(hw.reg.get(Reg.AL)))
+    assert math.isnan(Registers.to_f32(reg.peek(Reg.AL)))
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # +Inf
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(float("inf")))
+    reg.set(Reg.AL, Registers.from_f32(float("inf")))
     exp_f32(hw)
-    assert math.isinf(Registers.to_f32(hw.reg.get(Reg.AL)))
+    assert math.isinf(Registers.to_f32(reg.peek(Reg.AL)))
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # -Inf
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(float("-inf")))
+    reg.set(Reg.AL, Registers.from_f32(float("-inf")))
     exp_f32(hw)
-    assert Registers.to_f32(hw.reg.get(Reg.AL)) == 0.0
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 0.0
     assert hw.reg.get_flag(StatusFlag.ZERO)
 
 
 def test_exp_special_values_f64():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
 
     # NaN
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(float("nan")))
+    reg.set(Reg.AX, Registers.from_f64(float("nan")))
     exp_f64(hw)
-    assert math.isnan(Registers.to_f64(hw.reg.get(Reg.AX)))
+    assert math.isnan(Registers.to_f64(reg.peek(Reg.AX)))
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # +Inf
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(float("inf")))
+    reg.set(Reg.AX, Registers.from_f64(float("inf")))
     exp_f64(hw)
-    assert math.isinf(Registers.to_f64(hw.reg.get(Reg.AX)))
+    assert math.isinf(Registers.to_f64(reg.peek(Reg.AX)))
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # -Inf
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(float("-inf")))
+    reg.set(Reg.AX, Registers.from_f64(float("-inf")))
     exp_f64(hw)
-    assert Registers.to_f64(hw.reg.get(Reg.AX)) == 0.0
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 0.0
     assert hw.reg.get_flag(StatusFlag.ZERO)
 
 
 def test_alu_exp_delegation():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
 
-    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1.0))
+    reg.set(Reg.AL, Registers.from_f32(1.0))
     alu.exp_f32()
-    assert math.isclose(Registers.to_f32(hw.reg.get(Reg.AL)), math.e, rel_tol=1e-5)
+    assert math.isclose(Registers.to_f32(reg.peek(Reg.AL)), math.e, rel_tol=1e-5)
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1.0))
+    reg.set(Reg.AX, Registers.from_f64(1.0))
     alu.exp_f64()
-    assert math.isclose(Registers.to_f64(hw.reg.get(Reg.AX)), math.e, rel_tol=1e-10)
+    assert math.isclose(Registers.to_f64(reg.peek(Reg.AX)), math.e, rel_tol=1e-10)
 
 
 def test_exp2_frac_core():

@@ -17,6 +17,7 @@ from fpu_emu.alu.adder import (
 from fpu_emu.alu.alu import Alu
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 # =============================================================================
@@ -49,10 +50,11 @@ from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag, Registers
 )
 def test_adder_core_add(a, b, cin, expected_res, exp_cf, exp_zf, exp_sf, exp_vf, desc):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(a, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(b, 4))
-    hw.reg.set_ha_bus_mux(HalfSelect.LO)
-    hw.reg.set_hb_mux(HalfSelect.LO, Reg.BL)
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(a, 4))
+    reg.set(Reg.BL, Registers.from_int(b, 4))
+    reg.set_ha_bus_mux(HalfSelect.LO)
+    reg.set_hb_bus_mux(HalfSelect.LO, Reg.BL)
     res, cf, zf, sf, vf = adder_core(hw, cin=cin, sub=False)
 
     assert Registers.to_int(res) == expected_res, f"Failed {desc}: result mismatch"
@@ -87,10 +89,11 @@ def test_adder_core_add(a, b, cin, expected_res, exp_cf, exp_zf, exp_sf, exp_vf,
 )
 def test_adder_core_sub(a, b, cin, expected_res, exp_cf, exp_zf, exp_sf, exp_vf, desc):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(a, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(b, 4))
-    hw.reg.set_ha_bus_mux(HalfSelect.LO)
-    hw.reg.set_hb_mux(HalfSelect.LO, Reg.BL)
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(a, 4))
+    reg.set(Reg.BL, Registers.from_int(b, 4))
+    reg.set_ha_bus_mux(HalfSelect.LO)
+    reg.set_hb_bus_mux(HalfSelect.LO, Reg.BL)
     res, cf, zf, sf, vf = adder_core(hw, cin=cin, sub=True)
 
     assert Registers.to_int(res) == expected_res, f"Failed {desc}: result mismatch"
@@ -121,17 +124,18 @@ def test_adder_core_sub(a, b, cin, expected_res, exp_cf, exp_zf, exp_sf, exp_vf,
 )
 def test_add64_operations(a64, b64, expected_res, exp_cf, exp_zf, exp_sf, exp_vf, desc):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(a64, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(b64, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(a64, 8))
+    reg.set(Reg.BX, Registers.from_int(b64, 8))
 
     add64(hw, Reg.BX)
 
     assert hw.clock.cycles == 2, "64-bit add must consume exactly 2 cycles"
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == expected_res, f"Failed {desc}: result mismatch"
-    assert hw.reg.get_flag(StatusFlag.CARRY) == exp_cf, f"Failed {desc}: CF mismatch"
-    assert hw.reg.get_flag(StatusFlag.ZERO) == exp_zf, f"Failed {desc}: ZF mismatch"
-    assert hw.reg.get_flag(StatusFlag.SIGN) == exp_sf, f"Failed {desc}: SF mismatch"
-    assert hw.reg.get_flag(StatusFlag.OVERFLOW) == exp_vf, f"Failed {desc}: VF mismatch"
+    assert Registers.to_int(reg.peek(Reg.AX)) == expected_res, f"Failed {desc}: result mismatch"
+    assert reg.get_flag(StatusFlag.CARRY) == exp_cf, f"Failed {desc}: CF mismatch"
+    assert reg.get_flag(StatusFlag.ZERO) == exp_zf, f"Failed {desc}: ZF mismatch"
+    assert reg.get_flag(StatusFlag.SIGN) == exp_sf, f"Failed {desc}: SF mismatch"
+    assert reg.get_flag(StatusFlag.OVERFLOW) == exp_vf, f"Failed {desc}: VF mismatch"
 
 
 @pytest.mark.parametrize(
@@ -150,17 +154,18 @@ def test_add64_operations(a64, b64, expected_res, exp_cf, exp_zf, exp_sf, exp_vf
 )
 def test_sub64_operations(a64, b64, expected_res, exp_cf, exp_zf, exp_sf, exp_vf, desc):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(a64, 8))
-    hw.reg.testharness_set(Reg.DX, Registers.from_int(b64, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(a64, 8))
+    reg.set(Reg.DX, Registers.from_int(b64, 8))
 
     sub64(hw, Reg.DX)
 
     assert hw.clock.cycles == 2, "64-bit sub must consume exactly 2 cycles"
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == expected_res, f"Failed {desc}: result mismatch"
-    assert hw.reg.get_flag(StatusFlag.CARRY) == exp_cf, f"Failed {desc}: CF mismatch"
-    assert hw.reg.get_flag(StatusFlag.ZERO) == exp_zf, f"Failed {desc}: ZF mismatch"
-    assert hw.reg.get_flag(StatusFlag.SIGN) == exp_sf, f"Failed {desc}: SF mismatch"
-    assert hw.reg.get_flag(StatusFlag.OVERFLOW) == exp_vf, f"Failed {desc}: VF mismatch"
+    assert Registers.to_int(reg.peek(Reg.AX)) == expected_res, f"Failed {desc}: result mismatch"
+    assert reg.get_flag(StatusFlag.CARRY) == exp_cf, f"Failed {desc}: CF mismatch"
+    assert reg.get_flag(StatusFlag.ZERO) == exp_zf, f"Failed {desc}: ZF mismatch"
+    assert reg.get_flag(StatusFlag.SIGN) == exp_sf, f"Failed {desc}: SF mismatch"
+    assert reg.get_flag(StatusFlag.OVERFLOW) == exp_vf, f"Failed {desc}: VF mismatch"
 
 
 # =============================================================================
@@ -169,25 +174,27 @@ def test_sub64_operations(a64, b64, expected_res, exp_cf, exp_zf, exp_sf, exp_vf
 @pytest.mark.parametrize("src_reg", [Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH])
 def test_add32_all_valid_sources(src_reg):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(50, 4))
-    hw.reg.testharness_set(src_reg, Registers.from_int(25, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(50, 4))
+    reg.set(src_reg, Registers.from_int(25, 4))
 
     add32(hw, src_reg)
 
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 75
+    assert Registers.to_int(reg.peek(Reg.AL)) == 75
 
 
 @pytest.mark.parametrize("src_reg", [Reg.BX, Reg.DX, Reg.FX])
 def test_add64_all_valid_sources(src_reg):
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x100000000, 8))
-    hw.reg.testharness_set(src_reg, Registers.from_int(0x200000000, 8))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(0x100000000, 8))
+    reg.set(src_reg, Registers.from_int(0x200000000, 8))
 
     add64(hw, src_reg)
 
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == 0x300000000
+    assert Registers.to_int(reg.peek(Reg.AX)) == 0x300000000
 
 
 # =============================================================================
@@ -195,47 +202,51 @@ def test_add64_all_valid_sources(src_reg):
 # =============================================================================
 def test_adc32_with_initial_carry():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(10, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(20, 4))
-    hw.reg.set_flag(StatusFlag.CARRY, True)
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(10, 4))
+    reg.set(Reg.BL, Registers.from_int(20, 4))
+    reg.set_flag(StatusFlag.CARRY, True)
 
     adc32(hw, Reg.BL)
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 31
+    assert Registers.to_int(reg.peek(Reg.AL)) == 31
 
 
 def test_sbb32_with_initial_borrow():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(50, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(20, 4))
-    hw.reg.set_flag(StatusFlag.CARRY, True)
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(50, 4))
+    reg.set(Reg.BL, Registers.from_int(20, 4))
+    reg.set_flag(StatusFlag.CARRY, True)
 
     sbb32(hw, Reg.BL)
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 29
+    assert Registers.to_int(reg.peek(Reg.AL)) == 29
 
 
 def test_cmp32_preserves_al():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(42, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(42, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(42, 4))
+    reg.set(Reg.BL, Registers.from_int(42, 4))
 
     cmp32(hw, Reg.BL)
     assert hw.clock.cycles == 1
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 42
-    assert hw.reg.get_flag(StatusFlag.ZERO) is True
+    assert Registers.to_int(reg.peek(Reg.AL)) == 42
+    assert reg.get_flag(StatusFlag.ZERO) is True
 
 
 def test_cmp64_preserves_ax():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     val = 0x123456789ABCDEF0
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(val, 8))
-    hw.reg.testharness_set(Reg.DX, Registers.from_int(val, 8))
+    reg.set(Reg.AX, Registers.from_int(val, 8))
+    reg.set(Reg.DX, Registers.from_int(val, 8))
 
     cmp64(hw, Reg.DX)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == val
-    assert hw.reg.get_flag(StatusFlag.ZERO) is True
+    assert Registers.to_int(reg.peek(Reg.AX)) == val
+    assert reg.get_flag(StatusFlag.ZERO) is True
 
 
 def test_invalid_source_registers():
@@ -248,48 +259,52 @@ def test_invalid_source_registers():
 
 def test_alu_class_delegation():
     hw = Hardware()
+    reg = RegTestHarness(hw.reg)
     alu = Alu(hw)
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(15, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(25, 4))
+    reg.set(Reg.AL, Registers.from_int(15, 4))
+    reg.set(Reg.BL, Registers.from_int(25, 4))
 
     alu.add32(Reg.BL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 40
+    assert Registers.to_int(reg.peek(Reg.AL)) == 40
 
 
 def test_adc64_and_sbb64():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(100, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(200, 8))
-    hw.reg.set_flag(StatusFlag.CARRY, True)
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AX, Registers.from_int(100, 8))
+    reg.set(Reg.BX, Registers.from_int(200, 8))
+    reg.set_flag(StatusFlag.CARRY, True)
 
     adc64(hw, Reg.BX)
     assert hw.clock.cycles == 2
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == 301
+    assert Registers.to_int(reg.peek(Reg.AX)) == 301
 
-    hw.reg.testharness_set(Reg.AX, Registers.from_int(500, 8))
-    hw.reg.testharness_set(Reg.BX, Registers.from_int(200, 8))
-    hw.reg.set_flag(StatusFlag.CARRY, True)
+    reg.set(Reg.AX, Registers.from_int(500, 8))
+    reg.set(Reg.BX, Registers.from_int(200, 8))
+    reg.set_flag(StatusFlag.CARRY, True)
 
     sbb64(hw, Reg.BX)
     assert hw.clock.cycles == 4
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AX)) == 299
+    assert Registers.to_int(reg.peek(Reg.AX)) == 299
 
 
 def test_adder_core_invalid_operand_length():
     hw = Hardware()
-    hw.reg._al = bytearray(2)
-    hw.reg.set_ha_bus_mux(HalfSelect.LO)
-    hw.reg.set_hb_mux(HalfSelect.LO, Reg.BL)
+    reg = RegTestHarness(hw.reg)
+    reg._reg._al = bytearray(2)
+    reg.set_ha_bus_mux(HalfSelect.LO)
+    reg.set_hb_bus_mux(HalfSelect.LO, Reg.BL)
     with pytest.raises(ValueError, match="Operands must be 4 bytes each"):
         adder_core(hw)
 
 
 def test_sub32_direct():
     hw = Hardware()
-    hw.reg.testharness_set(Reg.AL, Registers.from_int(50, 4))
-    hw.reg.testharness_set(Reg.BL, Registers.from_int(20, 4))
+    reg = RegTestHarness(hw.reg)
+    reg.set(Reg.AL, Registers.from_int(50, 4))
+    reg.set(Reg.BL, Registers.from_int(20, 4))
     sub32(hw, Reg.BL)
-    assert Registers.to_int(hw.reg.testharness_peek(Reg.AL)) == 30
+    assert Registers.to_int(reg.peek(Reg.AL)) == 30
     assert hw.clock.cycles == 1
 
 

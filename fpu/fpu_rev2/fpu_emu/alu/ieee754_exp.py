@@ -48,7 +48,7 @@ VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 
 from typing import Optional, Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.memory.registers import Reg, StatusFlag, Registers, HalfSelect
 from fpu_emu.fpga_resource import fpga_resource
 
 # 12-bit constants
@@ -217,8 +217,12 @@ def exp_diff(hw: Hardware, reg: Reg = Reg.AL):
     if hw.reg.ea == hw.reg.eb:
         reg_b = Reg.BX if reg in (Reg.AX, Reg.BX) else Reg.BL
         reg_a = Reg.AX if reg in (Reg.AX, Reg.BX) else Reg.AL
-        val_a = Registers.to_int(hw.reg.get(reg_a))
-        val_b = Registers.to_int(hw.reg.get(reg_b))
+        if reg_a == Reg.AX:
+            val_a = Registers.to_int(bytearray(hw.reg._al) + bytearray(hw.reg._ah))
+            val_b = Registers.to_int(bytearray(hw.reg._bl) + bytearray(hw.reg._bh))
+        else:
+            val_a = Registers.to_int(bytearray(hw.reg._al))
+            val_b = Registers.to_int(bytearray(hw.reg._bl))
         borrow = val_a < val_b
     hw.reg.c = shift_count
     hw.reg.set_flag(StatusFlag.CARRY, borrow)
@@ -288,7 +292,17 @@ def unpack_f32(
     :return: Sign bit (0 for positive, 1 for negative)
     """
     hw.clock.tick(1)
-    raw_val = Registers.to_int(hw.reg.get(src))
+    if src == Reg.AL:
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        raw_bytes = hw.reg.read_ha_bus()
+    elif src == Reg.AH:
+        hw.reg.set_ha_bus_mux(HalfSelect.HI)
+        raw_bytes = hw.reg.read_ha_bus()
+    else:
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
+        raw_bytes = hw.reg.read_hb_bus()
+
+    raw_val = Registers.to_int(raw_bytes)
     sign = (raw_val >> 31) & 1
     exp = (raw_val >> 23) & 0xFF
     mantissa = raw_val & 0x007FFFFF
@@ -315,7 +329,7 @@ def unpack_f32(
     elif src == Reg.BL or dst_mantissa == Reg.BL:
         hw.reg.sign_b = sign
 
-    hw.reg.testharness_set(dst_mantissa, Registers.from_int(mantissa, 4))
+    hw.reg.set_res_bus(dst_mantissa, Registers.from_int(mantissa, 4))
     return sign
 
 
@@ -329,13 +343,22 @@ def pack_f32(
     """Packs sign, exponent, and mantissa into IEEE-754 single-precision float in `dst` (1 cycle)."""
     hw.clock.tick(1)
     exp = hw.reg.ea if src_exp == Reg.EA else hw.reg.eb
-    mantissa_raw = Registers.to_int(hw.reg.get(src_mantissa))
+    if src_mantissa == Reg.AL:
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        mant_bytes = hw.reg.read_ha_bus()
+    elif src_mantissa == Reg.AH:
+        hw.reg.set_ha_bus_mux(HalfSelect.HI)
+        mant_bytes = hw.reg.read_ha_bus()
+    else:
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, src_mantissa)
+        mant_bytes = hw.reg.read_hb_bus()
+    mantissa_raw = Registers.to_int(mant_bytes)
 
     # Determine sign: explicit argument, sign_a, or sign_res
     sign_val = sign if sign is not None else (hw.reg.sign_a if hw.reg.sign_res == 0 else hw.reg.sign_res)
 
     if exp <= 0 or mantissa_raw == 0:
-        hw.reg.testharness_set(dst, Registers.from_int(0, 4))
+        hw.reg.set_res_bus(dst, Registers.from_int(0, 4))
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -349,7 +372,7 @@ def pack_f32(
     sign_bit = (sign_val & 1) << 31
 
     packed = sign_bit | (exp_clamped << 23) | mantissa
-    hw.reg.testharness_set(dst, Registers.from_int(packed, 4))
+    hw.reg.set_res_bus(dst, Registers.from_int(packed, 4))
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, bool(sign_val & 1))
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -370,8 +393,17 @@ def unpack_f64(
     - 53-bit mantissa left-justified into `dst_mantissa` (AX or BX) with hidden 1 at bit 63
     :return: Sign bit (0 for positive, 1 for negative)
     """
-    hw.clock.tick(2)
-    raw_val = Registers.to_int(hw.reg.get(src))
+    hw.clock.tick(1)
+    if src == Reg.AX:
+        raw_lo = Registers.to_int(hw.reg._al)
+        raw_hi = Registers.to_int(hw.reg._ah)
+    elif src == Reg.BX:
+        raw_lo = Registers.to_int(hw.reg._bl)
+        raw_hi = Registers.to_int(hw.reg._bh)
+    else:
+        raw_lo, raw_hi = 0, 0
+
+    raw_val = raw_lo | (raw_hi << 32)
     sign = (raw_val >> 63) & 1
     exp = (raw_val >> 52) & 0x7FF
     mantissa = raw_val & 0x000FFFFFFFFFFFFF
@@ -397,7 +429,12 @@ def unpack_f64(
     elif src == Reg.BX or dst_mantissa == Reg.BX:
         hw.reg.sign_b = sign
 
-    hw.reg.testharness_set(dst_mantissa, Registers.from_int(mantissa, 8))
+    mant_bytes = Registers.from_int(mantissa, 8)
+    dst_lo = Reg.AL if dst_mantissa == Reg.AX else Reg.BL
+    dst_hi = Reg.AH if dst_mantissa == Reg.AX else Reg.BH
+    hw.reg.set_res_bus(dst_lo, mant_bytes[0:4])
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(dst_hi, mant_bytes[4:8])
     return sign
 
 
@@ -409,14 +446,27 @@ def pack_f64(
     dst: Reg = Reg.AX,
 ):
     """Packs sign, exponent, and mantissa into IEEE-754 double-precision float in `dst` (2 cycles)."""
-    hw.clock.tick(2)
+    hw.clock.tick(1)
     exp = hw.reg.ea if src_exp == Reg.EA else hw.reg.eb
-    mantissa_raw = Registers.to_int(hw.reg.get(src_mantissa))
+    if src_mantissa == Reg.AX:
+        mant_lo = Registers.to_int(hw.reg._al)
+        mant_hi = Registers.to_int(hw.reg._ah)
+    elif src_mantissa == Reg.BX:
+        mant_lo = Registers.to_int(hw.reg._bl)
+        mant_hi = Registers.to_int(hw.reg._bh)
+    else:
+        mant_lo, mant_hi = 0, 0
+    mantissa_raw = mant_lo | (mant_hi << 32)
 
     sign_val = sign if sign is not None else (hw.reg.sign_a if hw.reg.sign_res == 0 else hw.reg.sign_res)
 
+    dst_lo = Reg.AL if dst == Reg.AX else Reg.BL
+    dst_hi = Reg.AH if dst == Reg.AX else Reg.BH
+
     if exp <= 0 or mantissa_raw == 0:
-        hw.reg.testharness_set(dst, Registers.from_int(0, 8))
+        hw.reg.set_res_bus(dst_lo, Registers.from_int(0, 4))
+        hw.clock.tick(1)
+        hw.reg.set_res_bus(dst_hi, Registers.from_int(0, 4))
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -430,7 +480,10 @@ def pack_f64(
     sign_bit = (sign_val & 1) << 63
 
     packed = sign_bit | (exp_clamped << 52) | mantissa
-    hw.reg.testharness_set(dst, Registers.from_int(packed, 8))
+    packed_bytes = Registers.from_int(packed, 8)
+    hw.reg.set_res_bus(dst_lo, packed_bytes[0:4])
+    hw.clock.tick(1)
+    hw.reg.set_res_bus(dst_hi, packed_bytes[4:8])
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, bool(sign_val & 1))
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -442,23 +495,17 @@ def swap(hw: Hardware, reg_a: Reg, reg_b: Reg):
     """SWAP reg_a, reg_b: Exchanges two registers and corresponding sign latches."""
     if reg_a in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
         hw.clock.tick(2)
-        val_a = hw.reg.get(reg_a)
-        val_b = hw.reg.get(reg_b)
-        hw.reg.testharness_set(reg_a, val_b)
-        hw.reg.testharness_set(reg_b, val_a)
         if (reg_a == Reg.AX and reg_b == Reg.BX) or (reg_a == Reg.BX and reg_b == Reg.AX):
+            hw.reg._al, hw.reg._bl = bytearray(hw.reg._bl), bytearray(hw.reg._al)
+            hw.reg._ah, hw.reg._bh = bytearray(hw.reg._bh), bytearray(hw.reg._ah)
             hw.reg.sign_a, hw.reg.sign_b = hw.reg.sign_b, hw.reg.sign_a
     elif reg_a in (Reg.EA, Reg.EB) and reg_b in (Reg.EA, Reg.EB):
         hw.clock.tick(1)
-        ea = hw.reg.ea
-        eb = hw.reg.eb
-        hw.reg.ea = eb
-        hw.reg.eb = ea
+        hw.reg.ea, hw.reg.eb = hw.reg.eb, hw.reg.ea
     else:
         hw.clock.tick(1)
-        val_a = hw.reg.get(reg_a)
-        val_b = hw.reg.get(reg_b)
-        hw.reg.testharness_set(reg_a, val_b)
-        hw.reg.testharness_set(reg_b, val_a)
         if (reg_a == Reg.AL and reg_b == Reg.BL) or (reg_a == Reg.BL and reg_b == Reg.AL):
+            hw.reg._al, hw.reg._bl = bytearray(hw.reg._bl), bytearray(hw.reg._al)
             hw.reg.sign_a, hw.reg.sign_b = hw.reg.sign_b, hw.reg.sign_a
+        elif (reg_a == Reg.AH and reg_b == Reg.BH) or (reg_a == Reg.BH and reg_b == Reg.AH):
+            hw.reg._ah, hw.reg._bh = bytearray(hw.reg._bh), bytearray(hw.reg._ah)
