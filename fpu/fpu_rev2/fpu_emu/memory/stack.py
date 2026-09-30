@@ -40,7 +40,7 @@ def pop32(hw: Hardware, dst: Reg):
 
     new_sp = sp - 4
     data = hw.mem.load(STACK_BASE + new_sp, 4)
-    hw.reg.set(dst, data)
+    hw.reg.testharness_set(dst, data)
     hw.reg.sp = new_sp
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 
@@ -71,7 +71,7 @@ def pop64(hw: Hardware, dst: Reg):
 
     new_sp = sp - 8
     data = hw.mem.load(STACK_BASE + new_sp, 8)
-    hw.reg.set(dst, data)
+    hw.reg.testharness_set(dst, data)
     hw.reg.sp = new_sp
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 

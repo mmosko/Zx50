@@ -29,8 +29,8 @@ def hw():
     ],
 )
 def test_mul_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
-    hw.reg.set(Reg.AL, Registers.from_f32(a))
-    hw.reg.set(Reg.BL, Registers.from_f32(b))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(a))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(b))
 
     prev_cycles = hw.clock.cycles
     fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
@@ -46,8 +46,8 @@ def test_mul_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
 
 def test_mul_f32_overflow(hw):
     # Large numbers that overflow float32
-    hw.reg.set(Reg.AL, Registers.from_f32(1e30))
-    hw.reg.set(Reg.BL, Registers.from_f32(1e30))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1e30))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(1e30))
 
     fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
 
@@ -70,8 +70,8 @@ def test_mul_f32_overflow(hw):
     ],
 )
 def test_div_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
-    hw.reg.set(Reg.AL, Registers.from_f32(a))
-    hw.reg.set(Reg.BL, Registers.from_f32(b))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(a))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(b))
 
     prev_cycles = hw.clock.cycles
     fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
@@ -86,8 +86,8 @@ def test_div_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
 
 
 def test_div_f32_divide_by_zero(hw):
-    hw.reg.set(Reg.AL, Registers.from_f32(42.0))
-    hw.reg.set(Reg.BL, Registers.from_f32(0.0))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(42.0))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(0.0))
 
     fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
 
@@ -96,8 +96,8 @@ def test_div_f32_divide_by_zero(hw):
 
 
 def test_div_f32_overflow(hw):
-    hw.reg.set(Reg.AL, Registers.from_f32(1e38))
-    hw.reg.set(Reg.BL, Registers.from_f32(1e-10))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1e38))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(1e-10))
 
     fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
 
@@ -119,8 +119,8 @@ def test_div_f32_overflow(hw):
     ],
 )
 def test_mul_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
-    hw.reg.set(Reg.AX, Registers.from_f64(a))
-    hw.reg.set(Reg.BX, Registers.from_f64(b))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(a))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(b))
 
     prev_cycles = hw.clock.cycles
     fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
@@ -135,8 +135,8 @@ def test_mul_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
 
 
 def test_mul_f64_overflow(hw):
-    hw.reg.set(Reg.AX, Registers.from_f64(1e308))
-    hw.reg.set(Reg.BX, Registers.from_f64(2.0))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1e308))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(2.0))
 
     fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
 
@@ -158,8 +158,8 @@ def test_mul_f64_overflow(hw):
     ],
 )
 def test_div_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
-    hw.reg.set(Reg.AX, Registers.from_f64(a))
-    hw.reg.set(Reg.BX, Registers.from_f64(b))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(a))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(b))
 
     prev_cycles = hw.clock.cycles
     fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
@@ -174,8 +174,8 @@ def test_div_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
 
 
 def test_div_f64_divide_by_zero(hw):
-    hw.reg.set(Reg.AX, Registers.from_f64(100.0))
-    hw.reg.set(Reg.BX, Registers.from_f64(0.0))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(100.0))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(0.0))
 
     fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
 
@@ -184,8 +184,8 @@ def test_div_f64_divide_by_zero(hw):
 
 
 def test_div_f64_overflow(hw):
-    hw.reg.set(Reg.AX, Registers.from_f64(1e308))
-    hw.reg.set(Reg.BX, Registers.from_f64(1e-10))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1e308))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(1e-10))
 
     fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
 
@@ -195,29 +195,60 @@ def test_div_f64_overflow(hw):
 
 def test_nan_and_inf_handling(hw):
     # mul_f32 inf
-    hw.reg.set(Reg.AL, Registers.from_f32(float("inf")))
-    hw.reg.set(Reg.BL, Registers.from_f32(2.0))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(float("inf")))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(2.0))
     fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # div_f32 inf
-    hw.reg.set(Reg.AL, Registers.from_f32(float("inf")))
-    hw.reg.set(Reg.BL, Registers.from_f32(2.0))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(float("inf")))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(2.0))
     fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # mul_f64 inf
-    hw.reg.set(Reg.AX, Registers.from_f64(float("inf")))
-    hw.reg.set(Reg.BX, Registers.from_f64(2.0))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(float("inf")))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(2.0))
     fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # div_f64 inf
-    hw.reg.set(Reg.AX, Registers.from_f64(float("inf")))
-    hw.reg.set(Reg.BX, Registers.from_f64(2.0))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(float("inf")))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(2.0))
     fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_underflow_handling(hw):
+    # mul_f32 underflow
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1e-30))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(1e-30))
+    fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+
+    # div_f32 underflow
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1e-30))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(1e30))
+    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+
+    # mul_f64 underflow
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1e-200))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(1e-200))
+    fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+
+    # div_f64 underflow
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1e-200))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(1e200))
+    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+

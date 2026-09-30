@@ -134,31 +134,43 @@ At power-up reset:
 
 ## 3. Internal Memory Subsystem (SysMEM EBR)
 
-The MachXO2-2000 provides 8 true dual-port SysMEM EBR blocks (9,216 bytes total).
+The MachXO2-2000 provides **8 independent physical SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total capacity). 
 
-### 3.1 SysMEM EBR Memory Map
+Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
+* A single EBR block supports a maximum data width of **18 bits** in ROM/Single-Port mode (`512 × 18`), or **9 bits** in True Dual-Port mode (`1,024 × 9`).
+* To provide native **32-bit single-cycle word access** for the datapath without multi-cycle serialization, **two EBR blocks are paired in parallel** (`512 × 32` bits = 2,048 bytes per pair).
+* High-speed host command queuing (the 32-byte **Command Stack / Operation Stack**) is implemented directly in **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), completely isolating host command writes from the primary memory blocks.
+* Z80 host data I/O on Port `0x70` uses dedicated 32-bit staging registers (**`HOST_IN`** on `HB_BUS` and **`HOST_OUT`** on `RES_BUS`), enabling standard Single-Port RAM mode for the stack and eliminating complex dual-port arbitration.
+
+### 3.1 Physical SysMEM EBR Allocation Map (8 Blocks Total)
 
 ```text
-+-------------------+-----------------------------------------------+------------+
-| Address Range     | Functional Allocation                         | Size       |
-+-------------------+-----------------------------------------------+------------+
-| 0x0000 - 0x01FF   | Hardware Math Stack (64 words x 64-bit / 8B)  | 512 Bytes  |
-| 0x0200 - 0x02FF   | Scratchpad & Vector Registers (64 x 32-bit)   | 256 Bytes  |
-| 0x0300 - 0x033F   | User Word Storage (16 words x 32-bit)         | 64 Bytes   |
-| 0x0340 - 0x035F   | Command Stack / Queue (up to 32 opcodes)       | 32 Bytes   |
-| 0x0360 - 0x03FF   | Reserved / Status & Mode Configuration        | 160 Bytes  |
-| 0x0400 - 0x07FF   | Polynomial Coefficients & Math Headroom       | 1,024 Bytes|
-| 0x0800 - 0x09FF   | Reciprocal / Division Table                   | 512 Bytes  |
-| 0x0A00 - 0x0BFF   | Square Root Seed LUT                          | 512 Bytes  |
-| 0x0C00 - 0x0DFF   | Base-2 Exponent / Power LUT                   | 512 Bytes  |
-| 0x0E00 - 0x0FFF   | Base-2 Logarithm LUT                          | 512 Bytes  |
-| 0x1000 - 0x11FF   | Trigonometric Constants / CORDIC Tables       | 512 Bytes  |
-| 0x1200 - 0x19FF   | Runtime Microcode Execution RAM (1K x 16-bit) | 2,048 Bytes|
-| 0x1A00 - 0x23FF   | Unallocated / Extended Buffer Headroom        | 2,560 Bytes|
-+-------------------+-----------------------------------------------+------------+
-Total Allocated:    5,472 Bytes (~5.3 KB)
-Total Available:    9,216 Bytes (8 EBR blocks)
-Free Headroom:      3,744 Bytes (~41% free)
++---------------+-------------------+-----------------------------------------------+------------+
+| Physical EBR  | Config & Width    | Functional Allocation                         | Size       |
++---------------+-------------------+-----------------------------------------------+------------+
+| EBR 0 & EBR 1 | Paired Single-Port| • Hardware Math Stack (128 words x 32-bit)    | 512 Bytes  |
+|               | (512 x 32-bit)    | • Scratchpad RAM SCR[0..63] (64 x 32-bit)     | 256 Bytes  |
+|               |                   | • User Word Storage (16 words x 32-bit)       | 64 Bytes   |
+|               |                   | • Reserved / Working Headroom (304 words)     | 1,216 Bytes|
++---------------+-------------------+-----------------------------------------------+------------+
+| EBR 2 & EBR 3 | Paired ROM        | • Trigonometric & CORDIC Angles (128 x 32-bit)| 512 Bytes  |
+|               | (512 x 32-bit)    | • Chebyshev Polynomial Coeffs (128 x 32-bit)  | 512 Bytes  |
+|               |                   | • IEEE-754 Constants (pi, e, ln2: 64 x 32-bit)| 256 Bytes  |
+|               |                   | • Math Constants Headroom (192 words)         | 768 Bytes  |
++---------------+-------------------+-----------------------------------------------+------------+
+| EBR 4         | Single ROM        | • Reciprocal / Division Seed LUT (256 x 16-bit)| 512 Bytes  |
+|               | (512 x 16-bit)    | • Square Root Seed LUT (256 x 16-bit)         | 512 Bytes  |
++---------------+-------------------+-----------------------------------------------+------------+
+| EBR 5 & EBR 6 | Paired ROM        | • Runtime Microcode Execution Store           | 2,048 Bytes|
+|               | (512 x 32-bit)    |   (512 micro-instructions x 32-bit wide)      |            |
++---------------+-------------------+-----------------------------------------------+------------+
+| EBR 7         | Unallocated       | • Free Headroom / Expansion Buffer            | 1,152 Bytes|
+|               | (1 Block Free)    |   (Available for FIR filter taps / vectors)   |            |
++---------------+-------------------+-----------------------------------------------+------------+
+| Distributed   | PFU Distributed   | • Command Stack / Batch Queue (OSP[4:0])      | 32 Bytes   |
+| LUT-RAM       | RAM (32 x 8-bit)  |   (Zero EBR blocks consumed)                  |            |
++---------------+-------------------+-----------------------------------------------+------------+
+Total EBR Utilization:  7 of 8 blocks (87.5% used, 1 block / 12.5% free margin)
 ```
 
 ### 3.2 User Memory Allocation (Intermediate Storage)

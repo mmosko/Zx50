@@ -8,7 +8,7 @@ from fpu_emu.memory.registers import Reg, StatusFlag, Registers
 
 def test_push_pop_32():
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(0x12345678, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x12345678, 4))
 
     assert hw.reg.sp == 0
     assert hw.clock.cycles == 0
@@ -25,7 +25,7 @@ def test_push_pop_32():
 
 def test_push_pop_64():
     hw = Hardware()
-    hw.reg.set(Reg.AX, Registers.from_int(0x1122334455667788, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x1122334455667788, 8))
 
     stack.push64(hw, Reg.AX)
     assert hw.reg.sp == 8

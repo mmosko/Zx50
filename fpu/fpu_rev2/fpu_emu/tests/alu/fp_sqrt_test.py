@@ -75,7 +75,7 @@ class TestSqrtDispatcher:
         hw, dispatcher = setup_dispatcher
         # Push 32-bit float onto operand stack
         raw = Registers.from_f32(val)
-        hw.reg.set(Reg.AL, raw)
+        hw.reg.testharness_set(Reg.AL, raw)
         stack.push32(hw, Reg.AL)
 
         dispatcher.execute(UserOpcode.SQRT_F32)
@@ -91,7 +91,7 @@ class TestSqrtDispatcher:
         hw, dispatcher = setup_dispatcher
         # Push negative float
         raw = Registers.from_f32(-4.0)
-        hw.reg.set(Reg.AL, raw)
+        hw.reg.testharness_set(Reg.AL, raw)
         stack.push32(hw, Reg.AL)
 
         dispatcher.execute(UserOpcode.SQRT_F32)
@@ -128,7 +128,7 @@ class TestSqrtDispatcher:
         hw, dispatcher = setup_dispatcher
         # Push 64-bit double onto operand stack
         raw = Registers.from_f64(val)
-        hw.reg.set(Reg.AX, raw)
+        hw.reg.testharness_set(Reg.AX, raw)
         stack.push64(hw, Reg.AX)
 
         dispatcher.execute(UserOpcode.SQRT_F64)
@@ -144,7 +144,7 @@ class TestSqrtDispatcher:
         hw, dispatcher = setup_dispatcher
         # Push negative double
         raw = Registers.from_f64(-9.0)
-        hw.reg.set(Reg.AX, raw)
+        hw.reg.testharness_set(Reg.AX, raw)
         stack.push64(hw, Reg.AX)
 
         dispatcher.execute(UserOpcode.SQRT_F64)

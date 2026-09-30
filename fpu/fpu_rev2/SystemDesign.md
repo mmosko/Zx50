@@ -18,15 +18,16 @@ The target device is the **Lattice MachXO2-2000HC-4TG100I** (`U17`), which provi
 
 ### 1.1 Minimizing Hardware Registers vs. EBR Storage
 To remain well within the 2,112 LUT4 budget while preserving high arithmetic throughput:
-1. **Dedicated Flip-Flop Registers are Strictly Minimized:** Only operands actively engaged in single-cycle datapath operations (ALU inputs, accumulator, shift staging, exponent arithmetic, and status flags) are instantiated as discrete flip-flops.
-2. **Bulk Storage Lives in EBR:** The 64-word hardware stack, the 64-byte user storage (`0x0300`–`0x033F`), the 256-byte vector scratchpad, mathematical lookup tables, and microcode execution memory reside entirely within dual-port SysMEM EBR.
-3. **32-Bit Datapath Core with Multi-Cycle 64-Bit Sequencing:** The physical ALU primitives operate natively on 32-bit slices. 64-bit integer (`i64`) and double-precision float (`f64`) operations are synthesized across consecutive cycles under micro-sequencer control.
+1. **Dedicated Flip-Flop Registers are Strictly Minimized:** Only operands actively engaged in single-cycle datapath operations (ALU inputs, accumulator, shift staging, exponent arithmetic, host staging, and status flags) are instantiated as discrete flip-flops.
+2. **Bulk Storage Lives in Paired SysMEM EBR:** Because a single 9Kb EBR block has a maximum width of 18 bits in single-port mode (MachXO2 Family Data Sheet Table 2.5), the 32-bit hardware stack (128 words), 64-word scratchpad (`SCR[0..63]`), and 16-word user storage (`0x0300`–`0x033F`) reside in a pair of single-port SysMEM EBR blocks (EBR 0 & 1, `512 × 32`).
+3. **Decoupled Operation Stack in Distributed LUT-RAM:** The 32-byte host command queue (`0x0340`–`0x035F`) is implemented in Distributed LUT-RAM (~12 LUT4s) using PFU slices, eliminating memory arbitration between host queuing and arithmetic execution.
+4. **32-Bit Datapath Core with Multi-Cycle 64-Bit Sequencing:** The physical ALU primitives operate natively on 32-bit slices. 64-bit integer (`i64`) and double-precision float (`f64`) operations are synthesized across consecutive cycles under micro-sequencer control.
 
 ---
 
 ## 2. Register File Architecture
 
-To keep hardware resource utilization low while providing sufficient scratchpad capacity for multi-word arithmetic and CORDIC transcendental algorithms, the physical register file consists of **eight 32-bit data registers** (paired as four 64-bit working registers: `AX`, `BX`, `DX`, `FX`), **two 12-bit exponent registers** (`EA`, `EB`), a **6-bit loop/shift counter** (`C`), and minimal control/status registers.
+To keep hardware resource utilization low while providing sufficient scratchpad capacity for multi-word arithmetic and CORDIC transcendental algorithms, the physical register file consists of **eight 32-bit data registers** (paired as four 64-bit working registers: `AX`, `BX`, `DX`, `FX`), **two 12-bit exponent registers** (`EA`, `EB`), a **6-bit loop/shift counter** (`C`), **two 32-bit host staging registers** (`HOST_IN`, `HOST_OUT`), and minimal control/status registers.
 
 ### 2.1 Physical Hardware Registers
 
@@ -44,15 +45,17 @@ To keep hardware resource utilization low while providing sufficient scratchpad 
 | DL [31:0]         | Dedicated Math Low       / CORDIC Z Angle         | 32 FFs    |
 | FH [31:0]         | Pure Scratch High        / Staging & Conversion   | 32 FFs    |
 | FL [31:0]         | Pure Scratch Low         / Staging & Immediate    | 32 FFs    |
+| HOST_IN [31:0]    | Host Port 0x70 4-Byte Input Staging Register      | 32 FFs    |
+| HOST_OUT [31:0]   | Host Port 0x70 4-Byte Output Shift Register       | 32 FFs    |
 | EA [11:0]         | Primary Working Exponent A (Signed 12-bit)        | 12 FFs    |
 | EB [11:0]         | Secondary Working Exponent B (Signed 12-bit)      | 12 FFs    |
 | C [5:0]           | Loop Counter & Shift Step Counter (Range 0..63)   | 6 FFs     |
 | STATUS [7:0]      | System Status & Arithmetic Flags (BUSY,Z,S,C,V,U,E| 8 FFs     |
-| SP [5:0]          | Hardware Stack Pointer (Index 0..63 in EBR)       | 6 FFs     |
+| SP [5:0]          | Hardware Stack Pointer (Index 0..63 words in EBR) | 6 FFs     |
 | OSP [4:0]         | Operation Stack Pointer for Command Queue (0..31) | 5 FFs     |
 | UPC [9:0]         | Microcode Program Counter (Address in EBR)        | 10 FFs    |
 +-------------------+---------------------------------------------------+-----------+
-Total Dedicated Flip-Flops:                                             315 FFs
+Total Dedicated Flip-Flops:                                             379 FFs
 ```
 
 > [!NOTE]
@@ -130,16 +133,22 @@ Two dedicated single flip-flop mode flags control host handshaking and execution
   * `0`: Batch mode. Non-management opcodes written to Port `0x71` are pushed into the Command Stack (`0x0340`–`0x035F`) without executing. Execution begins only when `EXEC_BATCH` is received.
   * Controlled via user management opcodes `SET_IMMEDIATE` (`0b1111_1100`) and `SET_BATCH` (`0b1111_1011`).
 
-### 2.6 Coupling with SysMEM Dual-Port EBR
+### 2.6 Coupling with SysMEM Paired Single-Port EBR
 
 The physical registers act as the **fast execution front-end** for the SysMEM EBR storage:
 
 1. **Stack POP to Registers:**
-   * When popping $TOS$ into `AX`: EBR read Port B fetches $TOS_{Low}$ into `AL` (Cycle 1) and $TOS_{High}$ into `AH` (Cycle 2), updating `SP <= SP - 1`.
+   * When popping $TOS$ into `AL` / `AH`: Paired Single-Port EBR 0 & 1 (`512 × 32`) presents `MEM_DATA_OUT[31:0]` directly to `RES_BUS[31:0]`.
+   * Cycle 1: Fetches $TOS_{Low}$ into `AL` via `WE_AL`.
+   * Cycle 2: Fetches $TOS_{High}$ into `AH` via `WE_AH`, updating `SP <= SP - 1`.
 2. **Stack PUSH from Registers:**
-   * When pushing result `AX` to $TOS$: EBR write Port B stores `AL` and `AH` to address `Stack[SP]`, updating `SP <= SP + 1`.
-3. **User Memory Copy (`CP [xxxx], TOS` / `CP TOS, [xxxx]`):**
-   * Single-cycle or two-cycle word transfer directly between `AX` and the user memory block (`0x0300`–`0x033F`) via EBR Port B. No intermediate Z80 I/O cycles needed.
+   * When pushing register data to $TOS$: The source register is placed onto `HB_BUS[31:0]`, which feeds `MEM_DIN[31:0]`.
+   * EBR write enable pulses for 1 cycle at address `Stack[SP]`, updating `SP <= SP + 1`.
+3. **Host Data Staging (`HOST_IN` / `HOST_OUT`):**
+   * As the Z80 writes 4 consecutive bytes to Port `0x70`, `HOST_IN[31:0]` shifts them into place. Once the 4th byte is latched, microcode executes `PUSH HOST_IN` (or `MOV AL, HOST_IN`).
+   * When reading from Port `0x70`, microcode executes `POP HOST_OUT`. As the Z80 reads bytes 0 through 3, `HOST_OUT` shifts right by 8 bits onto `BD[7:0]`.
+4. **User Memory Copy (`CP [xxxx], TOS` / `CP TOS, [xxxx]`):**
+   * Single-cycle or two-cycle word transfer directly between `AX` and the user memory block (`0x0300`–`0x033F`) in EBR 0 & 1. No intermediate Z80 I/O cycles needed.
 
 ---
 
@@ -148,59 +157,132 @@ The physical registers act as the **fast execution front-end** for the SysMEM EB
 > [!IMPORTANT]
 > **Two-Layer Instruction Architecture:**
 > 1. **User ISA (Host Port 0x71 Language):** The 8-bit macro-opcodes issued by the Z80 host CPU via I/O Port `0x71` (e.g. `ADD_I32`, `MUL_F64`, `SIN`, `PUSH_PI_32`, `EXEC_BATCH`), defined in [FPU_REV2.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/FPU_REV2.md).
-> 2. **Microcode ISA (Internal Micro-Operations / $\mu$-ops):** The low-level horizontal/vertical micro-instructions executed by the FPGA micro-sequencer on the physical datapath and register file (`AX`, `BX`, `DX`, `EA`, `EB`, `C`, `STATUS`, `SP`), defined across Section 3 and Section 4. Every user opcode dispatches to an internal microcode program composed of these $\mu$-ops.
+> 2. **Microcode ISA (Internal Micro-Operations / $\mu$-ops):** The low-level horizontal 32-bit micro-instructions executed by the FPGA micro-sequencer on the physical datapath and register file (`AX`, `BX`, `DX`, `FX`, `EA`, `EB`, `C`, `STATUS`, `SP`), defined across Section 3 and Section 4. Every user opcode dispatches to an internal microcode program composed of these $\mu$-ops.
 
-The ALU consists of five independent functional primitives multiplexed into a common result bus, operating directly on the physical register file (`AX`, `BX`, `DX`, `EA`, `EB`, `C`):
+The ALU operates on a unified, strictly budgeted 32-bit bus architecture designed for the Lattice MachXO2-2000 (LCMXO2-2000HC):
+
+#### Datapath Interconnect Architecture:
+1. **`HA_BUS[31:0]` (Operand 1 Half-Select Bus):**
+   * Driven by a 32-bit 2:1 MUX (`16 LUT4s`) colocated directly within the `AX` register PFU slices, selecting between `AL` (bits 31:0) and `AH` (bits 63:32).
+   * Supplies 32-bit Operand 1 to the ALU core (`adder32`, `logic32`, `shifter32`, `booth_mul`, `lzc32`).
+2. **`HB_BUS[31:0]` (Unified Operand 2 Bus & Synthesis Strategy):**
+   * **Verilog Implementation Strategy:** Keep the initial Verilog RTL clean and behavioral using a standard `case (hb_sel)` structure. This allows the synthesis engine in **Lattice Radiant / Diamond** (Synplify Pro or LSE) to perform automated multiplexer tree balancing and Shannon decomposition, mapping directly into the slice hard multiplexer primitives (`MUXF5` and `OFX` / `MUX8`).
+   * **PFU Input Packing Optimization:** Each MachXO2 PFU block has **53 inputs and 25 outputs**. A single PFU can comfortably absorb three 16-bit words (48 data inputs) plus 2 select lines ($48 + 2 = 50 \le 53$ inputs), allowing the synthesis tool to pack wide bus multiplexers with high density.
+   * **2-Stage Hierarchical Decomposition Fallback:** If synthesis timing closure or place-and-route routing congestion on the switch matrix requires manual intervention, the bus will be partitioned into the documented two-stage hierarchy:
+     - **Stage 1 (Local Half-Selects, Colocated in Slices):** Four 32-bit 2:1 MUXes colocated inside the PFU slices holding `AX`, `BX`, `DX`, and `FX` (`A_DATA`, `B_DATA`, `D_DATA`, `F_DATA`) using local slice interconnect with zero general switch-matrix routing.
+     - **Stage 2 (Central Bank Select MUX, 5:1 32-bit):** Selects among `A_DATA`, `B_DATA`, `D_DATA`, `F_DATA`, and `HOST_IN[31:0]`. Requiring only 8 inputs per bit (5 data + 3 select), the entire 32-bit Stage 2 MUX fits in just 4–5 PFUs without interconnect congestion.
+   * Supplies 32-bit Operand 2 to the ALU core (`adder32`, `logic32`, `booth_mul`, `PASS_B`).
+3. **`RES_BUS[31:0]` (Universal Result & Writeback Bus):**
+   * Driven by a 32-bit 6:1 MUX (`64 LUT4s`) selecting the output of the active execution source:
+     - `adder32_out[31:0]`
+     - `logic32_out[31:0]`
+     - `shifter32_out[31:0]`
+     - `booth_mul_out[31:0]`
+     - `PASS_B[31:0]` (NOP / Direct wire passthrough from `HB_BUS[31:0]` for single-cycle `MOV` and pipeline bubbles)
+     - `MEM_DATA_OUT[31:0]` (Stack POP, Scratchpad RAM LOAD, Constants ROM)
+   * Note: The 6:1 MUX fits in the exact same 2 LUT4/bit MachXO2 PFU multiplexer slice as a 4:1 or 8:1 MUX, resulting in **0 additional LUT cost** for the passthrough channel.
+4. **Universal Clock-Enabled Writeback Network (`WE_*`):**
+   * `RES_BUS[31:0]` is wired directly in parallel to the $D$-inputs of all internal registers.
+   * Latching is controlled by dedicated PFU Flip-Flop Clock Enable pins decoded by a 4-to-12 one-hot decoder (~7 LUT4s):
+     - General 32-bit Registers: `WE_AL`, `WE_AH`, `WE_BL`, `WE_BH`, `WE_DL`, `WE_DH`, `WE_FL`, `WE_FH`
+     - Host Output Staging: `WE_HOST_OUT` (latches 32-bit word for serial 4-byte read by Z80 Port 0x70)
+     - Exponent Registers: `WE_EA`, `WE_EB` (latches `RES_BUS[11:0]`)
+     - Counter Register: `WE_C` (latches `RES_BUS[5:0]`)
+   * Requires **0 data multiplexer LUTs**.
+   * Enables:
+     - Single-cycle `POP reg`
+     - Single-cycle `LOAD reg, [addr]`
+     - Single-cycle register-to-register `MOV dst, src` (via `HB_BUS` -> `PASS_B` -> `RES_BUS` -> `WE_dst`)
+     - Single-cycle host output `POP HOST_OUT` or `MOV HOST_OUT, AL`
+     - True `NOP` (selects `PASS_B`, all `WE_* = 0`, flags unchanged)
 
 ```mermaid
-graph TD
-    subgraph RegisterFile [Physical Hardware Register File]
-        AX[Reg AX: 64-bit / AH, AL]
-        BX[Reg BX: 64-bit / BH, BL]
-        DX[Reg DX: 64-bit / DH, DL]
-        EA[Reg EA: 12-bit Signed]
-        EB[Reg EB: 12-bit Signed]
-        C[Reg C: 6-bit Counter]
+flowchart TD
+    subgraph S_REG [Physical Register Pairs]
+        direction LR
+        RF_A["AX: AL, AH (32b each)"]
+        RF_B["BX: BL, BH (32b each)"]
+        RF_D["DX: DL, DH (32b each)"]
+        RF_F["FX: FL, FH (32b each)"]
+        RF_H["HOST_IN (32b Staging)"]
     end
 
-    subgraph ALUPrimitives [ALU Execution Core - 32-bit Native]
-        Adder[32-bit Adder / Subtractor with Carry-In/Out]
-        Shifter[32-bit Bidirectional Barrel Shifter]
-        LZC[32-bit Leading-Zero Counter / Normalizer]
-        BitLogic[Bitwise Logic & Sign Manipulator: AND, OR, XOR, INV]
-        BoothMul[Radix-4 Booth Multiplier Engine: 32/64-bit]
-        ExpALU[12-bit Exponent Adder / Subtractor]
+    subgraph S_STAGE1 [Stage 1: Local Half-Select MUXes - Colocated in Slices]
+        direction LR
+        HAMux["HA_BUS MUX (2:1 32b)<br/>Selects AL / AH"]
+        MuxA["A_DATA MUX (2:1 32b)<br/>Selects AL / AH"]
+        MuxB["B_DATA MUX (2:1 32b)<br/>Selects BL / BH"]
+        MuxD["D_DATA MUX (2:1 32b)<br/>Selects DL / DH"]
+        MuxF["F_DATA MUX (2:1 32b)<br/>Selects FL / FH"]
     end
 
-    subgraph ALUOutput [Result Bus & Flag Evaluation]
-        ALUMux[ALU Result Mux]
-        Flags[Status Flag Generator: BUSY, Z, S, C, V, U, ERR]
+    subgraph S_STAGE2 [Stage 2: Central Bank MUX - 4-5 PFUs]
+        HBMux["HB_BUS MUX (5:1 32b: 64 LUTs)<br/>Selects A, B, D, F, or HOST_IN"]
     end
 
-    AX -->|AL or AH 32 bits| Adder
-    BX -->|BL or BH 32 bits| Adder
-    AX -->|Operand to Shift| Shifter
-    C -->|Shift Count 0..31| Shifter
-    AX -->|Mantissa Input| LZC
-    AX -->|Operand A| BitLogic
-    BX -->|Operand B| BitLogic
-    AX -->|Multiplicand M| BoothMul
-    BX -->|Multiplier Q| BoothMul
-    EA --> ExpALU
-    EB --> ExpALU
+    subgraph S_ALU [ALU & Execution Units - 266 LUT4s Total]
+        direction LR
+        Adder["alu_adder32<br/>(23 LUTs, 16 CCU2C)"]
+        Shifter["alu_shifter32<br/>(104 LUTs)"]
+        Booth["alu_booth_mul<br/>(61 LUTs, 17 CCU2C)"]
+        LogicUnit["alu_logic32<br/>(38 LUTs)"]
+        LZCUnit["alu_lzc32<br/>(35 LUTs)"]
+        PassB["PASS_B (NOP / MOV)<br/>(0 LUTs, direct wire)"]
+        MemRead["MEM_DATA_OUT<br/>(Stack / RAM / ROM)"]
+    end
 
-    Adder --> ALUMux
-    Shifter --> ALUMux
-    LZC --> ALUMux
-    BitLogic --> ALUMux
-    BoothMul --> ALUMux
-    ExpALU --> ALUMux
+    subgraph S_OUT [Result Bus & Flag Evaluation - 70 LUT4s Total]
+        RESMux["RES_BUS Selector (6:1 32b: 64 LUTs)"]
+        Flags["Status Flag Generator: BUSY, Z, S, C, V, U, ERR"]
+        WEDec["WE Decoder (4-to-12 one-hot: 7 LUTs)"]
+    end
 
-    ALUMux --> AX
-    ALUMux --> DX
-    Adder --> Flags
-    BoothMul --> Flags
-    ExpALU --> Flags
+    subgraph D_REG [Universal Writeback Destinations - 0 Data MUX LUTs]
+        direction LR
+        DST_GEN["General 32b Registers<br/>AL, AH, BL, BH, DL, DH, FL, FH<br/>(Clock Enable: WE_AL .. WE_FH)"]
+        DST_HOST["Host Out Register<br/>HOST_OUT (32b Staging)<br/>(Clock Enable: WE_HOST_OUT)"]
+        DST_CTRL["Control Registers<br/>EA[11:0], EB[11:0], C[5:0]<br/>(Clock Enable: WE_EA, WE_EB, WE_C)"]
+    end
+
+    RF_A --> HAMux
+    RF_A --> MuxA
+    RF_B --> MuxB
+    RF_D --> MuxD
+    RF_F --> MuxF
+
+    MuxA --> HBMux
+    MuxB --> HBMux
+    MuxD --> HBMux
+    MuxF --> HBMux
+    RF_H --> HBMux
+
+    HAMux -->|HA_BUS 32b| Adder
+    HAMux -->|HA_BUS 32b| Shifter
+    HAMux -->|HA_BUS 32b| Booth
+    HAMux -->|HA_BUS 32b| LogicUnit
+    HAMux -->|HA_BUS 32b| LZCUnit
+
+    HBMux -->|HB_BUS 32b| Adder
+    HBMux -->|HB_BUS 32b| Booth
+    HBMux -->|HB_BUS 32b| LogicUnit
+    HBMux -->|HB_BUS 32b direct wire| PassB
+
+    Adder --> RESMux
+    Shifter --> RESMux
+    Booth --> RESMux
+    LogicUnit --> RESMux
+    PassB --> RESMux
+    MemRead --> RESMux
+
+    Adder -.-> Flags
+    Booth -.-> Flags
+    LZCUnit -.-> Flags
+
+    RESMux -->|RES_BUS 32b D-inputs| DST_GEN
+    RESMux -->|RES_BUS 32b D-inputs| DST_HOST
+    RESMux -->|RES_BUS 11:0 / 5:0 D-inputs| DST_CTRL
+    WEDec -.->|Clock Enables| DST_GEN
+    WEDec -.->|Clock Enables| DST_CTRL
 ```
 
 ### 3.1 Parallel Adder / Subtractor (`alu_adder`)
@@ -1182,7 +1264,7 @@ The execution stack resides in SysMEM EBR block at `0x0000`–`0x00FF` (256 byte
 
 ### 4.6 Command Stack & Batch Execution Engine (`0x0340`–`0x035F`)
 
-To prevent host bus-poll overhead, the FPU incorporates a dedicated 32-byte **Command Stack** in SysMEM EBR managed by `OSP[4:0]`:
+To prevent host bus-poll overhead and eliminate memory contention with internal datapath execution, the FPU incorporates a dedicated 32-byte **Command Stack** implemented in **Distributed LUT-RAM** (PFU slice distributed RAM, ~12 LUT4s, 0 EBR blocks) managed by `OSP[4:0]`:
 * `SET_IMMEDIATE` (`0xFC`): Immediate execution per opcode.
 * `SET_BATCH` (`0xFB`): Opcodes queued into Command Stack without immediate execution.
 * `EXEC_BATCH` (`0xFA`): Dispatcher asserts `BUSY = 1` and runs all queued opcodes back-to-back at 80 MHz, holding `BWAIT_N` continuously until completion.
@@ -1194,7 +1276,7 @@ To prevent host bus-poll overhead, the FPU incorporates a dedicated 32-byte **Co
 
 Mathematical constants are loaded in two ways:
 1. **Embedded Immediate Literals in Microcode:** Immediate loads into volatile scratch register `FL` / `FX` (`LD FL, <const>` or `LD FX, <const>`), preserving math register `DX`.
-2. **Dedicated SysMEM EBR ROM Table (`0x0400`–`0x07FF`):** High-precision constants formatted as IEEE-754 Single Precision (`f32`) and Double Precision (`f64`).
+2. **Dedicated Paired SysMEM EBR ROM Tables (EBR 2 & 3):** High-precision constants formatted as IEEE-754 Single Precision (`f32`), Double Precision (`f64`), Chebyshev polynomial coefficients, and 32-bit CORDIC arctangent angles ($\theta_i$). Paired in parallel (`512 × 32`), this table outputs a full 32-bit constant directly to `HB_BUS` in a single clock cycle without stalling other memory domains.
 
 ---
 
@@ -1783,17 +1865,25 @@ stateDiagram-v2
     DeassertBusy_Batch --> IDLE
 ```
 
-### 6.1 Port `0x70` Data I/O Handling (`DATA_PUSH` / `DATA_POP`)
-* **Write (Push):** The Z80 writes a data byte to Port `0x70`. The hardware writes the byte into `Stack[SP]` on EBR Port A and automatically increments $SP \leftarrow SP + 1$.
-* **Read (Pop):** The Z80 reads a data byte from Port `0x70`. The hardware reads the byte from `Stack[SP - 1]` and automatically decrements $SP \leftarrow SP - 1$.
-* **Zero Overhead:** Streamed block transfers (`OTIR` / `INIR`) transfer 4-byte or 8-byte numbers directly without requiring opcode dispatches.
+### 6.1 Port `0x70` Data I/O Handling (`HOST_IN` / `HOST_OUT`)
+* **Write (Push):** The Z80 writes an 8-bit data byte to Port `0x70`. An internal 32-bit staging register `HOST_IN[31:0]` shifts the bytes in:
+  - Byte 0 $\rightarrow$ `HOST_IN[7:0]`
+  - Byte 1 $\rightarrow$ `HOST_IN[15:8]`
+  - Byte 2 $\rightarrow$ `HOST_IN[23:16]`
+  - Byte 3 $\rightarrow$ `HOST_IN[31:24]`
+  - When the 4th byte is latched, the dispatcher pulses an internal 1-cycle micro-op: `PUSH HOST_IN` (or `MOV AL, HOST_IN`). This places `HOST_IN` onto `HB_BUS` $\rightarrow$ `MEM_DIN`, pulses memory write enable to `Stack[SP]`, and increments $SP \leftarrow SP + 1$.
+* **Read (Pop):** When the Z80 reads the first data byte from Port `0x70`:
+  - Microcode executes `POP HOST_OUT` (or `MOV HOST_OUT, AL`), latching the 32-bit stack word from `RES_BUS` into `HOST_OUT[31:0]` and decrementing $SP \leftarrow SP - 1$.
+  - The low byte `HOST_OUT[7:0]` is presented immediately to `BD[7:0]`.
+  - On the next 3 byte reads, `HOST_OUT` simply shifts right by 8 bits with zero memory access and zero wait states.
+* **Zero Overhead:** Streamed block transfers (`OTIR` / `INIR`) transfer 4-byte or 8-byte numbers directly without requiring explicit opcode dispatches.
 
 ### 6.2 Port `0x71` Opcode & Status Handling
 * **Read (Status):** Returns the 8-bit `STATUS` register (`[BUSY, ZERO, SIGN, CARRY, OVERFLOW, UNDERFLOW, ERR, 0]`). Zero wait states inserted.
 * **Write (Opcode):**
   1. If `IMMEDIATE == 1`: The opcode is latched, `BUSY` is asserted, and the dispatch table sets the microcode program counter:
      $$\text{UPC} \leftarrow \text{DispatchTable}[\text{Opcode}]$$
-  2. If `IMMEDIATE == 0` (Batch Mode) and opcode is not a management command: The opcode is written to SysMEM EBR Command Stack at `0x0340 + OSP`, and $OSP \leftarrow OSP + 1$.
+  2. If `IMMEDIATE == 0` (Batch Mode) and opcode is not a management command: The opcode is written to the Distributed LUT-RAM Command Stack at `OpStack[OSP]`, and $OSP \leftarrow OSP + 1$.
   3. If opcode is `EXEC_BATCH` (`0b1111_1010`): The dispatcher enters batch execution mode.
 
 ### 6.3 Handshaking & Continuous `~WAIT` Generation in Batch Mode
@@ -1806,6 +1896,12 @@ stateDiagram-v2
   * The dispatcher sequences through all queued subroutines in back-to-back execution at 80 MHz.
   * Because `BUSY` is held high at the **dispatcher level** (rather than being toggled by individual microcode functions), $\text{BWAIT\_N}$ remains **continuously asserted high** throughout the entire formula evaluation. There are zero glitches or premature wait-state releases on the Z80 bus.
   * When the final queued opcode executes `RET` (or if any subroutine sets `ERR == 1`), the dispatcher resets $OSP \leftarrow 0$ and clears `BUSY <= 0`, smoothly waking up the Z80.
+
+### 6.4 Micro-Op Dispatch Handshaking & Variable-Latency Glue
+
+When executing individual micro-instructions within a macro-op sequence, the micro-sequencer/dispatcher interacts with execution units using a standardized 3-wire request/acknowledge protocol (`alu_start`, `alu_wb`, `alu_done`). This decouples the micro-sequencer from operation latency, allowing single-cycle primitives (e.g. `ADD`, `AND`) and variable-latency multi-cycle blocks (e.g. barrel shifting, Booth multiplication, CORDIC rotations) to share identical sequencer and register writeback logic.
+
+See [Appendix A: Dispatcher-to-ALU Micro-Op Handshaking & Variable-Latency Execution Glue](#appendix-a-dispatcher-to-alu-micro-op-handshaking--variable-latency-execution-glue) for the complete handshaking protocol flow, timing sequence diagrams, and reference Verilog implementation.
 
 ---
 
@@ -1856,11 +1952,12 @@ To ensure high-speed, single-cycle operand availability without multi-port RAM r
 | **Secondary Operand (`BX`)** | `BH`, `BL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
 | **First-Class Math (`DX`)** | `DH`, `DL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
 | **Pure Scratchpad (`FX`)** | `FH`, `FL` | 2 $\times$ 32-bit | 64 FFs | 16 LUT4s |
+| **Host Staging Registers** | `HOST_IN`, `HOST_OUT` | 2 $\times$ 32-bit | 64 FFs | 8 LUT4s |
 | **Working Exponents** | `EA`, `EB` | 2 $\times$ 12-bit | 24 FFs | 8 LUT4s |
 | **Counters & Pointers** | `C` (6-bit), `SP` (6-bit), `OSP` (5-bit) | Scaled counters | 17 FFs | 8 LUT4s |
 | **Status Register** | `STATUS` (`BUSY`, `Z`, `S`, `C`, `V`, `U`, `E`, `MODE`) | 8-bit flags | 8 FFs | 4 LUT4s |
 | **Micro-PC & Stack** | `UPC` (10-bit), 4-level return stack | Sequencer control | 50 FFs | 20 LUT4s |
-| **Subtotal (Registers & Steering)** | — | — | **355 FFs** | **112 LUT4s** |
+| **Subtotal (Registers & Steering)** | — | — | **419 FFs** | **120 LUT4s** |
 
 #### 7.1.3 Control Plane, Sequencer & Host Bus Interface
 * **Micro-Sequencer Logic & Opcode Decoder (`dispatcher.py`, `micro_code.py`):**
@@ -1873,23 +1970,28 @@ To ensure high-speed, single-cycle operand availability without multi-port RAM r
   * *Function:* Reads microcode, seed tables, and constants from external SPI Flash at power-on reset into dual-port SysMEM EBR.
   * *Utilization:* **~85 LUT4s, 60 FFs**.
 
-#### 7.1.4 On-Chip Memory Subsystem (Lattice SysMEM EBR)
-The MachXO2-2000 provides **8 True Dual-Port SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total capacity):
+#### 7.1.4 On-Chip Memory Subsystem (Lattice SysMEM EBR & Distributed RAM)
+The MachXO2-2000 provides **8 independent physical SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total capacity). Under Table 2.5 of the datasheet, single-port mode provides up to 18-bit width per block, so 32-bit datapath access is achieved by pairing blocks in parallel:
 
-* **Block 0 (Datapath Scratch & Stacks):**
-  * Hardware Operand Stack: 64 entries $\times$ 32 bits = 256 bytes (`0x0200`–`0x02FF`).
+* **EBR 0 & EBR 1 (Paired Single-Port 512 $\times$ 32-bit RAM: 2,048 Bytes):**
+  * Hardware Operand Stack: 128 words $\times$ 32 bits = 512 bytes (`SP[5:0]`).
+  * Vector & Math Scratchpad RAM: 64 words $\times$ 32 bits = 256 bytes (`SCR[0..63]`).
   * User Storage Memory: 16 slots $\times$ 32 bits = 64 bytes (`0x0300`–`0x033F`).
-  * Command Queue Buffer: 32 bytes (`0x0340`–`0x035F`).
-  * Vector Scratchpad: 256 bytes (`0x0360`–`0x03FF`).
-* **Block 1 & Block 2 (Microcode Store):**
-  * 1,024 words $\times$ 16 bits of micro-instruction memory (`0x0000`–`0x07FF`), loaded at boot.
-* **Blocks 3–6 (Mathematical Constants & Lookup Tables):**
-  * 256-entry Q0.16 Reciprocal Square Root Seed Table (512 bytes, `0x0600`–`0x07FF`).
-  * 256-entry Q0.16 Reciprocal Division Seed Table (512 bytes).
-  * 64-entry CORDIC Hyperbolic & Trigonometric Arctangent Tables (512 bytes).
-  * IEEE-754 F32/F64 Mathematical Constants Table ($\pi$, $e$, $\ln 2$, etc., `0x0080`–`0x00FF`).
-* **Block 7 (Free Headroom):**
-  * 1 unallocated EBR block reserved for user FIR filter coefficients or future expansion.
+  * Reserved / Working Storage: 304 words $\times$ 32 bits = 1,216 bytes headroom.
+* **EBR 2 & EBR 3 (Paired 512 $\times$ 32-bit Constants ROM: 2,048 Bytes):**
+  * Trigonometric & CORDIC Arctangent Angles: 128 words $\times$ 32 bits = 512 bytes.
+  * Chebyshev Polynomial Coefficients: 128 words $\times$ 32 bits = 512 bytes.
+  * IEEE-754 F32/F64 Mathematical Constants: 64 words $\times$ 32 bits = 256 bytes ($\pi$, $e$, $\ln 2$).
+  * Math Constants Headroom: 192 words $\times$ 32 bits = 768 bytes.
+* **EBR 4 (Single 512 $\times$ 16-bit Seed ROM: 1,024 Bytes):**
+  * Reciprocal Square Root Seed Table: 256 words $\times$ 16 bits = 512 bytes.
+  * Reciprocal Division Seed Table: 256 words $\times$ 16 bits = 512 bytes.
+* **EBR 5 & EBR 6 (Paired 512 $\times$ 32-bit Microcode ROM: 2,048 Bytes):**
+  * Runtime Microcode Execution Store: 512 micro-instructions $\times$ 32-bit wide horizontal control words, preloaded at boot.
+* **EBR 7 (Unallocated Headroom: 1,152 Bytes):**
+  * 1 full physical EBR block completely unallocated, reserved for future FIR filter buffers or vector coprocessor extensions.
+* **Distributed LUT-RAM (PFU Slices, 0 EBR consumed):**
+  * Command Stack / Batch Queue Buffer: 32 bytes $\times$ 8-bit (`OSP[4:0]`, `BPC[4:0]`), using ~12 LUT4s.
 
 ---
 
@@ -1898,16 +2000,161 @@ The MachXO2-2000 provides **8 True Dual-Port SysMEM EBR blocks** (9 Kbits / 1,15
 | Subsystem Component | LUT4s | Flip-Flops (FFs) | SysMEM EBR Blocks |
 |---|:---:|:---:|:---:|
 | **ALU Core Primitives (`alu/`)** | 370 | 10 | 0 |
-| **Dedicated Register File & Steering** | 112 | 355 | 0 |
+| **Dedicated Register File & Steering** | 120 | 419 | 0 |
 | **Micro-Sequencer & Micro-Op Decoder** | 125 | 24 | 0 |
 | **Host Z80 Bus Interface & Dispatcher** | 95 | 45 | 0 |
 | **Autonomous SPI Flash Bootloader** | 85 | 60 | 0 |
-| **On-Chip Memory Subsystem** | 0 | 0 | 7 Blocks |
-| **Total Estimated Utilization** | **~787 LUT4s** | **~494 FFs** | **7 Blocks** |
+| **Distributed LUT-RAM Command Stack** | 12 | 0 | 0 |
+| **On-Chip SysMEM EBR Memory** | 0 | 0 | 7 Blocks |
+| **Total Estimated Utilization** | **~807 LUT4s** | **~558 FFs** | **7 Blocks** |
 | **Available on MachXO2-2000HC** | **2,112 LUT4s** | **2,112 FFs** | **8 Blocks** |
-| **Utilization Percentage** | **37.3%** | **23.4%** | **87.5%** |
-| **Remaining Free Margin** | **~62.7% Free (1,325 LUT4s)** | **~76.6% Free (1,618 FFs)** | **1 Block Free (12.5%)** |
+| **Utilization Percentage** | **38.2%** | **26.4%** | **87.5%** |
+| **Remaining Free Margin** | **~61.8% Free (1,305 LUT4s)** | **~73.6% Free (1,554 FFs)** | **1 Block Free (12.5%)** |
 
 > [!NOTE]
 > **Resource Analysis & Routing Headroom:**
-> With only **~37.3% LUT4 utilization** and **~23.4% FF utilization**, the design easily meets timing closure at the internal **80 MHz** clock target. The low slice density prevents routing congestion across the MachXO2 switch matrix, leaving ample capacity for backplane bus monitoring, memory banking controllers, or custom peripheral registers.
+> With only **~38.2% LUT4 utilization** and **~26.4% FF utilization**, the design easily meets timing closure at the internal **80 MHz** clock target. The low slice density and 2-stage hierarchical multiplexing prevent routing congestion across the MachXO2 switch matrix, leaving ample capacity for backplane bus monitoring, memory banking controllers, or custom peripheral registers.
+
+---
+
+## Appendix A: Dispatcher-to-ALU Micro-Op Handshaking & Variable-Latency Execution Glue
+
+This appendix details the request/acknowledge handshaking pattern connecting the central microcode dispatcher FSM to execution units with variable latency (such as multi-cycle barrel shifters, Radix-4 Booth multipliers, CORDIC rotators, or single-cycle integer adders).
+
+Decoupling the dispatcher from the ALU execution latency allows single-cycle operations (e.g., `ADD`, `OR`, `XOR`) and multi-cycle operations (e.g., multi-bit shifts, `MUL`, `DIV`) to share the exact same dispatch and writeback control logic.
+
+### A.1 Signal Naming & Protocol Flow
+
+To make the code readable, modular, and easy to trace during hardware backplane probing:
+
+* **`alu_start`** (Dispatcher $\rightarrow$ ALU): Driven high for exactly 1 clock cycle when the dispatcher issues a new operation.
+* **`alu_wb`** (ALU $\rightarrow$ Register File): Drives the destination register's Clock Enable (`CE`). High for 1 clock cycle when the valid result is presented on `alu_result`.
+* **`alu_done`** (ALU $\rightarrow$ Dispatcher): Signals to the main CPU/FSM that the ALU cycle has finished so the dispatcher can fetch/decode the next instruction or advance the micro-PC (`UPC`).
+
+### A.2 Step-by-Step Execution Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant D as Dispatcher
+    participant A as ALU Core
+    participant R as Destination Register
+
+    Note over D,R: T1 -> T2: Dispatch Cycle
+    D->>A: Drive operands (HA_BUS, HB_BUS) & alu_op
+    D->>A: Pulse alu_start = 1 (1 cycle)
+    Note over A: T2: Sample start=1, enter BUSY, clear alu_done <= 0
+
+    Note over D,A: T2 -> Tk: Execution Phase (k-1 cycles)
+    D-->>D: Stall while alu_done == 0 (drop alu_start <= 0)
+    A->>A: Multi-cycle calculation (shift / mul / cordic)
+
+    Note over A,R: Tk -> Tk+1: Completion & Writeback
+    A->>R: Drive alu_result (RES_BUS), Assert alu_wb = 1 (CE)
+    A->>D: Assert alu_done = 1
+    Note over R: Tk+1: Clock edge samples alu_result
+    Note over D: Tk+1: Sample alu_done == 1, advance UPC
+```
+
+#### 1. Dispatch Cycle ($T_1 \rightarrow T_2$)
+* **Dispatcher Action:** Places operand registers onto the ALU input buses (`HA_BUS`, `HB_BUS`), sets the ALU function select line (`alu_op`), and pulses **`alu_start = 1`** for 1 clock cycle.
+* **At $T_2 \uparrow$:** The ALU sees `alu_start == 1`, enters its `STATE_CALC` / `BUSY` state, clears `alu_done <= 0`, and begins the calculation.
+
+#### 2. Execution Phase ($T_2 \rightarrow T_k$)
+* **ALU Action:** Internal counter, shifter, or accumulator stages run for $k-1$ clock ticks.
+* **Dispatcher Action:** Stalls on the current instruction/micro-op while `alu_done == 0`. `alu_start` returns to `0`.
+
+#### 3. Completion & Writeback ($T_k \rightarrow T_{k+1}$)
+* **At $T_k$:** Math finishes. The ALU places the final answer on `alu_result`, asserts **`alu_wb = 1`**, and asserts **`alu_done = 1`**.
+* **At $T_{k+1} \uparrow$:**
+  1. The destination register (`AL`, `AH`, etc.) samples `alu_result` because its `CE` line (`alu_wb`) is high.
+  2. The Dispatcher sees `alu_done == 1`, drops `alu_wb` and `alu_done` back to `0`, and advances the program counter or instruction state machine.
+
+### A.3 Verilog Reference Implementation: Variable-Latency ALU Handshake
+
+Here is how cleanly this maps into a state machine inside your ALU module:
+
+```verilog
+module alu_core (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire        alu_start,  // Trigger from Dispatcher (pulsed for 1 cycle)
+    input  wire [2:0]  alu_op,     // Operation select
+    input  wire [31:0] operand_a,  // From HA_BUS
+    input  wire [31:0] operand_b,  // From HB_BUS
+    output reg  [31:0] alu_result, // Output onto RES_BUS
+    output reg         alu_wb,     // Drives destination Register CE
+    output reg         alu_done    // Tells Dispatcher to proceed
+);
+
+    localparam STATE_IDLE = 2'b00;
+    localparam STATE_CALC = 2'b01;
+    localparam STATE_DONE = 2'b10;
+
+    reg [1:0] state;
+    reg [4:0] shift_count; // Example multi-cycle counter (0..31)
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state      <= STATE_IDLE;
+            alu_wb     <= 1'b0;
+            alu_done   <= 1'b0;
+            alu_result <= 32'h0000_0000;
+        end else begin
+            case (state)
+                STATE_IDLE: begin
+                    alu_wb   <= 1'b0;
+                    alu_done <= 1'b0;
+
+                    if (alu_start) begin
+                        case (alu_op)
+                            // Single-cycle ADD: Immediate result ready for next edge
+                            3'b000: begin
+                                alu_result <= operand_a + operand_b;
+                                alu_wb     <= 1'b1; // Register CE high for T2 edge
+                                alu_done   <= 1'b1;
+                                state      <= STATE_DONE;
+                            end
+                            
+                            // Multi-cycle Shift: Start counter
+                            3'b001: begin
+                                alu_result  <= operand_a;
+                                shift_count <= operand_b[4:0];
+                                state       <= STATE_CALC;
+                            end
+
+                            default: state <= STATE_IDLE;
+                        endcase
+                    end
+                end
+
+                STATE_CALC: begin
+                    if (shift_count > 1) begin
+                        alu_result  <= {alu_result[30:0], 1'b0};
+                        shift_count <= shift_count - 1'b1;
+                    end else begin
+                        // Final tick of multi-cycle operation
+                        alu_result <= {alu_result[30:0], 1'b0};
+                        alu_wb     <= 1'b1; // Trigger writeback on T_k+1 edge
+                        alu_done   <= 1'b1;
+                        state      <= STATE_DONE;
+                    end
+                end
+
+                STATE_DONE: begin
+                    // Clean up handshakes for 1 cycle
+                    alu_wb   <= 1'b0;
+                    alu_done <= 1'b0;
+                    state    <= STATE_IDLE;
+                end
+            endcase
+        end
+    end
+
+endmodule
+```
+
+### A.4 Two Essential Rules for Handshake Reliability
+
+1. **Pulse `alu_start` for Exactly 1 Cycle:** Ensure the dispatcher drops `alu_start` back to `0` immediately after asserting it, otherwise the ALU will re-trigger the same operation as soon as it transitions back to `STATE_IDLE`.
+2. **Combine Single-Cycle Latency in `STATE_IDLE`:** Notice how single-cycle operations (`3'b000` ADD) set `alu_wb <= 1` immediately inside `STATE_IDLE`. This eliminates any extra state-transition penalty for fast operations while keeping the exact same completion signal for the dispatcher.

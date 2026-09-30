@@ -134,8 +134,8 @@ def test_booth_core_64(m, q, expected_res128, expected_cf, expected_zf, expected
 @pytest.mark.parametrize("src", [Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH])
 def test_mul32_all_source_registers(src):
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(3, 4))
-    hw.reg.set(src, Registers.from_int(7, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(3, 4))
+    hw.reg.testharness_set(src, Registers.from_int(7, 4))
 
     mul32(hw, src)
 
@@ -151,8 +151,8 @@ def test_mul32_all_source_registers(src):
 def test_mul32_overflow_sets_flags():
     hw = Hardware()
     # 0x40000000 * 2 = 0x80000000 (overflows signed 32-bit)
-    hw.reg.set(Reg.AL, Registers.from_int(0x40000000, 4))
-    hw.reg.set(Reg.BL, Registers.from_int(2, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x40000000, 4))
+    hw.reg.testharness_set(Reg.BL, Registers.from_int(2, 4))
 
     mul32(hw, Reg.BL)
 
@@ -166,8 +166,8 @@ def test_mul32_overflow_sets_flags():
 @pytest.mark.parametrize("src", [Reg.BX, Reg.DX, Reg.FX])
 def test_mul64_all_source_registers(src):
     hw = Hardware()
-    hw.reg.set(Reg.AX, Registers.from_int(10, 8))
-    hw.reg.set(src, Registers.from_int(20, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(10, 8))
+    hw.reg.testharness_set(src, Registers.from_int(20, 8))
 
     mul64(hw, src)
 
@@ -189,8 +189,8 @@ def test_alu_class_booth_delegation():
     hw = Hardware()
     alu = Alu(hw)
 
-    hw.reg.set(Reg.AL, Registers.from_int(6, 4))
-    hw.reg.set(Reg.BL, Registers.from_int(7, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(6, 4))
+    hw.reg.testharness_set(Reg.BL, Registers.from_int(7, 4))
 
     alu.mul32(Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 42

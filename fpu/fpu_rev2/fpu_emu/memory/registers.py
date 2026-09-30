@@ -1,13 +1,54 @@
 """Physical and logical register file implementation for Zx50 FPU.
 
-All physical registers are stored internally as Little-Endian bytearrays.
-Compound 64-bit registers (AX, BX, DX, FX) map directly to pairs of 32-bit registers.
-Direct member variable manipulation is discouraged; callers must use the public API.
+Enforces physical bus routing via HA_BUS and HB_BUS, single-tick multiplexer
+timing rules, and clock-enabled writeback via RES_BUS. Direct access to math
+and compound registers is strictly forbidden during execution.
 """
 
 from enum import Enum
 import struct
-from typing import Union
+from typing import Any, Optional, Union
+from fpu_emu.fpga_resource import fpga_resource
+
+
+class HalfSelect(Enum):
+    """32-bit Half selection for 64-bit buses and registers."""
+
+    LO = 0
+    HI = 1
+
+    @classmethod
+    def from_val(cls, val: Union["HalfSelect", str, int]) -> "HalfSelect":
+        """Converts an enum, string ('HI'/'LO'), or integer (0/1) to HalfSelect."""
+        if isinstance(val, HalfSelect):
+            return val
+        if isinstance(val, str):
+            val_upper = val.upper().strip()
+            if val_upper in ("LO", "LOW", "0", "L"):
+                return cls.LO
+            elif val_upper in ("HI", "HIGH", "1", "H"):
+                return cls.HI
+        elif isinstance(val, int):
+            return cls.HI if val != 0 else cls.LO
+        raise ValueError(f"Invalid HalfSelect value: {val}")
+
+
+class HardwareTimingConflictError(Exception):
+    """Raised when hardware timing rules are violated in a single clock cycle."""
+
+    pass
+
+
+class HardwareBusError(Exception):
+    """Raised when an illegal bus access occurs."""
+
+    pass
+
+
+class HardwareAccessViolationError(Exception):
+    """Raised when direct register access is attempted on bus-gated registers."""
+
+    pass
 
 
 class Reg(Enum):
@@ -70,9 +111,9 @@ class StatusFlag(Enum):
 
 
 class Registers:
-    """Register file holding all physical FPU registers."""
+    """Register file holding all physical FPU registers and enforcing bus architecture."""
 
-    def __init__(self):
+    def __init__(self, clock: Optional[Any] = None):
         # 32-bit registers (Little-Endian: byte 0 = LSB, byte 3 = MSB)
         self._al = bytearray(4)
         self._ah = bytearray(4)
@@ -101,8 +142,177 @@ class Registers:
         self.sign_b: int = 0
         self.sign_res: int = 0
 
+        # Clock binding and bus cycle tracking
+        self._clock: Optional[Any] = clock
+        self._last_ha_tick: int = -1
+        self._last_hb_tick: int = -1
+        self._last_res_tick: int = -1
+
+        # MUX State Latches
+        self._ha_bus_half: Optional[HalfSelect] = None
+        self._hb_bus_reg: Optional[Reg] = None
+        self._hb_bus_half: Optional[HalfSelect] = None
+
+    def bind_clock(self, clock: Any) -> None:
+        """Binds master clock instance to monitor cycle transitions."""
+        self._clock = clock
+
+    @property
+    def current_tick(self) -> int:
+        """Returns the current clock cycle count."""
+        return self._clock.cycles if self._clock is not None else 0
+
     # -------------------------------------------------------------------------
-    # Properties for int-access convenience
+    # Shared Bus Interface & Timing Collision Protection
+    # -------------------------------------------------------------------------
+    @fpga_resource(
+        approach="32-bit 2:1 PFU multiplexer (AL vs AH)",
+        luts=16,
+        delay_ns=1.2,
+        cycles=1,
+        shared_unit="bus_ha_mux",
+    )
+    def set_ha_bus_mux(self, half: Union[HalfSelect, str, int]) -> None:
+        """Selects AL (LO) or AH (HI) to drive HA_BUS[31:0].
+
+        Throws HardwareTimingConflictError if called more than once in the same clock cycle.
+        """
+        half_sel = HalfSelect.from_val(half)
+        tick = self.current_tick
+        if self._last_ha_tick == tick:
+            raise HardwareTimingConflictError(
+                f"HA_BUS multiplexer timing violation: switched multiple times in clock cycle {tick}"
+            )
+        self._last_ha_tick = tick
+        self._ha_bus_half = half_sel
+
+    @fpga_resource(
+        approach="32-bit 8:1 PFU multiplexer (BL,BH,DL,DH,FL,FH,AL,AH)",
+        luts=64,
+        delay_ns=2.4,
+        cycles=1,
+        shared_unit="bus_hb_mux",
+    )
+    def set_hb_mux(
+        self,
+        half: Union[HalfSelect, str, int],
+        src: Union[Reg, str],
+    ) -> None:
+        """Selects a register half to drive HB_BUS[31:0].
+
+        Throws HardwareTimingConflictError if called more than once in the same clock cycle.
+        """
+        half_sel = HalfSelect.from_val(half)
+        if isinstance(src, str):
+            src = Reg[src.upper()]
+        tick = self.current_tick
+        if self._last_hb_tick == tick:
+            raise HardwareTimingConflictError(
+                f"HB_BUS multiplexer timing violation: switched multiple times in clock cycle {tick}"
+            )
+        self._last_hb_tick = tick
+        self._hb_bus_half = half_sel
+        self._hb_bus_reg = src
+
+    def read_ha_bus(self) -> bytearray:
+        """Reads the 32-bit (4-byte) value currently driven on HA_BUS."""
+        if self._ha_bus_half is None:
+            raise HardwareBusError("Attempted to read HA_BUS before set_ha_bus_mux was set.")
+        if self._ha_bus_half == HalfSelect.LO:
+            return bytearray(self._al)
+        else:
+            return bytearray(self._ah)
+
+    def read_hb_bus(self) -> bytearray:
+        """Reads the 32-bit (4-byte) value currently driven on HB_BUS."""
+        if self._hb_bus_half is None or self._hb_bus_reg is None:
+            raise HardwareBusError("Attempted to read HB_BUS before set_hb_mux was set.")
+
+        src = self._hb_bus_reg
+        half = self._hb_bus_half
+
+        if src == Reg.AX:
+            return bytearray(self._al if half == HalfSelect.LO else self._ah)
+        elif src == Reg.BX:
+            return bytearray(self._bl if half == HalfSelect.LO else self._bh)
+        elif src == Reg.DX:
+            return bytearray(self._dl if half == HalfSelect.LO else self._dh)
+        elif src == Reg.FX:
+            return bytearray(self._fl if half == HalfSelect.LO else self._fh)
+        elif src in (Reg.AL, Reg.BL, Reg.DL, Reg.FL):
+            return bytearray(getattr(self, f"_{src.name.lower()}"))
+        elif src in (Reg.AH, Reg.BH, Reg.DH, Reg.FH):
+            return bytearray(getattr(self, f"_{src.name.lower()}"))
+        elif src == Reg.EA:
+            return bytearray(self.ea.to_bytes(4, byteorder="little"))
+        elif src == Reg.EB:
+            return bytearray(self.eb.to_bytes(4, byteorder="little"))
+        elif src == Reg.C:
+            return bytearray(self.c.to_bytes(4, byteorder="little"))
+        else:
+            raise HardwareBusError(f"Unsupported register source for HB_BUS: {src}")
+
+    @fpga_resource(
+        approach="32-bit 6:1 PFU multiplexer and 4-to-11 WE decoder",
+        luts=70,
+        delay_ns=2.6,
+        cycles=1,
+        shared_unit="bus_res_mux",
+    )
+    def set_res_bus(
+        self,
+        dst: Union[Reg, str],
+        data: Union[bytes, bytearray, int],
+    ) -> None:
+        """Drives RES_BUS[31:0] and asserts WE_<dst> to latch data on clock edge.
+
+        Throws HardwareTimingConflictError if called more than once in the same clock cycle.
+        """
+        if isinstance(dst, str):
+            dst = Reg[dst.upper()]
+        tick = self.current_tick
+        if self._last_res_tick == tick:
+            raise HardwareTimingConflictError(
+                f"RES_BUS collision: multiple writes attempted in clock cycle {tick}"
+            )
+        self._last_res_tick = tick
+
+        if isinstance(data, int):
+            data_bytes = data.to_bytes(4, byteorder="little", signed=(data < 0))
+        elif isinstance(data, (bytes, bytearray)):
+            data_bytes = data
+        else:
+            raise TypeError(f"Invalid data type for set_res_bus: {type(data).__name__}")
+
+        if dst == Reg.AL:
+            self._al[:] = data_bytes[:4]
+        elif dst == Reg.AH:
+            self._ah[:] = data_bytes[:4]
+        elif dst == Reg.BL:
+            self._bl[:] = data_bytes[:4]
+        elif dst == Reg.BH:
+            self._bh[:] = data_bytes[:4]
+        elif dst == Reg.DL:
+            self._dl[:] = data_bytes[:4]
+        elif dst == Reg.DH:
+            self._dh[:] = data_bytes[:4]
+        elif dst == Reg.FL:
+            self._fl[:] = data_bytes[:4]
+        elif dst == Reg.FH:
+            self._fh[:] = data_bytes[:4]
+        elif dst == Reg.EA:
+            val = int.from_bytes(data_bytes[:2], byteorder="little") & 0x0FFF
+            self.ea = val
+        elif dst == Reg.EB:
+            val = int.from_bytes(data_bytes[:2], byteorder="little") & 0x0FFF
+            self.eb = val
+        elif dst == Reg.C:
+            self.c = data_bytes[0] & 0x3F
+        else:
+            raise HardwareBusError(f"Unsupported writeback destination for RES_BUS: {dst}")
+
+    # -------------------------------------------------------------------------
+    # Allowed Control & Status Getters / Setters
     # -------------------------------------------------------------------------
     @property
     def status(self) -> int:
@@ -174,45 +384,6 @@ class Registers:
         self._eb[1] = (masked >> 8) & 0x0F
 
     # -------------------------------------------------------------------------
-    # Compound 64-bit register properties
-    # -------------------------------------------------------------------------
-    @property
-    def ax(self) -> bytearray:
-        """64-bit compound {AH, AL} (Little-Endian: AL is low, AH is high)."""
-        return self.get(Reg.AX)
-
-    @ax.setter
-    def ax(self, val: Union[bytes, bytearray]):
-        self.set(Reg.AX, val)
-
-    @property
-    def bx(self) -> bytearray:
-        """64-bit compound {BH, BL}."""
-        return self.get(Reg.BX)
-
-    @bx.setter
-    def bx(self, val: Union[bytes, bytearray]):
-        self.set(Reg.BX, val)
-
-    @property
-    def dx(self) -> bytearray:
-        """64-bit compound {DH, DL}."""
-        return self.get(Reg.DX)
-
-    @dx.setter
-    def dx(self, val: Union[bytes, bytearray]):
-        self.set(Reg.DX, val)
-
-    @property
-    def fx(self) -> bytearray:
-        """64-bit compound {FH, FL}."""
-        return self.get(Reg.FX)
-
-    @fx.setter
-    def fx(self, val: Union[bytes, bytearray]):
-        self.set(Reg.FX, val)
-
-    # -------------------------------------------------------------------------
     # Status Flag Manipulation
     # -------------------------------------------------------------------------
     def get_flag(self, flag: Union[StatusFlag, int]) -> bool:
@@ -237,10 +408,33 @@ class Registers:
         self._status[0] = 0
 
     # -------------------------------------------------------------------------
-    # Core get / set API
+    # Public Access & Test Bench Backdoors
     # -------------------------------------------------------------------------
-    def get(self, reg: Union[Reg, str]) -> bytearray:
-        """Gets a copy of the specified register as a bytearray."""
+    # def get(self, reg: Union[Reg, str]) -> bytearray:
+    #     """Gets register contents (delegates to peek)."""
+    #     return self.peek(reg)
+    #
+    # def set(
+    #     self,
+    #     reg: Union[Reg, str],
+    #     val: Union[bytes, bytearray, int],
+    # ) -> None:
+    #     """Sets register contents (delegates to load_test_vector)."""
+    #     self.load_test_vector(reg, val)
+
+    def testharness_set(
+        self,
+        reg: Union[Reg, str],
+        val: Union[bytes, bytearray, int],
+    ) -> None:
+        """Sets register contents (delegates to load_test_vector)."""
+        self.load_test_vector(reg, val)
+
+    # -------------------------------------------------------------------------
+    # Test Fixture Backdoors (Explicitly labeled for non-hardware test code)
+    # -------------------------------------------------------------------------
+    def testharness_peek(self, reg: Union[Reg, str]) -> bytearray:
+        """Test fixture backdoor: inspects raw register bytes bypassing bus muxes."""
         if isinstance(reg, str):
             reg = Reg[reg.upper()]
 
@@ -285,13 +479,21 @@ class Registers:
         else:
             raise ValueError(f"Unsupported register: {reg}")
 
-    def set(self, reg: Union[Reg, str], val: Union[bytes, bytearray]):
-        """Sets the specified register from bytes or bytearray."""
+    def load_test_vector(
+        self,
+        reg: Union[Reg, str],
+        val: Union[bytes, bytearray, int],
+    ) -> None:
+        """Test fixture backdoor: sets register state directly bypassing bus timing."""
         if isinstance(reg, str):
             reg = Reg[reg.upper()]
 
+        if isinstance(val, int):
+            length = reg.byte_length
+            val = val.to_bytes(length, byteorder="little", signed=(val < 0))
+
         if not isinstance(val, (bytes, bytearray)):
-            raise TypeError(f"val must be bytes or bytearray, got {type(val).__name__}")
+            raise TypeError(f"val must be bytes, bytearray, or int, got {type(val).__name__}")
 
         expected_len = reg.byte_length
         if len(val) != expected_len:
@@ -348,11 +550,7 @@ class Registers:
     # Hardware Reset
     # -------------------------------------------------------------------------
     def reset(self):
-        """Performs a master soft reset matching FPGA RESET (0xFF).
-
-        Zeroes general/math registers, exponents, counters, and pointers.
-        Initializes STATUS to 0x40 (ZERO flag asserted).
-        """
+        """Resets all physical registers and bus arbitration tracking to power-on state."""
         for r in (
             self._al,
             self._ah,
@@ -374,6 +572,13 @@ class Registers:
         self.sign_a = 0
         self.sign_b = 0
         self.sign_res = 0
+
+        self._last_ha_tick = -1
+        self._last_hb_tick = -1
+        self._last_res_tick = -1
+        self._ha_bus_half = None
+        self._hb_bus_reg = None
+        self._hb_bus_half = None
 
     # -------------------------------------------------------------------------
     # Conversion Utilities (for testbenches & loaders)
@@ -432,22 +637,19 @@ class Registers:
             flags.append("U")
         if self.get_flag(StatusFlag.ERR):
             flags.append("ERR")
-        flag_str = " ".join(flags) if flags else "-"
+        if self.get_flag(StatusFlag.DIFF_SIGN):
+            flags.append("DS")
 
-        # Little-Endian display: bytes displayed MSB-first for human reading
-        def hex_rev(b: bytearray) -> str:
-            return bytes(reversed(b)).hex().upper()
+        flg_str = " ".join(flags) if flags else "none"
 
-        lines = [
-            f"AL: {hex_rev(self._al)}  AH: {hex_rev(self._ah)}  (AX: {hex_rev(self.ax)})",
-            f"BL: {hex_rev(self._bl)}  BH: {hex_rev(self._bh)}  (BX: {hex_rev(self.bx)})",
-            f"DL: {hex_rev(self._dl)}  DH: {hex_rev(self._dh)}  (DX: {hex_rev(self.dx)})",
-            f"FL: {hex_rev(self._fl)}  FH: {hex_rev(self._fh)}  (FX: {hex_rev(self.fx)})",
-            f"EA: {hex_rev(self._ea)}  EB: {hex_rev(self._eb)}  C: {self.c:02X}",
-            f"SP: {self.sp:02X}        OSP: {self.osp:02X}       UPC: {self.upc:04X}",
-            f"STATUS: 0x{self.status:02X} [{flag_str}]",
-        ]
-        return "\n".join(lines)
-
-    def __repr__(self) -> str:
-        return f"<Registers SP={self.sp:02X} STATUS={self.status:02X} UPC={self.upc:04X}>"
+        return (
+            f"=== Register File Dump ===\n"
+            f"AX: 0x{self.to_int(self.testharness_peek(Reg.AX)):016X}  (AH: 0x{self.to_int(self.testharness_peek(Reg.AH)):08X}, AL: 0x{self.to_int(self.testharness_peek(Reg.AL)):08X})\n"
+            f"BX: 0x{self.to_int(self.testharness_peek(Reg.BX)):016X}  (BH: 0x{self.to_int(self.testharness_peek(Reg.BH)):08X}, BL: 0x{self.to_int(self.testharness_peek(Reg.BL)):08X})\n"
+            f"DX: 0x{self.to_int(self.testharness_peek(Reg.DX)):016X}  (DH: 0x{self.to_int(self.testharness_peek(Reg.DH)):08X}, DL: 0x{self.to_int(self.testharness_peek(Reg.DL)):08X})\n"
+            f"FX: 0x{self.to_int(self.testharness_peek(Reg.FX)):016X}  (FH: 0x{self.to_int(self.testharness_peek(Reg.FH)):08X}, FL: 0x{self.to_int(self.testharness_peek(Reg.FL)):08X})\n"
+            f"EA: 0x{self.ea:03X}  EB: 0x{self.eb:03X}  C: 0x{self.c:02X}\n"
+            f"SP: 0x{self.sp:02X}  OSP: 0x{self.osp:02X}  UPC: 0x{self.upc:03X}\n"
+            f"STATUS: 0x{self.status:02X} [{flg_str}]\n"
+            f"=========================="
+        )

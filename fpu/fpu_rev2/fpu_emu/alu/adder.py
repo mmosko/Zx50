@@ -2,11 +2,38 @@
 
 Implements ADD, ADC, SUB, SBB, and CMP per SystemDesign.md Section 3.1.
 Operates on the physical hardware register file and advances the system clock.
+
+VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
+- Module: alu_adder32 (time-multiplexed for 64-bit operations)
+- Architecture:
+  * 32-bit fast carry chain (16 CCU2C dual-ripple slices)
+  * 32 XOR gates for B-operand complement on subtraction (16 LUT4s)
+  * Dynamic carry-in (CIN mux selects 0, 1, or CF flip-flop)
+  * 32-bit Zero Flag evaluation NOR tree (6 LUT4s)
+  * Overflow evaluation (1 LUT4)
+- Inputs:
+  * Operand 1: Connected to HA_BUS[31:0] (from HA 2:1 selector: AL or AH)
+  * Operand 2: Connected to HB_BUS[31:0] (from HB 8:1 selector: BL, BH, DL, DH, FL, FH, AL, AH)
+  * Note: Input selection MUXes reside in the shared bus infrastructure (80 LUT4s total).
+- Output Destination:
+  * Drives RES_BUS[31:0] -> Latching steered to AL (Cycle 1) or AH (Cycle 2) via Clock Enables (WE_AL, WE_AH)
+  * Status flags: CF, ZF, SF, VF latched into STATUS register FFs (4 FFs)
+- Hardware Resources (MachXO2-2000, standalone adder core):
+  * Total LUT4s: 23 (16 XORs + 6 ZF NOR tree + 1 VF)
+  * Total CCU2C Carry Slices: 16 (32-bit carry chain)
+  * Flip-Flops (FF): 4 (status flags CF, ZF, SF, VF; destination registers in PFU)
+  * EBR Blocks: 0
+  * DSP Multipliers: 0
+- Critical Path & Timing:
+  * HA/HB bus setup (1.5 ns) + CCU2C carry ripple (1.8 ns) + flag NOR tree (1.2 ns) = 4.5 ns
+  * 32-bit operations: 1 clock cycle (20 ns at 50 MHz)
+  * 64-bit compound operations: 2 clock cycles (Cycle 1: AL+XL, Cycle 2: AH+XH+CF)
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag
+from fpu_emu.fpga_resource import fpga_resource
 
 # Permitted source registers
 VALID_32BIT_SRCS = {
@@ -17,22 +44,44 @@ VALID_64BIT_SRCS = {
 }
 
 
+def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
+    """Sets the HB_BUS multiplexer according to the source register and half."""
+    if half is not None:
+        hw.reg.set_hb_mux(half, src)
+    elif src in (Reg.AL, Reg.BL, Reg.DL, Reg.FL):
+        hw.reg.set_hb_mux(HalfSelect.LO, src)
+    elif src in (Reg.AH, Reg.BH, Reg.DH, Reg.FH):
+        hw.reg.set_hb_mux(HalfSelect.HI, src)
+    else:
+        raise ValueError(f"Invalid source register for HB_BUS: {src}")
+
+
+@fpga_resource(
+    approach="32 XOR gates + MachXO2 CCU2C fast carry-chain",
+    luts=23,
+    slices_ccu2c=16,
+    ffs=4,
+    delay_ns=3.9,
+    cycles=1,
+    shared_unit="alu_adder32",
+)
 def adder_core(
-    a: bytearray,
-    b: bytearray,
+    hw: Hardware,
     cin: int = 0,
     sub: bool = False
 ) -> Tuple[bytearray, bool, bool, bool, bool]:
-    """Pure byte-by-byte 32-bit carry-lookahead/ripple adder-subtractor core.
+    """Pure 32-bit carry-lookahead/ripple adder-subtractor core.
 
-    Models MachXO2 CCU2C dedicated carry chains.
+    Models MachXO2 CCU2C dedicated carry chains connected directly to HA_BUS and HB_BUS.
 
-    :param a: 4-byte Little-Endian operand A
-    :param b: 4-byte Little-Endian operand B
+    :param hw: Hardware instance holding registers and datapath buses
     :param cin: Carry-in (0 or 1) for addition; Borrow-in (0 or 1) for subtraction
-    :param sub: True for subtraction (A - B - cin), False for addition (A + B + cin)
+    :param sub: True for subtraction (HA - HB - cin), False for addition (HA + HB + cin)
     :return: (result, carry_borrow_out, zf, sf, vf)
     """
+    a = hw.reg.read_ha_bus()
+    b = hw.reg.read_hb_bus()
+
     if len(a) != 4 or len(b) != 4:
         raise ValueError(f"Operands must be 4 bytes each, got len(a)={len(a)}, len(b)={len(b)}")
 
@@ -80,22 +129,22 @@ def add32(hw: Hardware, src: Reg):
     """ADD AL, src: 32-bit addition without carry (1 cycle)."""
     _validate_src32(src)
     hw.clock.tick(1)
-    a = hw.reg.get(Reg.AL)
-    b = hw.reg.get(src)
-    res, cf, zf, sf, vf = adder_core(a, b, cin=0, sub=False)
-    hw.reg.set(Reg.AL, res)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src)
+    res, cf, zf, sf, vf = adder_core(hw, cin=0, sub=False)
+    hw.reg.set_res_bus(Reg.AL, res)
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
 def adc32(hw: Hardware, src: Reg):
     """ADC AL, src: 32-bit addition with carry (1 cycle)."""
     _validate_src32(src)
-    hw.clock.tick(1)
     cin = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
-    a = hw.reg.get(Reg.AL)
-    b = hw.reg.get(src)
-    res, cf, zf, sf, vf = adder_core(a, b, cin=cin, sub=False)
-    hw.reg.set(Reg.AL, res)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src)
+    res, cf, zf, sf, vf = adder_core(hw, cin=cin, sub=False)
+    hw.reg.set_res_bus(Reg.AL, res)
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
@@ -103,22 +152,22 @@ def sub32(hw: Hardware, src: Reg):
     """SUB AL, src: 32-bit subtraction without borrow (1 cycle)."""
     _validate_src32(src)
     hw.clock.tick(1)
-    a = hw.reg.get(Reg.AL)
-    b = hw.reg.get(src)
-    res, cf, zf, sf, vf = adder_core(a, b, cin=0, sub=True)
-    hw.reg.set(Reg.AL, res)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src)
+    res, cf, zf, sf, vf = adder_core(hw, cin=0, sub=True)
+    hw.reg.set_res_bus(Reg.AL, res)
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
 def sbb32(hw: Hardware, src: Reg):
     """SBB AL, src: 32-bit subtraction with borrow (1 cycle)."""
     _validate_src32(src)
-    hw.clock.tick(1)
     borrow_in = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
-    a = hw.reg.get(Reg.AL)
-    b = hw.reg.get(src)
-    res, cf, zf, sf, vf = adder_core(a, b, cin=borrow_in, sub=True)
-    hw.reg.set(Reg.AL, res)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src)
+    res, cf, zf, sf, vf = adder_core(hw, cin=borrow_in, sub=True)
+    hw.reg.set_res_bus(Reg.AL, res)
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
@@ -126,9 +175,10 @@ def cmp32(hw: Hardware, src: Reg):
     """CMP AL, src: 32-bit compare AL - src without modifying AL (1 cycle)."""
     _validate_src32(src)
     hw.clock.tick(1)
-    a = hw.reg.get(Reg.AL)
-    b = hw.reg.get(src)
-    _, cf, zf, sf, vf = adder_core(a, b, cin=0, sub=True)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src)
+    _, cf, zf, sf, vf = adder_core(hw, cin=0, sub=True)
+    # Latching disabled: WE_AL = 0
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
 
@@ -138,94 +188,106 @@ def cmp32(hw: Hardware, src: Reg):
 def add64(hw: Hardware, src: Reg):
     """ADD AX, src: 64-bit addition without carry (2 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(2)
-    src_bytes = hw.reg.get(src)
-    src_l, src_h = src_bytes[0:4], src_bytes[4:8]
 
     # Cycle 1: Low word add
-    al = hw.reg.get(Reg.AL)
-    res_l, cout_l, zf_l, _, _ = adder_core(al, src_l, cin=0, sub=False)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src, HalfSelect.LO)
+    res_l, cout_l, zf_l, _, _ = adder_core(hw, cin=0, sub=False)
+    hw.reg.set_res_bus(Reg.AL, res_l)
 
     # Cycle 2: High word add with carry
-    ah = hw.reg.get(Reg.AH)
-    res_h, cf, zf_h, sf, vf = adder_core(ah, src_h, cin=(1 if cout_l else 0), sub=False)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    _select_hb(hw, src, HalfSelect.HI)
+    res_h, cf, zf_h, sf, vf = adder_core(hw, cin=(1 if cout_l else 0), sub=False)
+    hw.reg.set_res_bus(Reg.AH, res_h)
 
-    hw.reg.set(Reg.AX, res_l + res_h)
     _set_flags(hw, cf=cf, zf=(zf_l and zf_h), sf=sf, vf=vf)
 
 
 def adc64(hw: Hardware, src: Reg):
     """ADC AX, src: 64-bit addition with carry (2 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(2)
     cin = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
-    src_bytes = hw.reg.get(src)
-    src_l, src_h = src_bytes[0:4], src_bytes[4:8]
 
     # Cycle 1: Low word add with initial carry
-    al = hw.reg.get(Reg.AL)
-    res_l, cout_l, zf_l, _, _ = adder_core(al, src_l, cin=cin, sub=False)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src, HalfSelect.LO)
+    res_l, cout_l, zf_l, _, _ = adder_core(hw, cin=cin, sub=False)
+    hw.reg.set_res_bus(Reg.AL, res_l)
 
     # Cycle 2: High word add with carry
-    ah = hw.reg.get(Reg.AH)
-    res_h, cf, zf_h, sf, vf = adder_core(ah, src_h, cin=(1 if cout_l else 0), sub=False)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    _select_hb(hw, src, HalfSelect.HI)
+    res_h, cf, zf_h, sf, vf = adder_core(hw, cin=(1 if cout_l else 0), sub=False)
+    hw.reg.set_res_bus(Reg.AH, res_h)
 
-    hw.reg.set(Reg.AX, res_l + res_h)
     _set_flags(hw, cf=cf, zf=(zf_l and zf_h), sf=sf, vf=vf)
 
 
 def sub64(hw: Hardware, src: Reg):
     """SUB AX, src: 64-bit subtraction without borrow (2 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(2)
-    src_bytes = hw.reg.get(src)
-    src_l, src_h = src_bytes[0:4], src_bytes[4:8]
 
     # Cycle 1: Low word subtract
-    al = hw.reg.get(Reg.AL)
-    res_l, bout_l, zf_l, _, _ = adder_core(al, src_l, cin=0, sub=True)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src, HalfSelect.LO)
+    res_l, bout_l, zf_l, _, _ = adder_core(hw, cin=0, sub=True)
+    hw.reg.set_res_bus(Reg.AL, res_l)
 
     # Cycle 2: High word subtract with borrow
-    ah = hw.reg.get(Reg.AH)
-    res_h, cf, zf_h, sf, vf = adder_core(ah, src_h, cin=(1 if bout_l else 0), sub=True)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    _select_hb(hw, src, HalfSelect.HI)
+    res_h, cf, zf_h, sf, vf = adder_core(hw, cin=(1 if bout_l else 0), sub=True)
+    hw.reg.set_res_bus(Reg.AH, res_h)
 
-    hw.reg.set(Reg.AX, res_l + res_h)
     _set_flags(hw, cf=cf, zf=(zf_l and zf_h), sf=sf, vf=vf)
 
 
 def sbb64(hw: Hardware, src: Reg):
     """SBB AX, src: 64-bit subtraction with borrow (2 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(2)
     borrow_in = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
-    src_bytes = hw.reg.get(src)
-    src_l, src_h = src_bytes[0:4], src_bytes[4:8]
 
     # Cycle 1: Low word subtract with initial borrow
-    al = hw.reg.get(Reg.AL)
-    res_l, bout_l, zf_l, _, _ = adder_core(al, src_l, cin=borrow_in, sub=True)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src, HalfSelect.LO)
+    res_l, bout_l, zf_l, _, _ = adder_core(hw, cin=borrow_in, sub=True)
+    hw.reg.set_res_bus(Reg.AL, res_l)
 
     # Cycle 2: High word subtract with borrow
-    ah = hw.reg.get(Reg.AH)
-    res_h, cf, zf_h, sf, vf = adder_core(ah, src_h, cin=(1 if bout_l else 0), sub=True)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    _select_hb(hw, src, HalfSelect.HI)
+    res_h, cf, zf_h, sf, vf = adder_core(hw, cin=(1 if bout_l else 0), sub=True)
+    hw.reg.set_res_bus(Reg.AH, res_h)
 
-    hw.reg.set(Reg.AX, res_l + res_h)
     _set_flags(hw, cf=cf, zf=(zf_l and zf_h), sf=sf, vf=vf)
 
 
 def cmp64(hw: Hardware, src: Reg):
     """CMP AX, src: 64-bit compare AX - src without modifying AX (2 cycles)."""
     _validate_src64(src)
-    hw.clock.tick(2)
-    src_bytes = hw.reg.get(src)
-    src_l, src_h = src_bytes[0:4], src_bytes[4:8]
 
-    al = hw.reg.get(Reg.AL)
-    _, bout_l, zf_l, _, _ = adder_core(al, src_l, cin=0, sub=True)
+    # Cycle 1: Low word compare
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    _select_hb(hw, src, HalfSelect.LO)
+    _, bout_l, zf_l, _, _ = adder_core(hw, cin=0, sub=True)
 
-    ah = hw.reg.get(Reg.AH)
-    _, cf, zf_h, sf, vf = adder_core(ah, src_h, cin=(1 if bout_l else 0), sub=True)
+    # Cycle 2: High word compare
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    _select_hb(hw, src, HalfSelect.HI)
+    _, cf, zf_h, sf, vf = adder_core(hw, cin=(1 if bout_l else 0), sub=True)
 
+    # Latching disabled: WE_AL = WE_AH = 0
     _set_flags(hw, cf=cf, zf=(zf_l and zf_h), sf=sf, vf=vf)
 
 

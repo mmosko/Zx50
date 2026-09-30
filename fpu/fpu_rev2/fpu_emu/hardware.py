@@ -19,9 +19,13 @@ class Hardware:
     mem: Ram = field(default_factory=Ram)
     rom: Rom = field(default_factory=Rom)
 
+    def __post_init__(self):
+        self.reg.bind_clock(self.clock)
+
     def reset(self, clear_mem: bool = False):
         """Performs a master hardware reset on clock, registers, and optionally RAM."""
         self.clock.reset()
         self.reg.reset()
+        self.reg.bind_clock(self.clock)
         if clear_mem:
             self.mem.clear()

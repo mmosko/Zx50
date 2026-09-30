@@ -10,11 +10,36 @@ Per SystemDesign.md Section 3.3, Section 3.8, and Section 4:
   * ZF: Set to 1 if input operand is zero, cleared to 0 otherwise.
   * SF: Cleared to 0.
   * Other flags (CF, VF, UF, ERR) remain unaffected.
+
+VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
+- Module: alu_lzc32 (time-shared for 64-bit operations)
+- Architecture:
+  * 4-level binary tree priority encoder
+  * Level 1: 8 nibble priority encoders (8 LUT4s)
+  * Level 2-4: Binary hierarchical merge stages (19 LUT4s)
+  * Zero-detection comparator (8 LUT4s)
+- Fixed Inputs:
+  * Operand: Hardwired to AL register output (32 bits, NO input MUX!)
+- Dynamic Inputs: None
+- Output Destination:
+  * Latched into counter register C[5:0] (6 FFs)
+  * ZF latched into STATUS register (1 FF)
+  * IMPORTANT: AL is PRESERVED! Does NOT clobber AL or BL.
+- Hardware Resources (MachXO2-2000):
+  * Total LUT4s: ~35
+  * Total CCU2C Carry Slices: 0 (pure priority encoder logic)
+  * Flip-Flops (FF): 7 (6 in C register + 1 in ZF flag)
+  * EBR Blocks: 0
+  * DSP Multipliers: 0
+- Critical Path & Timing:
+  * 4 priority tree levels * 0.7 ns/level = 2.8 ns
+  * Latency: 1 clock cycle (20 ns at 50 MHz)
 """
 
 from typing import Tuple
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.fpga_resource import fpga_resource
 
 # Width constants
 WIDTH_32_BYTES = 4
@@ -22,6 +47,14 @@ WIDTH_64_BYTES = 8
 BITS_PER_BYTE = 8
 
 
+@fpga_resource(
+    approach="32-bit hierarchical priority encoder tree (4b -> 16b -> 32b)",
+    luts=35,
+    ffs=0,
+    delay_ns=3.6,
+    cycles=1,
+    shared_unit="alu_lzc32",
+)
 def lzc_core(val_bytes: bytearray, width_bytes: int = WIDTH_32_BYTES) -> Tuple[int, bool]:
     """Pure functional priority encoding datapath for leading-zero counting.
 

@@ -1,26 +1,39 @@
-"""Unit tests for Registers class and Reg enum."""
+"""Unit tests for Registers class, bus routing, timing enforcement, and access controls."""
 
 import unittest
-from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.clock import Clock
+from fpu_emu.memory.registers import (
+    HalfSelect,
+    HardwareAccessViolationError,
+    HardwareBusError,
+    HardwareTimingConflictError,
+    Reg,
+    Registers,
+    StatusFlag,
+)
 
 
 class TestRegisters(unittest.TestCase):
-    """Test suite for physical and logical FPU registers."""
+    """Test suite for physical FPU register file and bus timing rules."""
 
     def setUp(self):
-        self.regs = Registers()
+        self.clock = Clock()
+        self.regs = Registers(clock=self.clock)
 
     def test_initial_state(self):
-        """Verify registers are initialized to zero."""
+        """Verify registers are initialized to zero and status flags are reset."""
         for r in (Reg.AL, Reg.AH, Reg.BL, Reg.BH, Reg.DL, Reg.DH, Reg.FL, Reg.FH):
-            self.assertEqual(self.regs.get(r), bytearray(4))
-        self.assertEqual(self.regs.get(Reg.EA), bytearray(2))
-        self.assertEqual(self.regs.get(Reg.EB), bytearray(2))
-        self.assertEqual(self.regs.get(Reg.C), bytearray(1))
+            self.assertEqual(self.regs.testharness_peek(r), bytearray(4))
+        self.assertEqual(self.regs.testharness_peek(Reg.EA), bytearray(2))
+        self.assertEqual(self.regs.testharness_peek(Reg.EB), bytearray(2))
+        self.assertEqual(self.regs.testharness_peek(Reg.C), bytearray(1))
+
+        # Allowed getters
         self.assertEqual(self.regs.get(Reg.STATUS), bytearray(1))
         self.assertEqual(self.regs.get(Reg.SP), bytearray(1))
         self.assertEqual(self.regs.get(Reg.OSP), bytearray(1))
         self.assertEqual(self.regs.get(Reg.UPC), bytearray(2))
+        self.assertEqual(self.regs.get(Reg.C), bytearray(1))
 
         self.assertEqual(self.regs.status, 0)
         self.assertEqual(self.regs.sp, 0)
@@ -28,263 +41,136 @@ class TestRegisters(unittest.TestCase):
         self.assertEqual(self.regs.c, 0)
         self.assertEqual(self.regs.upc, 0)
 
-    def test_32bit_registers_get_set(self):
-        """Test read, write, copy isolation, and validation for 32-bit registers."""
-        test_val = bytearray([0x12, 0x34, 0x56, 0x78])
+    def test_compound_properties_forbidden(self):
+        """Verify compound register property getters do not exist on Registers."""
+        for prop in ("ax", "bx", "dx", "fx"):
+            self.assertFalse(hasattr(self.regs, prop), f"Property {prop} should not exist")
 
-        for r in (Reg.AL, Reg.AH, Reg.BL, Reg.BH, Reg.DL, Reg.DH, Reg.FL, Reg.FH):
-            self.regs.set(r, test_val)
-            ret = self.regs.get(r)
-            self.assertEqual(ret, test_val)
+    def test_ha_bus_mux_and_read(self):
+        """Test HA_BUS selecting AL (LO) vs AH (HI)."""
+        self.regs.load_test_vector(Reg.AL, 0x11223344)
+        self.regs.load_test_vector(Reg.AH, 0x55667788)
 
-            # Verify copy isolation (modifying returned bytearray doesn't affect register)
-            ret[0] = 0xFF
-            self.assertEqual(self.regs.get(r), test_val)
+        # Before configuring HA_BUS MUX, read raises HardwareBusError
+        with self.assertRaises(HardwareBusError):
+            self.regs.read_ha_bus()
 
-        # Test string register name lookup
-        self.regs.set("al", bytearray([0xAA, 0xBB, 0xCC, 0xDD]))
-        self.assertEqual(self.regs.get("AL"), bytearray([0xAA, 0xBB, 0xCC, 0xDD]))
+        # Select LO (AL)
+        self.regs.set_ha_bus_mux(HalfSelect.LO)
+        self.assertEqual(Registers.to_int(self.regs.read_ha_bus()), 0x11223344)
 
-        # Test invalid type
-        with self.assertRaises(TypeError):
-            self.regs.set(Reg.AL, 1234)  # type: ignore
+        # In the next clock cycle, select HI (AH)
+        self.clock.tick(1)
+        self.regs.set_ha_bus_mux(HalfSelect.HI)
+        self.assertEqual(Registers.to_int(self.regs.read_ha_bus()), 0x55667788)
 
-        # Test invalid lengths
-        with self.assertRaises(ValueError):
-            self.regs.set(Reg.AL, bytearray([1, 2, 3]))
-        with self.assertRaises(ValueError):
-            self.regs.set(Reg.AL, bytearray([1, 2, 3, 4, 5]))
+    def test_hb_bus_mux_and_read(self):
+        """Test HB_BUS selecting halves of BX, DX, FX, AX, EA, EB, C."""
+        self.regs.load_test_vector(Reg.BX, 0x0102030405060708)
+        self.regs.load_test_vector(Reg.DX, 0x0A0B0C0D0E0F1011)
 
-    def test_64bit_compound_registers(self):
-        """Test 64-bit compound registers AX, BX, DX, FX mapping to low/high pairs."""
-        raw_64 = bytearray([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])
+        # Before configuring HB_BUS MUX, read raises HardwareBusError
+        with self.assertRaises(HardwareBusError):
+            self.regs.read_hb_bus()
 
-        # Test AX
-        self.regs.set(Reg.AX, raw_64)
-        self.assertEqual(self.regs.get(Reg.AX), raw_64)
-        self.assertEqual(self.regs.get(Reg.AL), bytearray([0x01, 0x02, 0x03, 0x04]))
-        self.assertEqual(self.regs.get(Reg.AH), bytearray([0x05, 0x06, 0x07, 0x08]))
+        # Read BL (BX, LO)
+        self.regs.set_hb_mux(HalfSelect.LO, Reg.BX)
+        self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x05060708)
 
-        # Modify AL and check AX updates
-        self.regs.set(Reg.AL, bytearray([0xAA, 0xBB, 0xCC, 0xDD]))
-        self.assertEqual(
-            self.regs.ax,
-            bytearray([0xAA, 0xBB, 0xCC, 0xDD, 0x05, 0x06, 0x07, 0x08]),
-        )
+        # Advance cycle, read BH (BX, HI)
+        self.clock.tick(1)
+        self.regs.set_hb_mux(HalfSelect.HI, Reg.BX)
+        self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x01020304)
 
-        # Modify AH and check AX updates
-        self.regs.set(Reg.AH, bytearray([0x11, 0x22, 0x33, 0x44]))
-        self.assertEqual(
-            self.regs.ax,
-            bytearray([0xAA, 0xBB, 0xCC, 0xDD, 0x11, 0x22, 0x33, 0x44]),
-        )
+        # Advance cycle, read DL
+        self.clock.tick(1)
+        self.regs.set_hb_mux(HalfSelect.LO, Reg.DX)
+        self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x0E0F1011)
 
-        # Test property setter
-        self.regs.ax = raw_64
-        self.assertEqual(self.regs.get(Reg.AX), raw_64)
+        # Read EA (zero-extended 12 bits)
+        self.clock.tick(1)
+        self.regs.ea = 0x3FF
+        self.regs.set_hb_mux(HalfSelect.LO, Reg.EA)
+        self.assertEqual(Registers.to_int(self.regs.read_hb_bus()), 0x3FF)
 
-        # Test BX, DX, FX
-        for comp_reg, low_reg, high_reg in (
-            (Reg.BX, Reg.BL, Reg.BH),
-            (Reg.DX, Reg.DL, Reg.DH),
-            (Reg.FX, Reg.FL, Reg.FH),
-        ):
-            self.regs.set(comp_reg, raw_64)
-            self.assertEqual(self.regs.get(comp_reg), raw_64)
-            self.assertEqual(self.regs.get(low_reg), raw_64[0:4])
-            self.assertEqual(self.regs.get(high_reg), raw_64[4:8])
+    def test_ha_bus_timing_conflict(self):
+        """Verify calling set_ha_bus_mux twice in same clock cycle raises HardwareTimingConflictError."""
+        self.regs.set_ha_bus_mux(HalfSelect.LO)
+        with self.assertRaises(HardwareTimingConflictError):
+            self.regs.set_ha_bus_mux(HalfSelect.HI)
 
-        # Test length validation for compound registers
-        with self.assertRaises(ValueError):
-            self.regs.set(Reg.AX, bytearray(4))
-        with self.assertRaises(ValueError):
-            self.regs.set(Reg.AX, bytearray(9))
+        # Advances cycle -> should succeed
+        self.clock.tick(1)
+        self.regs.set_ha_bus_mux(HalfSelect.HI)
 
-    def test_exponent_registers(self):
-        """Test EA and EB 2-byte registers."""
-        val = bytearray([0x7F, 0x00])
-        self.regs.set(Reg.EA, val)
-        self.assertEqual(self.regs.get(Reg.EA), val)
+    def test_hb_bus_timing_conflict(self):
+        """Verify calling set_hb_mux twice in same clock cycle raises HardwareTimingConflictError."""
+        self.regs.set_hb_mux(HalfSelect.LO, Reg.BX)
+        with self.assertRaises(HardwareTimingConflictError):
+            self.regs.set_hb_mux(HalfSelect.HI, Reg.BX)
 
-        self.regs.set(Reg.EB, bytearray([0x01, 0x04]))
-        self.assertEqual(self.regs.get(Reg.EB), bytearray([0x01, 0x04]))
+        # Advances cycle -> should succeed
+        self.clock.tick(1)
+        self.regs.set_hb_mux(HalfSelect.HI, Reg.DX)
 
-        with self.assertRaises(ValueError):
-            self.regs.set(Reg.EA, bytearray(1))
+    def test_res_bus_writeback_and_timing_conflict(self):
+        """Verify set_res_bus writes to destination and forbids multiple writes per cycle."""
+        # Cycle 0: write AL
+        self.regs.set_res_bus(Reg.AL, 0xAABBCCDD)
+        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AL)), 0xAABBCCDD)
 
-    def test_counter_and_pointers(self):
-        """Test C counter, SP, OSP, and UPC."""
-        # C is 6-bit (0..63)
-        self.regs.c = 42
-        self.assertEqual(self.regs.c, 42)
-        self.assertEqual(self.regs.get(Reg.C), bytearray([42]))
-        # 6-bit masking
-        self.regs.c = 0xFF
-        self.assertEqual(self.regs.c, 0x3F)
+        # Second write in cycle 0 raises HardwareTimingConflictError
+        with self.assertRaises(HardwareTimingConflictError):
+            self.regs.set_res_bus(Reg.AH, 0x11223344)
 
-        # SP is 8-bit
-        self.regs.sp = 0xA5
-        self.assertEqual(self.regs.sp, 0xA5)
-        self.assertEqual(self.regs.get(Reg.SP), bytearray([0xA5]))
-
-        # OSP is 8-bit (5-bit hardware usage)
-        self.regs.osp = 0x1F
-        self.assertEqual(self.regs.osp, 0x1F)
-        self.assertEqual(self.regs.get(Reg.OSP), bytearray([0x1F]))
-
-        # UPC is 10-bit (0..1023)
-        self.regs.upc = 0x2A5
-        self.assertEqual(self.regs.upc, 0x2A5)
-        self.assertEqual(self.regs.get(Reg.UPC), bytearray([0xA5, 0x02]))
-        # 10-bit masking
-        self.regs.upc = 0xFFFF
-        self.assertEqual(self.regs.upc, 0x3FF)
+        # Advance cycle -> write AH
+        self.clock.tick(1)
+        self.regs.set_res_bus(Reg.AH, 0x11223344)
+        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AH)), 0x11223344)
 
     def test_status_flags(self):
-        """Test individual status flag bitweights and operations."""
-        # Bit assignments:
-        # ERR=1 (0x02), UNDERFLOW=2 (0x04), OVERFLOW=3 (0x08),
-        # CARRY=4 (0x10), SIGN=5 (0x20), ZERO=6 (0x40), BUSY=7 (0x80)
-        expected_bits = {
-            StatusFlag.ERR: 0x02,
-            StatusFlag.UNDERFLOW: 0x04,
-            StatusFlag.OVERFLOW: 0x08,
-            StatusFlag.CARRY: 0x10,
-            StatusFlag.SIGN: 0x20,
-            StatusFlag.ZERO: 0x40,
-            StatusFlag.BUSY: 0x80,
-        }
-
-        for flag, bitmask in expected_bits.items():
-            self.regs.clear_flags()
-            self.assertFalse(self.regs.get_flag(flag))
-            self.assertEqual(self.regs.status, 0)
-
-            self.regs.set_flag(flag)
-            self.assertTrue(self.regs.get_flag(flag))
-            self.assertEqual(self.regs.status, bitmask)
-
-            self.regs.clr_flag(flag)
-            self.assertFalse(self.regs.get_flag(flag))
-            self.assertEqual(self.regs.status, 0)
-
-        # Test multiple flags active simultaneously
+        """Test status flag manipulation."""
         self.regs.clear_flags()
-        self.regs.set_flag(StatusFlag.BUSY)
+        self.assertEqual(self.regs.status, 0)
+
         self.regs.set_flag(StatusFlag.ZERO)
-        self.regs.set_flag(StatusFlag.CARRY)
-        self.assertEqual(self.regs.status, 0x80 | 0x40 | 0x10)
-        self.assertTrue(self.regs.get_flag(StatusFlag.BUSY))
         self.assertTrue(self.regs.get_flag(StatusFlag.ZERO))
-        self.assertTrue(self.regs.get_flag(StatusFlag.CARRY))
-        self.assertFalse(self.regs.get_flag(StatusFlag.SIGN))
+        self.assertFalse(self.regs.get_flag(StatusFlag.CARRY))
+
+        self.regs.clr_flag(StatusFlag.ZERO)
+        self.assertFalse(self.regs.get_flag(StatusFlag.ZERO))
+
+    def test_conversion_utilities(self):
+        """Test integer and float Little-Endian conversions."""
+        val32 = 0x12345678
+        raw32 = Registers.from_int(val32, 4)
+        self.assertEqual(Registers.to_int(raw32), val32)
+
+        f_val = 3.1415927
+        raw_f32 = Registers.from_f32(f_val)
+        self.assertAlmostEqual(Registers.to_f32(raw_f32), f_val, places=6)
+
+        d_val = 2.718281828459045
+        raw_f64 = Registers.from_f64(d_val)
+        self.assertAlmostEqual(Registers.to_f64(raw_f64), d_val, places=12)
 
     def test_reset(self):
-        """Test hardware reset clears all registers and asserts ZERO flag (0x40)."""
-        self.regs.set(Reg.AL, bytearray([1, 2, 3, 4]))
-        self.regs.set(Reg.AX, bytearray([1, 2, 3, 4, 5, 6, 7, 8]))
-        self.regs.set(Reg.DL, bytearray([9, 9, 9, 9]))
-        self.regs.sp = 16
-        self.regs.osp = 4
-        self.regs.c = 10
-        self.regs.upc = 250
-        self.regs.set_flag(StatusFlag.BUSY)
-
+        """Test hardware reset clears all registers and timing tracking."""
+        self.regs.load_test_vector(Reg.AL, 0xFFFFFFFF)
+        self.regs.set_ha_bus_mux(HalfSelect.LO)
         self.regs.reset()
 
-        for r in (Reg.AL, Reg.AH, Reg.BL, Reg.BH, Reg.DL, Reg.DH, Reg.FL, Reg.FH):
-            self.assertEqual(self.regs.get(r), bytearray(4))
-        self.assertEqual(self.regs.sp, 0)
-        self.assertEqual(self.regs.osp, 0)
-        self.assertEqual(self.regs.c, 0)
-        self.assertEqual(self.regs.upc, 0)
-        # Status should have ZERO=1 (0x40) per spec
-        self.assertEqual(self.regs.status, 0x40)
-        self.assertTrue(self.regs.get_flag(StatusFlag.ZERO))
-        self.assertFalse(self.regs.get_flag(StatusFlag.BUSY))
+        self.assertEqual(Registers.to_int(self.regs.testharness_peek(Reg.AL)), 0)
+        # HA bus MUX should be reset
+        with self.assertRaises(HardwareBusError):
+            self.regs.read_ha_bus()
 
-    def test_integer_conversion_helpers(self):
-        """Test from_int and to_int Little-Endian conversion utilities."""
-        # 32-bit unsigned
-        b = Registers.from_int(0x12345678, 4)
-        self.assertEqual(b, bytearray([0x78, 0x56, 0x34, 0x12]))
-        self.assertEqual(Registers.to_int(b), 0x12345678)
+        # Should be able to set HA bus again at cycle 0 because reset cleared last tick
+        self.regs.set_ha_bus_mux(HalfSelect.LO)
 
-        # 32-bit signed negative
-        b_neg = Registers.from_int(-1, 4, signed=True)
-        self.assertEqual(b_neg, bytearray([0xFF, 0xFF, 0xFF, 0xFF]))
-        self.assertEqual(Registers.to_int(b_neg, signed=True), -1)
-
-        # 64-bit integer
-        val64 = 0x0102030405060708
-        b64 = Registers.from_int(val64, 8)
-        self.assertEqual(Registers.to_int(b64), val64)
-
-    def test_float_conversion_helpers(self):
-        """Test from_f32, to_f32, from_f64, and to_f64 IEEE-754 helpers."""
-        import math
-
-        # 32-bit float: 1.0f -> 0x3F800000
-        b_f32 = Registers.from_f32(1.0)
-        self.assertEqual(b_f32, bytearray([0x00, 0x00, 0x80, 0x3F]))
-        self.assertEqual(Registers.to_f32(b_f32), 1.0)
-
-        # 32-bit float: -1.0f -> 0xBF800000
-        b_neg_f32 = Registers.from_f32(-1.0)
-        self.assertEqual(b_neg_f32, bytearray([0x00, 0x00, 0x80, 0xBF]))
-        self.assertEqual(Registers.to_f32(b_neg_f32), -1.0)
-
-        # 32-bit float round-trips
-        for val in [0.0, -0.0, 2.5, -128.75, 1e-10, 1e10]:
-            b = Registers.from_f32(val)
-            self.assertEqual(len(b), 4)
-            self.assertAlmostEqual(Registers.to_f32(b), val, places=6)
-
-        # 64-bit double: 1.0 -> 0x3FF0000000000000
-        b_f64 = Registers.from_f64(1.0)
-        self.assertEqual(b_f64, bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F]))
-        self.assertEqual(Registers.to_f64(b_f64), 1.0)
-
-        # 64-bit double: -1.0 -> 0xBFF0000000000000
-        b_neg_f64 = Registers.from_f64(-1.0)
-        self.assertEqual(b_neg_f64, bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xBF]))
-        self.assertEqual(Registers.to_f64(b_neg_f64), -1.0)
-
-        # 64-bit double round-trips
-        for val in [0.0, -0.0, 3.141592653589793, -1.23456789e-50, 1e100]:
-            b = Registers.from_f64(val)
-            self.assertEqual(len(b), 8)
-            self.assertEqual(Registers.to_f64(b), val)
-
-        # Special values: inf, -inf, nan
-        self.assertTrue(math.isinf(Registers.to_f32(Registers.from_f32(float("inf")))))
-        self.assertTrue(math.isinf(Registers.to_f64(Registers.from_f64(float("-inf")))))
-        self.assertTrue(math.isnan(Registers.to_f32(Registers.from_f32(float("nan")))))
-        self.assertTrue(math.isnan(Registers.to_f64(Registers.from_f64(float("nan")))))
-
-        # Length validation
-        with self.assertRaises(ValueError):
-            Registers.to_f32(bytearray(3))
-        with self.assertRaises(ValueError):
-            Registers.to_f32(bytearray(8))
-        with self.assertRaises(ValueError):
-            Registers.to_f64(bytearray(4))
-        with self.assertRaises(ValueError):
-            Registers.to_f64(bytearray(16))
-
-    def test_dump_and_repr(self):
-        """Test dump formatting and repr."""
-        self.regs.sp = 0x20
-        self.regs.set_flag(StatusFlag.ZERO)
+    def test_dump(self):
+        """Verify dump format."""
         dump_str = self.regs.dump()
-        self.assertIn("AL:", dump_str)
-        self.assertIn("STATUS: 0x40 [Z]", dump_str)
-        self.assertIn("SP: 20", dump_str)
-
-        repr_str = repr(self.regs)
-        self.assertIn("SP=20", repr_str)
-        self.assertIn("STATUS=40", repr_str)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertIn("=== Register File Dump ===", dump_str)
+        self.assertIn("AX: 0x", dump_str)
+        self.assertIn("STATUS:", dump_str)

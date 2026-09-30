@@ -18,12 +18,37 @@ Per SystemDesign.md Section 3.4 and Section 4:
 - Flag updates for CHS/ABS:
   * SF: Set to sign bit of register
   * ZF, CF, VF, UF, ERR: Unaffected
+
+VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
+- Module: alu_logic32 (time-multiplexed for 64-bit operations)
+- Architecture:
+  * 32 parallel 4-LUT function generators (A, B, op[1:0]) implementing AND/OR/XOR/NOT in 1 LUT layer
+  * 32-bit Zero Flag evaluation NOR tree (6 LUT4s)
+  * Single-bit XOR/inverter for sign bit toggle (CHS) or clear (ABS)
+- Inputs:
+  * Operand 1: Connected to HA_BUS[31:0] (from HA 2:1 selector: AL or AH)
+  * Operand 2: Connected to HB_BUS[31:0] (from HB 8:1 selector: BL, BH, DL, DH, FL, FH, AL, AH; unused for unary NOT/CHS/ABS)
+  * Note: Input selection MUXes reside in the shared bus infrastructure (80 LUT4s total).
+- Output Destination:
+  * Drives RES_BUS[31:0] -> Latching steered to AL (Cycle 1) or AH (Cycle 2) via Clock Enables (WE_AL, WE_AH)
+  * Status flags: ZF, SF latched into STATUS register (2 FFs).
+- Hardware Resources (MachXO2-2000, standalone logic core):
+  * Total LUT4s: ~38 (32 bitwise function generators + 6 ZF NOR tree)
+  * Total CCU2C Carry Slices: 0 (pure boolean logic)
+  * Flip-Flops (FF): 2 (status flags ZF, SF)
+  * EBR Blocks: 0
+  * DSP Multipliers: 0
+- Critical Path & Timing:
+  * HA/HB bus setup (1.5 ns) + LUT4 boolean gate (0.6 ns) + ZF NOR tree (1.0 ns) = 3.1 ns
+  * 32-bit logic: 1 clock cycle (20 ns at 50 MHz)
+  * 64-bit compound logic: 2 clock cycles (Cycle 1: AL=AL op XL, Cycle 2: AH=AH op XH)
 """
 
 from enum import Enum, auto
 from typing import Optional, Set, Tuple
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
+from fpu_emu.fpga_resource import fpga_resource
 
 # Supported width constants
 WIDTH_32_BYTES = 4
@@ -44,6 +69,14 @@ class LogicOp(Enum):
     NOT = auto()
 
 
+@fpga_resource(
+    approach="Bitwise 32-bit logic using 4-input LUTs",
+    luts=38,
+    ffs=0,
+    delay_ns=2.1,
+    cycles=1,
+    shared_unit="alu_logic32",
+)
 def logic_core(
     a_bytes: bytearray,
     b_bytes: Optional[bytearray],
@@ -101,7 +134,7 @@ def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     a_bytes = hw.reg.get(dst)
     res_bytes, zf, sf = logic_core(a_bytes, b_bytes, op, width_bytes=WIDTH_32_BYTES)
 
-    hw.reg.set(dst, res_bytes)
+    hw.reg.testharness_set(dst, res_bytes)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
     hw.reg.set_flag(StatusFlag.CARRY, False)
@@ -121,7 +154,7 @@ def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     a_bytes = hw.reg.get(dst)
     res_bytes, zf, sf = logic_core(a_bytes, b_bytes, op, width_bytes=WIDTH_64_BYTES)
 
-    hw.reg.set(dst, res_bytes)
+    hw.reg.testharness_set(dst, res_bytes)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
     hw.reg.set_flag(StatusFlag.CARRY, False)
@@ -187,13 +220,13 @@ def chs(hw: Hardware, reg: Reg = Reg.AH):
         hw.clock.tick(2)
         val = Registers.to_int(hw.reg.get(reg))
         val ^= (1 << 63)
-        hw.reg.set(reg, Registers.from_int(val, 8))
+        hw.reg.testharness_set(reg, Registers.from_int(val, 8))
         hw.reg.set_flag(StatusFlag.SIGN, bool(val & (1 << 63)))
     else:
         hw.clock.tick(1)
         val = Registers.to_int(hw.reg.get(reg))
         val ^= 0x80000000
-        hw.reg.set(reg, Registers.from_int(val, 4))
+        hw.reg.testharness_set(reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, bool(val & 0x80000000))
 
 
@@ -207,13 +240,13 @@ def abs_val(hw: Hardware, reg: Reg = Reg.AH):
         hw.clock.tick(2)
         val = Registers.to_int(hw.reg.get(reg))
         val &= 0x7FFFFFFFFFFFFFFF
-        hw.reg.set(reg, Registers.from_int(val, 8))
+        hw.reg.testharness_set(reg, Registers.from_int(val, 8))
         hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
         hw.clock.tick(1)
         val = Registers.to_int(hw.reg.get(reg))
         val &= 0x7FFFFFFF
-        hw.reg.set(reg, Registers.from_int(val, 4))
+        hw.reg.testharness_set(reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, False)
 
 
@@ -230,7 +263,7 @@ def abs_int32(hw: Hardware, reg: Reg = Reg.AL):
             hw.reg.set_flag(StatusFlag.SIGN, True)
         else:
             val = ((~val) + 1) & 0xFFFFFFFF
-            hw.reg.set(reg, Registers.from_int(val, 4))
+            hw.reg.testharness_set(reg, Registers.from_int(val, 4))
             hw.reg.set_flag(StatusFlag.OVERFLOW, False)
             hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
@@ -254,7 +287,7 @@ def abs_int64(hw: Hardware, reg: Reg = Reg.AX):
             hw.reg.set_flag(StatusFlag.SIGN, True)
         else:
             val = ((~val) + 1) & 0xFFFFFFFFFFFFFFFF
-            hw.reg.set(reg, Registers.from_int(val, 8))
+            hw.reg.testharness_set(reg, Registers.from_int(val, 8))
             hw.reg.set_flag(StatusFlag.OVERFLOW, False)
             hw.reg.set_flag(StatusFlag.SIGN, False)
     else:

@@ -143,17 +143,30 @@ class Alu:
     def mul64(self, src: Reg = Reg.BX):
         booth_mul.mul64(self._hw, src)
 
+    def add_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
+        fp_mul_div.add_f32(self._hw, dst, src)
+
+    def sub_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
+        fp_mul_div.sub_f32(self._hw, dst, src)
+
     def mul_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         fp_mul_div.mul_f32(self._hw, dst, src)
 
     def div_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         fp_mul_div.div_f32(self._hw, dst, src)
 
+    def add_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
+        fp_mul_div.add_f64(self._hw, dst, src)
+
+    def sub_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
+        fp_mul_div.sub_f64(self._hw, dst, src)
+
     def mul_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         fp_mul_div.mul_f64(self._hw, dst, src)
 
     def div_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         fp_mul_div.div_f64(self._hw, dst, src)
+
 
     # -------------------------------------------------------------------------
     # 12-Bit Exponent ALU API (alu_exp12 / ieee754_exp)
@@ -245,12 +258,12 @@ class Alu:
     def sqrt_core32(self, is_odd: bool, dst: Reg = Reg.AL):
         from fpu_emu.memory.registers import Registers
         res = fp_sqrt.sqrt_mantissa_core_f32(self._hw, is_odd=is_odd)
-        self._hw.reg.set(dst, Registers.from_int(res, 4))
+        self._hw.reg.testharness_set(dst, Registers.from_int(res, 4))
 
     def sqrt_core64(self, is_odd: bool, dst: Reg = Reg.AX):
         from fpu_emu.memory.registers import Registers
         res = fp_sqrt.sqrt_mantissa_core_f64(self._hw, is_odd=is_odd)
-        self._hw.reg.set(dst, Registers.from_int(res, 8))
+        self._hw.reg.testharness_set(dst, Registers.from_int(res, 8))
 
     # -------------------------------------------------------------------------
     # Floating-Point Natural Log, Exponential, and Power API

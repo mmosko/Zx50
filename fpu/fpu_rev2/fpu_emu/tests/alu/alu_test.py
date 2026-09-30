@@ -12,8 +12,8 @@ def test_alu_full():
     assert alu.hw is hw
 
     # Adder 32 / 64
-    hw.reg.set(Reg.AL, Registers.from_int(10, 4))
-    hw.reg.set(Reg.BL, Registers.from_int(5, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(10, 4))
+    hw.reg.testharness_set(Reg.BL, Registers.from_int(5, 4))
     alu.add32(Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 15
 
@@ -29,8 +29,8 @@ def test_alu_full():
     alu.cmp32(Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 10
 
-    hw.reg.set(Reg.AX, Registers.from_int(100, 8))
-    hw.reg.set(Reg.BX, Registers.from_int(50, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(100, 8))
+    hw.reg.testharness_set(Reg.BX, Registers.from_int(50, 8))
     alu.add64(Reg.BX)
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 150
 
@@ -47,7 +47,7 @@ def test_alu_full():
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 100
 
     # Shifter 32 / 64
-    hw.reg.set(Reg.AL, Registers.from_int(0x10, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x10, 4))
     alu.lsl32(1)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x20
 
@@ -60,7 +60,7 @@ def test_alu_full():
     alu.rrc32()
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x04
 
-    hw.reg.set(Reg.AX, Registers.from_int(0x100, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x100, 8))
     alu.lsl64(1)
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x200
 
@@ -74,15 +74,15 @@ def test_alu_full():
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x40
 
     # LZC
-    hw.reg.set(Reg.AL, Registers.from_int(0x00010000, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00010000, 4))
     assert alu.lzc32() == 15
 
-    hw.reg.set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
     assert alu.lzc64() == 31
 
     # Logic 32 / 64
-    hw.reg.set(Reg.AL, Registers.from_int(0xFF, 4))
-    hw.reg.set(Reg.BL, Registers.from_int(0x0F, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0xFF, 4))
+    hw.reg.testharness_set(Reg.BL, Registers.from_int(0x0F, 4))
     alu.and32(Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x0F
 
@@ -95,8 +95,8 @@ def test_alu_full():
     alu.not32()
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 0xFFFFFFFF
 
-    hw.reg.set(Reg.AX, Registers.from_int(0xFF, 8))
-    hw.reg.set(Reg.BX, Registers.from_int(0x0F, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0xFF, 8))
+    hw.reg.testharness_set(Reg.BX, Registers.from_int(0x0F, 8))
     alu.and64(Reg.BX)
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 0x0F
 
@@ -112,36 +112,36 @@ def test_alu_full():
     alu.chs()
     alu.abs_val()
 
-    hw.reg.set(Reg.AL, Registers.from_int(-5, 4, signed=True))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(-5, 4, signed=True))
     alu.abs_int32()
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 5
 
-    hw.reg.set(Reg.AX, Registers.from_int(-50, 8, signed=True))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(-50, 8, signed=True))
     alu.abs_int64()
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 50
 
     # Booth Mul 32 / 64
-    hw.reg.set(Reg.AL, Registers.from_int(3, 4))
-    hw.reg.set(Reg.BL, Registers.from_int(7, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(3, 4))
+    hw.reg.testharness_set(Reg.BL, Registers.from_int(7, 4))
     alu.mul32(Reg.BL)
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 21
 
-    hw.reg.set(Reg.AX, Registers.from_int(6, 8))
-    hw.reg.set(Reg.BX, Registers.from_int(7, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(6, 8))
+    hw.reg.testharness_set(Reg.BX, Registers.from_int(7, 8))
     alu.mul64(Reg.BX)
     assert Registers.to_int(hw.reg.get(Reg.AX)) == 42
 
     # FP Mul / Div 32 / 64
-    hw.reg.set(Reg.AL, Registers.from_f32(2.5))
-    hw.reg.set(Reg.BL, Registers.from_f32(4.0))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(2.5))
+    hw.reg.testharness_set(Reg.BL, Registers.from_f32(4.0))
     alu.mul_f32()
     assert Registers.to_f32(hw.reg.get(Reg.AL)) == 10.0
 
     alu.div_f32()
     assert Registers.to_f32(hw.reg.get(Reg.AL)) == 2.5
 
-    hw.reg.set(Reg.AX, Registers.from_f64(2.5))
-    hw.reg.set(Reg.BX, Registers.from_f64(4.0))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(2.5))
+    hw.reg.testharness_set(Reg.BX, Registers.from_f64(4.0))
     alu.mul_f64()
     assert Registers.to_f64(hw.reg.get(Reg.AX)) == 10.0
 
@@ -160,11 +160,11 @@ def test_alu_full():
     alu.exp_inc()
     alu.exp_dec()
 
-    hw.reg.set(Reg.AL, Registers.from_f32(1.5))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(1.5))
     alu.unpack_f32()
     alu.pack_f32()
 
-    hw.reg.set(Reg.AX, Registers.from_f64(1.5))
+    hw.reg.testharness_set(Reg.AX, Registers.from_f64(1.5))
     alu.unpack_f64()
     alu.pack_f64()
 

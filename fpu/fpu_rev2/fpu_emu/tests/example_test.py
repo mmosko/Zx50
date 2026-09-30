@@ -22,7 +22,7 @@ from fpu_emu.user_opcodes import UserOpcode
 # =============================================================================
 def push_i32(hw: Hardware, val: int):
     """Pushes a 32-bit signed integer onto the operand stack."""
-    hw.reg.set(Reg.AL, Registers.from_int(val, 4, signed=True))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(val, 4, signed=True))
     stack.push32(hw, Reg.AL)
 
 
@@ -34,7 +34,7 @@ def pop_i32(hw: Hardware) -> int:
 
 def push_f32(hw: Hardware, val: float):
     """Pushes an IEEE-754 32-bit float onto the operand stack."""
-    hw.reg.set(Reg.AL, Registers.from_f32(val))
+    hw.reg.testharness_set(Reg.AL, Registers.from_f32(val))
     stack.push32(hw, Reg.AL)
 
 

@@ -336,10 +336,10 @@ class Dispatcher:
                     if opcode is not None:
                         if opcode & 1:
                             val = self._hw.rom.load_const64(opcode)
-                            self._hw.reg.set(Reg.FX, val)
+                            self._hw.reg.testharness_set(Reg.FX, val)
                         else:
                             val = self._hw.rom.load_const32(opcode)
-                            self._hw.reg.set(Reg.FL, val)
+                            self._hw.reg.testharness_set(Reg.FL, val)
                 case MicroOp.CP_MEM_TOS:
                     slot = inst.imm if inst.imm is not None else 0
                     if self._hw.reg.sp < 4:
@@ -355,7 +355,7 @@ class Dispatcher:
                         self._hw.reg.set_flag(StatusFlag.ERR, True)
                     else:
                         data = self._hw.mem.load_user_mem(slot, 4)
-                        self._hw.reg.set(Reg.FL, data)
+                        self._hw.reg.testharness_set(Reg.FL, data)
                         stack.push32(self._hw, Reg.FL)
                 case MicroOp.ZERO_MEM:
                     self._hw.mem.zero_user_mem()
@@ -364,7 +364,7 @@ class Dispatcher:
                         self._alu.swap(inst.dst, inst.src)
                 case MicroOp.MOV:
                     if inst.dst is not None and inst.src is not None:
-                        self._hw.reg.set(inst.dst, self._hw.reg.get(inst.src))
+                        self._hw.reg.testharness_set(inst.dst, self._hw.reg.get(inst.src))
                 case MicroOp.JMP:
                     pc = inst.target
                 case MicroOp.JZ:

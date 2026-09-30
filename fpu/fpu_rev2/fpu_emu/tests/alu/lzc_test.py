@@ -63,7 +63,7 @@ def test_lzc_core_64(val, expected_count, expected_zf, desc):
 def test_lzc32_hardware_integration():
     hw = Hardware()
     # Put 0x00010000 in AL (bit 16 set -> 15 leading zeros)
-    hw.reg.set(Reg.AL, Registers.from_int(0x00010000, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00010000, 4))
     hw.reg.set_flag(StatusFlag.SIGN, True)  # Pre-set sign to verify it gets cleared
 
     count = lzc32(hw)
@@ -77,7 +77,7 @@ def test_lzc32_hardware_integration():
 
 def test_lzc32_zero_operand():
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(0, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0, 4))
 
     count = lzc32(hw)
 
@@ -91,7 +91,7 @@ def test_lzc32_zero_operand():
 def test_lzc64_hardware_integration():
     hw = Hardware()
     # 0x0000000000000008 -> 60 leading zeros
-    hw.reg.set(Reg.AX, Registers.from_int(0x8, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x8, 8))
 
     count = lzc64(hw)
 
@@ -106,7 +106,7 @@ def test_alu_class_lzc_delegation():
     hw = Hardware()
     alu = Alu(hw)
 
-    hw.reg.set(Reg.AL, Registers.from_int(0x00000001, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x00000001, 4))
     count = alu.lzc32()
 
     assert count == 31

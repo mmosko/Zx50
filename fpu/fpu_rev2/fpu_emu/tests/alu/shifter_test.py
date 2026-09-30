@@ -102,7 +102,7 @@ def test_shifter_core_64(val, shift, op, expected_res, exp_cf, exp_zf, exp_sf, e
 # =============================================================================
 def test_lsl32_with_counter_c():
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(0x0000000F, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x0000000F, 4))
     hw.reg.c = 4  # Shift by 4
 
     lsl32(hw)
@@ -117,7 +117,7 @@ def test_lsl32_with_counter_c():
 
 def test_lsr32_with_counter_c():
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(0x000000F1, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x000000F1, 4))
     hw.reg.c = 1  # Shift by 1 -> bit 0 shifted out
 
     lsr32(hw)
@@ -129,7 +129,7 @@ def test_lsr32_with_counter_c():
 
 def test_asr32_negative():
     hw = Hardware()
-    hw.reg.set(Reg.AL, Registers.from_int(0x80000000, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x80000000, 4))
     hw.reg.c = 2
 
     asr32(hw)
@@ -141,7 +141,7 @@ def test_asr32_negative():
 
 def test_64bit_shifts_take_2_cycles():
     hw = Hardware()
-    hw.reg.set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000100000000, 8))
     hw.reg.c = 4
 
     lsl64(hw)
@@ -161,7 +161,7 @@ def test_alu_class_shifter_delegation():
     hw = Hardware()
     alu = Alu(hw)
 
-    hw.reg.set(Reg.AL, Registers.from_int(0x10, 4))
+    hw.reg.testharness_set(Reg.AL, Registers.from_int(0x10, 4))
     alu.lsl32(shift=2)
 
     assert Registers.to_int(hw.reg.get(Reg.AL)) == 0x40
@@ -172,7 +172,7 @@ def test_rrc64():
     hw = Hardware()
     # In carry = 1, AX = 0x0000000000000001 (bit 0 is 1)
     hw.reg.set_flag(StatusFlag.CARRY, True)
-    hw.reg.set(Reg.AX, Registers.from_int(0x0000000000000001, 8))
+    hw.reg.testharness_set(Reg.AX, Registers.from_int(0x0000000000000001, 8))
 
     rrc64(hw)
 

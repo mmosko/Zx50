@@ -52,7 +52,7 @@ class TestHardware(unittest.TestCase):
     def test_hardware_reset(self):
         hw = Hardware()
         hw.clock.tick(50)
-        hw.reg.set(Reg.AL, bytearray([1, 2, 3, 4]))
+        hw.reg.testharness_set(Reg.AL, bytearray([1, 2, 3, 4]))
         hw.mem.store(0x100, bytearray([0xAA, 0xBB]))
 
         # Reset without clear_mem
