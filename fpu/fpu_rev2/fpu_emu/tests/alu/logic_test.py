@@ -37,19 +37,16 @@ from fpu_emu.tests.testharness import RegTestHarness
         (0xAAAAAAAA, 0x55555555, LogicOp.AND, 0x00000000, True, False, "AND alternating bits -> zero"),
         (0xFFFFFFFF, 0x80000000, LogicOp.AND, 0x80000000, False, True, "AND sign bit set"),
         (0x12345678, 0x0000FFFF, LogicOp.AND, 0x00005678, False, False, "AND lower 16 bits"),
-
         # OR
         (0x00000000, 0x00000000, LogicOp.OR, 0x00000000, True, False, "OR zero with zero -> zero"),
         (0xAAAAAAAA, 0x55555555, LogicOp.OR, 0xFFFFFFFF, False, True, "OR alternating bits -> all ones"),
         (0x00000001, 0x80000000, LogicOp.OR, 0x80000001, False, True, "OR sign bit and LSB"),
         (0x12340000, 0x00005678, LogicOp.OR, 0x12345678, False, False, "OR combine halves"),
-
         # XOR
         (0xFFFFFFFF, 0xFFFFFFFF, LogicOp.XOR, 0x00000000, True, False, "XOR identical -> zero"),
         (0x12345678, 0x12345678, LogicOp.XOR, 0x00000000, True, False, "XOR identical word -> zero"),
         (0x00000000, 0x80000000, LogicOp.XOR, 0x80000000, False, True, "XOR toggle sign bit"),
         (0xFFFFFFFF, 0x7FFFFFFF, LogicOp.XOR, 0x80000000, False, True, "XOR bit 31 set"),
-
         # NOT
         (0x00000000, None, LogicOp.NOT, 0xFFFFFFFF, False, True, "NOT 0 -> 0xFFFFFFFF"),
         (0xFFFFFFFF, None, LogicOp.NOT, 0x00000000, True, False, "NOT 0xFFFFFFFF -> 0"),
@@ -122,7 +119,7 @@ def test_or32_flags():
     assert hw.clock.cycles == 1
     assert reg.get_flag(StatusFlag.SIGN) is True
     assert not reg.get_flag(StatusFlag.ZERO)
-    assert not reg.get_flag(StatusFlag.CARRY)     # Cleared
+    assert not reg.get_flag(StatusFlag.CARRY)  # Cleared
     assert not reg.get_flag(StatusFlag.OVERFLOW)  # Cleared
 
 

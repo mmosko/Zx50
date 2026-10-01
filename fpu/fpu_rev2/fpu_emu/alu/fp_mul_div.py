@@ -520,4 +520,3 @@ def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool =
 def sub_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
     """Subtracts two IEEE-754 double-precision floats: dst <- dst - src (2 cycles)."""
     add_f64(hw, dst=dst, src=src, negate_b=True)
-

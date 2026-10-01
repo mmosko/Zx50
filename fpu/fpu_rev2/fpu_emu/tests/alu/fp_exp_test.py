@@ -179,4 +179,3 @@ def test_exp2_frac_core():
 
     res64 = exp2_frac_core(0.5, is_64=True)
     assert math.isclose(res64, math.sqrt(2.0), rel_tol=1e-10)
-

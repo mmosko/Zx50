@@ -327,4 +327,3 @@ def test_add_sub_f64(hw):
     reg.set(Reg.BX, Registers.from_f64(0.0))
     fp_mul_div.add_f64(hw, dst=Reg.AX, src=Reg.BX)
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == 8.25
-

@@ -36,12 +36,8 @@ from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag
 from fpu_emu.fpga_resource import fpga_resource
 
 # Permitted source registers
-VALID_32BIT_SRCS = {
-    Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH, Reg.AH, Reg.AL
-}
-VALID_64BIT_SRCS = {
-    Reg.BX, Reg.DX, Reg.FX, Reg.AX
-}
+VALID_32BIT_SRCS = {Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH, Reg.AH, Reg.AL}
+VALID_64BIT_SRCS = {Reg.BX, Reg.DX, Reg.FX, Reg.AX}
 
 
 def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
@@ -65,11 +61,7 @@ def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
     cycles=1,
     shared_unit="alu_adder32",
 )
-def adder_core(
-    hw: Hardware,
-    cin: int = 0,
-    sub: bool = False
-) -> Tuple[bytearray, bool, bool, bool, bool]:
+def adder_core(hw: Hardware, cin: int = 0, sub: bool = False) -> Tuple[bytearray, bool, bool, bool, bool]:
     """Pure 32-bit carry-lookahead/ripple adder-subtractor core.
 
     Models MachXO2 CCU2C dedicated carry chains connected directly to HA_BUS and HB_BUS.
@@ -97,7 +89,7 @@ def adder_core(
         carry = (temp >> 8) & 1
 
     # Zero flag: all 32 bits are 0
-    zf = (res == b"\x00\x00\x00\x00")
+    zf = res == b"\x00\x00\x00\x00"
 
     # Sign flag: bit 31 of result is 1
     sf = bool(res[3] & 0x80)
@@ -108,7 +100,7 @@ def adder_core(
 
     if sub:
         # Borrow out: carry == 0 means borrow occurred (A < B + borrow_in)
-        cf = (carry == 0)
+        cf = carry == 0
         # Two's complement signed overflow on subtraction:
         # Occurs when operands have different signs and result sign differs from A
         vf = (a_msb != b_msb) and (a_msb != r_msb)

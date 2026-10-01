@@ -304,7 +304,7 @@ def ln_f32(hw: Hardware):
     res_sign = (res_raw >> 31) & 1
     res_exp = (res_raw >> 23) & 0xFF
     res_frac = res_raw & 0x7FFFFF
-    is_zero = (res_exp == 0 and res_frac == 0)
+    is_zero = res_exp == 0 and res_frac == 0
     hw.reg.set_flag(StatusFlag.ERR, False)
     hw.reg.set_flag(StatusFlag.ZERO, is_zero)
     hw.reg.set_flag(StatusFlag.SIGN, res_sign == 1)
@@ -375,7 +375,7 @@ def ln_f64(hw: Hardware):
     res_sign = (res_raw >> 63) & 1
     res_exp = (res_raw >> 52) & 0x7FF
     res_frac = res_raw & 0x000FFFFFFFFFFFFF
-    is_zero = (res_exp == 0 and res_frac == 0)
+    is_zero = res_exp == 0 and res_frac == 0
     hw.reg.set_flag(StatusFlag.ERR, False)
     hw.reg.set_flag(StatusFlag.ZERO, is_zero)
     hw.reg.set_flag(StatusFlag.SIGN, res_sign == 1)

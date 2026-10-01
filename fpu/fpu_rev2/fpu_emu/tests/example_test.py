@@ -144,9 +144,7 @@ def test_example_2_vector3d_norm_immediate(x: float, y: float, z: float, expecte
         (2.0, 3.0, 6.0, 7.0),
     ],
 )
-def test_example_2_vector3d_norm_batch_with_storage_slots(
-    x: float, y: float, z: float, expected: float
-):
+def test_example_2_vector3d_norm_batch_with_storage_slots(x: float, y: float, z: float, expected: float):
     """Section 6.2: D = sqrt(X^2 + Y^2 + Z^2) streamed and executed in Batch Queuing Mode."""
     hw = Hardware()
     alu = Alu(hw)
@@ -171,16 +169,16 @@ def test_example_2_vector3d_norm_batch_with_storage_slots(
     batch_opcodes = [
         UserOpcode.CP_TOS_MEM0,  # Load X
         UserOpcode.DUP4,
-        UserOpcode.MUL_F32,      # X^2
+        UserOpcode.MUL_F32,  # X^2
         UserOpcode.CP_TOS_MEM1,  # Load Y
         UserOpcode.DUP4,
-        UserOpcode.MUL_F32,      # Y^2
-        UserOpcode.ADD_F32,      # X^2 + Y^2
+        UserOpcode.MUL_F32,  # Y^2
+        UserOpcode.ADD_F32,  # X^2 + Y^2
         UserOpcode.CP_TOS_MEM2,  # Load Z
         UserOpcode.DUP4,
-        UserOpcode.MUL_F32,      # Z^2
-        UserOpcode.ADD_F32,      # X^2 + Y^2 + Z^2
-        UserOpcode.SQRT_F32,     # sqrt(X^2 + Y^2 + Z^2)
+        UserOpcode.MUL_F32,  # Z^2
+        UserOpcode.ADD_F32,  # X^2 + Y^2 + Z^2
+        UserOpcode.SQRT_F32,  # sqrt(X^2 + Y^2 + Z^2)
     ]
     for op in batch_opcodes:
         disp.execute(op)
@@ -208,7 +206,7 @@ def test_example_3_sphere_volume_f32(r: float):
     alu = Alu(hw)
     disp = Dispatcher(hw, alu)
 
-    expected = (4.0 / 3.0) * math.pi * (r ** 3)
+    expected = (4.0 / 3.0) * math.pi * (r**3)
 
     # 1. Push r
     push_f32(hw, r)
@@ -243,11 +241,11 @@ def test_example_3_sphere_volume_f32(r: float):
 @pytest.mark.parametrize(
     "x, a, b, c",
     [
-        (2.0, 3.0, 4.0, 5.0),      # 3(4) + 4(2) + 5 = 25.0
-        (-1.0, 2.0, -3.0, 4.0),    # 2(1) - 3(-1) + 4 = 9.0
-        (0.0, 10.0, 20.0, 30.0),   # 30.0
-        (1.5, 2.0, -1.0, -3.0),    # 2(2.25) - 1.5 - 3 = 0.0
-        (5.0, 1.0, 0.0, -25.0),    # 25 - 25 = 0.0
+        (2.0, 3.0, 4.0, 5.0),  # 3(4) + 4(2) + 5 = 25.0
+        (-1.0, 2.0, -3.0, 4.0),  # 2(1) - 3(-1) + 4 = 9.0
+        (0.0, 10.0, 20.0, 30.0),  # 30.0
+        (1.5, 2.0, -1.0, -3.0),  # 2(2.25) - 1.5 - 3 = 0.0
+        (5.0, 1.0, 0.0, -25.0),  # 25 - 25 = 0.0
     ],
 )
 def test_example_4_polynomial_evaluation(x: float, a: float, b: float, c: float):

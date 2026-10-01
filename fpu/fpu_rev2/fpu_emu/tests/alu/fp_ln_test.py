@@ -117,4 +117,3 @@ def test_ln_mantissa_core():
 
     res64 = ln_mantissa_core(1.5, is_64=True)
     assert math.isclose(res64, math.log(1.5), rel_tol=1e-10)
-

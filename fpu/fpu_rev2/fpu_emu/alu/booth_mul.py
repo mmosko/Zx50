@@ -18,28 +18,45 @@ Per SystemDesign.md Section 3.6, Section 3.8, and Section 4:
 VERILOG SYNTHESIS SPEC (MachXO2 LCMXO2-2000HC):
 - Module: alu_booth_mul (iterative state machine)
 - Architecture:
-  * MachXO2-2000 has ZERO DSP slices / hard multipliers; multiplication is synthesized entirely in PFU logic
-  * Radix-4 Booth recoder (retires 2 bits per cycle)
-  * Multiplicand selector (0, +/- M, +/- 2M) via 5:1 34-bit MUX
-  * 34-bit partial-product accumulator adder (17 CCU2C slices)
-  * 66-bit combined shift-right register {Accumulator, Multiplier, Q_prev}
+  * MachXO2-2000 has ZERO DSP slices / hard multipliers; multiplication is synthesized entirely in PFU logic.
+  * Radix-4 Booth recoder (retires 2 bits per cycle).
+  * Multiplicand selector (0, +/- M, +/- 2M) via 5:1 MUX.
+  * Partial-product accumulator adder using dedicated MachXO2 CCU2C fast carry-chains.
+  * Internal combined shift-right register {Accumulator P, Multiplier Q, Q_prev}.
+    When multiplication finishes, shift clock-enable is deactivated. The 64-bit (or 128-bit)
+    product remains latched in these internal FFs throughout the writeback phase.
+  * 32-bit Output Multiplexer (booth_out_sel):
+    Gates one 32-bit slice of {P, Q} onto the 32-bit RES_BUS[31:0] per clock cycle.
+    Because {P, Q} are dedicated internal FFs, modifying target registers in the register file
+    (AL, AH, DL, DH) introduces ZERO combinational feedback into the multiplier.
 - Inputs:
   * Multiplier Q: Connected to HA_BUS[31:0] (from HA 2:1 selector: AL or AH)
   * Multiplicand M: Connected to HB_BUS[31:0] (from HB 8:1 selector: BL, BH, DL, DH, FL, FH, AL, AH)
   * Note: Input selection MUXes reside in the shared bus infrastructure (80 LUT4s total).
 - Output Destination:
-  * Drives RES_BUS[31:0] -> Latching steered to AL and AH via Clock Enables (WE_AL, WE_AH)
+  * Drives RES_BUS[31:0] -> Latching steered to AL, AH, DL, DH via Clock Enables (WE_AL, WE_AH, WE_DL, WE_DH)
   * Flags: ZF, SF, VF latched into STATUS register (3 FFs)
-- Hardware Resources (MachXO2-2000, standalone Booth multiplier core):
-  * Total LUT4s: ~61 (57 Booth core/adder + 4 flags)
-  * Total CCU2C Carry Slices: 17
-  * Flip-Flops (FF): ~75 (66 shift register bits + 5 cycle counter + 4 flags)
+- Hardware Resources (MachXO2-2000):
+  * 32-Bit Booth Core:
+    - 66-bit shift register {P[32:0], Q[31:0], q_-1}: 66 FFs
+    - 34-bit CCU2C adder: 17 slices
+    - Booth recoder & MUX logic: ~57 LUT4s
+    - 32-bit 2:1 output MUX (booth_out_sel): 16 LUT4s
+    - Cycle counter & flags: 9 FFs, 4 LUT4s
+    - Total 32-bit: ~77 LUT4s, 17 CCU2C slices, 75 FFs
+  * 64-Bit Booth Core:
+    - 130-bit shift register {P[64:0], Q[63:0], q_-1}: 130 FFs
+    - 66-bit CCU2C adder: 33 slices
+    - Booth recoder & MUX logic: ~105 LUT4s
+    - 32-bit 4:1 output MUX (booth_out_sel): 32 LUT4s
+    - Cycle counter & flags: 10 FFs, 4 LUT4s
+    - Total 64-bit: ~141 LUT4s, 33 CCU2C slices, 140 FFs
   * EBR Blocks: 0
   * DSP Multipliers: 0 (pure LUT-based synthesis)
 - Critical Path & Timing:
   * HA/HB bus setup (1.5 ns) + Booth recode (0.8 ns) + CCU2C adder (1.9 ns) + setup (0.5 ns) = 4.7 ns
-  * 32-bit multiply latency: 16 clock cycles (320 ns at 50 MHz)
-  * 64-bit multiply latency: 32 clock cycles (640 ns at 50 MHz)
+  * 32-bit multiply latency: 16 clock cycles (14 compute + 2 writeback: AL, AH)
+  * 64-bit multiply latency: 32 clock cycles (2 read + 26 compute + 4 writeback: AL, AH, DL, DH)
 """
 
 from typing import Set, Tuple
@@ -57,12 +74,8 @@ CYCLES_32 = 16
 CYCLES_64 = 32
 
 # Permitted source registers
-VALID_32BIT_SRCS: Set[Reg] = {
-    Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH
-}
-VALID_64BIT_SRCS: Set[Reg] = {
-    Reg.BX, Reg.DX, Reg.FX
-}
+VALID_32BIT_SRCS: Set[Reg] = {Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH}
+VALID_64BIT_SRCS: Set[Reg] = {Reg.BX, Reg.DX, Reg.FX}
 
 
 def _to_signed(val: int, bits: int) -> int:
@@ -73,12 +86,12 @@ def _to_signed(val: int, bits: int) -> int:
 
 
 @fpga_resource(
-    approach="Radix-4 Booth Multiplier with CCU2C carry-chains and PFU multiplexers",
-    luts=61,
+    approach="Radix-4 Booth Multiplier with CCU2C carry-chains, internal {P, Q} FFs, and RES_BUS MUX",
+    luts=77,
     slices_ccu2c=17,
-    ffs=69,
-    delay_ns=4.8,
-    cycles=1,
+    ffs=75,
+    delay_ns=4.7,
+    cycles=16,
     shared_unit="alu_booth_mul",
 )
 def booth_core(
@@ -120,9 +133,9 @@ def booth_core(
             case 1 | 2:
                 p += m_signed
             case 3:
-                p += (m_signed << 1)
+                p += m_signed << 1
             case 4:
-                p -= (m_signed << 1)
+                p -= m_signed << 1
             case 5 | 6:
                 p -= m_signed
             case _:
@@ -150,7 +163,7 @@ def booth_core(
 
     # Overflow: High word is not the sign extension of low word
     sign_ext_mask = ((1 << total_bits) - 1) if (low_bytes[-1] & 0x80) else 0
-    vf = (high_half != sign_ext_mask)
+    vf = high_half != sign_ext_mask
 
     return product_bytes, cf, zf, sf, vf
 
@@ -168,16 +181,22 @@ def mul32(hw: Hardware, src: Reg = Reg.BL):
 
     prod_bytes, cf, zf, sf, vf = booth_core(m_bytes, q_bytes, width_bytes=WIDTH_32_BYTES)
 
+    # Hardware Model: The 64-bit product is held in the multiplier's internal {P, Q}
+    # shift-register flip-flops (66 FFs) and frozen at cycle 14 when calculation completes.
+    # A 32-bit 2:1 multiplexer (booth_out_sel) gates 32 bits at a time onto RES_BUS[31:0].
+    # There is zero combinational feedback from register writebacks into {P, Q}.
+    prod_latch = prod_bytes
+
     # 16 cycles: 14 compute cycles + 2 writeback cycles (AL, AH)
     hw.clock.tick(CYCLES_32 - 2)
 
-    # Cycle 15: write AL
+    # Cycle 15: booth_out_sel=0 -> RES_BUS[31:0] = prod_latch[31:0] -> WE_AL
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.AL, prod_bytes[0:4])
+    hw.reg.set_res_bus(Reg.AL, prod_latch[0:4])
 
-    # Cycle 16: write AH
+    # Cycle 16: booth_out_sel=1 -> RES_BUS[31:0] = prod_latch[63:32] -> WE_AH
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.AH, prod_bytes[4:8])
+    hw.reg.set_res_bus(Reg.AH, prod_latch[4:8])
 
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 
@@ -205,24 +224,30 @@ def mul64(hw: Hardware, src: Reg = Reg.BX):
 
     prod_bytes, cf, zf, sf, vf = booth_core(m_bytes, q_bytes, width_bytes=WIDTH_64_BYTES)
 
+    # Hardware Model: The 128-bit product is held in the multiplier's internal {P, Q}
+    # shift-register flip-flops (130 FFs) and frozen at cycle 28 when calculation completes.
+    # A 32-bit 4:1 multiplexer (booth_out_sel) gates 32 bits at a time onto RES_BUS[31:0].
+    # There is zero combinational feedback from register writebacks into {P, Q}.
+    prod_latch = prod_bytes
+
     # 32 cycles: 2 operand read cycles + 26 compute cycles + 4 writeback cycles (AL, AH, DL, DH)
     hw.clock.tick(CYCLES_64 - 4 - 2)
 
-    # Cycle 29: write AL
+    # Cycle 29: booth_out_sel=00 -> RES_BUS[31:0] = prod_latch[31:0] -> WE_AL
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.AL, prod_bytes[0:4])
+    hw.reg.set_res_bus(Reg.AL, prod_latch[0:4])
 
-    # Cycle 30: write AH
+    # Cycle 30: booth_out_sel=01 -> RES_BUS[31:0] = prod_latch[63:32] -> WE_AH
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.AH, prod_bytes[4:8])
+    hw.reg.set_res_bus(Reg.AH, prod_latch[4:8])
 
-    # Cycle 31: write DL
+    # Cycle 31: booth_out_sel=10 -> RES_BUS[31:0] = prod_latch[95:64] -> WE_DL
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.DL, prod_bytes[8:12])
+    hw.reg.set_res_bus(Reg.DL, prod_latch[8:12])
 
-    # Cycle 32: write DH
+    # Cycle 32: booth_out_sel=11 -> RES_BUS[31:0] = prod_latch[127:96] -> WE_DH
     hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg.DH, prod_bytes[12:16])
+    hw.reg.set_res_bus(Reg.DH, prod_latch[12:16])
 
     _set_flags(hw, cf=cf, zf=zf, sf=sf, vf=vf)
 

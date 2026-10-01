@@ -105,21 +105,13 @@ class FpgaResourceRegistry:
         """
         violations = []
         if cls.total_luts() > MACHXO2_2000_MAX_LUTS:
-            violations.append(
-                f"LUT limit exceeded: {cls.total_luts()} > {MACHXO2_2000_MAX_LUTS}"
-            )
+            violations.append(f"LUT limit exceeded: {cls.total_luts()} > {MACHXO2_2000_MAX_LUTS}")
         if cls.total_ffs() > MACHXO2_2000_MAX_FFS:
-            violations.append(
-                f"FF limit exceeded: {cls.total_ffs()} > {MACHXO2_2000_MAX_FFS}"
-            )
+            violations.append(f"FF limit exceeded: {cls.total_ffs()} > {MACHXO2_2000_MAX_FFS}")
         if cls.total_ebr_blocks() > MACHXO2_2000_MAX_EBR_BLOCKS:
-            violations.append(
-                f"EBR block limit exceeded: {cls.total_ebr_blocks()} > {MACHXO2_2000_MAX_EBR_BLOCKS}"
-            )
+            violations.append(f"EBR block limit exceeded: {cls.total_ebr_blocks()} > {MACHXO2_2000_MAX_EBR_BLOCKS}")
         if cls.total_dsp() > MACHXO2_2000_MAX_DSP:
-            violations.append(
-                f"DSP limit exceeded: MachXO2 has no DSP blocks, used {cls.total_dsp()}"
-            )
+            violations.append(f"DSP limit exceeded: MachXO2 has no DSP blocks, used {cls.total_dsp()}")
         return violations
 
     @classmethod
@@ -142,14 +134,16 @@ class FpgaResourceRegistry:
         tot_ffs = cls.total_ffs()
         tot_ebr = cls.total_ebr_blocks()
 
-        lines.extend([
-            "",
-            "**Total Dedicated / Shared Hardware:**",
-            f"- **LUT4s:** {tot_luts} / {MACHXO2_2000_MAX_LUTS} ({tot_luts / MACHXO2_2000_MAX_LUTS * 100:.1f}%)",
-            f"- **Carry Slices (CCU2C):** {tot_slices} / {MACHXO2_2000_MAX_SLICES} ({tot_slices / MACHXO2_2000_MAX_SLICES * 100:.1f}%)",
-            f"- **Flip-Flops (FF):** {tot_ffs} / {MACHXO2_2000_MAX_FFS} ({tot_ffs / MACHXO2_2000_MAX_FFS * 100:.1f}%)",
-            f"- **EBR (9Kb Blocks):** {tot_ebr} / {MACHXO2_2000_MAX_EBR_BLOCKS} ({tot_ebr / MACHXO2_2000_MAX_EBR_BLOCKS * 100:.1f}%)",
-        ])
+        lines.extend(
+            [
+                "",
+                "**Total Dedicated / Shared Hardware:**",
+                f"- **LUT4s:** {tot_luts} / {MACHXO2_2000_MAX_LUTS} ({tot_luts / MACHXO2_2000_MAX_LUTS * 100:.1f}%)",
+                f"- **Carry Slices (CCU2C):** {tot_slices} / {MACHXO2_2000_MAX_SLICES} ({tot_slices / MACHXO2_2000_MAX_SLICES * 100:.1f}%)",
+                f"- **Flip-Flops (FF):** {tot_ffs} / {MACHXO2_2000_MAX_FFS} ({tot_ffs / MACHXO2_2000_MAX_FFS * 100:.1f}%)",
+                f"- **EBR (9Kb Blocks):** {tot_ebr} / {MACHXO2_2000_MAX_EBR_BLOCKS} ({tot_ebr / MACHXO2_2000_MAX_EBR_BLOCKS * 100:.1f}%)",
+            ]
+        )
         return "\n".join(lines)
 
 

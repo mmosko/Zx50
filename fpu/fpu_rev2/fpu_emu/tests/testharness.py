@@ -28,7 +28,6 @@ class RegTestHarness:
     def read_ha_bus(self) -> bytearray:
         return self._reg.read_ha_bus()
 
-
     def read_hb_bus(self) -> bytearray:
         return self._reg.read_hb_bus()
 
@@ -192,9 +191,7 @@ class RegTestHarness:
 
         expected_len = reg.byte_length
         if len(val) != expected_len:
-            raise ValueError(
-                f"Expected {expected_len} bytes for register {reg.name}, got {len(val)}"
-            )
+            raise ValueError(f"Expected {expected_len} bytes for register {reg.name}, got {len(val)}")
 
         if reg == Reg.AL:
             self._reg._al[:] = val
@@ -252,8 +249,6 @@ class RegTestHarness:
     # -------------------------------------------------------------------------
     def dump(self) -> str:
         return self._reg.dump()
-
-
 
 
 class HardwareTestHarness:

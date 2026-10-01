@@ -35,16 +35,19 @@ class HalfSelect(Enum):
 
 class HardwareTimingConflictError(Exception):
     """Raised when hardware timing rules are violated in a single clock cycle."""
+
     pass
 
 
 class HardwareBusError(Exception):
     """Raised when an illegal bus access occurs."""
+
     pass
 
 
 class HardwareAccessViolationError(Exception):
     """Raised when direct register access is attempted on bus-gated registers."""
+
     pass
 
 
@@ -113,13 +116,13 @@ class StatusFlag(Enum):
     """Status register flag bit allocations (SystemDesign.md Section 2.1)."""
 
     DIFF_SIGN = 0  # Bit 0: Effective subtraction / operand signs differ
-    ERR = 1        # Bit 1: Error flag (Division by zero, domain errors, stack traps)
+    ERR = 1  # Bit 1: Error flag (Division by zero, domain errors, stack traps)
     UNDERFLOW = 2  # Bit 2: Stack or floating-point underflow
-    OVERFLOW = 3   # Bit 3: Stack, integer, or floating-point overflow
-    CARRY = 4      # Bit 4: Arithmetic carry or borrow
-    SIGN = 5       # Bit 5: Sign flag (1 = Negative)
-    ZERO = 6       # Bit 6: Zero flag (1 = Result is zero)
-    BUSY = 7       # Bit 7: Hardware execution busy flag
+    OVERFLOW = 3  # Bit 3: Stack, integer, or floating-point overflow
+    CARRY = 4  # Bit 4: Arithmetic carry or borrow
+    SIGN = 5  # Bit 5: Sign flag (1 = Negative)
+    ZERO = 6  # Bit 6: Zero flag (1 = Result is zero)
+    BUSY = 7  # Bit 7: Hardware execution busy flag
 
 
 class Registers:
@@ -284,9 +287,7 @@ class Registers:
             dst = Reg[dst.upper()]
         tick = self.current_tick
         if self._last_res_tick == tick:
-            raise HardwareTimingConflictError(
-                f"RES_BUS collision: multiple writes attempted in clock cycle {tick}"
-            )
+            raise HardwareTimingConflictError(f"RES_BUS collision: multiple writes attempted in clock cycle {tick}")
         self._last_res_tick = tick
 
         if isinstance(data, int):
@@ -322,7 +323,6 @@ class Registers:
             self.c = data_bytes[0] & 0x3F
         else:
             raise HardwareBusError(f"Unsupported writeback destination for RES_BUS: {dst}")
-
 
     # -------------------------------------------------------------------------
     # Allowed Control & Status Getters / Setters
@@ -408,7 +408,7 @@ class Registers:
         """Sets or clears an individual status flag."""
         bit_idx = flag.value if isinstance(flag, StatusFlag) else flag
         if val:
-            self._status[0] |= (1 << bit_idx)
+            self._status[0] |= 1 << bit_idx
         else:
             self._status[0] &= ~(1 << bit_idx)
 

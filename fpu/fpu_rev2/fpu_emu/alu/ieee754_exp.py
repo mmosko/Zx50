@@ -144,9 +144,7 @@ def exp_core_diff(ea_raw: int, eb_raw: int) -> Tuple[int, int, bool]:
     return from_signed_12(delta), shift_count, borrow
 
 
-def exp_core_add_mul(
-    ea_raw: int, eb_raw: int, bias: int = BIAS_F32
-) -> Tuple[int, bool, bool, bool]:
+def exp_core_add_mul(ea_raw: int, eb_raw: int, bias: int = BIAS_F32) -> Tuple[int, bool, bool, bool]:
     """Multiplication exponent calculation: EA + EB - BIAS.
 
     :return: (res_12bit, ovf, uf, err)
@@ -161,9 +159,7 @@ def exp_core_add_mul(
     return from_signed_12(res), ovf, uf, err
 
 
-def exp_core_sub_div(
-    ea_raw: int, eb_raw: int, bias: int = BIAS_F32
-) -> Tuple[int, bool, bool, bool]:
+def exp_core_sub_div(ea_raw: int, eb_raw: int, bias: int = BIAS_F32) -> Tuple[int, bool, bool, bool]:
     """Division exponent calculation: EA - EB + BIAS.
 
     :return: (res_12bit, ovf, uf, err)
@@ -324,7 +320,7 @@ def unpack_f32(
     else:
         raise ValueError(f"Invalid destination exponent register: {dst_exp}")
 
-    is_zero = (exp == 0 and mantissa == 0)
+    is_zero = exp == 0 and mantissa == 0
     if src == Reg.AL or dst_mantissa == Reg.AL:
         hw.reg.sign_a = sign
         hw.reg.set_flag(StatusFlag.SIGN, sign == 1)
@@ -429,7 +425,7 @@ def unpack_f64(
     else:
         raise ValueError(f"Invalid destination exponent register: {dst_exp}")
 
-    is_zero = (exp == 0 and mantissa == 0)
+    is_zero = exp == 0 and mantissa == 0
     if src == Reg.AX or dst_mantissa == Reg.AX:
         hw.reg.sign_a = sign
         hw.reg.set_flag(StatusFlag.SIGN, sign == 1)

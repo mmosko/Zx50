@@ -10,17 +10,17 @@ from typing import Optional
 ROM_SIZE = 32768  # 32 KB active region for CA[14:0]
 
 # ROM Base Addresses (matching src/fpu_rom_map.vh)
-FLASH_QS_BASE     = 0x0000  # Quarter-Square Table (1022 bytes)
-FLASH_RECIP_BASE  = 0x0400  # Reciprocal Table (512 bytes)
-FLASH_SQRT_BASE   = 0x0600  # Reciprocal Square Root Seed Table (512 bytes)
-FLASH_EXP2_BASE   = 0x0800  # Exp2 Table (512 bytes)
-FLASH_LOG2_BASE   = 0x0A00  # Log2 Table (512 bytes)
-FLASH_SIN_BASE    = 0x0C00  # Sine Table (512 bytes)
-FLASH_COS_BASE    = 0x0E00  # Cosine Table (512 bytes)
-FLASH_TAN_BASE    = 0x1000  # Tangent Table (512 bytes)
-FLASH_LN_BASE     = 0x1200  # Natural Log Table (512 bytes)
-FLASH_LOG10_BASE  = 0x1400  # Base-10 Log Table (512 bytes)
-FLASH_CONST_BASE  = 0x1600  # Mathematical Constants Table (128 bytes)
+FLASH_QS_BASE = 0x0000  # Quarter-Square Table (1022 bytes)
+FLASH_RECIP_BASE = 0x0400  # Reciprocal Table (512 bytes)
+FLASH_SQRT_BASE = 0x0600  # Reciprocal Square Root Seed Table (512 bytes)
+FLASH_EXP2_BASE = 0x0800  # Exp2 Table (512 bytes)
+FLASH_LOG2_BASE = 0x0A00  # Log2 Table (512 bytes)
+FLASH_SIN_BASE = 0x0C00  # Sine Table (512 bytes)
+FLASH_COS_BASE = 0x0E00  # Cosine Table (512 bytes)
+FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
+FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
+FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
+FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (128 bytes)
 
 
 def get_default_rom_path() -> str:
@@ -39,9 +39,7 @@ class Rom:
             with open(rom_path, "rb") as f:
                 self._data = bytearray(f.read())
             if len(self._data) != ROM_SIZE:
-                raise ValueError(
-                    f"Invalid ROM image size: {len(self._data)} bytes (expected {ROM_SIZE})"
-                )
+                raise ValueError(f"Invalid ROM image size: {len(self._data)} bytes (expected {ROM_SIZE})")
         else:
             # Fallback uninitialized ROM image pre-filled with 0xFF
             self._data = bytearray([0xFF] * ROM_SIZE)
@@ -54,7 +52,7 @@ class Rom:
     def load_byte(self, addr: int) -> int:
         """Loads a single byte from ROM."""
         if not (0 <= addr < ROM_SIZE):
-            raise IndexError(f"ROM address 0x{addr:04X} out of range (0..0x{ROM_SIZE-1:04X})")
+            raise IndexError(f"ROM address 0x{addr:04X} out of range (0..0x{ROM_SIZE - 1:04X})")
         return self._data[addr]
 
     def load_u16(self, addr: int) -> int:
@@ -68,9 +66,7 @@ class Rom:
         if length <= 0:
             raise ValueError(f"length must be positive, got {length}")
         if not (0 <= addr and addr + length <= ROM_SIZE):
-            raise IndexError(
-                f"ROM access at 0x{addr:04X} with length {length} exceeds ROM bounds (size={ROM_SIZE})"
-            )
+            raise IndexError(f"ROM access at 0x{addr:04X} with length {length} exceeds ROM bounds (size={ROM_SIZE})")
         return bytearray(self._data[addr : addr + length])
 
     def load_sqrt_seed(self, index: int) -> int:

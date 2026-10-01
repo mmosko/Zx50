@@ -37,8 +37,6 @@ class TestClock(unittest.TestCase):
             clk.tick(-1)
 
 
-
-
 class TestHardware(unittest.TestCase):
     """Test suite for Hardware container."""
 

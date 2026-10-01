@@ -34,7 +34,6 @@ from fpu_emu.tests.testharness import RegTestHarness
         (0x00000001, 31, ShiftOp.LSL, 0x80000000, False, False, True, False, "LSL shift 31 bit 0 to sign bit"),
         (0x00000003, 31, ShiftOp.LSL, 0x80000000, True, False, True, False, "LSL shift 31 with carry out"),
         (0xFFFFFFFF, 4, ShiftOp.LSL, 0xFFFFFFF0, True, False, True, False, "LSL 0xFFFFFFFF by 4"),
-
         # LSR 32-bit tests
         (0x12345678, 0, ShiftOp.LSR, 0x12345678, False, False, False, False, "LSR shift 0"),
         (0x12345678, 1, ShiftOp.LSR, 0x091A2B3C, False, False, False, False, "LSR shift 1 even value"),
@@ -43,7 +42,6 @@ from fpu_emu.tests.testharness import RegTestHarness
         (0x80000000, 31, ShiftOp.LSR, 0x00000001, False, False, False, False, "LSR shift 31 MSB to LSB"),
         (0x80000001, 31, ShiftOp.LSR, 0x00000001, False, False, False, False, "LSR shift 31 bit 0 lost"),
         (0x80000002, 2, ShiftOp.LSR, 0x20000000, True, False, False, False, "LSR zeroes enter MSB"),
-
         # ASR 32-bit tests
         (0x12345678, 0, ShiftOp.ASR, 0x12345678, False, False, False, False, "ASR positive shift 0"),
         (0x80000000, 0, ShiftOp.ASR, 0x80000000, False, False, True, False, "ASR negative shift 0"),
@@ -75,12 +73,10 @@ def test_shifter_core_32(val, shift, op, expected_res, exp_cf, exp_zf, exp_sf, e
         (0x00000000FFFFFFFF, 32, ShiftOp.LSL, 0xFFFFFFFF00000000, False, False, True, False, "LSL 64 shift 32"),
         (0x8000000000000000, 1, ShiftOp.LSL, 0x0000000000000000, True, True, False, False, "LSL 64 MSB out -> 0"),
         (0x0000000000000001, 63, ShiftOp.LSL, 0x8000000000000000, False, False, True, False, "LSL 64 shift 63"),
-
         # LSR 64-bit
         (0xFFFFFFFF00000000, 32, ShiftOp.LSR, 0x00000000FFFFFFFF, False, False, False, False, "LSR 64 shift 32"),
         (0x0000000000000001, 1, ShiftOp.LSR, 0x0000000000000000, True, True, False, False, "LSR 64 bit 0 -> 0"),
         (0x8000000000000000, 63, ShiftOp.LSR, 0x0000000000000001, False, False, False, False, "LSR 64 shift 63"),
-
         # ASR 64-bit
         (0x8000000000000000, 1, ShiftOp.ASR, 0xC000000000000000, False, False, True, False, "ASR 64 sign-extend 1"),
         (0x8000000000000000, 32, ShiftOp.ASR, 0xFFFFFFFF80000000, False, False, True, False, "ASR 64 shift 32"),

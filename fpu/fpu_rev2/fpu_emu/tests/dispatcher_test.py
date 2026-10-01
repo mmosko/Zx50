@@ -467,6 +467,7 @@ def test_abs_i64_and_constants():
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
     import math
+
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == math.pi
 
 
@@ -552,6 +553,7 @@ def test_batch_invalid_opcode_error():
 
     # Directly inject an invalid opcode byte (0x7F) into the batch buffer
     from fpu_emu.dispatcher import CMD_STACK_BASE
+
     hw.mem[CMD_STACK_BASE] = 0x7F
     hw.reg.osp = 1
 
@@ -599,6 +601,7 @@ def test_more_dispatcher_user_opcodes():
     assert hw.reg.sp == 4
     stack.pop32(hw, Reg.AL)
     import math
+
     assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == math.pi
 
     # Successful CP_MEM0_TOS and CP_TOS_MEM0
@@ -668,5 +671,6 @@ def test_more_dispatcher_user_opcodes():
 
     # Unimplemented microcode lookup
     from fpu_emu.micro_code import MicroCode
+
     with pytest.raises(NotImplementedError):
         MicroCode.get(UserOpcode.CONV_I32_I64)

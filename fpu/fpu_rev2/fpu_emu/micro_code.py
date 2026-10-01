@@ -29,7 +29,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # ADD_F32:
         # 0: POP BL
         # 1: JNZ UNDERFLOW -> 25 (TRAP)
@@ -88,7 +87,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # ADD_I64:
         # 0: POP64 BX
         # 1: JNZ UNDERFLOW -> 7 (TRAP)
@@ -108,7 +106,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # ADD_F64:
         # 0: POP64 BX
         # 1: JNZ UNDERFLOW -> 25 (TRAP)
@@ -167,7 +164,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SUB_I32:
         # 0: POP BL
         # 1: JNZ UNDERFLOW -> 7 (TRAP)
@@ -187,7 +183,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SUB_F32:
         # 0: POP BL
         # 1: JNZ UNDERFLOW -> 26 (TRAP)
@@ -248,7 +243,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SUB_I64:
         # 0: POP64 BX
         # 1: JNZ UNDERFLOW -> 7 (TRAP)
@@ -268,7 +262,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SUB_F64:
         # 0: POP64 BX
         # 1: JNZ UNDERFLOW -> 26 (TRAP)
@@ -329,7 +322,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # MUL_I32:
         # 0: POP BL
         # 1: JNZ UNDERFLOW -> 7 (TRAP)
@@ -349,7 +341,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # MUL_I64:
         # 0: POP64 BX
         # 1: JNZ UNDERFLOW -> 7 (TRAP)
@@ -369,7 +360,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SQRT_F32:
         # 0: POP AL
         # 1: JNZ UNDERFLOW -> 11 (TRAP)
@@ -397,7 +387,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.NOP),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # SQRT_F64:
         # 0: POP64 AX
         # 1: JNZ UNDERFLOW -> 11 (TRAP)
@@ -425,7 +414,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.NOP),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # ABS_I32:
         UserOpcode.ABS_I32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
@@ -435,7 +423,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # ABS_I64:
         UserOpcode.ABS_I64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
@@ -445,7 +432,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # DUP4:
         UserOpcode.DUP4: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
@@ -456,7 +442,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # DUP8:
         UserOpcode.DUP8: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
@@ -467,7 +452,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # MUL_F32:
         UserOpcode.MUL_F32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
@@ -479,7 +463,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # DIV_F32:
         UserOpcode.DIV_F32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
@@ -492,7 +475,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # MUL_F64:
         UserOpcode.MUL_F64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.BX),
@@ -504,7 +486,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # DIV_F64:
         UserOpcode.DIV_F64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.BX),
@@ -517,7 +498,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # LN_F32:
         UserOpcode.LN_F32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
@@ -528,7 +508,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # LN_F64:
         UserOpcode.LN_F64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
@@ -539,7 +518,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # EXP_F32:
         UserOpcode.EXP_F32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
@@ -550,7 +528,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # EXP_F64:
         UserOpcode.EXP_F64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
@@ -561,7 +538,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # POW_F32:
         UserOpcode.POW_F32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
@@ -574,7 +550,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         # POW_F64:
         UserOpcode.POW_F64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.BX),
@@ -587,7 +562,6 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
-
         UserOpcode.ZERO_MEM: [
             MicroInstruction(op=MicroOp.ZERO_MEM),
             MicroInstruction(op=MicroOp.RET),

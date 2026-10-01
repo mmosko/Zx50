@@ -65,7 +65,14 @@ def test_to_signed_12(raw_12, expected_signed):
         (LIMIT_EXP_MAX, 1, 1024, True, False, "1023 + 1 -> 1024 (OVF)"),
         # Underflow < -1022
         (from_signed_12(-1000), from_signed_12(-23), from_signed_12(-1023), False, True, "-1000 + (-23) -> -1023 (UF)"),
-        (from_signed_12(LIMIT_EXP_MIN), from_signed_12(-1), from_signed_12(-1023), False, True, "-1022 + (-1) -> -1023 (UF)"),
+        (
+            from_signed_12(LIMIT_EXP_MIN),
+            from_signed_12(-1),
+            from_signed_12(-1023),
+            False,
+            True,
+            "-1022 + (-1) -> -1023 (UF)",
+        ),
     ],
 )
 def test_exp_core_add(ea, eb, expected_res, expected_ovf, expected_uf, desc):
@@ -405,16 +412,64 @@ def test_pack_f64_default_sign_from_sign_a(val_float, expected_sign_bit):
 @pytest.mark.parametrize(
     "ea,eb,mant_a,mant_b,sign_a,sign_b,expected_carry,expected_diff_sign,desc",
     [
-        (1023, 1023, 0x8000000000000000, 0xC000000000000000, 0, 1, True, True, "Equal exp, AX < BX -> borrow=True, DIFF_SIGN=True"),
-        (1023, 1023, 0xC000000000000000, 0x8000000000000000, 1, 1, False, False, "Equal exp, AX > BX -> borrow=False, DIFF_SIGN=False"),
-        (1023, 1023, 0x8000000000000000, 0x8000000000000000, 0, 0, False, False, "Equal exp, AX == BX -> borrow=False, DIFF_SIGN=False"),
-        (1024, 1023, 0x8000000000000000, 0xC000000000000000, 1, 0, False, True, "EA > EB -> borrow=False, DIFF_SIGN=True"),
-        (1022, 1023, 0xC000000000000000, 0x8000000000000000, 0, 0, True, False, "EA < EB -> borrow=True, DIFF_SIGN=False"),
+        (
+            1023,
+            1023,
+            0x8000000000000000,
+            0xC000000000000000,
+            0,
+            1,
+            True,
+            True,
+            "Equal exp, AX < BX -> borrow=True, DIFF_SIGN=True",
+        ),
+        (
+            1023,
+            1023,
+            0xC000000000000000,
+            0x8000000000000000,
+            1,
+            1,
+            False,
+            False,
+            "Equal exp, AX > BX -> borrow=False, DIFF_SIGN=False",
+        ),
+        (
+            1023,
+            1023,
+            0x8000000000000000,
+            0x8000000000000000,
+            0,
+            0,
+            False,
+            False,
+            "Equal exp, AX == BX -> borrow=False, DIFF_SIGN=False",
+        ),
+        (
+            1024,
+            1023,
+            0x8000000000000000,
+            0xC000000000000000,
+            1,
+            0,
+            False,
+            True,
+            "EA > EB -> borrow=False, DIFF_SIGN=True",
+        ),
+        (
+            1022,
+            1023,
+            0xC000000000000000,
+            0x8000000000000000,
+            0,
+            0,
+            True,
+            False,
+            "EA < EB -> borrow=True, DIFF_SIGN=False",
+        ),
     ],
 )
-def test_exp_diff_tie_breaking_64bit(
-    ea, eb, mant_a, mant_b, sign_a, sign_b, expected_carry, expected_diff_sign, desc
-):
+def test_exp_diff_tie_breaking_64bit(ea, eb, mant_a, mant_b, sign_a, sign_b, expected_carry, expected_diff_sign, desc):
     """Verify that when EA == EB in 64-bit mode, exp_diff compares AX vs BX."""
     hw = Hardware()
     reg = RegTestHarness(hw.reg)

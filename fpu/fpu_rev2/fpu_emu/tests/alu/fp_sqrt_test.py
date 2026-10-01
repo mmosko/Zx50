@@ -17,9 +17,9 @@ class TestFpSqrtAlu:
         "ea, expected_ea, expected_odd",
         [
             (127, 127, False),  # 2^0 -> 2^0
-            (128, 127, True),   # 2^1 -> 2^0 * sqrt(2)
+            (128, 127, True),  # 2^1 -> 2^0 * sqrt(2)
             (129, 128, False),  # 2^2 -> 2^1
-            (126, 126, True),   # 2^-1 -> 2^-1 * sqrt(2)
+            (126, 126, True),  # 2^-1 -> 2^-1 * sqrt(2)
             (125, 126, False),  # 2^-2 -> 2^-1
         ],
     )
@@ -32,9 +32,9 @@ class TestFpSqrtAlu:
         "ea, expected_ea, expected_odd",
         [
             (1023, 1023, False),  # 2^0 -> 2^0
-            (1024, 1023, True),   # 2^1 -> 2^0 * sqrt(2)
+            (1024, 1023, True),  # 2^1 -> 2^0 * sqrt(2)
             (1025, 1024, False),  # 2^2 -> 2^1
-            (1022, 1022, True),   # 2^-1 -> 2^-1 * sqrt(2)
+            (1022, 1022, True),  # 2^-1 -> 2^-1 * sqrt(2)
             (1021, 1022, False),  # 2^-2 -> 2^-1
         ],
     )

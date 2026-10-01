@@ -68,9 +68,7 @@ class Ram:
             self._validate_bounds(addr, len(data))
             self._ram[addr : addr + len(data)] = data
         else:
-            raise TypeError(
-                f"data must be bytes, bytearray, or int, got {type(data).__name__}"
-            )
+            raise TypeError(f"data must be bytes, bytearray, or int, got {type(data).__name__}")
 
     # -------------------------------------------------------------------------
     # Scratchpad Helpers (0x0200 - 0x02FF)
@@ -78,27 +76,19 @@ class Ram:
     def load_scratch(self, word_idx: int, length: int = 4) -> bytearray:
         """Loads from scratchpad at word index `0..63` (each word is 4 bytes)."""
         if not (0 <= word_idx < SCRATCHPAD_WORDS):
-            raise IndexError(
-                f"Scratchpad word index {word_idx} out of range (0..{SCRATCHPAD_WORDS-1})"
-            )
+            raise IndexError(f"Scratchpad word index {word_idx} out of range (0..{SCRATCHPAD_WORDS - 1})")
         addr = SCRATCHPAD_BASE + (word_idx * 4)
         if addr + length > SCRATCHPAD_BASE + SCRATCHPAD_SIZE:
-            raise IndexError(
-                f"Scratchpad access at word {word_idx} with length {length} exceeds scratchpad partition"
-            )
+            raise IndexError(f"Scratchpad access at word {word_idx} with length {length} exceeds scratchpad partition")
         return self.load(addr, length)
 
     def store_scratch(self, word_idx: int, data: Union[bytes, bytearray]):
         """Stores `data` to scratchpad at word index `0..63`."""
         if not (0 <= word_idx < SCRATCHPAD_WORDS):
-            raise IndexError(
-                f"Scratchpad word index {word_idx} out of range (0..{SCRATCHPAD_WORDS-1})"
-            )
+            raise IndexError(f"Scratchpad word index {word_idx} out of range (0..{SCRATCHPAD_WORDS - 1})")
         addr = SCRATCHPAD_BASE + (word_idx * 4)
         if addr + len(data) > SCRATCHPAD_BASE + SCRATCHPAD_SIZE:
-            raise IndexError(
-                f"Scratchpad write at word {word_idx} of {len(data)} bytes exceeds scratchpad partition"
-            )
+            raise IndexError(f"Scratchpad write at word {word_idx} of {len(data)} bytes exceeds scratchpad partition")
         self.store(addr, data)
 
     # -------------------------------------------------------------------------
@@ -107,27 +97,19 @@ class Ram:
     def load_user_mem(self, slot_idx: int, length: int = 4) -> bytearray:
         """Loads from user memory at slot index `0..15` (each slot is 4 bytes)."""
         if not (0 <= slot_idx < USER_MEM_SLOTS):
-            raise IndexError(
-                f"User memory slot index {slot_idx} out of range (0..{USER_MEM_SLOTS-1})"
-            )
+            raise IndexError(f"User memory slot index {slot_idx} out of range (0..{USER_MEM_SLOTS - 1})")
         addr = USER_MEM_BASE + (slot_idx * 4)
         if addr + length > USER_MEM_BASE + USER_MEM_SIZE:
-            raise IndexError(
-                f"User memory access at slot {slot_idx} with length {length} exceeds user partition"
-            )
+            raise IndexError(f"User memory access at slot {slot_idx} with length {length} exceeds user partition")
         return self.load(addr, length)
 
     def store_user_mem(self, slot_idx: int, data: Union[bytes, bytearray]):
         """Stores `data` to user memory at slot index `0..15`."""
         if not (0 <= slot_idx < USER_MEM_SLOTS):
-            raise IndexError(
-                f"User memory slot index {slot_idx} out of range (0..{USER_MEM_SLOTS-1})"
-            )
+            raise IndexError(f"User memory slot index {slot_idx} out of range (0..{USER_MEM_SLOTS - 1})")
         addr = USER_MEM_BASE + (slot_idx * 4)
         if addr + len(data) > USER_MEM_BASE + USER_MEM_SIZE:
-            raise IndexError(
-                f"User memory write at slot {slot_idx} of {len(data)} bytes exceeds user partition"
-            )
+            raise IndexError(f"User memory write at slot {slot_idx} of {len(data)} bytes exceeds user partition")
         self.store(addr, data)
 
     def zero_user_mem(self):
@@ -146,13 +128,9 @@ class Ram:
         if length < 0:
             raise ValueError(f"Length cannot be negative, got {length}")
         if addr < 0 or addr >= self._size:
-            raise IndexError(
-                f"Address 0x{addr:04X} out of bounds for RAM of size 0x{self._size:04X}"
-            )
+            raise IndexError(f"Address 0x{addr:04X} out of bounds for RAM of size 0x{self._size:04X}")
         if addr + length > self._size:
-            raise IndexError(
-                f"Access range [0x{addr:04X} : 0x{addr+length:04X}] exceeds RAM size 0x{self._size:04X}"
-            )
+            raise IndexError(f"Access range [0x{addr:04X} : 0x{addr + length:04X}] exceeds RAM size 0x{self._size:04X}")
 
     # -------------------------------------------------------------------------
     # Python Indexing & Slicing

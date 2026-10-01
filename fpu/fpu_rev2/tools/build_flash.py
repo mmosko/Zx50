@@ -25,22 +25,22 @@ import math
 import os
 
 # ROM Parameters & Base Addresses
-FLASH_SIZE        = 32768   # 32 KB active region for CA[14:0]
-FLASH_QS_BASE     = 0x0000  # Quarter-Square Table (1022 bytes)
-FLASH_RECIP_BASE  = 0x0400  # Reciprocal Table (512 bytes)
-FLASH_SQRT_BASE   = 0x0600  # Square Root Seed Table (512 bytes)
-FLASH_EXP2_BASE   = 0x0800  # Exp2 Table (512 bytes)
-FLASH_LOG2_BASE   = 0x0A00  # Log2 Table (512 bytes)
-FLASH_SIN_BASE    = 0x0C00  # Sine Table (512 bytes)
-FLASH_COS_BASE    = 0x0E00  # Cosine Table (512 bytes)
-FLASH_TAN_BASE    = 0x1000  # Tangent Table (512 bytes)
-FLASH_LN_BASE     = 0x1200  # Natural Log Table (512 bytes)
-FLASH_LOG10_BASE  = 0x1400  # Base-10 Log Table (512 bytes)
-FLASH_CONST_BASE  = 0x1600  # Mathematical Constants Table (128 bytes)
+FLASH_SIZE = 32768  # 32 KB active region for CA[14:0]
+FLASH_QS_BASE = 0x0000  # Quarter-Square Table (1022 bytes)
+FLASH_RECIP_BASE = 0x0400  # Reciprocal Table (512 bytes)
+FLASH_SQRT_BASE = 0x0600  # Square Root Seed Table (512 bytes)
+FLASH_EXP2_BASE = 0x0800  # Exp2 Table (512 bytes)
+FLASH_LOG2_BASE = 0x0A00  # Log2 Table (512 bytes)
+FLASH_SIN_BASE = 0x0C00  # Sine Table (512 bytes)
+FLASH_COS_BASE = 0x0E00  # Cosine Table (512 bytes)
+FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
+FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
+FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
+FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (128 bytes)
 
-HEADER_FILE  = "src/fpu_rom_map.vh"
-HEX_FILE     = "sim/fpu_rom.hex"
-BIN_FILE     = "bin/fpu_flash.bin"
+HEADER_FILE = "src/fpu_rom_map.vh"
+HEX_FILE = "sim/fpu_rom.hex"
+BIN_FILE = "bin/fpu_flash.bin"
 EMU_BIN_FILE = "fpu_emu/rom/fpu_flash.bin"
 
 
@@ -52,7 +52,7 @@ def generate_qs_table() -> bytearray:
     data = bytearray(511 * 2)
     for n in range(511):
         val = (n * n) // 4
-        data[n * 2]     = val & 0xFF
+        data[n * 2] = val & 0xFF
         data[n * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -62,7 +62,7 @@ def generate_recip_table() -> bytearray:
     data = bytearray(256 * 2)
     for x in range(1, 256):
         val = min(65535, math.ceil(65536.0 / x))
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -86,7 +86,7 @@ def generate_sqrt_table() -> bytearray:
             m = 2.0 * (1.0 + (x - 128 + 0.5) / 128.0)
         r = 1.0 / math.sqrt(m)
         val = min(65535, int(round(r * 65536.0)))
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -96,7 +96,7 @@ def generate_exp2_table() -> bytearray:
     data = bytearray(256 * 2)
     for x in range(256):
         val = int(2 ** (x / 256.0) * 256) & 0xFFFF
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -106,7 +106,7 @@ def generate_log2_table() -> bytearray:
     data = bytearray(256 * 2)
     for x in range(256):
         val = int(math.log2(1.0 + (x / 256.0)) * 256) & 0xFFFF
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -117,7 +117,7 @@ def generate_sin_table() -> bytearray:
     for x in range(256):
         rad = (x / 256.0) * (math.pi / 2.0)
         val = min(65535, int(round(math.sin(rad) * 256.0)))
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -128,7 +128,7 @@ def generate_cos_table() -> bytearray:
     for x in range(256):
         rad = (x / 256.0) * (math.pi / 2.0)
         val = min(65535, int(round(math.cos(rad) * 256.0)))
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -139,7 +139,7 @@ def generate_tan_table() -> bytearray:
     for x in range(256):
         rad = (x / 256.0) * (math.pi / 4.0)
         val = min(65535, int(round(math.tan(rad) * 256.0)))
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -149,7 +149,7 @@ def generate_ln_table() -> bytearray:
     data = bytearray(256 * 2)
     for x in range(256):
         val = int(round(math.log(1.0 + (x / 256.0)) * 256.0)) & 0xFFFF
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -159,7 +159,7 @@ def generate_log10_table() -> bytearray:
     data = bytearray(256 * 2)
     for x in range(256):
         val = int(round(math.log10(1.0 + (x / 256.0)) * 256.0)) & 0xFFFF
-        data[x * 2]     = val & 0xFF
+        data[x * 2] = val & 0xFF
         data[x * 2 + 1] = (val >> 8) & 0xFF
     return data
 
@@ -169,22 +169,22 @@ def generate_constants_table() -> bytearray:
     data = bytearray(16 * 8)
     constants_def = [
         # (index, hex_value, num_bytes)
-        (0x00, 0x40490FDB, 4),               # 0xA0: PUSH_PI_32
-        (0x01, 0x400921FB54442D18, 8),       # 0xA1: PUSH_PI_64
-        (0x02, 0x402DF854, 4),               # 0xA2: PUSH_E_32
-        (0x03, 0x4005BF0A8B145769, 8),       # 0xA3: PUSH_E_64
-        (0x04, 0x3F317218, 4),               # 0xA4: PUSH_LN2_32
-        (0x05, 0x3FE62E42FEFA39EF, 8),       # 0xA5: PUSH_LN2_64
-        (0x06, 0x3FB8AA3B, 4),               # 0xA6: PUSH_LOG2E_32
-        (0x07, 0x3FF71547652B82FE, 8),       # 0xA7: PUSH_LOG2E_64
-        (0x08, 0x40549A78, 4),               # 0xA8: PUSH_LOG2_10_32
-        (0x09, 0x400A934F0979A371, 8),       # 0xA9: PUSH_LOG2_10_64
-        (0x0A, 0x3E9A209B, 4),               # 0xAA: PUSH_LOG10_2_32
-        (0x0B, 0x3FD34413509F79FF, 8),       # 0xAB: PUSH_LOG10_2_64
-        (0x0C, 0x3FB504F3, 4),               # 0xAC: PUSH_SQRT2_32
-        (0x0D, 0x3FF6A09E667F3BCD, 8),       # 0xAD: PUSH_SQRT2_64
-        (0x0E, 0x3F3504F3, 4),               # 0xAE: PUSH_INV_SQRT2_32
-        (0x0F, 0x3FE6A09E667F3BCD, 8),       # 0xAF: PUSH_INV_SQRT2_64
+        (0x00, 0x40490FDB, 4),  # 0xA0: PUSH_PI_32
+        (0x01, 0x400921FB54442D18, 8),  # 0xA1: PUSH_PI_64
+        (0x02, 0x402DF854, 4),  # 0xA2: PUSH_E_32
+        (0x03, 0x4005BF0A8B145769, 8),  # 0xA3: PUSH_E_64
+        (0x04, 0x3F317218, 4),  # 0xA4: PUSH_LN2_32
+        (0x05, 0x3FE62E42FEFA39EF, 8),  # 0xA5: PUSH_LN2_64
+        (0x06, 0x3FB8AA3B, 4),  # 0xA6: PUSH_LOG2E_32
+        (0x07, 0x3FF71547652B82FE, 8),  # 0xA7: PUSH_LOG2E_64
+        (0x08, 0x40549A78, 4),  # 0xA8: PUSH_LOG2_10_32
+        (0x09, 0x400A934F0979A371, 8),  # 0xA9: PUSH_LOG2_10_64
+        (0x0A, 0x3E9A209B, 4),  # 0xAA: PUSH_LOG10_2_32
+        (0x0B, 0x3FD34413509F79FF, 8),  # 0xAB: PUSH_LOG10_2_64
+        (0x0C, 0x3FB504F3, 4),  # 0xAC: PUSH_SQRT2_32
+        (0x0D, 0x3FF6A09E667F3BCD, 8),  # 0xAD: PUSH_SQRT2_64
+        (0x0E, 0x3F3504F3, 4),  # 0xAE: PUSH_INV_SQRT2_32
+        (0x0F, 0x3FE6A09E667F3BCD, 8),  # 0xAF: PUSH_INV_SQRT2_64
     ]
     for idx, hex_val, nbytes in constants_def:
         offset = idx * 8
@@ -198,27 +198,27 @@ def generate_constants_table() -> bytearray:
 # =============================================================================
 def populate_flash_memory(flash_mem: bytearray) -> bytearray:
     """Populate an existing 32KB bytearray with all Flash LUTs at their base addresses."""
-    qs     = generate_qs_table()
-    recip  = generate_recip_table()
-    sqrt   = generate_sqrt_table()
-    exp2   = generate_exp2_table()
-    log2   = generate_log2_table()
-    sin    = generate_sin_table()
-    cos    = generate_cos_table()
-    tan    = generate_tan_table()
-    ln     = generate_ln_table()
-    log10  = generate_log10_table()
+    qs = generate_qs_table()
+    recip = generate_recip_table()
+    sqrt = generate_sqrt_table()
+    exp2 = generate_exp2_table()
+    log2 = generate_log2_table()
+    sin = generate_sin_table()
+    cos = generate_cos_table()
+    tan = generate_tan_table()
+    ln = generate_ln_table()
+    log10 = generate_log10_table()
     consts = generate_constants_table()
 
-    flash_mem[FLASH_QS_BASE    : FLASH_QS_BASE + len(qs)]       = qs
+    flash_mem[FLASH_QS_BASE : FLASH_QS_BASE + len(qs)] = qs
     flash_mem[FLASH_RECIP_BASE : FLASH_RECIP_BASE + len(recip)] = recip
-    flash_mem[FLASH_SQRT_BASE  : FLASH_SQRT_BASE + len(sqrt)]   = sqrt
-    flash_mem[FLASH_EXP2_BASE  : FLASH_EXP2_BASE + len(exp2)]   = exp2
-    flash_mem[FLASH_LOG2_BASE  : FLASH_LOG2_BASE + len(log2)]   = log2
-    flash_mem[FLASH_SIN_BASE   : FLASH_SIN_BASE + len(sin)]     = sin
-    flash_mem[FLASH_COS_BASE   : FLASH_COS_BASE + len(cos)]     = cos
-    flash_mem[FLASH_TAN_BASE   : FLASH_TAN_BASE + len(tan)]     = tan
-    flash_mem[FLASH_LN_BASE    : FLASH_LN_BASE + len(ln)]       = ln
+    flash_mem[FLASH_SQRT_BASE : FLASH_SQRT_BASE + len(sqrt)] = sqrt
+    flash_mem[FLASH_EXP2_BASE : FLASH_EXP2_BASE + len(exp2)] = exp2
+    flash_mem[FLASH_LOG2_BASE : FLASH_LOG2_BASE + len(log2)] = log2
+    flash_mem[FLASH_SIN_BASE : FLASH_SIN_BASE + len(sin)] = sin
+    flash_mem[FLASH_COS_BASE : FLASH_COS_BASE + len(cos)] = cos
+    flash_mem[FLASH_TAN_BASE : FLASH_TAN_BASE + len(tan)] = tan
+    flash_mem[FLASH_LN_BASE : FLASH_LN_BASE + len(ln)] = ln
     flash_mem[FLASH_LOG10_BASE : FLASH_LOG10_BASE + len(log10)] = log10
     flash_mem[FLASH_CONST_BASE : FLASH_CONST_BASE + len(consts)] = consts
 
@@ -288,4 +288,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

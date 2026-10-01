@@ -68,10 +68,9 @@ def test_rom_sqrt_seed_table():
 def test_rom_image_consistency_with_build_flash():
     """Drift-prevention test: verify that fpu_flash.bin matches tools/build_flash.py."""
     import sys
+
     # Add tools directory to sys.path for this verification test only
-    tools_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools")
-    )
+    tools_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "tools"))
     if tools_dir not in sys.path:
         sys.path.insert(0, tools_dir)
 

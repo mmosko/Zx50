@@ -91,4 +91,3 @@ def peek32(hw: Hardware) -> bytearray:
         hw.reg.set_flag(StatusFlag.ERR, True)
         return bytearray(4)
     return hw.mem.load(STACK_BASE + (sp - 4), 4)
-

@@ -24,26 +24,31 @@ from fpu_emu.tests.testharness import RegTestHarness
         (0, 0, 0, False, True, False, False, "0 * 0 -> 0"),
         (0, 12345, 0, False, True, False, False, "0 * 12345 -> 0"),
         (12345, 0, 0, False, True, False, False, "12345 * 0 -> 0"),
-
         # Positive * Positive (no overflow)
         (10, 20, 200, False, False, False, False, "10 * 20 -> 200"),
         (1000, 2000, 2000000, False, False, False, False, "1000 * 2000 -> 2000000"),
         (0x00007FFF, 2, 0x0000FFFE, False, False, False, False, "0x7FFF * 2 (fits in int32)"),
-
         # Positive * Negative & Negative * Positive (no overflow)
         (10, -20, (10 * -20) & 0xFFFFFFFFFFFFFFFF, False, False, True, False, "10 * -20 -> -200"),
         (-10, 20, (-10 * 20) & 0xFFFFFFFFFFFFFFFF, False, False, True, False, "-10 * 20 -> -200"),
         (-1, 5, -5 & 0xFFFFFFFFFFFFFFFF, False, False, True, False, "-1 * 5 -> -5"),
         (5, -1, -5 & 0xFFFFFFFFFFFFFFFF, False, False, True, False, "5 * -1 -> -5"),
-
         # Negative * Negative (no overflow)
         (-10, -20, 200, False, False, False, False, "-10 * -20 -> 200"),
         (-1, -1, 1, False, False, False, False, "-1 * -1 -> 1"),
-
         # Overflow cases (high 32-bit word AH != sign_extension(AL))
         (0x40000000, 2, 0x0000000080000000, False, False, False, True, "0x40000000 * 2 (overflows signed int32)"),
         (0x7FFFFFFF, 2, 0x00000000FFFFFFFE, False, False, False, True, "MaxInt32 * 2 (overflows signed int32)"),
-        (0x7FFFFFFF, 0x7FFFFFFF, (0x7FFFFFFF * 0x7FFFFFFF) & 0xFFFFFFFFFFFFFFFF, False, False, False, True, "MaxInt32 * MaxInt32"),
+        (
+            0x7FFFFFFF,
+            0x7FFFFFFF,
+            (0x7FFFFFFF * 0x7FFFFFFF) & 0xFFFFFFFFFFFFFFFF,
+            False,
+            False,
+            False,
+            True,
+            "MaxInt32 * MaxInt32",
+        ),
         (-0x80000000, 1, 0xFFFFFFFF80000000, False, False, True, False, "MinInt32 * 1 -> fits in int32"),
         (-0x80000000, -1, 0x0000000080000000, False, False, False, True, "MinInt32 * -1 -> overflows int32 (+2^31)"),
         (-0x80000000, 2, (-0x80000000 * 2) & 0xFFFFFFFFFFFFFFFF, False, False, True, True, "MinInt32 * 2"),
@@ -72,7 +77,6 @@ def test_booth_core_32(m, q, expected_res64, expected_cf, expected_zf, expected_
         (100, 200, 20000, False, False, False, False, "64-bit 100 * 200 (no overflow)"),
         (-100, 200, (-100 * 200) & ((1 << 128) - 1), False, False, True, False, "64-bit -100 * 200"),
         (-100, -200, 20000, False, False, False, False, "64-bit -100 * -200"),
-
         # 64-bit overflow cases
         (
             0x4000000000000000,

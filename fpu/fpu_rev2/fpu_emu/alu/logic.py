@@ -393,4 +393,3 @@ def abs_int64(hw: Hardware, reg: Reg = Reg.AX):
 
     hw.reg.set_flag(StatusFlag.ZERO, val == 0)
     hw.reg.set_flag(StatusFlag.CARRY, False)
-

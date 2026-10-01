@@ -121,4 +121,3 @@ class UserOpcode(Enum):
     SET_NONBLOCKING = 0xFD
     SET_BLOCKING = 0xFE
     RESET = 0xFF
-

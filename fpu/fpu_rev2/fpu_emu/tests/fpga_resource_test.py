@@ -25,7 +25,7 @@ def test_fpga_resource_decorator():
         pass
 
     assert hasattr(dummy_adder, "__fpga_resource__")
-    res = getattr(dummy_adder, "__fpga_resource__")
+    res = dummy_adder.__fpga_resource__  # pyright: ignore[reportFunctionMemberAccess]
     assert res.luts == 23
     assert res.slices_ccu2c == 16
     assert res.ffs == 4

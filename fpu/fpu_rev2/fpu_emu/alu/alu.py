@@ -169,7 +169,6 @@ class Alu:
     def div_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         fp_mul_div.div_f64(self._hw, dst, src)
 
-
     # -------------------------------------------------------------------------
     # 12-Bit Exponent ALU API (alu_exp12 / ieee754_exp)
     # -------------------------------------------------------------------------

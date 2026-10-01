@@ -310,7 +310,7 @@ def test_sub32_direct():
 
 def test_select_hb_invalid_reg():
     from fpu_emu.alu.adder import _select_hb
+
     hw = Hardware()
     with pytest.raises(ValueError, match="Invalid source register for HB_BUS"):
         _select_hb(hw, Reg.SP)
-

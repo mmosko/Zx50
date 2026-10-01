@@ -262,5 +262,3 @@ def _sqrt_seed_index_f64(is_odd: bool, mantissa_u64: int) -> int:
     """
     idx = (128 if is_odd else 0) | ((mantissa_u64 >> 56) & 0x7F)
     return idx
-
-
