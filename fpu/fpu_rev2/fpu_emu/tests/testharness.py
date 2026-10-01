@@ -15,13 +15,13 @@ class RegTestHarness:
     # -------------------------------------------------------------------------
     # Shared Bus Interface & Timing Collision Protection
     # -------------------------------------------------------------------------
-    def set_ha_bus_mux(self, half: Union[HalfSelect, str, int]) -> None:
+    def set_ha_bus_mux(self, half: HalfSelect) -> None:
         self._reg.set_ha_bus_mux(half)
 
     def set_hb_bus_mux(
         self,
-        half: Union[HalfSelect, str, int],
-        src: Union[Reg, str],
+        half: HalfSelect,
+        src: Reg,
     ) -> None:
         self._reg.set_hb_bus_mux(half, src)
 
@@ -33,7 +33,7 @@ class RegTestHarness:
 
     def set_res_bus(
         self,
-        dst: Union[Reg, str],
+        dst: Reg,
         data: Union[bytes, bytearray, int],
     ) -> None:
         self._reg.set_res_bus(dst, data)
@@ -118,7 +118,7 @@ class RegTestHarness:
 
     def set(
         self,
-        reg: Union[Reg, str],
+        reg: Reg,
         val: Union[bytes, bytearray, int],
     ) -> None:
         """Sets register contents (delegates to load_test_vector)."""
@@ -127,7 +127,7 @@ class RegTestHarness:
     # -------------------------------------------------------------------------
     # Test Fixture Backdoors (Explicitly labeled for non-hardware test code)
     # -------------------------------------------------------------------------
-    def peek(self, reg: Union[Reg, str]) -> bytearray:
+    def peek(self, reg: Reg) -> bytearray:
         """Test fixture backdoor: inspects raw register bytes bypassing bus muxes."""
         if isinstance(reg, str):
             reg = Reg[reg.upper()]
@@ -175,7 +175,7 @@ class RegTestHarness:
 
     def load_test_vector(
         self,
-        reg: Union[Reg, str],
+        reg: Reg,
         val: Union[bytes, bytearray, int],
     ) -> None:
         """Test fixture backdoor: sets register state directly bypassing bus timing."""

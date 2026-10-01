@@ -56,7 +56,7 @@ WIDTH_64_BYTES = 8
 BITS_PER_BYTE = 8
 
 # Allowed source registers
-VALID_SRC_32: Set[Reg] = {Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH}
+# VALID_SRC_32: Set[Reg] = {Reg.BL, Reg.DL, Reg.FL, Reg.BH, Reg.DH, Reg.FH}
 VALID_SRC_64: Set[Reg] = {Reg.BX, Reg.DX, Reg.FX}
 
 
@@ -122,13 +122,13 @@ def logic_core(
 
 
 def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
-    if src in (Reg.BX, Reg.DX, Reg.FX):
+    if src.is_64():
         if half is None:
             raise ValueError(f"64-bit source {src} requires half selection")
         hw.reg.set_hb_bus_mux(half, src)
-    elif src in (Reg.BL, Reg.DL, Reg.FL):
+    elif src.is_lo():
         hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
-    elif src in (Reg.BH, Reg.DH, Reg.FH):
+    elif src.is_hi():
         hw.reg.set_hb_bus_mux(HalfSelect.HI, src)
     else:
         raise ValueError(f"Invalid source register for HB_BUS: {src}")
@@ -141,7 +141,7 @@ def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg]):
     a_bytes = hw.reg.read_ha_bus()
 
     if op != LogicOp.NOT:
-        if src is None or src not in VALID_SRC_32:
+        if src is None:
             raise ValueError(f"Invalid 32-bit logic source register: {src}")
         _select_hb(hw, src)
         b_bytes = hw.reg.read_hb_bus()
@@ -241,60 +241,42 @@ def not64(hw: Hardware):
 # -----------------------------------------------------------------------------
 # Floating-Point Sign Manipulation (1 cycle)
 # -----------------------------------------------------------------------------
-def chs(hw: Hardware, reg: Reg = Reg.AH):
+def chs(hw: Hardware, reg: Reg):
     """CHS — Change Sign (1 cycle for 32-bit, 2 cycles for 64-bit).
 
     Toggles sign bit (bit 31 for 32-bit, bit 63 for 64-bit) of reg.
     Sets SF <- sign bit.
     """
-    if reg in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
+    if reg.is_64():
         hw.clock.tick(1)
-        hw.clock.tick(1)
-        if reg == Reg.AX:
-            hw.reg.set_ha_bus_mux(HalfSelect.HI)
-            val_bytes = hw.reg.read_ha_bus()
-            hi_reg = Reg.AH
-        else:
-            hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
-            val_bytes = hw.reg.read_hb_bus()
-            hi_reg = Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH)
-        val = Registers.to_int(val_bytes) ^ 0x80000000
-        hw.reg.set_res_bus(hi_reg, Registers.from_int(val, 4))
-        hw.reg.set_flag(StatusFlag.SIGN, bool(val & 0x80000000))
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+        val_bytes = hw.reg.read_hb_bus()
+        res_bus = Registers.to_int(val_bytes) ^ 0x80000000
+        hw.reg.set_res_bus(reg.hi_half(), Registers.from_int(res_bus, 4))
+        hw.reg.set_flag(StatusFlag.SIGN, bool(res_bus & 0x80000000))
     else:
         hw.clock.tick(1)
-        if reg in (Reg.AL, Reg.AH):
-            half = HalfSelect.LO if reg == Reg.AL else HalfSelect.HI
-            hw.reg.set_ha_bus_mux(half)
-            val_bytes = hw.reg.read_ha_bus()
-        else:
-            half = HalfSelect.LO if reg in (Reg.BL, Reg.DL, Reg.FL) else HalfSelect.HI
-            hw.reg.set_hb_bus_mux(half, reg)
-            val_bytes = hw.reg.read_hb_bus()
+        half = HalfSelect.LO if reg.is_lo() else HalfSelect.HI
+        hw.reg.set_hb_bus_mux(half, reg)
+        val_bytes = hw.reg.read_hb_bus()
         val = Registers.to_int(val_bytes) ^ 0x80000000
         hw.reg.set_res_bus(reg, Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, bool(val & 0x80000000))
 
 
-def abs_val(hw: Hardware, reg: Reg = Reg.AH):
+def abs_val(hw: Hardware, reg: Reg):
     """ABS — Absolute Value (1 cycle for 32-bit, 2 cycles for 64-bit).
 
     Clears sign bit (bit 31 for 32-bit, bit 63 for 64-bit) of reg.
     Clears SF <- 0.
     """
-    if reg in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
+    if reg.is_64():
         hw.clock.tick(1)
         hw.clock.tick(1)
-        if reg == Reg.AX:
-            hw.reg.set_ha_bus_mux(HalfSelect.HI)
-            val_bytes = hw.reg.read_ha_bus()
-            hi_reg = Reg.AH
-        else:
-            hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
-            val_bytes = hw.reg.read_hb_bus()
-            hi_reg = Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+        val_bytes = hw.reg.read_hb_bus()
         val = Registers.to_int(val_bytes) & 0x7FFFFFFF
-        hw.reg.set_res_bus(hi_reg, Registers.from_int(val, 4))
+        hw.reg.set_res_bus(reg.hi_half(), Registers.from_int(val, 4))
         hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
         hw.clock.tick(1)
@@ -311,7 +293,7 @@ def abs_val(hw: Hardware, reg: Reg = Reg.AH):
         hw.reg.set_flag(StatusFlag.SIGN, False)
 
 
-def abs_int32(hw: Hardware, reg: Reg = Reg.AL):
+def abs_int32(hw: Hardware, reg: Reg):
     """ABS_I32 — 32-bit Two's Complement Integer Absolute Value (1 cycle).
 
     If val < 0, computes -val. If val == 0x80000000 (-2147483648), sets OVERFLOW = 1.
@@ -344,7 +326,7 @@ def abs_int32(hw: Hardware, reg: Reg = Reg.AL):
     hw.reg.set_flag(StatusFlag.CARRY, False)
 
 
-def abs_int64(hw: Hardware, reg: Reg = Reg.AX):
+def abs_int64(hw: Hardware, reg: Reg):
     """ABS_I64 — 64-bit Two's Complement Integer Absolute Value (2 cycles).
 
     If val < 0, computes -val. If val == 0x80000000_00000000, sets OVERFLOW = 1.

@@ -96,9 +96,45 @@ class Reg(Enum):
             return 1
         raise ValueError(f"Unknown byte length for register {self}")
 
+    def is_64(self) -> bool:
+        return self in _REG_64
+    def is_32(self) -> bool:
+        return self in _REG_32
+    def is_hi(self) -> bool:
+        return self in _REG_32_HI
+    def is_lo(self) -> bool:
+        return self in _REG_32_LO
 
-REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
-REG_32 = (
+    def hi_half(self) -> 'Reg':
+        if self.is_32():
+            raise ValueError(f"Tried getting hi half of a 32 bit reg: {self}")
+        match self:
+            case Reg.AX:
+                return Reg.AH
+            case Reg.BX:
+                return Reg.BH
+            case Reg.DX:
+                return Reg.DH
+            case Reg.FX:
+                return Reg.FH
+        raise ValueError(f"Unsupported 64-bit register: {self}")
+
+    def lo_half(self) -> 'Reg':
+        if self.is_32():
+            raise ValueError(f"Tried getting hi half of a 32 bit reg: {self}")
+        match self:
+            case Reg.AX:
+                return Reg.AL
+            case Reg.BX:
+                return Reg.BL
+            case Reg.DX:
+                return Reg.DL
+            case Reg.FX:
+                return Reg.FL
+        raise ValueError(f"Unsupported 64-bit register: {self}")
+
+_REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
+_REG_32 = (
     Reg.AL,
     Reg.AH,
     Reg.BL,
@@ -109,6 +145,20 @@ REG_32 = (
     Reg.FH,
     Reg.EA,
     Reg.EB,
+)
+
+_REG_32_HI = (
+    Reg.AH,
+    Reg.BH,
+    Reg.DH,
+    Reg.FH,
+)
+
+_REG_32_LO = (
+    Reg.AL,
+    Reg.BL,
+    Reg.DL,
+    Reg.FL,
 )
 
 
@@ -195,12 +245,11 @@ class Registers:
         cycles=1,
         shared_unit="bus_ha_mux",
     )
-    def set_ha_bus_mux(self, half: Union[HalfSelect, str, int]) -> None:
+    def set_ha_bus_mux(self, half_sel: HalfSelect) -> None:
         """Selects AL (LO) or AH (HI) to drive HA_BUS[31:0].
 
         Throws HardwareTimingConflictError if called more than once in the same clock cycle.
         """
-        half_sel = HalfSelect.from_val(half)
         tick = self.current_tick
         if self._last_ha_tick == tick:
             raise HardwareTimingConflictError(
@@ -218,16 +267,15 @@ class Registers:
     )
     def set_hb_bus_mux(
         self,
-        half: Union[HalfSelect, str, int],
-        src: Union[Reg, str],
+        half_sel: HalfSelect,
+        src: Reg,
     ) -> None:
         """Selects a register half to drive HB_BUS[31:0].
 
         Throws HardwareTimingConflictError if called more than once in the same clock cycle.
         """
-        half_sel = HalfSelect.from_val(half)
-        if isinstance(src, str):
-            src = Reg[src.upper()]
+        if src not in _REG_64 and src not in _REG_32 and src not in (Reg.C, Reg.EA, Reg.EB):
+            raise HardwareBusError(f"HB_BUS multiplexer invalid source: {src}")
         tick = self.current_tick
         if self._last_hb_tick == tick:
             raise HardwareTimingConflictError(
@@ -284,7 +332,7 @@ class Registers:
     )
     def set_res_bus(
         self,
-        dst: Union[Reg, str],
+        dst: Reg,
         data: Union[bytes, bytearray, int],
     ) -> None:
         """Drives RES_BUS[31:0] and asserts WE_<dst> to latch data on clock edge.

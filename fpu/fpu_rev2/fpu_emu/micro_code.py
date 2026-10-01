@@ -415,6 +415,44 @@ class MicroCode:
             MicroInstruction(op=MicroOp.NOP),
             MicroInstruction(op=MicroOp.TRAP),
         ],
+        # CHS_I32:
+        UserOpcode.CHS_I32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=0),
+            MicroInstruction(op=MicroOp.SUB, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+        # CHS_F32:
+        UserOpcode.CHS_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=5),
+            MicroInstruction(op=MicroOp.CHS, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+        # CHS_I64:
+        UserOpcode.CHS_I64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.BX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=6),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.AX, imm=0),
+            MicroInstruction(op=MicroOp.SUB64, src=Reg.BX),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+        # CHS_F64:
+        UserOpcode.CHS_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=5),
+            MicroInstruction(op=MicroOp.CHS, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
         # ABS_I32:
         UserOpcode.ABS_I32: [
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
@@ -424,11 +462,29 @@ class MicroCode:
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
         ],
+        # ABS_F32:
+        UserOpcode.ABS_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=5),
+            MicroInstruction(op=MicroOp.ABS, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
         # ABS_I64:
         UserOpcode.ABS_I64: [
             MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
             MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=5),
             MicroInstruction(op=MicroOp.ABS_INT64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+        # ABS_F64:
+        UserOpcode.ABS_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=5),
+            MicroInstruction(op=MicroOp.ABS, dst=Reg.AX),
             MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),

@@ -674,3 +674,199 @@ def test_more_dispatcher_user_opcodes():
 
     with pytest.raises(NotImplementedError):
         MicroCode.get(UserOpcode.CONV_I32_I64)
+
+
+def test_chs_i32_execution():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # 42 -> -42
+    reg.set(Reg.AL, Registers.from_int(42, 4, signed=True))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_I32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_int(reg.peek(Reg.AL), signed=True) == -42
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert hw.reg.get_flag(StatusFlag.SIGN)
+
+    # -42 -> 42
+    reg.set(Reg.AL, Registers.from_int(-42, 4, signed=True))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_I32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_int(reg.peek(Reg.AL), signed=True) == 42
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # 0 -> 0
+    reg.set(Reg.AL, Registers.from_int(0, 4, signed=True))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_I32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_int(reg.peek(Reg.AL), signed=True) == 0
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+
+    # Max negative: 0x80000000 -> Overflow
+    reg.set(Reg.AL, Registers.from_int(-2147483648, 4, signed=True))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_I32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_int(reg.peek(Reg.AL), signed=True) == -2147483648
+    assert hw.reg.get_flag(StatusFlag.OVERFLOW)
+
+    # Underflow check
+    hw.reg.sp = 0
+    disp.execute(UserOpcode.CHS_I32)
+    assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
+    assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_chs_f32_execution():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # 1.5 -> -1.5
+    reg.set(Reg.AL, Registers.from_f32(1.5))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == -1.5
+    assert hw.reg.get_flag(StatusFlag.SIGN)
+
+    # -1.5 -> 1.5
+    reg.set(Reg.AL, Registers.from_f32(-1.5))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.CHS_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 1.5
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # Underflow check
+    hw.reg.sp = 0
+    disp.execute(UserOpcode.CHS_F32)
+    assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
+    assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_chs_i64_execution():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # 1000 -> -1000
+    reg.set(Reg.AX, Registers.from_int(1000, 8, signed=True))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.CHS_I64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_int(reg.peek(Reg.AX), signed=True) == -1000
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert hw.reg.get_flag(StatusFlag.SIGN)
+
+    # -1000 -> 1000
+    reg.set(Reg.AX, Registers.from_int(-1000, 8, signed=True))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.CHS_I64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_int(reg.peek(Reg.AX), signed=True) == 1000
+    assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # Max negative: 0x80000000_00000000 -> Overflow
+    reg.set(Reg.AX, Registers.from_int(-9223372036854775808, 8, signed=True))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.CHS_I64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_int(reg.peek(Reg.AX), signed=True) == -9223372036854775808
+    assert hw.reg.get_flag(StatusFlag.OVERFLOW)
+
+    # Underflow check
+    hw.reg.sp = 0
+    disp.execute(UserOpcode.CHS_I64)
+    assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
+    assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_chs_f64_execution():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # 123.456 -> -123.456
+    reg.set(Reg.AX, Registers.from_f64(123.456))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.CHS_F64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_f64(reg.peek(Reg.AX)) == -123.456
+    assert hw.reg.get_flag(StatusFlag.SIGN)
+
+    # -123.456 -> 123.456
+    reg.set(Reg.AX, Registers.from_f64(-123.456))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.CHS_F64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 123.456
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # Underflow check
+    hw.reg.sp = 0
+    disp.execute(UserOpcode.CHS_F64)
+    assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
+    assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_abs_f32_and_f64_execution():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # ABS_F32: -42.5 -> 42.5
+    reg.set(Reg.AL, Registers.from_f32(-42.5))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.ABS_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 42.5
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # ABS_F32: 42.5 -> 42.5
+    reg.set(Reg.AL, Registers.from_f32(42.5))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.ABS_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 42.5
+
+    # ABS_F64: -999.125 -> 999.125
+    reg.set(Reg.AX, Registers.from_f64(-999.125))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.ABS_F64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 999.125
+    assert not hw.reg.get_flag(StatusFlag.SIGN)
+
+    # ABS_F64: 999.125 -> 999.125
+    reg.set(Reg.AX, Registers.from_f64(999.125))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.ABS_F64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert Registers.to_f64(reg.peek(Reg.AX)) == 999.125

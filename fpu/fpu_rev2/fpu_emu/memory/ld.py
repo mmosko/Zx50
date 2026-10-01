@@ -11,7 +11,7 @@ Per SystemDesign.md Section 3 (Datapath Architecture) and Section 4.2 / 4.3:
 
 from typing import Union
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, REG_64, REG_32
+from fpu_emu.memory.registers import Reg
 
 
 def _int_to_bytes(val: int, length: int) -> bytes:
@@ -31,12 +31,9 @@ def _to_bytes(imm: Union[int, bytes, bytearray], length: int) -> bytes:
     raise TypeError(f"Invalid type for immediate operand: {type(imm).__name__}")
 
 
-def ld32(hw: Hardware, dst: Union[Reg, str], imm: Union[int, bytes, bytearray]) -> None:
+def ld32(hw: Hardware, dst: Reg, imm: Union[int, bytes, bytearray]) -> None:
     """Loads a 32-bit immediate literal into a register in 2 clock cycles."""
-    if isinstance(dst, str):
-        dst = Reg[dst.upper()]
-
-    if dst in REG_64 or dst in (Reg.SP, Reg.OSP, Reg.C):
+    if dst.is_64() or dst in (Reg.SP, Reg.OSP, Reg.C):
         raise ValueError(f"ld32 called with incompatible register: {dst}")
 
     data = _to_bytes(imm, 4)
@@ -47,17 +44,14 @@ def ld32(hw: Hardware, dst: Union[Reg, str], imm: Union[int, bytes, bytearray]) 
     hw.reg.set_res_bus(dst, data)
 
 
-def ld64(hw: Hardware, dst: Union[Reg, str], imm: Union[int, bytes, bytearray]) -> None:
+def ld64(hw: Hardware, dst: Reg, imm: Union[int, bytes, bytearray]) -> None:
     """Loads a 64-bit immediate literal into a compound register in 3 clock cycles."""
-    if isinstance(dst, str):
-        dst = Reg[dst.upper()]
-
-    if dst not in REG_64:
+    if not dst.is_64():
         raise ValueError(f"ld64 requires 64-bit compound register: {dst}")
 
     data = _to_bytes(imm, 8)
-    dst_lo = Reg[f"{dst.name[0]}L"]
-    dst_hi = Reg[f"{dst.name[0]}H"]
+    dst_lo = dst.lo_half()
+    dst_hi = dst.hi_half()
 
     # 3 clock cycles: fetch low, fetch high & latch low, latch high
     hw.clock.tick(1)
@@ -85,7 +79,7 @@ def ld_osp(hw: Hardware, val: int = 0) -> None:
     hw.reg.osp = val & 0xFF
 
 
-def ld(hw: Hardware, dst: Union[Reg, str], imm: Union[int, bytes, bytearray]) -> None:
+def ld(hw: Hardware, dst: Reg, imm: Union[int, bytes, bytearray]) -> None:
     """Dispatches immediate load based on destination register type."""
     if isinstance(dst, str):
         dst = Reg[dst.upper()]
@@ -99,9 +93,9 @@ def ld(hw: Hardware, dst: Union[Reg, str], imm: Union[int, bytes, bytearray]) ->
     elif dst == Reg.C:
         val = imm if isinstance(imm, int) else int.from_bytes(imm, byteorder="little")
         ld_c(hw, val)
-    elif dst in REG_64:
+    elif dst.is_64():
         ld64(hw, dst, imm)
-    elif dst in REG_32:
+    elif dst.is_32():
         ld32(hw, dst, imm)
     else:
         raise ValueError(f"Unsupported register for LD: {dst}")

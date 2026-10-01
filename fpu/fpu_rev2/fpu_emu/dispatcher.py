@@ -395,22 +395,24 @@ class Dispatcher:
         self._alu.not64()
 
     def _run_chs(self, instr: MicroInstruction) -> None:
-        if instr.dst is not None and instr.dst != Reg.AH:
-            self._alu.chs(reg=instr.dst)
-        else:
-            self._alu.chs()
+        if instr.dst is None:
+            raise ValueError("MicroOp.CHS requires a target register in instr.dst")
+        self._alu.chs(instr.dst)
 
     def _run_abs(self, instr: MicroInstruction) -> None:
-        if instr.dst is not None and instr.dst != Reg.AH:
-            self._alu.abs_val(reg=instr.dst)
-        else:
-            self._alu.abs_val()
+        if instr.dst is None:
+            raise ValueError("MicroOp.ABS requires a target register in instr.dst")
+        self._alu.abs_val(instr.dst)
 
-    def _run_abs_int(self, _: MicroInstruction) -> None:
-        self._alu.abs_int32()
+    def _run_abs_int(self, instr: MicroInstruction) -> None:
+        if instr.dst is None:
+            raise ValueError("MicroOp.ABS_INT requires a target register in instr.dst")
+        self._alu.abs_int32(instr.dst)
 
-    def _run_abs_int64(self, _: MicroInstruction) -> None:
-        self._alu.abs_int64()
+    def _run_abs_int64(self, instr: MicroInstruction) -> None:
+        if instr.dst is None:
+            raise ValueError("MicroOp.ABS_INT64 requires a target register in instr.dst")
+        self._alu.abs_int64(instr.dst)
 
     def _run_mul(self, instr: MicroInstruction) -> None:
         src = instr.src if instr.src is not None else Reg.BL

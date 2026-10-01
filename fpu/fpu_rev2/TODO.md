@@ -39,9 +39,41 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
   - [x] Implement the 4 canonical benchmark programs in `tests/example_test.py` verifying full end-to-end execution.
   - [x] Perform detailed second-pass FPGA resource estimation in `SystemDesign.md` (~787 LUT4s, 494 FFs, 7 EBR blocks, ~62.7% free logic).
   - [x] Implement transcendental ALU modules: natural logarithm (`fp_ln.py`), exponential (`fp_exp.py`), and power (`fp_pow.py`).
-  - [ ] Implement CORDIC trigonometric microcode routines (`sin`, `cos`, `tan`, `atan`).
   - [ ] Implement combinatorial Z80 SRAM memory mapping/decoding and strobe qualification model.
   - [ ] Implement autonomous SPI Flash bootloader copy simulation.
+
+- [ ] **Phase 4.5: Trigonometric (CORDIC) Engine & ISA Completeness**
+  - [x] **Trigonometric Architecture & Design Specification (`fpu_emu/alu/fp_trig.md`)**:
+    - [x] Detail circular CORDIC vector rotation algorithm in $z \to 0$ mode.
+    - [x] Specify precision: 24 rotation stages for `f32` (24-bit mantissa), 53 rotation stages for `f64` (53-bit mantissa).
+    - [x] Document range reduction strategy: modulo $\pi/2$ with quadrant tracking ($\sin, \cos, \tan$ sign and axis mapping).
+    - [x] Define tangent asymptote overflow detection ($\tan(\pm \pi/2) \to \pm \infty$, $V=1$, $ERR=1$).
+    - [x] Specify register allocation contract (`AX`: $X$, `BX`: $Y$, `DX`: $Z$ residual angle, `C`: loop counter).
+  - [ ] **Lookup Table & Flash Constants (`tools/build_flash.py`)**:
+    - [ ] Precompute high-precision CORDIC arctangent angle table ($\theta_i = \text{atan}(2^{-i})$) in Q1.31 / Q1.63 fixed-point format for EBR 2 & 3 constants ROM.
+    - [ ] Add scaling factor constants ($1/K \approx 0.607252935...$) and range-reduction factors ($2/\pi$, $\pi/2$).
+    - [ ] Update `tools/build_flash.py` serializer, Verilog headers (`src/fpu_rom_map.vh`), and emulator binary image (`fpu_emu/rom/fpu_flash.bin`).
+  - [ ] **Core ALU Trigonometric Primitives (`fpu_emu/alu/fp_trig.py`)**:
+    - [ ] Implement bit-accurate, synthesizable circular CORDIC engine without Python `math` module (pure fixed-point additions, subtractions, and barrel shifts).
+    - [ ] Implement quadrant range reduction and normalization.
+    - [ ] Expose `sin_f32`, `cos_f32`, `tan_f32`, `sin_f64`, `cos_f64`, `tan_f64` through `ALU` class in `fpu_emu/alu/alu.py`.
+    - [ ] Unit testing (`fpu_emu/tests/alu/fp_trig_test.py`): verify against IEEE-754 reference vectors, special angles ($0, \pi/6, \pi/4, \pi/3, \pi/2, \pi, 3\pi/2, 2\pi$), negative angles, and domain limits.
+  - [ ] **ISA & Opcode Completeness Audit**:
+    - [ ] Add missing User Opcodes to `fpu_emu/user_opcodes.py`:
+      - Trigonometrics: `SIN_F32` (`0x71`), `SIN_F64` (`0x73`), `COS_F32` (`0x79`), `COS_F64` (`0x7B`), `TAN_F32` (`0x81`), `TAN_F64` (`0x83`).
+      - [x] Sign negation: `CHS_I32` (`0x50`), `CHS_F32` (`0x51`), `CHS_I64` (`0x52`), `CHS_F64` (`0x53`).
+      - Floor / Ceil: `FLOOR_F32` (`0x61`), `FLOOR_F64` (`0x63`), `CEIL_F32` (`0x69`), `CEIL_F64` (`0x6B`).
+    - [ ] Add corresponding micro-operations to `fpu_emu/micro_opcodes.py` (`MicroOp`).
+    - [ ] Implement missing microcode sequences in `fpu_emu/micro_code.py` (`_ucode` dictionary):
+      - `SIN`, `COS`, `TAN` routines for F32 and F64.
+      - [x] `CHS` routines for I32, F32, I64, F64.
+      - [x] `ABS` routines for F32, F64.
+      - `FLOOR` and `CEIL` routines for F32 and F64.
+      - Fill existing gaps: integer division (`DIV_I32`, `DIV_I64`) and type conversions (`CONV_*`).
+    - [ ] Wire functor dispatch table `_FUNCTORS` in `fpu_emu/dispatcher.py` maintaining alphabetical sorting and zero-unused-param conventions.
+  - [ ] **Integration & End-to-End Validation**:
+    - [ ] Extend `fpu_emu/tests/dispatcher_test.py` to cover all new user opcodes across blocking, non-blocking, and batch modes.
+    - [ ] Verify 100% test pass rate, code coverage, `ruff check`, `ruff format`, and `pyright`.
 
 - [ ] **Phase 5: Verilog Implementation & Unit/Integration Testing**
   - [ ] Build modular Verilog components (top-level bus interface, CDC dispatcher, micro-engine, ALU blocks, SysMEM EBR wrappers, QSPI shadow loader, combinatorial SRAM decoder).

@@ -117,28 +117,28 @@ class TestLd:
         assert Registers.to_int(self.reg.peek(Reg.FL)) == 0x12344321
 
         # String register names
-        ld.ld32(self.hw, "BL", 0x1234)
+        ld.ld32(self.hw,  Reg.BL, 0x1234)
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 0x1234
-        ld.ld64(self.hw, "BX", 0x5678)
+        ld.ld64(self.hw, Reg.BX, 0x5678)
         assert Registers.to_int(self.reg.peek(Reg.BX)) == 0x5678
 
-        ld.ld(self.hw, "AL", 0x55)
+        ld.ld(self.hw, Reg.AL, 0x55)
         assert Registers.to_int(self.reg.peek(Reg.AL)) == 0x55
-        ld.ld(self.hw, "AX", 0x99)
+        ld.ld(self.hw, Reg.AX, 0x99)
         assert Registers.to_int(self.reg.peek(Reg.AX)) == 0x99
-        ld.ld(self.hw, "SP", 4)
+        ld.ld(self.hw, Reg.SP, 4)
         assert self.hw.reg.sp == 4
-        ld.ld(self.hw, "OSP", 2)
+        ld.ld(self.hw, Reg.OSP, 2)
         assert self.hw.reg.osp == 2
-        ld.ld(self.hw, "C", 5)
+        ld.ld(self.hw, Reg.C, 5)
         assert self.hw.reg.c == 5
 
         # Bytes imm for control regs
-        ld.ld(self.hw, "SP", b"\x08")
+        ld.ld(self.hw, Reg.SP, b"\x08")
         assert self.hw.reg.sp == 8
-        ld.ld(self.hw, "OSP", b"\x04")
+        ld.ld(self.hw, Reg.OSP, b"\x04")
         assert self.hw.reg.osp == 4
-        ld.ld(self.hw, "C", b"\x0a")
+        ld.ld(self.hw, Reg.C, b"\x0a")
         assert self.hw.reg.c == 10
 
     def test_flags_unaffected(self):

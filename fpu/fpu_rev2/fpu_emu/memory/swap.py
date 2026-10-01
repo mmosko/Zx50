@@ -12,42 +12,24 @@ Per Option B (Microcode approach using FL as temporary scratch register):
 - Status flags are completely unaffected.
 """
 
-from typing import Union
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import mov
 from fpu_emu.memory.registers import Reg
 
-REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
-REG_32 = (
-    Reg.AL,
-    Reg.AH,
-    Reg.BL,
-    Reg.BH,
-    Reg.DL,
-    Reg.DH,
-    Reg.FL,
-    Reg.FH,
-)
-
 
 def swap32(
     hw: Hardware,
-    reg_a: Union[Reg, str],
-    reg_b: Union[Reg, str],
+    reg_a: Reg,
+    reg_b: Reg,
 ) -> None:
     """Exchanges two 32-bit registers using FL as temporary register (3 clock cycles)."""
-    if isinstance(reg_a, str):
-        reg_a = Reg[reg_a.upper()]
-    if isinstance(reg_b, str):
-        reg_b = Reg[reg_b.upper()]
-
-    if reg_a in REG_64 or reg_b in REG_64:
+    if reg_a.is_64() or reg_b.is_64():
         raise ValueError(f"swap32 cannot be used with 64-bit registers: {reg_a}, {reg_b}")
 
     if reg_a in (Reg.FL, Reg.FH) or reg_b in (Reg.FL, Reg.FH):
         raise ValueError(f"Cannot swap volatile scratch register FL/FH: {reg_a}, {reg_b}")
 
-    if reg_a not in REG_32 or reg_b not in REG_32:
+    if reg_a in (Reg.SP, Reg.OSP) or reg_b in (Reg.SP, Reg.OSP):
         raise ValueError(f"Unsupported registers for swap32: {reg_a}, {reg_b}")
 
     if reg_a == reg_b:
@@ -58,6 +40,7 @@ def swap32(
     # 1. FL <- reg_b
     # 2. reg_b <- reg_a
     # 3. reg_a <- FL
+    # This will throw an error if the register src or dst is not feasible
     mov.mov32(hw, Reg.FL, reg_b)
     mov.mov32(hw, reg_b, reg_a)
     mov.mov32(hw, reg_a, Reg.FL)
@@ -69,8 +52,8 @@ def swap32(
 
 def swap64(
     hw: Hardware,
-    reg_a: Union[Reg, str],
-    reg_b: Union[Reg, str],
+    reg_a: Reg,
+    reg_b: Reg,
 ) -> None:
     """Exchanges two 64-bit compound registers (6 clock cycles total)."""
     if isinstance(reg_a, str):
@@ -78,7 +61,7 @@ def swap64(
     if isinstance(reg_b, str):
         reg_b = Reg[reg_b.upper()]
 
-    if reg_a not in REG_64 or reg_b not in REG_64:
+    if not(reg_a.is_64() and reg_b.is_64()):
         raise ValueError(f"swap64 requires 64-bit compound registers: {reg_a}, {reg_b}")
 
     if reg_a == Reg.FX or reg_b == Reg.FX:
@@ -87,10 +70,10 @@ def swap64(
     if reg_a == reg_b:
         return
 
-    reg_a_lo = Reg[f"{reg_a.name[0]}L"]
-    reg_a_hi = Reg[f"{reg_a.name[0]}H"]
-    reg_b_lo = Reg[f"{reg_b.name[0]}L"]
-    reg_b_hi = Reg[f"{reg_b.name[0]}H"]
+    reg_a_lo = reg_a.lo_half()
+    reg_a_hi = reg_a.hi_half()
+    reg_b_lo = reg_b.lo_half()
+    reg_b_hi = reg_b.hi_half()
 
     # Swap low halves (3 cycles, exchanges sign_a/sign_b if AX/BX)
     swap32(hw, reg_a_lo, reg_b_lo)
@@ -111,8 +94,8 @@ def swap_exp(hw: Hardware) -> None:
 
 def swap(
     hw: Hardware,
-    reg_a: Union[Reg, str],
-    reg_b: Union[Reg, str],
+    reg_a: Reg,
+    reg_b: Reg,
 ) -> None:
     """Dispatches register swap based on register width and type."""
     if isinstance(reg_a, str):
@@ -122,9 +105,9 @@ def swap(
 
     if reg_a in (Reg.EA, Reg.EB) and reg_b in (Reg.EA, Reg.EB):
         swap_exp(hw)
-    elif reg_a in REG_64 and reg_b in REG_64:
+    elif reg_a.is_64() and reg_b.is_64():
         swap64(hw, reg_a, reg_b)
-    elif reg_a in REG_32 and reg_b in REG_32:
+    elif reg_a.is_32() and reg_b.is_32():
         swap32(hw, reg_a, reg_b)
     else:
         raise ValueError(f"Mismatched or unsupported registers for SWAP: {reg_a}, {reg_b}")

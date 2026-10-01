@@ -38,6 +38,12 @@ class UserOpcode(Enum):
     EXP_F32 = 0x39
     EXP_F64 = 0x3B
 
+    # Change Sign (Negate)
+    CHS_I32 = 0x50
+    CHS_F32 = 0x51
+    CHS_I64 = 0x52
+    CHS_F64 = 0x53
+
     # Absolute Value
     ABS_I32 = 0x58
     ABS_F32 = 0x59

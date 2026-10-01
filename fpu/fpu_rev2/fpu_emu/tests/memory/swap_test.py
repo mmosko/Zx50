@@ -130,25 +130,25 @@ class TestSwap:
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 100
 
         # String register names
-        swap.swap32(self.hw, "AL", "BL")
+        swap.swap32(self.hw, Reg.AL, Reg.BL)
         assert Registers.to_int(self.reg.peek(Reg.AL)) == 100
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 200
 
-        swap.swap(self.hw, "AL", "BL")
+        swap.swap(self.hw, Reg.AL, Reg.BL)
         assert Registers.to_int(self.reg.peek(Reg.AL)) == 200
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 100
 
         self.reg.set(Reg.AX, 10)
         self.reg.set(Reg.BX, 20)
-        swap.swap64(self.hw, "AX", "BX")
+        swap.swap64(self.hw, Reg.AX, Reg.BX)
         assert Registers.to_int(self.reg.peek(Reg.AX)) == 20
         assert Registers.to_int(self.reg.peek(Reg.BX)) == 10
 
-        swap.swap(self.hw, "AX", "BX")
+        swap.swap(self.hw, Reg.AX, Reg.BX)
         assert Registers.to_int(self.reg.peek(Reg.AX)) == 10
         assert Registers.to_int(self.reg.peek(Reg.BX)) == 20
 
-        swap.swap(self.hw, "EA", "EB")
+        swap.swap(self.hw, Reg.EA, Reg.EB)
         assert self.hw.reg.ea == 10
         assert self.hw.reg.eb == 20
 

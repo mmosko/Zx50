@@ -124,16 +124,16 @@ class Alu:
     def not64(self):
         logic.not64(self._hw)
 
-    def chs(self, reg: Reg = Reg.AH):
+    def chs(self, reg: Reg):
         logic.chs(self._hw, reg)
 
-    def abs_val(self, reg: Reg = Reg.AH):
+    def abs_val(self, reg: Reg):
         logic.abs_val(self._hw, reg)
 
-    def abs_int32(self, reg: Reg = Reg.AL):
+    def abs_int32(self, reg: Reg):
         logic.abs_int32(self._hw, reg)
 
-    def abs_int64(self, reg: Reg = Reg.AX):
+    def abs_int64(self, reg: Reg):
         logic.abs_int64(self._hw, reg)
 
     # -------------------------------------------------------------------------

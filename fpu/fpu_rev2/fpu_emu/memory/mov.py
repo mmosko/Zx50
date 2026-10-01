@@ -8,19 +8,13 @@ Per SystemDesign.md Section 3 (Datapath Architecture) and Section 4.2 / 4.3:
 - Status flags are completely unaffected.
 """
 
-from typing import Union
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import HalfSelect, Reg, REG_64, REG_32
+from fpu_emu.memory.registers import HalfSelect, Reg
 
 
-def mov32(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:
+def mov32(hw: Hardware, dst: Reg, src: Reg) -> None:
     """Executes a 32-bit register-to-register move in 1 clock cycle."""
-    if isinstance(dst, str):
-        dst = Reg[dst.upper()]
-    if isinstance(src, str):
-        src = Reg[src.upper()]
-
-    if dst in REG_64 or src in REG_64:
+    if dst.is_64() or src.is_64():
         raise ValueError(f"mov32 called with 64-bit register: dst={dst}, src={src}")
 
     hw.clock.tick(1)
@@ -30,14 +24,14 @@ def mov32(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:
     hw.reg.set_res_bus(dst, data)
 
 
-def mov64(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:
+def mov64(hw: Hardware, dst: Reg, src: Reg) -> None:
     """Executes a 64-bit compound register-to-register move in 2 clock cycles."""
     if isinstance(dst, str):
         dst = Reg[dst.upper()]
     if isinstance(src, str):
         src = Reg[src.upper()]
 
-    if dst not in REG_64 or src not in REG_64:
+    if dst.is_32() or src.is_32():
         raise ValueError(f"mov64 requires 64-bit compound registers: dst={dst}, src={src}")
 
     dst_lo = Reg[f"{dst.name[0]}L"]
@@ -56,16 +50,16 @@ def mov64(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:
     hw.reg.set_res_bus(dst_hi, data_hi)
 
 
-def mov(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:
+def mov(hw: Hardware, dst: Reg, src: Reg) -> None:
     """Dispatches a register-to-register move based on operand width."""
     if isinstance(dst, str):
         dst = Reg[dst.upper()]
     if isinstance(src, str):
         src = Reg[src.upper()]
 
-    if dst in REG_64 and src in REG_64:
+    if dst.is_64() and src.is_64():
         mov64(hw, dst, src)
-    elif dst in REG_32 and src in REG_32:
+    elif dst.is_32() and src.is_32():
         mov32(hw, dst, src)
     else:
         raise ValueError(f"Mismatched register widths for MOV: dst={dst}, src={src}")

@@ -111,15 +111,15 @@ def test_alu_full():
     alu.not64()
     assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
 
-    alu.chs()
-    alu.abs_val()
+    alu.chs(Reg.AH)
+    alu.abs_val(Reg.AH)
 
     reg.set(Reg.AL, Registers.from_int(-5, 4, signed=True))
-    alu.abs_int32()
+    alu.abs_int32(Reg.AL)
     assert Registers.to_int(reg.peek(Reg.AL)) == 5
 
     reg.set(Reg.AX, Registers.from_int(-50, 8, signed=True))
-    alu.abs_int64()
+    alu.abs_int64(Reg.AX)
     assert Registers.to_int(reg.peek(Reg.AX)) == 50
 
     # Booth Mul 32 / 64

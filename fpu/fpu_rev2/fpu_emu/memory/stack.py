@@ -26,7 +26,6 @@ def push32(hw: Hardware, src: Reg):
     data = bytearray(getattr(hw.reg, f"_{src.name.lower()}"))
     hw.mem.store(STACK_BASE + sp, data)
     hw.reg.sp = sp + 4
-    hw.reg.set_flag(StatusFlag.OVERFLOW, False)
 
 
 def pop32(hw: Hardware, dst: Reg):
@@ -42,7 +41,6 @@ def pop32(hw: Hardware, dst: Reg):
     data = hw.mem.load(STACK_BASE + new_sp, 4)
     hw.reg.set_res_bus(dst, data)
     hw.reg.sp = new_sp
-    hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 
 
 def push64(hw: Hardware, src: Reg):
@@ -59,7 +57,6 @@ def push64(hw: Hardware, src: Reg):
     data = bytearray(lo) + bytearray(hi)
     hw.mem.store(STACK_BASE + sp, data)
     hw.reg.sp = sp + 8
-    hw.reg.set_flag(StatusFlag.OVERFLOW, False)
 
 
 def pop64(hw: Hardware, dst: Reg):
@@ -79,7 +76,6 @@ def pop64(hw: Hardware, dst: Reg):
     hw.clock.tick(1)
     hw.reg.set_res_bus(dst_hi, data[4:8])
     hw.reg.sp = new_sp
-    hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
 
 
 def peek32(hw: Hardware) -> bytearray:

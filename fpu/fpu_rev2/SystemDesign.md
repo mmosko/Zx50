@@ -333,20 +333,25 @@ flowchart TD
 * **Estimated Complexity:** ~32 LUT4s.
 
 ### 3.4 Bitwise Logic & Sign Manipulator (`alu_logic`)
-* **Target:** Accumulator `A` (`AL` or `AX`). Source selects from `BX`, `DX`, `BL`, or `DL`.
+* **Target:** 
+  * bitwise logic: Accumulator `A` (`AL` or `AX`)
+  * Source: AX, BX, or DX (or the low or high, e.g. `Az`)
+* **Bus Multiplexing:** Bitwise dyadic operations select operand 1 via `HA_BUS` (`AL`/`AH`) and operand 2 via `HB_BUS` (`BL`, `DL`, etc.). Unary sign manipulation (`CHS`, `ABS`) supports registers on either `HA_BUS` (`AL`, `AH`, `AX`) or `HB_BUS` (`BL`, `BH`, `BX`), permitting in-place sign inversion of operand B during floating-point subtraction (`SUB_F32`/`SUB_F64`) without prior register copying.
 
 | Instruction Syntax | Operation Width | Cycles | Execution & Flag Updates |
 |---|:---:|:---:|---|
 | **`AND AL, {BL, DL}`** | 32-bit | 1 | `AL <- AL & src`, sets `ZF`, `SF`, clears `CF <- 0`, `OVF <- 0` |
 | **`OR AL, {BL, DL}`**  | 32-bit | 1 | `AL <- AL \| src`, sets `ZF`, `SF`, clears `CF <- 0`, `OVF <- 0` |
 | **`XOR AL, {BL, DL}`** | 32-bit | 1 | `AL <- AL ^ src`, sets `ZF`, `SF`, clears `CF <- 0`, `OVF <- 0` |
-| **`NOT AL`**           | 32-bit | 1 | `AL <- ~AL`, sets `ZF`, `SF`, clears `CF <- 0`, `OVF <- 0` |
+| **`NOT {Az, Bz, Dz}`** | 32-bit | 1 | `src <- ~src`, sets `ZF`, `SF`, clears `CF <- 0`, `OVF <- 0` |
+| **`CHS {Az, Bz, Dz}`** | Float Sign | 1/2 | Inverts sign bit (bit 31 or bit 63) of target register, sets `SF` |
+| **`ABS {AL, BL, DL}`** | Float Sign | 1/2 | Clears sign bit (bit 31 or bit 63) of target register, clears `SF <- 0` |
 | **`AND AX, {BX, DX}`** | 64-bit | 2 | `AL <- AL & src.L`, `AH <- AH & src.H`, sets flags |
 | **`OR AX, {BX, DX}`**  | 64-bit | 2 | `AL <- AL \| src.L`, `AH <- AH \| src.H`, sets flags |
 | **`XOR AX, {BX, DX}`** | 64-bit | 2 | `AL <- AL ^ src.L`, `AH <- AH ^ src.H`, sets flags |
-| **`NOT AX`**           | 64-bit | 2 | `AL <- ~AL`, `AH <- ~AH`, sets flags |
-| **`CHS {AL, AX}`**     | Float Sign | 1/2 | Inverts sign bit (bit 31 or bit 63), sets `SF` |
-| **`ABS {AL, AX}`**     | Float Sign | 1/2 | Clears sign bit (bit 31 or bit 63), clears `SF <- 0` |
+| **`NOT {AX, BX, DX}`** | 64-bit | 2 | `src <- ~src`, sets flags |
+| **`CHS {AX, BX, DX}`** | Float Sign | 1/2 | Inverts sign bit (bit 31 or bit 63) of target register, sets `SF` |
+| **`ABS {AX, BX, DX}`** | Float Sign | 1/2 | Clears sign bit (bit 31 or bit 63) of target register, clears `SF <- 0` |
 
 * **Estimated Complexity:** ~20 LUT4s.
 

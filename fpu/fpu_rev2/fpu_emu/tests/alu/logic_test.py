@@ -186,14 +186,14 @@ def test_chs_toggles_sign_bit():
     reg.set(Reg.AH, Registers.from_int(0x3F800000, 4))
     reg.set(Reg.AL, Registers.from_int(0x11223344, 4))  # AL must be unmodified
 
-    chs(hw)
+    chs(hw, Reg.AH)
 
     assert hw.clock.cycles == 1
     assert Registers.to_int(reg.peek(Reg.AH)) == 0xBF800000  # Sign bit toggled
     assert reg.get_flag(StatusFlag.SIGN) is True
     assert Registers.to_int(reg.peek(Reg.AL)) == 0x11223344  # AL intact
 
-    chs(hw)
+    chs(hw, Reg.AH)
     assert hw.clock.cycles == 2
     assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000  # Sign bit toggled back
     assert not reg.get_flag(StatusFlag.SIGN)
@@ -206,14 +206,14 @@ def test_abs_clears_sign_bit():
     reg.set(Reg.AH, Registers.from_int(0xBF800000, 4))
     reg.set_flag(StatusFlag.SIGN, True)
 
-    abs_val(hw)
+    abs_val(hw, Reg.AH)
 
     assert hw.clock.cycles == 1
     assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000  # Sign cleared
     assert not reg.get_flag(StatusFlag.SIGN)
 
     # Calling ABS on already positive value
-    abs_val(hw)
+    abs_val(hw, Reg.AH)
     assert hw.clock.cycles == 2
     assert Registers.to_int(reg.peek(Reg.AH)) == 0x3F800000
     assert not reg.get_flag(StatusFlag.SIGN)
@@ -224,12 +224,12 @@ def test_chs_64bit_register():
     reg = RegTestHarness(hw.reg)
     reg.set(Reg.BX, Registers.from_int(0x3FF0000000000000, 8))  # +1.0 double
     chs(hw, reg=Reg.BX)
-    assert hw.clock.cycles == 2
+    assert hw.clock.cycles == 1
     assert Registers.to_int(reg.peek(Reg.BX)) == 0xBFF0000000000000  # -1.0 double
     assert reg.get_flag(StatusFlag.SIGN) is True
 
     chs(hw, reg=Reg.BX)
-    assert hw.clock.cycles == 4
+    assert hw.clock.cycles == 2
     assert Registers.to_int(reg.peek(Reg.BX)) == 0x3FF0000000000000  # +1.0 double
     assert not reg.get_flag(StatusFlag.SIGN)
 
@@ -267,7 +267,7 @@ def test_alu_class_logic_delegation():
     assert Registers.to_int(reg.peek(Reg.AL)) == 0x0F000F00
     assert hw.clock.cycles == 1
 
-    alu.chs()
+    alu.chs(Reg.AH)
     assert hw.clock.cycles == 2
 
 

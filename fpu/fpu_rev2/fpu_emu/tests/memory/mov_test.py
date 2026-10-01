@@ -101,16 +101,16 @@ class TestMov:
 
         # String register names
         self.reg.set(Reg.AL, Registers.from_int(0x12344321, 4))
-        mov.mov32(self.hw, "BL", "AL")
+        mov.mov32(self.hw, Reg.BL, Reg.AL)
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 0x12344321
 
         self.reg.set(Reg.BX, Registers.from_int(0x1122334455667788, 8))
-        mov.mov64(self.hw, "DX", "BX")
+        mov.mov64(self.hw, Reg.DX, Reg.BX)
         assert Registers.to_int(self.reg.peek(Reg.DX)) == 0x1122334455667788
 
-        mov.mov(self.hw, "FL", "BL")
+        mov.mov(self.hw, Reg.FL, Reg.BL)
         assert Registers.to_int(self.reg.peek(Reg.FL)) == 0x55667788
-        mov.mov(self.hw, "FX", "DX")
+        mov.mov(self.hw, Reg.FX, Reg.DX)
         assert Registers.to_int(self.reg.peek(Reg.FX)) == 0x1122334455667788
 
     def test_flags_unaffected(self):
