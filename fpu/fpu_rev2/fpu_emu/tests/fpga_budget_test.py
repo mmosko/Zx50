@@ -10,7 +10,11 @@ import fpu_emu.alu.shifter  # noqa: F401
 import fpu_emu.alu.booth_mul  # noqa: F401
 import fpu_emu.alu.lzc  # noqa: F401
 import fpu_emu.alu.ieee754_exp  # noqa: F401
+import fpu_emu.dispatcher  # noqa: F401
+import fpu_emu.memory.ram  # noqa: F401
 import fpu_emu.memory.registers  # noqa: F401
+import fpu_emu.memory.rom  # noqa: F401
+import fpu_emu.micro_code  # noqa: F401
 
 
 class TestFpgaBudget(unittest.TestCase):
@@ -57,4 +61,12 @@ class TestFpgaBudget(unittest.TestCase):
         self.assertIn("bus_ha_mux", report)
         self.assertIn("bus_hb_mux", report)
         self.assertIn("bus_res_mux", report)
+        self.assertIn("register_file", report)
+        self.assertIn("ebr_sysmem", report)
+        self.assertIn("ebr_constants_rom", report)
+        self.assertIn("ebr_seed_rom", report)
+        self.assertIn("ebr_microcode_rom", report)
+        self.assertIn("micro_sequencer", report)
+        self.assertIn("host_bus_interface", report)
+        self.assertIn("lutram_command_stack", report)
         self.assertIn("Total Dedicated / Shared Hardware", report)

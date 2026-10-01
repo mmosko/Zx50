@@ -11,6 +11,7 @@ Direct member variable manipulation is discouraged; callers must use the public 
 """
 
 from typing import Union
+from fpu_emu.fpga_resource import fpga_resource
 
 # Default size for Lattice MachXO2-2000HC (9 EBR blocks * 1024 bytes = 9216 bytes)
 DEFAULT_RAM_SIZE = 9216
@@ -37,6 +38,15 @@ ROM_SIZE = 1024  # 0x0400 - 0x07FF
 class Ram:
     """SysMEM EBR RAM implementation."""
 
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 0 & 1, 512x32: Stack, Scratchpad, User Storage)",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_sysmem",
+    )
     def __init__(self, size: int = DEFAULT_RAM_SIZE):
         if size <= 0:
             raise ValueError(f"RAM size must be positive, got {size}")

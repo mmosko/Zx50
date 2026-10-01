@@ -128,6 +128,14 @@ class StatusFlag(Enum):
 class Registers:
     """Register file holding all physical FPU registers and enforcing bus architecture."""
 
+    @fpga_resource(
+        approach="MachXO2 PFU Slice Flip-Flops for 17 Physical Hardware Registers",
+        luts=0,
+        ffs=379,
+        delay_ns=1.5,
+        cycles=1,
+        shared_unit="register_file",
+    )
     def __init__(self, clock: Optional[Any] = None):
         # 32-bit registers (Little-Endian: byte 0 = LSB, byte 3 = MSB)
         self._al = bytearray(4)

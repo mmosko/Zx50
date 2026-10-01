@@ -6,6 +6,7 @@ Direct member variable manipulation is discouraged; callers must use the public 
 
 import os
 from typing import Optional
+from fpu_emu.fpga_resource import fpga_resource
 
 ROM_SIZE = 32768  # 32 KB active region for CA[14:0]
 
@@ -69,6 +70,15 @@ class Rom:
             raise IndexError(f"ROM access at 0x{addr:04X} with length {length} exceeds ROM bounds (size={ROM_SIZE})")
         return bytearray(self._data[addr : addr + length])
 
+    @fpga_resource(
+        approach="Single SysMEM EBR (EBR 4, 512x16) for reciprocal and square root seed tables",
+        luts=0,
+        ffs=0,
+        ebr=1,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_seed_rom",
+    )
     def load_sqrt_seed(self, index: int) -> int:
         """Loads 16-bit Q0.16 reciprocal square root seed for index 0..255."""
         if not (0 <= index < 256):
@@ -90,6 +100,15 @@ class Rom:
         addr = FLASH_EXP2_BASE + (index * 2)
         return self.load_u16(addr)
 
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_constants_rom",
+    )
     def load_const32(self, opcode: int) -> bytearray:
         """Loads 4-byte little-endian IEEE-754 single precision constant for opcode 0xA0..0xAF."""
         if not (0xA0 <= opcode <= 0xAF):

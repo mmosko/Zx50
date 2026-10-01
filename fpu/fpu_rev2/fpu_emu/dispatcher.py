@@ -2,6 +2,7 @@
 
 from typing import List
 from fpu_emu.alu.alu import Alu
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import ld, mov, stack, swap
 from fpu_emu.memory.ram import CMD_STACK_BASE, CMD_STACK_SIZE
@@ -14,6 +15,14 @@ from fpu_emu.user_opcodes import UserOpcode
 class Dispatcher:
     """Dispatches user opcodes and executes microcode instruction streams."""
 
+    @fpga_resource(
+        approach="Host Z80 bus interface, Port 0x70/0x71 decoder, BWAIT_N generator, and mode flags",
+        luts=95,
+        ffs=45,
+        delay_ns=2.5,
+        cycles=1,
+        shared_unit="host_bus_interface",
+    )
     def __init__(self, hw: Hardware, alu: Alu):
         self._hw = hw
         self._alu = alu
@@ -110,6 +119,14 @@ class Dispatcher:
         finally:
             self._hw.reg.set_flag(StatusFlag.BUSY, False)
 
+    @fpga_resource(
+        approach="Distributed LUT-RAM in PFU slices for 32-byte host command queue",
+        luts=12,
+        ffs=0,
+        delay_ns=2.0,
+        cycles=1,
+        shared_unit="lutram_command_stack",
+    )
     def _enqueue_command(self, user_opcode: UserOpcode):
         """Enqueues a user opcode into SysMEM command queue (0x0340..0x035F)."""
         self._hw.clock.tick(1)
@@ -122,6 +139,14 @@ class Dispatcher:
         self._hw.mem[CMD_STACK_BASE + osp] = user_opcode.value
         self._hw.reg.osp = osp + 1
 
+    @fpga_resource(
+        approach="Microcode execution engine: PC sequencer, branch MUX, and horizontal control word decoder",
+        luts=125,
+        ffs=24,
+        delay_ns=3.4,
+        cycles=1,
+        shared_unit="micro_sequencer",
+    )
     def _run(self, microcode: List[MicroInstruction]):
         """Micro-sequencer execution loop.
 
@@ -178,74 +203,89 @@ class Dispatcher:
                     if inst.src is not None:
                         self._alu.cmp64(inst.src)
                 case MicroOp.LSL:
-                    reg = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.lsl32(shift=inst.imm if inst.imm else None, reg=reg)
-                case MicroOp.LSR:
-                    reg = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.lsr32(shift=inst.imm if inst.imm else None, reg=reg)
-                case MicroOp.ASR:
-                    reg = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.asr32(shift=inst.imm if inst.imm else None, reg=reg)
-                case MicroOp.RRC:
-                    reg = inst.dst if inst.dst is not None else Reg.AL
-                    if reg in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
-                        self._alu.rrc64(reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AL:
+                        self._alu.lsl32(shift=inst.imm if inst.imm else None, reg=inst.dst)
                     else:
-                        self._alu.rrc32(reg=reg)
+                        self._alu.lsl32(shift=inst.imm if inst.imm else None)
+                case MicroOp.LSR:
+                    if inst.dst is not None and inst.dst != Reg.AL:
+                        self._alu.lsr32(shift=inst.imm if inst.imm else None, reg=inst.dst)
+                    else:
+                        self._alu.lsr32(shift=inst.imm if inst.imm else None)
+                case MicroOp.ASR:
+                    if inst.dst is not None and inst.dst != Reg.AL:
+                        self._alu.asr32(shift=inst.imm if inst.imm else None, reg=inst.dst)
+                    else:
+                        self._alu.asr32(shift=inst.imm if inst.imm else None)
+                case MicroOp.RRC:
+                    if inst.dst in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
+                        self._alu.rrc64(reg=inst.dst)
+                    elif inst.dst is not None and inst.dst != Reg.AL:
+                        self._alu.rrc32(reg=inst.dst)
+                    else:
+                        self._alu.rrc32()
                 case MicroOp.RRC64:
-                    reg = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.rrc64(reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AX:
+                        self._alu.rrc64(reg=inst.dst)
+                    else:
+                        self._alu.rrc64()
                 case MicroOp.LSL64:
-                    reg = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.lsl64(shift=inst.imm if inst.imm else None, reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AX:
+                        self._alu.lsl64(shift=inst.imm if inst.imm else None, reg=inst.dst)
+                    else:
+                        self._alu.lsl64(shift=inst.imm if inst.imm else None)
                 case MicroOp.LSR64:
-                    reg = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.lsr64(shift=inst.imm if inst.imm else None, reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AX:
+                        self._alu.lsr64(shift=inst.imm if inst.imm else None, reg=inst.dst)
+                    else:
+                        self._alu.lsr64(shift=inst.imm if inst.imm else None)
                 case MicroOp.ASR64:
-                    reg = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.asr64(shift=inst.imm if inst.imm else None, reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AX:
+                        self._alu.asr64(shift=inst.imm if inst.imm else None, reg=inst.dst)
+                    else:
+                        self._alu.asr64(shift=inst.imm if inst.imm else None)
                 case MicroOp.LZC:
-                    reg = inst.src if inst.src is not None else Reg.AL
-                    self._alu.lzc32(reg=reg)
+                    if inst.src is not None and inst.src != Reg.AL:
+                        self._alu.lzc32(reg=inst.src)
+                    else:
+                        self._alu.lzc32()
                 case MicroOp.LZC64:
-                    reg = inst.src if inst.src is not None else Reg.AX
-                    self._alu.lzc64(reg=reg)
+                    if inst.src is not None and inst.src != Reg.AX:
+                        self._alu.lzc64(reg=inst.src)
+                    else:
+                        self._alu.lzc64()
                 case MicroOp.AND:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AL
-                        self._alu.and32(inst.src, dst=dst)
+                        self._alu.and32(inst.src)
                 case MicroOp.OR:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AL
-                        self._alu.or32(inst.src, dst=dst)
+                        self._alu.or32(inst.src)
                 case MicroOp.XOR:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AL
-                        self._alu.xor32(inst.src, dst=dst)
+                        self._alu.xor32(inst.src)
                 case MicroOp.NOT:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.not32(dst=dst)
+                    self._alu.not32()
                 case MicroOp.AND64:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AX
-                        self._alu.and64(inst.src, dst=dst)
+                        self._alu.and64(inst.src)
                 case MicroOp.OR64:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AX
-                        self._alu.or64(inst.src, dst=dst)
+                        self._alu.or64(inst.src)
                 case MicroOp.XOR64:
                     if inst.src is not None:
-                        dst = inst.dst if inst.dst is not None else Reg.AX
-                        self._alu.xor64(inst.src, dst=dst)
+                        self._alu.xor64(inst.src)
                 case MicroOp.NOT64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.not64(dst=dst)
+                    self._alu.not64()
                 case MicroOp.CHS:
-                    reg = inst.dst if inst.dst is not None else Reg.AH
-                    self._alu.chs(reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AH:
+                        self._alu.chs(reg=inst.dst)
+                    else:
+                        self._alu.chs()
                 case MicroOp.ABS:
-                    reg = inst.dst if inst.dst is not None else Reg.AH
-                    self._alu.abs_val(reg=reg)
+                    if inst.dst is not None and inst.dst != Reg.AH:
+                        self._alu.abs_val(reg=inst.dst)
+                    else:
+                        self._alu.abs_val()
                 case MicroOp.MUL:
                     src = inst.src if inst.src is not None else Reg.BL
                     self._alu.mul32(src=src)
@@ -270,51 +310,41 @@ class Dispatcher:
                     dst_exp = inst.dst if inst.dst is not None else Reg.EA
                     self._alu.unpack_f32(src=src, dst_mantissa=src, dst_exp=dst_exp)
                 case MicroOp.PACK_F32:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
                     src_exp = inst.src if inst.src is not None else Reg.EA
-                    self._alu.pack_f32(src_mantissa=dst, src_exp=src_exp, dst=dst)
+                    self._alu.pack_f32(src_exp=src_exp)
                 case MicroOp.UNPACK_F64:
                     src = inst.src if inst.src is not None else Reg.AX
                     dst_exp = inst.dst if inst.dst is not None else Reg.EA
                     self._alu.unpack_f64(src=src, dst_mantissa=src, dst_exp=dst_exp)
                 case MicroOp.PACK_F64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
                     src_exp = inst.src if inst.src is not None else Reg.EA
-                    self._alu.pack_f64(src_mantissa=dst, src_exp=src_exp, dst=dst)
+                    self._alu.pack_f64(src_exp=src_exp)
                 case MicroOp.SQRT_EXP:
                     exp_reg = inst.dst if inst.dst is not None else Reg.EA
                     self._sqrt_is_odd = self._alu.sqrt_exp32(exp_reg=exp_reg)
                 case MicroOp.SQRT_CORE:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.sqrt_core32(is_odd=self._sqrt_is_odd, dst=dst)
+                    self._alu.sqrt_core32(is_odd=self._sqrt_is_odd)
                 case MicroOp.SQRT_EXP64:
                     exp_reg = inst.dst if inst.dst is not None else Reg.EA
                     self._sqrt_is_odd = self._alu.sqrt_exp64(exp_reg=exp_reg)
                 case MicroOp.SQRT_CORE64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.sqrt_core64(is_odd=self._sqrt_is_odd, dst=dst)
+                    self._alu.sqrt_core64(is_odd=self._sqrt_is_odd)
                 case MicroOp.ABS_INT:
-                    reg = inst.dst if inst.dst is not None else Reg.AL
-                    self._alu.abs_int32(reg=reg)
+                    self._alu.abs_int32()
                 case MicroOp.ABS_INT64:
-                    reg = inst.dst if inst.dst is not None else Reg.AX
-                    self._alu.abs_int64(reg=reg)
+                    self._alu.abs_int64()
                 case MicroOp.MUL_F32:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
                     src = inst.src if inst.src is not None else Reg.BL
-                    self._alu.mul_f32(dst=dst, src=src)
+                    self._alu.mul_f32(src=src)
                 case MicroOp.DIV_F32:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
                     src = inst.src if inst.src is not None else Reg.BL
-                    self._alu.div_f32(dst=dst, src=src)
+                    self._alu.div_f32(src=src)
                 case MicroOp.MUL_F64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
                     src = inst.src if inst.src is not None else Reg.BX
-                    self._alu.mul_f64(dst=dst, src=src)
+                    self._alu.mul_f64(src=src)
                 case MicroOp.DIV_F64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
                     src = inst.src if inst.src is not None else Reg.BX
-                    self._alu.div_f64(dst=dst, src=src)
+                    self._alu.div_f64(src=src)
                 case MicroOp.LN_F32:
                     self._alu.ln_f32()
                 case MicroOp.LN_F64:
@@ -324,13 +354,11 @@ class Dispatcher:
                 case MicroOp.EXP_F64:
                     self._alu.exp_f64()
                 case MicroOp.POW_F32:
-                    dst = inst.dst if inst.dst is not None else Reg.AL
                     src = inst.src if inst.src is not None else Reg.BL
-                    self._alu.pow_f32(dst=dst, src=src)
+                    self._alu.pow_f32(src=src)
                 case MicroOp.POW_F64:
-                    dst = inst.dst if inst.dst is not None else Reg.AX
                     src = inst.src if inst.src is not None else Reg.BX
-                    self._alu.pow_f64(dst=dst, src=src)
+                    self._alu.pow_f64(src=src)
                 case MicroOp.LOAD_CONST:
                     opcode = inst.imm
                     if opcode is not None:

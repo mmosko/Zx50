@@ -6,6 +6,19 @@ from fpu_emu.fpga_resource import (
 )
 
 
+_original_entries = {}
+
+
+def setup_module():
+    global _original_entries
+    _original_entries = dict(FpgaResourceRegistry._entries)
+
+
+def teardown_module():
+    FpgaResourceRegistry._entries.clear()
+    FpgaResourceRegistry._entries.update(_original_entries)
+
+
 def setup_function():
     """Clear registry before each test."""
     FpgaResourceRegistry.clear()

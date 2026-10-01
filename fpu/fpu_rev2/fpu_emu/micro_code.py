@@ -1,6 +1,7 @@
 """Microcode ROM mapping UserOpcode to micro-instruction sequences."""
 
 from typing import Dict, List
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.memory.registers import Reg, StatusFlag
 from fpu_emu.micro_opcodes import MicroOp, MicroInstruction
 from fpu_emu.user_opcodes import UserOpcode
@@ -606,6 +607,15 @@ class MicroCode:
         ]
 
     @classmethod
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 5 & 6, 512x32) for runtime microcode execution store",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_microcode_rom",
+    )
     def get(cls, opcode: UserOpcode) -> List[MicroInstruction]:
         if opcode not in cls._ucode:
             raise NotImplementedError(f"Microcode for opcode {opcode} not implemented")
