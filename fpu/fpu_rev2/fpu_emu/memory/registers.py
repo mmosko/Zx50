@@ -35,19 +35,16 @@ class HalfSelect(Enum):
 
 class HardwareTimingConflictError(Exception):
     """Raised when hardware timing rules are violated in a single clock cycle."""
-
     pass
 
 
 class HardwareBusError(Exception):
     """Raised when an illegal bus access occurs."""
-
     pass
 
 
 class HardwareAccessViolationError(Exception):
     """Raised when direct register access is attempted on bus-gated registers."""
-
     pass
 
 

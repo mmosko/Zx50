@@ -1,37 +1,14 @@
 """Command Dispatcher and Micro-sequencer execution engine."""
 
-from typing import List, Union
+from typing import List
 from fpu_emu.alu.alu import Alu
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory import stack
+from fpu_emu.memory import mov, stack
 from fpu_emu.memory.ram import CMD_STACK_BASE, CMD_STACK_SIZE
 from fpu_emu.memory.registers import StatusFlag, Reg
 from fpu_emu.micro_code import MicroCode
 from fpu_emu.micro_opcodes import MicroOp, MicroInstruction
 from fpu_emu.user_opcodes import UserOpcode
-
-
-def _read_reg(hw: Hardware, reg: Reg) -> bytearray:
-    name = reg.name.lower()
-    if name in ("ax", "bx", "dx", "fx"):
-        lo = getattr(hw.reg, f"_{name[0]}l")
-        hi = getattr(hw.reg, f"_{name[0]}h")
-        return bytearray(lo + hi)
-    return bytearray(getattr(hw.reg, f"_{name}"))
-
-
-def _write_reg(hw: Hardware, reg: Reg, data: Union[bytes, bytearray]):
-    name = reg.name.lower()
-    if name in ("ax", "bx", "dx", "fx"):
-        lo_name = f"{reg.name[0]}L"
-        hi_name = f"{reg.name[0]}H"
-        hw.clock.tick(1)
-        hw.reg.set_res_bus(Reg[lo_name], data[:4])
-        hw.clock.tick(1)
-        hw.reg.set_res_bus(Reg[hi_name], data[4:8])
-    else:
-        hw.clock.tick(1)
-        hw.reg.set_res_bus(reg, data[:4])
 
 
 class Dispatcher:
@@ -359,10 +336,14 @@ class Dispatcher:
                     if opcode is not None:
                         if opcode & 1:
                             val = self._hw.rom.load_const64(opcode)
-                            _write_reg(self._hw, Reg.FX, val)
+                            self._hw.clock.tick(1)
+                            self._hw.reg.set_res_bus(Reg.FL, val[:4])
+                            self._hw.clock.tick(1)
+                            self._hw.reg.set_res_bus(Reg.FH, val[4:8])
                         else:
                             val = self._hw.rom.load_const32(opcode)
-                            _write_reg(self._hw, Reg.FL, val)
+                            self._hw.clock.tick(1)
+                            self._hw.reg.set_res_bus(Reg.FL, val[:4])
                 case MicroOp.CP_MEM_TOS:
                     slot = inst.imm if inst.imm is not None else 0
                     if self._hw.reg.sp < 4:
@@ -378,7 +359,8 @@ class Dispatcher:
                         self._hw.reg.set_flag(StatusFlag.ERR, True)
                     else:
                         data = self._hw.mem.load_user_mem(slot, 4)
-                        _write_reg(self._hw, Reg.FL, data)
+                        self._hw.clock.tick(1)
+                        self._hw.reg.set_res_bus(Reg.FL, data[:4])
                         stack.push32(self._hw, Reg.FL)
                 case MicroOp.ZERO_MEM:
                     self._hw.mem.zero_user_mem()
@@ -387,8 +369,7 @@ class Dispatcher:
                         self._alu.swap(inst.dst, inst.src)
                 case MicroOp.MOV:
                     if inst.dst is not None and inst.src is not None:
-                        val = _read_reg(self._hw, inst.src)
-                        _write_reg(self._hw, inst.dst, val)
+                        mov.mov(self._hw, inst.dst, inst.src)
                 case MicroOp.JMP:
                     pc = inst.target
                 case MicroOp.JZ:
