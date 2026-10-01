@@ -21,6 +21,7 @@ Serializes all tables into:
   - src/fpu_rom_map.vh : Verilog header containing memory base addresses
 """
 
+from decimal import Decimal, getcontext
 import math
 import os
 
@@ -37,6 +38,9 @@ FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
 FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
 FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
 FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (128 bytes)
+FLASH_CORDIC_ATAN32_BASE = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes: 32 x 4 bytes)
+FLASH_CORDIC_ATAN64_BASE = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes: 64 x 8 bytes)
+FLASH_TRIG_CONST_BASE = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes: 16 x 8 bytes)
 
 HEADER_FILE = "src/fpu_rom_map.vh"
 HEX_FILE = "sim/fpu_rom.hex"
@@ -193,6 +197,119 @@ def generate_constants_table() -> bytearray:
     return data
 
 
+def generate_cordic_atan32_table() -> bytearray:
+    """Table 12: CORDIC Arctangent 32-bit Table [ theta_i = atan(2^-i) in Q2.30 ] for i in [0..31]."""
+    getcontext().prec = 100
+    pi = Decimal(
+        "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679"
+    )
+    scale30 = Decimal(1 << 30)
+
+    data = bytearray(32 * 4)
+    for i in range(32):
+        if i == 0:
+            angle = pi / Decimal(4)
+        else:
+            x = Decimal(1) / (Decimal(2) ** i)
+            term = x
+            x_sq = x * x
+            angle = x
+            sign = -1
+            denom = 3
+            for _ in range(50):
+                term *= x_sq
+                delta = term / denom
+                if delta == 0:
+                    break
+                angle += sign * delta
+                sign = -sign
+                denom += 2
+        val = int(round(angle * scale30)) & 0xFFFFFFFF
+        data[i * 4 : i * 4 + 4] = val.to_bytes(4, byteorder="little")
+    return data
+
+
+def generate_cordic_atan64_table() -> bytearray:
+    """Table 13: CORDIC Arctangent 64-bit Table [ theta_i = atan(2^-i) in Q2.62 ] for i in [0..63]."""
+    getcontext().prec = 100
+    pi = Decimal(
+        "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679"
+    )
+    scale62 = Decimal(1 << 62)
+
+    data = bytearray(64 * 8)
+    for i in range(64):
+        if i == 0:
+            angle = pi / Decimal(4)
+        else:
+            x = Decimal(1) / (Decimal(2) ** i)
+            term = x
+            x_sq = x * x
+            angle = x
+            sign = -1
+            denom = 3
+            for _ in range(60):
+                term *= x_sq
+                delta = term / denom
+                if delta == 0:
+                    break
+                angle += sign * delta
+                sign = -sign
+                denom += 2
+        val = int(round(angle * scale62)) & 0xFFFFFFFFFFFFFFFF
+        data[i * 8 : i * 8 + 8] = val.to_bytes(8, byteorder="little")
+    return data
+
+
+def generate_trig_constants_table() -> bytearray:
+    """Table 14: Trigonometric & CORDIC Constants (16 entries * 8 bytes = 128 bytes)."""
+    getcontext().prec = 100
+    pi = Decimal(
+        "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679"
+    )
+    # Compute CORDIC K for 64 stages
+    k = Decimal(1)
+    for i in range(64):
+        k *= (Decimal(1) + (Decimal(1) / (Decimal(4) ** i))).sqrt()
+    inv_k = Decimal(1) / k
+
+    inv_k_32 = int(round(inv_k * Decimal(1 << 30))) & 0xFFFFFFFF
+    inv_k_64 = int(round(inv_k * Decimal(1 << 62))) & 0xFFFFFFFFFFFFFFFF
+    half_pi_32 = int(round((pi / Decimal(2)) * Decimal(1 << 30))) & 0xFFFFFFFF
+    half_pi_64 = int(round((pi / Decimal(2)) * Decimal(1 << 62))) & 0xFFFFFFFFFFFFFFFF
+    two_over_pi_32 = int(round((Decimal(2) / pi) * Decimal(1 << 31))) & 0xFFFFFFFF
+    two_over_pi_64 = int(round((Decimal(2) / pi) * Decimal(1 << 63))) & 0xFFFFFFFFFFFFFFFF
+    quarter_pi_32 = int(round((pi / Decimal(4)) * Decimal(1 << 30))) & 0xFFFFFFFF
+    quarter_pi_64 = int(round((pi / Decimal(4)) * Decimal(1 << 62))) & 0xFFFFFFFFFFFFFFFF
+
+    constants = [
+        # (slot, hex_val, num_bytes)
+        (0x00, inv_k_32, 4),  # INV_K_32 (Q2.30)
+        (0x01, inv_k_64, 8),  # INV_K_64 (Q2.62)
+        (0x02, half_pi_32, 4),  # HALF_PI_32 (Q2.30)
+        (0x03, half_pi_64, 8),  # HALF_PI_64 (Q2.62)
+        (0x04, two_over_pi_32, 4),  # TWO_OVER_PI_32 (Q1.31)
+        (0x05, two_over_pi_64, 8),  # TWO_OVER_PI_64 (Q1.63)
+        (0x06, quarter_pi_32, 4),  # QUARTER_PI_32 (Q2.30)
+        (0x07, quarter_pi_64, 8),  # QUARTER_PI_64 (Q2.62)
+        (0x08, 0x3F22F983, 4),  # TWO_OVER_PI_F32 (IEEE-754)
+        (0x09, 0x3FE45F306DC9C883, 8),  # TWO_OVER_PI_F64 (IEEE-754)
+        (0x0A, 0x3FC90FDB, 4),  # HALF_PI_F32 (IEEE-754)
+        (0x0B, 0x3FF921FB54442D18, 8),  # HALF_PI_F64 (IEEE-754)
+        (0x0C, 0x40490FDB, 4),  # PI_F32 (IEEE-754)
+        (0x0D, 0x400921FB54442D18, 8),  # PI_F64 (IEEE-754)
+        (0x0E, 0x3F1B74EE, 4),  # INV_K_F32 (IEEE-754)
+        (0x0F, 0x3FE36E9DE57788A5, 8),  # INV_K_F64 (IEEE-754)
+    ]
+
+    data = bytearray(16 * 8)
+    for idx, hex_val, nbytes in constants:
+        offset = idx * 8
+        raw = hex_val.to_bytes(nbytes, byteorder="little")
+        data[offset : offset + nbytes] = raw
+    return data
+
+
 # =============================================================================
 # In-Memory Flash Population Helper (Used by fpu_sim.py)
 # =============================================================================
@@ -209,6 +326,9 @@ def populate_flash_memory(flash_mem: bytearray) -> bytearray:
     ln = generate_ln_table()
     log10 = generate_log10_table()
     consts = generate_constants_table()
+    cordic_atan32 = generate_cordic_atan32_table()
+    cordic_atan64 = generate_cordic_atan64_table()
+    trig_consts = generate_trig_constants_table()
 
     flash_mem[FLASH_QS_BASE : FLASH_QS_BASE + len(qs)] = qs
     flash_mem[FLASH_RECIP_BASE : FLASH_RECIP_BASE + len(recip)] = recip
@@ -221,6 +341,9 @@ def populate_flash_memory(flash_mem: bytearray) -> bytearray:
     flash_mem[FLASH_LN_BASE : FLASH_LN_BASE + len(ln)] = ln
     flash_mem[FLASH_LOG10_BASE : FLASH_LOG10_BASE + len(log10)] = log10
     flash_mem[FLASH_CONST_BASE : FLASH_CONST_BASE + len(consts)] = consts
+    flash_mem[FLASH_CORDIC_ATAN32_BASE : FLASH_CORDIC_ATAN32_BASE + len(cordic_atan32)] = cordic_atan32
+    flash_mem[FLASH_CORDIC_ATAN64_BASE : FLASH_CORDIC_ATAN64_BASE + len(cordic_atan64)] = cordic_atan64
+    flash_mem[FLASH_TRIG_CONST_BASE : FLASH_TRIG_CONST_BASE + len(trig_consts)] = trig_consts
 
     return flash_mem
 
@@ -243,17 +366,20 @@ def write_verilog_header(header_path: str):
         f.write(" * DO NOT EDIT MANUALLY - Generated by tools/build_flash.py\n")
         f.write(" ***************************************************************************************/\n\n")
         f.write("`ifndef FPU_ROM_MAP_VH\n`define FPU_ROM_MAP_VH\n\n")
-        f.write(f"  `define FLASH_QS_BASE     15'h{FLASH_QS_BASE:04X}\n")
-        f.write(f"  `define FLASH_RECIP_BASE  15'h{FLASH_RECIP_BASE:04X}\n")
-        f.write(f"  `define FLASH_SQRT_BASE   15'h{FLASH_SQRT_BASE:04X}\n")
-        f.write(f"  `define FLASH_EXP2_BASE   15'h{FLASH_EXP2_BASE:04X}\n")
-        f.write(f"  `define FLASH_LOG2_BASE   15'h{FLASH_LOG2_BASE:04X}\n")
-        f.write(f"  `define FLASH_SIN_BASE    15'h{FLASH_SIN_BASE:04X}\n")
-        f.write(f"  `define FLASH_COS_BASE    15'h{FLASH_COS_BASE:04X}\n")
-        f.write(f"  `define FLASH_TAN_BASE    15'h{FLASH_TAN_BASE:04X}\n")
-        f.write(f"  `define FLASH_LN_BASE     15'h{FLASH_LN_BASE:04X}\n")
-        f.write(f"  `define FLASH_LOG10_BASE  15'h{FLASH_LOG10_BASE:04X}\n")
-        f.write(f"  `define FLASH_CONST_BASE  15'h{FLASH_CONST_BASE:04X}\n\n")
+        f.write(f"  `define FLASH_QS_BASE            15'h{FLASH_QS_BASE:04X}\n")
+        f.write(f"  `define FLASH_RECIP_BASE         15'h{FLASH_RECIP_BASE:04X}\n")
+        f.write(f"  `define FLASH_SQRT_BASE          15'h{FLASH_SQRT_BASE:04X}\n")
+        f.write(f"  `define FLASH_EXP2_BASE          15'h{FLASH_EXP2_BASE:04X}\n")
+        f.write(f"  `define FLASH_LOG2_BASE          15'h{FLASH_LOG2_BASE:04X}\n")
+        f.write(f"  `define FLASH_SIN_BASE           15'h{FLASH_SIN_BASE:04X}\n")
+        f.write(f"  `define FLASH_COS_BASE           15'h{FLASH_COS_BASE:04X}\n")
+        f.write(f"  `define FLASH_TAN_BASE           15'h{FLASH_TAN_BASE:04X}\n")
+        f.write(f"  `define FLASH_LN_BASE            15'h{FLASH_LN_BASE:04X}\n")
+        f.write(f"  `define FLASH_LOG10_BASE         15'h{FLASH_LOG10_BASE:04X}\n")
+        f.write(f"  `define FLASH_CONST_BASE         15'h{FLASH_CONST_BASE:04X}\n")
+        f.write(f"  `define FLASH_CORDIC_ATAN32_BASE 15'h{FLASH_CORDIC_ATAN32_BASE:04X}\n")
+        f.write(f"  `define FLASH_CORDIC_ATAN64_BASE 15'h{FLASH_CORDIC_ATAN64_BASE:04X}\n")
+        f.write(f"  `define FLASH_TRIG_CONST_BASE    15'h{FLASH_TRIG_CONST_BASE:04X}\n\n")
         f.write("`endif // FPU_ROM_MAP_VH\n")
 
 

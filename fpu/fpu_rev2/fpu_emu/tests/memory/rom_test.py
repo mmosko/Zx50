@@ -121,3 +121,70 @@ def test_rom_constants_and_errors(tmp_path):
     bad_rom_file.write_bytes(b"too short")
     with pytest.raises(ValueError, match="Invalid ROM image size"):
         Rom(rom_path=str(bad_rom_file))
+
+
+def test_rom_cordic_atan_tables():
+    """Verify CORDIC arctangent tables in ROM for 32-bit (Q2.30) and 64-bit (Q2.62)."""
+    rom = Rom()
+
+    # 32-bit Q2.30 tests
+    assert rom.load_cordic_atan32(0) == 0x3243F6A9  # pi/4
+    assert rom.load_cordic_atan32(1) == 0x1DAC6705  # atan(0.5)
+    assert rom.load_cordic_atan32(2) == 0x0FADBAFD  # atan(0.25)
+    assert rom.load_cordic_atan32(31) >= 0
+
+    with pytest.raises(IndexError):
+        rom.load_cordic_atan32(-1)
+    with pytest.raises(IndexError):
+        rom.load_cordic_atan32(32)
+
+    # 64-bit Q2.62 tests
+    assert rom.load_cordic_atan64(0) == 0x3243F6A8885A308D  # pi/4
+    assert rom.load_cordic_atan64(1) == 0x1DAC670561BB4F69  # atan(0.5)
+    assert rom.load_cordic_atan64(2) == 0x0FADBAFC96406EB1  # atan(0.25)
+    assert rom.load_cordic_atan64(63) >= 0
+
+    with pytest.raises(IndexError):
+        rom.load_cordic_atan64(-1)
+    with pytest.raises(IndexError):
+        rom.load_cordic_atan64(64)
+
+
+def test_rom_trig_constants():
+    """Verify trigonometric and CORDIC constants table."""
+    from fpu_emu.memory.rom import TrigConstSlot
+
+    rom = Rom()
+
+    # Fixed-point CORDIC scale factors and range reduction
+    assert rom.load_trig_const32(TrigConstSlot.INV_K_32) == 0x26DD3B6A
+    assert rom.load_trig_const64(TrigConstSlot.INV_K_64) == 0x26DD3B6A10D7969A
+
+    assert rom.load_trig_const32(TrigConstSlot.HALF_PI_32) == 0x6487ED51
+    assert rom.load_trig_const64(TrigConstSlot.HALF_PI_64) == 0x6487ED5110B4611A
+
+    assert rom.load_trig_const32(TrigConstSlot.TWO_OVER_PI_32) == 0x517CC1B7
+    assert rom.load_trig_const64(TrigConstSlot.TWO_OVER_PI_64) == 0x517CC1B727220A95
+
+    assert rom.load_trig_const32(TrigConstSlot.QUARTER_PI_32) == 0x3243F6A9
+    assert rom.load_trig_const64(TrigConstSlot.QUARTER_PI_64) == 0x3243F6A8885A308D
+
+    # IEEE-754 representations
+    assert rom.load_trig_const32(TrigConstSlot.TWO_OVER_PI_F32) == 0x3F22F983
+    assert rom.load_trig_const64(TrigConstSlot.TWO_OVER_PI_F64) == 0x3FE45F306DC9C883
+    assert rom.load_trig_const32(TrigConstSlot.HALF_PI_F32) == 0x3FC90FDB
+    assert rom.load_trig_const64(TrigConstSlot.HALF_PI_F64) == 0x3FF921FB54442D18
+    assert rom.load_trig_const32(TrigConstSlot.PI_F32) == 0x40490FDB
+    assert rom.load_trig_const64(TrigConstSlot.PI_F64) == 0x400921FB54442D18
+    assert rom.load_trig_const32(TrigConstSlot.INV_K_F32) == 0x3F1B74EE
+    assert rom.load_trig_const64(TrigConstSlot.INV_K_F64) == 0x3FE36E9DE57788A5
+
+    # Bounds check
+    with pytest.raises(IndexError):
+        rom.load_trig_const32(-1)
+    with pytest.raises(IndexError):
+        rom.load_trig_const32(16)
+    with pytest.raises(IndexError):
+        rom.load_trig_const64(-1)
+    with pytest.raises(IndexError):
+        rom.load_trig_const64(16)

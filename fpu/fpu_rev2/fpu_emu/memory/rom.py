@@ -4,6 +4,7 @@ Loads and exposes lookup tables from the compiled 32KB Flash ROM image (fpu_flas
 Direct member variable manipulation is discouraged; callers must use the public API.
 """
 
+from enum import IntEnum
 import os
 from typing import Optional
 from fpu_emu.fpga_resource import fpga_resource
@@ -22,6 +23,30 @@ FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
 FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
 FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
 FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (128 bytes)
+FLASH_CORDIC_ATAN32_BASE = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes: 32 x 4 bytes)
+FLASH_CORDIC_ATAN64_BASE = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes: 64 x 8 bytes)
+FLASH_TRIG_CONST_BASE = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes: 16 x 8 bytes)
+
+
+class TrigConstSlot(IntEnum):
+    """Slot indices for Table 14: FLASH_TRIG_CONST_BASE (16 slots * 8 bytes)."""
+
+    INV_K_32 = 0
+    INV_K_64 = 1
+    HALF_PI_32 = 2
+    HALF_PI_64 = 3
+    TWO_OVER_PI_32 = 4
+    TWO_OVER_PI_64 = 5
+    QUARTER_PI_32 = 6
+    QUARTER_PI_64 = 7
+    TWO_OVER_PI_F32 = 8
+    TWO_OVER_PI_F64 = 9
+    HALF_PI_F32 = 10
+    HALF_PI_F64 = 11
+    PI_F32 = 12
+    PI_F64 = 13
+    INV_K_F32 = 14
+    INV_K_F64 = 15
 
 
 def get_default_rom_path() -> str:
@@ -122,3 +147,69 @@ class Rom:
             raise IndexError(f"Constant opcode 0x{opcode:02X} out of range (0xA0..0xAF)")
         addr = FLASH_CONST_BASE + ((opcode - 0xA0) * 8)
         return self.load(addr, 8)
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_cordic_atan32(self, index: int) -> int:
+        """Loads 32-bit Q2.30 CORDIC arctangent angle for iteration index 0..31."""
+        if not (0 <= index < 32):
+            raise IndexError(f"CORDIC atan32 index {index} out of range (0..31)")
+        addr = FLASH_CORDIC_ATAN32_BASE + (index * 4)
+        return int.from_bytes(self.load(addr, 4), byteorder="little")
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=2,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_cordic_atan64(self, index: int) -> int:
+        """Loads 64-bit Q2.62 CORDIC arctangent angle for iteration index 0..63."""
+        if not (0 <= index < 64):
+            raise IndexError(f"CORDIC atan64 index {index} out of range (0..63)")
+        addr = FLASH_CORDIC_ATAN64_BASE + (index * 8)
+        return int.from_bytes(self.load(addr, 8), byteorder="little")
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_trig_const32(self, slot: int | TrigConstSlot) -> int:
+        """Loads 32-bit trig/cordic constant from slot 0..15."""
+        slot_int = int(slot)
+        if not (0 <= slot_int < 16):
+            raise IndexError(f"Trig constant slot {slot_int} out of range (0..15)")
+        addr = FLASH_TRIG_CONST_BASE + (slot_int * 8)
+        return int.from_bytes(self.load(addr, 4), byteorder="little")
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=2,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_trig_const64(self, slot: int | TrigConstSlot) -> int:
+        """Loads 64-bit trig/cordic constant from slot 0..15."""
+        slot_int = int(slot)
+        if not (0 <= slot_int < 16):
+            raise IndexError(f"Trig constant slot {slot_int} out of range (0..15)")
+        addr = FLASH_TRIG_CONST_BASE + (slot_int * 8)
+        return int.from_bytes(self.load(addr, 8), byteorder="little")

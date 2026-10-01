@@ -49,10 +49,10 @@ Target Hardware: Lattice MachXO2 FPGA on `boards/zx50_cpu_RevC4` (host: Zilog Z8
     - [x] Document range reduction strategy: modulo $\pi/2$ with quadrant tracking ($\sin, \cos, \tan$ sign and axis mapping).
     - [x] Define tangent asymptote overflow detection ($\tan(\pm \pi/2) \to \pm \infty$, $V=1$, $ERR=1$).
     - [x] Specify register allocation contract (`AX`: $X$, `BX`: $Y$, `DX`: $Z$ residual angle, `C`: loop counter).
-  - [ ] **Lookup Table & Flash Constants (`tools/build_flash.py`)**:
-    - [ ] Precompute high-precision CORDIC arctangent angle table ($\theta_i = \text{atan}(2^{-i})$) in Q1.31 / Q1.63 fixed-point format for EBR 2 & 3 constants ROM.
-    - [ ] Add scaling factor constants ($1/K \approx 0.607252935...$) and range-reduction factors ($2/\pi$, $\pi/2$).
-    - [ ] Update `tools/build_flash.py` serializer, Verilog headers (`src/fpu_rom_map.vh`), and emulator binary image (`fpu_emu/rom/fpu_flash.bin`).
+  - [x] **Lookup Table & Flash Constants (`tools/build_flash.py`)**:
+    - [x] Precompute high-precision CORDIC arctangent angle table ($\theta_i = \text{atan}(2^{-i})$) in Q2.30 / Q2.62 fixed-point format for EBR 2 & 3 constants ROM.
+    - [x] Add scaling factor constants ($1/K \approx 0.607252935...$) and range-reduction factors ($2/\pi$, $\pi/2$, $\pi/4$) in both fixed-point and IEEE-754 formats.
+    - [x] Update `tools/build_flash.py` serializer, Verilog headers (`src/fpu_rom_map.vh`), and emulator binary image (`fpu_emu/rom/fpu_flash.bin`).
   - [ ] **Core ALU Trigonometric Primitives (`fpu_emu/alu/fp_trig.py`)**:
     - [ ] Implement bit-accurate, synthesizable circular CORDIC engine without Python `math` module (pure fixed-point additions, subtractions, and barrel shifts).
     - [ ] Implement quadrant range reduction and normalization.

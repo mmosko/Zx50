@@ -7,16 +7,19 @@
 `ifndef FPU_ROM_MAP_VH
 `define FPU_ROM_MAP_VH
 
-  `define FLASH_QS_BASE     15'h0000
-  `define FLASH_RECIP_BASE  15'h0400
-  `define FLASH_SQRT_BASE   15'h0600
-  `define FLASH_EXP2_BASE   15'h0800
-  `define FLASH_LOG2_BASE   15'h0A00
-  `define FLASH_SIN_BASE    15'h0C00
-  `define FLASH_COS_BASE    15'h0E00
-  `define FLASH_TAN_BASE    15'h1000
-  `define FLASH_LN_BASE     15'h1200
-  `define FLASH_LOG10_BASE  15'h1400
-  `define FLASH_CONST_BASE  15'h1600
+  `define FLASH_QS_BASE            15'h0000
+  `define FLASH_RECIP_BASE         15'h0400
+  `define FLASH_SQRT_BASE          15'h0600
+  `define FLASH_EXP2_BASE          15'h0800
+  `define FLASH_LOG2_BASE          15'h0A00
+  `define FLASH_SIN_BASE           15'h0C00
+  `define FLASH_COS_BASE           15'h0E00
+  `define FLASH_TAN_BASE           15'h1000
+  `define FLASH_LN_BASE            15'h1200
+  `define FLASH_LOG10_BASE         15'h1400
+  `define FLASH_CONST_BASE         15'h1600
+  `define FLASH_CORDIC_ATAN32_BASE 15'h1800
+  `define FLASH_CORDIC_ATAN64_BASE 15'h1900
+  `define FLASH_TRIG_CONST_BASE    15'h1B00
 
 `endif // FPU_ROM_MAP_VH

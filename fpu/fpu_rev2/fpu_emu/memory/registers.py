@@ -98,14 +98,17 @@ class Reg(Enum):
 
     def is_64(self) -> bool:
         return self in _REG_64
+
     def is_32(self) -> bool:
         return self in _REG_32
+
     def is_hi(self) -> bool:
         return self in _REG_32_HI
+
     def is_lo(self) -> bool:
         return self in _REG_32_LO
 
-    def hi_half(self) -> 'Reg':
+    def hi_half(self) -> "Reg":
         if self.is_32():
             raise ValueError(f"Tried getting hi half of a 32 bit reg: {self}")
         match self:
@@ -119,7 +122,7 @@ class Reg(Enum):
                 return Reg.FH
         raise ValueError(f"Unsupported 64-bit register: {self}")
 
-    def lo_half(self) -> 'Reg':
+    def lo_half(self) -> "Reg":
         if self.is_32():
             raise ValueError(f"Tried getting hi half of a 32 bit reg: {self}")
         match self:
@@ -132,6 +135,7 @@ class Reg(Enum):
             case Reg.FX:
                 return Reg.FL
         raise ValueError(f"Unsupported 64-bit register: {self}")
+
 
 _REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
 _REG_32 = (

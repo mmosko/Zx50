@@ -61,7 +61,7 @@ def swap64(
     if isinstance(reg_b, str):
         reg_b = Reg[reg_b.upper()]
 
-    if not(reg_a.is_64() and reg_b.is_64()):
+    if not (reg_a.is_64() and reg_b.is_64()):
         raise ValueError(f"swap64 requires 64-bit compound registers: {reg_a}, {reg_b}")
 
     if reg_a == Reg.FX or reg_b == Reg.FX:

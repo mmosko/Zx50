@@ -117,7 +117,7 @@ class TestLd:
         assert Registers.to_int(self.reg.peek(Reg.FL)) == 0x12344321
 
         # String register names
-        ld.ld32(self.hw,  Reg.BL, 0x1234)
+        ld.ld32(self.hw, Reg.BL, 0x1234)
         assert Registers.to_int(self.reg.peek(Reg.BL)) == 0x1234
         ld.ld64(self.hw, Reg.BX, 0x5678)
         assert Registers.to_int(self.reg.peek(Reg.BX)) == 0x5678
