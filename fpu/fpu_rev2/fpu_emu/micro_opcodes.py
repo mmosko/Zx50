@@ -97,7 +97,8 @@ class MicroOp(Enum):
     SQRT_EXP64 = auto() # EA <- (EA - 1023)/2 + 1023, latch exponent odd parity
     SQRT_CORE64 = auto()# AX <- sqrt_mantissa64(AX, seed, parity)
 
-    # Register Transfer
+    # Register Transfer & Immediate Load
+    LD = auto()         # LD dst, imm
     MOV = auto()        # MOV dst, src
     SWAP = auto()       # SWAP dst, src
 

@@ -10,22 +10,7 @@ Per SystemDesign.md Section 3 (Datapath Architecture) and Section 4.2 / 4.3:
 
 from typing import Union
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import HalfSelect, Reg
-
-REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
-REG_32 = (
-    Reg.AL,
-    Reg.AH,
-    Reg.BL,
-    Reg.BH,
-    Reg.DL,
-    Reg.DH,
-    Reg.FL,
-    Reg.FH,
-    Reg.EA,
-    Reg.EB,
-    Reg.C,
-)
+from fpu_emu.memory.registers import HalfSelect, Reg, REG_64, REG_32
 
 
 def mov32(hw: Hardware, dst: Union[Reg, str], src: Union[Reg, str]) -> None:

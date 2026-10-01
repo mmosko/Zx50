@@ -15,6 +15,7 @@ from fpu_emu.alu import fp_mul_div
 from fpu_emu.alu import fp_ln
 from fpu_emu.alu import fp_exp
 from fpu_emu.alu import fp_pow
+from fpu_emu.memory import swap
 
 
 class Alu:
@@ -231,7 +232,7 @@ class Alu:
         ieee754_exp.pack_f64(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
 
     def swap(self, reg_a: Reg, reg_b: Reg):
-        ieee754_exp.swap(self._hw, reg_a=reg_a, reg_b=reg_b)
+        swap.swap(self._hw, reg_a=reg_a, reg_b=reg_b)
 
     # -------------------------------------------------------------------------
     # Floating-Point Square Root API

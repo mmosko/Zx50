@@ -489,23 +489,3 @@ def pack_f64(
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
     hw.reg.set_flag(StatusFlag.CARRY, False)
-
-
-def swap(hw: Hardware, reg_a: Reg, reg_b: Reg):
-    """SWAP reg_a, reg_b: Exchanges two registers and corresponding sign latches."""
-    if reg_a in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
-        hw.clock.tick(2)
-        if (reg_a == Reg.AX and reg_b == Reg.BX) or (reg_a == Reg.BX and reg_b == Reg.AX):
-            hw.reg._al, hw.reg._bl = bytearray(hw.reg._bl), bytearray(hw.reg._al)
-            hw.reg._ah, hw.reg._bh = bytearray(hw.reg._bh), bytearray(hw.reg._ah)
-            hw.reg.sign_a, hw.reg.sign_b = hw.reg.sign_b, hw.reg.sign_a
-    elif reg_a in (Reg.EA, Reg.EB) and reg_b in (Reg.EA, Reg.EB):
-        hw.clock.tick(1)
-        hw.reg.ea, hw.reg.eb = hw.reg.eb, hw.reg.ea
-    else:
-        hw.clock.tick(1)
-        if (reg_a == Reg.AL and reg_b == Reg.BL) or (reg_a == Reg.BL and reg_b == Reg.AL):
-            hw.reg._al, hw.reg._bl = bytearray(hw.reg._bl), bytearray(hw.reg._al)
-            hw.reg.sign_a, hw.reg.sign_b = hw.reg.sign_b, hw.reg.sign_a
-        elif (reg_a == Reg.AH and reg_b == Reg.BH) or (reg_a == Reg.BH and reg_b == Reg.AH):
-            hw.reg._ah, hw.reg._bh = bytearray(hw.reg._bh), bytearray(hw.reg._ah)

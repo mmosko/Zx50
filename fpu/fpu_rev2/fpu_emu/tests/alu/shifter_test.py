@@ -1,6 +1,7 @@
 """Comprehensive unit tests for 32/64-bit barrel shifter primitive."""
 
 import pytest
+
 from fpu_emu.alu.alu import Alu
 from fpu_emu.alu.shifter import (
     shifter_core,

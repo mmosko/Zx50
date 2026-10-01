@@ -94,6 +94,21 @@ class Reg(Enum):
         raise ValueError(f"Unknown byte length for register {self}")
 
 
+REG_64 = (Reg.AX, Reg.BX, Reg.DX, Reg.FX)
+REG_32 = (
+    Reg.AL,
+    Reg.AH,
+    Reg.BL,
+    Reg.BH,
+    Reg.DL,
+    Reg.DH,
+    Reg.FL,
+    Reg.FH,
+    Reg.EA,
+    Reg.EB,
+)
+
+
 class StatusFlag(Enum):
     """Status register flag bit allocations (SystemDesign.md Section 2.1)."""
 
@@ -307,6 +322,7 @@ class Registers:
             self.c = data_bytes[0] & 0x3F
         else:
             raise HardwareBusError(f"Unsupported writeback destination for RES_BUS: {dst}")
+
 
     # -------------------------------------------------------------------------
     # Allowed Control & Status Getters / Setters

@@ -3,7 +3,7 @@
 from typing import List
 from fpu_emu.alu.alu import Alu
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory import mov, stack
+from fpu_emu.memory import ld, mov, stack, swap
 from fpu_emu.memory.ram import CMD_STACK_BASE, CMD_STACK_SIZE
 from fpu_emu.memory.registers import StatusFlag, Reg
 from fpu_emu.micro_code import MicroCode
@@ -366,10 +366,13 @@ class Dispatcher:
                     self._hw.mem.zero_user_mem()
                 case MicroOp.SWAP:
                     if inst.dst is not None and inst.src is not None:
-                        self._alu.swap(inst.dst, inst.src)
+                        swap.swap(self._hw, inst.dst, inst.src)
                 case MicroOp.MOV:
                     if inst.dst is not None and inst.src is not None:
                         mov.mov(self._hw, inst.dst, inst.src)
+                case MicroOp.LD:
+                    if inst.dst is not None and inst.imm is not None:
+                        ld.ld(self._hw, inst.dst, inst.imm)
                 case MicroOp.JMP:
                     pc = inst.target
                 case MicroOp.JZ:

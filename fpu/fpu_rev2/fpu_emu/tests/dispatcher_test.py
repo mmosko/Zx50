@@ -535,11 +535,13 @@ def test_micro_ops_direct_run():
         MicroInstruction(MicroOp.ASR64, dst=Reg.AX, imm=1),
         MicroInstruction(MicroOp.SWAP, dst=Reg.AL, src=Reg.BL),
         MicroInstruction(MicroOp.MOV, dst=Reg.BL, src=Reg.AL),
+        MicroInstruction(MicroOp.LD, dst=Reg.FL, imm=0x12345678),
         MicroInstruction(MicroOp.NOP),
         MicroInstruction(MicroOp.RET),
     ]
     disp._run(ucode)
     assert not hw.reg.get_flag(StatusFlag.ERR)
+    assert Registers.to_int(reg.peek(Reg.FL)) == 0x12345678
 
 
 def test_batch_invalid_opcode_error():
