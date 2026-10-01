@@ -34,7 +34,7 @@ def test_mul_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
     reg.set(Reg.BL, Registers.from_f32(b))
 
     prev_cycles = hw.clock.cycles
-    fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.mul_f32(hw, src=Reg.BL)
 
     assert hw.clock.cycles - prev_cycles == 16
     res = Registers.to_f32(reg.peek(Reg.AL))
@@ -50,7 +50,7 @@ def test_mul_f32_overflow(hw):
     reg.set(Reg.AL, Registers.from_f32(1e30))
     reg.set(Reg.BL, Registers.from_f32(1e30))
 
-    fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.mul_f32(hw, src=Reg.BL)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -76,7 +76,7 @@ def test_div_f32_standard(hw, a, b, expected_res, expected_sign, expected_zero):
     reg.set(Reg.BL, Registers.from_f32(b))
 
     prev_cycles = hw.clock.cycles
-    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.div_f32(hw, src=Reg.BL)
 
     assert hw.clock.cycles - prev_cycles == 16
     res = Registers.to_f32(reg.peek(Reg.AL))
@@ -92,7 +92,7 @@ def test_div_f32_divide_by_zero(hw):
     reg.set(Reg.AL, Registers.from_f32(42.0))
     reg.set(Reg.BL, Registers.from_f32(0.0))
 
-    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.div_f32(hw, src=Reg.BL)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -103,7 +103,7 @@ def test_div_f32_overflow(hw):
     reg.set(Reg.AL, Registers.from_f32(1e38))
     reg.set(Reg.BL, Registers.from_f32(1e-10))
 
-    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.div_f32(hw, src=Reg.BL)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -128,7 +128,7 @@ def test_mul_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
     reg.set(Reg.BX, Registers.from_f64(b))
 
     prev_cycles = hw.clock.cycles
-    fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.mul_f64(hw, src=Reg.BX)
 
     assert hw.clock.cycles - prev_cycles == 32
     res = Registers.to_f64(reg.peek(Reg.AX))
@@ -144,7 +144,7 @@ def test_mul_f64_overflow(hw):
     reg.set(Reg.AX, Registers.from_f64(1e308))
     reg.set(Reg.BX, Registers.from_f64(2.0))
 
-    fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.mul_f64(hw, src=Reg.BX)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -169,7 +169,7 @@ def test_div_f64_standard(hw, a, b, expected_res, expected_sign, expected_zero):
     reg.set(Reg.BX, Registers.from_f64(b))
 
     prev_cycles = hw.clock.cycles
-    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.div_f64(hw, src=Reg.BX)
 
     assert hw.clock.cycles - prev_cycles == 32
     res = Registers.to_f64(reg.peek(Reg.AX))
@@ -185,7 +185,7 @@ def test_div_f64_divide_by_zero(hw):
     reg.set(Reg.AX, Registers.from_f64(100.0))
     reg.set(Reg.BX, Registers.from_f64(0.0))
 
-    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.div_f64(hw, src=Reg.BX)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -196,7 +196,7 @@ def test_div_f64_overflow(hw):
     reg.set(Reg.AX, Registers.from_f64(1e308))
     reg.set(Reg.BX, Registers.from_f64(1e-10))
 
-    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.div_f64(hw, src=Reg.BX)
 
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
@@ -207,28 +207,28 @@ def test_nan_and_inf_handling(hw):
     # mul_f32 inf
     reg.set(Reg.AL, Registers.from_f32(float("inf")))
     reg.set(Reg.BL, Registers.from_f32(2.0))
-    fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.mul_f32(hw, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # div_f32 inf
     reg.set(Reg.AL, Registers.from_f32(float("inf")))
     reg.set(Reg.BL, Registers.from_f32(2.0))
-    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.div_f32(hw, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # mul_f64 inf
     reg.set(Reg.AX, Registers.from_f64(float("inf")))
     reg.set(Reg.BX, Registers.from_f64(2.0))
-    fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.mul_f64(hw, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
     # div_f64 inf
     reg.set(Reg.AX, Registers.from_f64(float("inf")))
     reg.set(Reg.BX, Registers.from_f64(2.0))
-    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.div_f64(hw, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.OVERFLOW)
     assert hw.reg.get_flag(StatusFlag.ERR)
 
@@ -238,28 +238,28 @@ def test_underflow_handling(hw):
     # mul_f32 underflow
     reg.set(Reg.AL, Registers.from_f32(1e-30))
     reg.set(Reg.BL, Registers.from_f32(1e-30))
-    fp_mul_div.mul_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.mul_f32(hw, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
 
     # div_f32 underflow
     reg.set(Reg.AL, Registers.from_f32(1e-30))
     reg.set(Reg.BL, Registers.from_f32(1e30))
-    fp_mul_div.div_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.div_f32(hw, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
 
     # mul_f64 underflow
     reg.set(Reg.AX, Registers.from_f64(1e-200))
     reg.set(Reg.BX, Registers.from_f64(1e-200))
-    fp_mul_div.mul_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.mul_f64(hw, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
 
     # div_f64 underflow
     reg.set(Reg.AX, Registers.from_f64(1e-200))
     reg.set(Reg.BX, Registers.from_f64(1e200))
-    fp_mul_div.div_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.div_f64(hw, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert not hw.reg.get_flag(StatusFlag.OVERFLOW)
 
@@ -271,30 +271,30 @@ def test_add_sub_f32(hw):
     reg = RegTestHarness(hw.reg)
     reg.set(Reg.AL, Registers.from_f32(1.5))
     reg.set(Reg.BL, Registers.from_f32(2.25))
-    fp_mul_div.add_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.add_f32(hw, src=Reg.BL)
     assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == 3.75
 
     reg.set(Reg.AL, Registers.from_f32(3.75))
     reg.set(Reg.BL, Registers.from_f32(1.5))
-    fp_mul_div.sub_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.sub_f32(hw, src=Reg.BL)
     assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == 2.25
 
     # Equal cancellation
     reg.set(Reg.AL, Registers.from_f32(2.5))
     reg.set(Reg.BL, Registers.from_f32(2.5))
-    fp_mul_div.sub_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.sub_f32(hw, src=Reg.BL)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert Registers.to_f32(reg.peek(Reg.AL)) == 0.0
 
     # Add zero
     reg.set(Reg.AL, Registers.from_f32(0.0))
     reg.set(Reg.BL, Registers.from_f32(4.5))
-    fp_mul_div.add_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.add_f32(hw, src=Reg.BL)
     assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == 4.5
 
     reg.set(Reg.AL, Registers.from_f32(4.5))
     reg.set(Reg.BL, Registers.from_f32(0.0))
-    fp_mul_div.add_f32(hw, dst=Reg.AL, src=Reg.BL)
+    fp_mul_div.add_f32(hw, src=Reg.BL)
     assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-6) == 4.5
 
 
@@ -302,28 +302,28 @@ def test_add_sub_f64(hw):
     reg = RegTestHarness(hw.reg)
     reg.set(Reg.AX, Registers.from_f64(10.125))
     reg.set(Reg.BX, Registers.from_f64(20.375))
-    fp_mul_div.add_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.add_f64(hw, src=Reg.BX)
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == 30.5
 
     reg.set(Reg.AX, Registers.from_f64(30.5))
     reg.set(Reg.BX, Registers.from_f64(10.125))
-    fp_mul_div.sub_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.sub_f64(hw, src=Reg.BX)
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == 20.375
 
     # Equal cancellation
     reg.set(Reg.AX, Registers.from_f64(7.5))
     reg.set(Reg.BX, Registers.from_f64(7.5))
-    fp_mul_div.sub_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.sub_f64(hw, src=Reg.BX)
     assert hw.reg.get_flag(StatusFlag.ZERO)
     assert Registers.to_f64(reg.peek(Reg.AX)) == 0.0
 
     # Add zero
     reg.set(Reg.AX, Registers.from_f64(0.0))
     reg.set(Reg.BX, Registers.from_f64(8.25))
-    fp_mul_div.add_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.add_f64(hw, src=Reg.BX)
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == 8.25
 
     reg.set(Reg.AX, Registers.from_f64(8.25))
     reg.set(Reg.BX, Registers.from_f64(0.0))
-    fp_mul_div.add_f64(hw, dst=Reg.AX, src=Reg.BX)
+    fp_mul_div.add_f64(hw, src=Reg.BX)
     assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-12) == 8.25

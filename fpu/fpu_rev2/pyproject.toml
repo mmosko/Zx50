@@ -12,6 +12,7 @@ select = [
     "E",
     "F",
     "W",
+    "ARG",     # Enforces flake8-unused-arguments (ARG001, ARG002, etc.)
     "SLF",
     "C901", # McCabe cyclomatic complexity
     "SLF001", # Flags direct private access (obj._foo)
@@ -23,7 +24,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "fpu_emu/tests/**" = ["SLF001", "C901"]
-"fpu_emu/dispatcher.py" = ["C901"] # Permitted by agents.md rule 6
 "fpu_emu/memory/registers.py" = ["C901"] # Protected by agents.md rule 16
 
 [tool.ruff.lint.mccabe]

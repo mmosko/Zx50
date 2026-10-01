@@ -17,13 +17,11 @@ from fpu_emu.memory.registers import Reg, Registers, StatusFlag
 
 # IEEE-754 Bit Masks
 F32_SIGN_MASK = 0x80000000
-F32_EXP_MASK = 0x7F800000
 F32_FRAC_MASK = 0x007FFFFF
 F32_HIDDEN_BIT = 0x00800000
 F32_EXP_MAX = 0xFF
 
 F64_SIGN_MASK = 0x8000000000000000
-F64_EXP_MASK = 0x7FF0000000000000
 F64_FRAC_MASK = 0x000FFFFFFFFFFFFF
 F64_HIDDEN_BIT = 0x0010000000000000
 F64_EXP_MAX = 0x7FF
@@ -48,8 +46,8 @@ def _write_fp_result(hw: Hardware, reg: Reg, val: int, is_64: bool) -> None:
         hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
 
 
-def mul_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-    """Multiplies two IEEE-754 single-precision floats: dst <- dst * src.
+def mul_f32(hw: Hardware, src: Reg = Reg.BL):
+    """Multiplies two IEEE-754 single-precision floats: AL <- AL * src.
 
     Synthesizable datapath:
       - Sign XOR: sign_r = sign_a ^ sign_b
@@ -58,7 +56,7 @@ def mul_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
       - Normalization: if product MSB is set, shift right by 1 and increment exponent.
     """
     hw.clock.tick(16)
-    a_raw = _read_fp_operand(hw, dst, False)
+    a_raw = _read_fp_operand(hw, Reg.AL, False)
     b_raw = _read_fp_operand(hw, src, False)
 
     sign_a = (a_raw >> 31) & 1
@@ -77,7 +75,7 @@ def mul_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
     # Zero operand check
     if (exp_a == 0 and (a_raw & F32_FRAC_MASK) == 0) or (exp_b == 0 and (b_raw & F32_FRAC_MASK) == 0):
         res_raw = sign_r << 31
-        _write_fp_result(hw, dst, res_raw, False)
+        _write_fp_result(hw, Reg.AL, res_raw, False)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -114,7 +112,7 @@ def mul_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
     if exp_r <= 0:
         # Underflow to signed zero
         res_raw = sign_r << 31
-        _write_fp_result(hw, dst, res_raw, False)
+        _write_fp_result(hw, Reg.AL, res_raw, False)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -122,15 +120,15 @@ def mul_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         return
 
     res_raw = (sign_r << 31) | ((exp_r & 0xFF) << 23) | frac
-    _write_fp_result(hw, dst, res_raw, False)
+    _write_fp_result(hw, Reg.AL, res_raw, False)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.ERR, False)
 
 
-def div_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-    """Divides two IEEE-754 single-precision floats: dst <- dst / src.
+def div_f32(hw: Hardware, src: Reg = Reg.BL):
+    """Divides two IEEE-754 single-precision floats: AL <- AL / src.
 
     Synthesizable datapath:
       - Division by zero check
@@ -139,7 +137,7 @@ def div_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
       - 26-step shift-and-subtract restoring divider for mantissa quotient
     """
     hw.clock.tick(16)
-    a_raw = _read_fp_operand(hw, dst, False)
+    a_raw = _read_fp_operand(hw, Reg.AL, False)
     b_raw = _read_fp_operand(hw, src, False)
 
     sign_a = (a_raw >> 31) & 1
@@ -164,7 +162,7 @@ def div_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
     # Dividend zero check
     if exp_a == 0 and (a_raw & F32_FRAC_MASK) == 0:
         res_raw = sign_r << 31
-        _write_fp_result(hw, dst, res_raw, False)
+        _write_fp_result(hw, Reg.AL, res_raw, False)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -198,7 +196,7 @@ def div_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         return
     if exp_r <= 0:
         res_raw = sign_r << 31
-        _write_fp_result(hw, dst, res_raw, False)
+        _write_fp_result(hw, Reg.AL, res_raw, False)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -206,15 +204,15 @@ def div_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
         return
 
     res_raw = (sign_r << 31) | ((exp_r & 0xFF) << 23) | frac
-    _write_fp_result(hw, dst, res_raw, False)
+    _write_fp_result(hw, Reg.AL, res_raw, False)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.ERR, False)
 
 
-def mul_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-    """Multiplies two IEEE-754 double-precision floats: dst <- dst * src.
+def mul_f64(hw: Hardware, src: Reg = Reg.BX):
+    """Multiplies two IEEE-754 double-precision floats: AX <- AX * src.
 
     Synthesizable datapath:
       - Sign XOR: sign_r = sign_a ^ sign_b
@@ -223,7 +221,7 @@ def mul_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
       - Normalization: if product MSB is set, shift right by 1 and increment exponent.
     """
     hw.clock.tick(31)
-    a_raw = _read_fp_operand(hw, dst, True)
+    a_raw = _read_fp_operand(hw, Reg.AX, True)
     b_raw = _read_fp_operand(hw, src, True)
 
     sign_a = (a_raw >> 63) & 1
@@ -242,7 +240,7 @@ def mul_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
     # Zero operand check
     if (exp_a == 0 and (a_raw & F64_FRAC_MASK) == 0) or (exp_b == 0 and (b_raw & F64_FRAC_MASK) == 0):
         res_raw = sign_r << 63
-        _write_fp_result(hw, dst, res_raw, True)
+        _write_fp_result(hw, Reg.AX, res_raw, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -273,7 +271,7 @@ def mul_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         return
     if exp_r <= 0:
         res_raw = sign_r << 63
-        _write_fp_result(hw, dst, res_raw, True)
+        _write_fp_result(hw, Reg.AX, res_raw, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -281,15 +279,15 @@ def mul_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         return
 
     res_raw = (sign_r << 63) | ((exp_r & 0x7FF) << 52) | frac
-    _write_fp_result(hw, dst, res_raw, True)
+    _write_fp_result(hw, Reg.AX, res_raw, True)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.ERR, False)
 
 
-def div_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-    """Divides two IEEE-754 double-precision floats: dst <- dst / src.
+def div_f64(hw: Hardware, src: Reg = Reg.BX):
+    """Divides two IEEE-754 double-precision floats: AX <- AX / src.
 
     Synthesizable datapath:
       - Division by zero check
@@ -298,7 +296,7 @@ def div_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
       - 55-step shift-and-subtract restoring divider for mantissa quotient
     """
     hw.clock.tick(31)
-    a_raw = _read_fp_operand(hw, dst, True)
+    a_raw = _read_fp_operand(hw, Reg.AX, True)
     b_raw = _read_fp_operand(hw, src, True)
 
     sign_a = (a_raw >> 63) & 1
@@ -323,7 +321,7 @@ def div_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
     # Dividend zero check
     if exp_a == 0 and (a_raw & F64_FRAC_MASK) == 0:
         res_raw = sign_r << 63
-        _write_fp_result(hw, dst, res_raw, True)
+        _write_fp_result(hw, Reg.AX, res_raw, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -357,7 +355,7 @@ def div_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         return
     if exp_r <= 0:
         res_raw = sign_r << 63
-        _write_fp_result(hw, dst, res_raw, True)
+        _write_fp_result(hw, Reg.AX, res_raw, True)
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -365,17 +363,17 @@ def div_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
         return
 
     res_raw = (sign_r << 63) | ((exp_r & 0x7FF) << 52) | frac
-    _write_fp_result(hw, dst, res_raw, True)
+    _write_fp_result(hw, Reg.AX, res_raw, True)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
     hw.reg.set_flag(StatusFlag.ERR, False)
 
 
-def add_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL, negate_b: bool = False):
-    """Adds two IEEE-754 single-precision floats: dst <- dst + src (2 cycles)."""
+def add_f32(hw: Hardware, src: Reg = Reg.BL, negate_b: bool = False):
+    """Adds two IEEE-754 single-precision floats: AL <- AL + src (2 cycles)."""
     hw.clock.tick(2)
-    a_raw = _read_fp_operand(hw, dst, False)
+    a_raw = _read_fp_operand(hw, Reg.AL, False)
     b_raw = _read_fp_operand(hw, src, False)
 
     sign_a = (a_raw >> 31) & 1
@@ -385,7 +383,7 @@ def add_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL, negate_b: bool =
 
     if exp_a == 0 and (a_raw & F32_FRAC_MASK) == 0:
         b_eff = b_raw ^ (F32_SIGN_MASK if negate_b else 0)
-        _write_fp_result(hw, dst, b_eff, False)
+        _write_fp_result(hw, Reg.AL, b_eff, False)
         return
     if exp_b == 0 and (b_raw & F32_FRAC_MASK) == 0:
         return
@@ -414,7 +412,7 @@ def add_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL, negate_b: bool =
     else:
         diff_m = ma - mb
         if diff_m == 0:
-            _write_fp_result(hw, dst, 0, False)
+            _write_fp_result(hw, Reg.AL, 0, False)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             return
@@ -425,7 +423,7 @@ def add_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL, negate_b: bool =
             lzc += 1
         exp_r = exp_a - lzc
         if exp_r <= 0:
-            _write_fp_result(hw, dst, 0, False)
+            _write_fp_result(hw, Reg.AL, 0, False)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             return
@@ -437,20 +435,20 @@ def add_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL, negate_b: bool =
         return
 
     res_raw = (sign_r << 31) | ((exp_r & 0xFF) << 23) | frac
-    _write_fp_result(hw, dst, res_raw, False)
+    _write_fp_result(hw, Reg.AL, res_raw, False)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
 
 
-def sub_f32(hw: Hardware, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-    """Subtracts two IEEE-754 single-precision floats: dst <- dst - src (2 cycles)."""
-    add_f32(hw, dst=dst, src=src, negate_b=True)
+def sub_f32(hw: Hardware, src: Reg = Reg.BL):
+    """Subtracts two IEEE-754 single-precision floats: AL <- AL - src (2 cycles)."""
+    add_f32(hw, src=src, negate_b=True)
 
 
-def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool = False):
-    """Adds two IEEE-754 double-precision floats: dst <- dst + src (2 cycles)."""
+def add_f64(hw: Hardware, src: Reg = Reg.BX, negate_b: bool = False):
+    """Adds two IEEE-754 double-precision floats: AX <- AX + src (2 cycles)."""
     hw.clock.tick(2)
-    a_raw = _read_fp_operand(hw, dst, True)
+    a_raw = _read_fp_operand(hw, Reg.AX, True)
     b_raw = _read_fp_operand(hw, src, True)
 
     sign_a = (a_raw >> 63) & 1
@@ -460,7 +458,7 @@ def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool =
 
     if exp_a == 0 and (a_raw & F64_FRAC_MASK) == 0:
         b_eff = b_raw ^ (F64_SIGN_MASK if negate_b else 0)
-        _write_fp_result(hw, dst, b_eff, True)
+        _write_fp_result(hw, Reg.AX, b_eff, True)
         return
     if exp_b == 0 and (b_raw & F64_FRAC_MASK) == 0:
         return
@@ -489,7 +487,7 @@ def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool =
     else:
         diff_m = ma - mb
         if diff_m == 0:
-            _write_fp_result(hw, dst, 0, True)
+            _write_fp_result(hw, Reg.AX, 0, True)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             return
@@ -500,7 +498,7 @@ def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool =
             lzc += 1
         exp_r = exp_a - lzc
         if exp_r <= 0:
-            _write_fp_result(hw, dst, 0, True)
+            _write_fp_result(hw, Reg.AX, 0, True)
             hw.reg.set_flag(StatusFlag.ZERO, True)
             hw.reg.set_flag(StatusFlag.SIGN, False)
             return
@@ -512,11 +510,11 @@ def add_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX, negate_b: bool =
         return
 
     res_raw = (sign_r << 63) | ((exp_r & 0x7FF) << 52) | frac
-    _write_fp_result(hw, dst, res_raw, True)
+    _write_fp_result(hw, Reg.AX, res_raw, True)
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, sign_r == 1)
 
 
-def sub_f64(hw: Hardware, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-    """Subtracts two IEEE-754 double-precision floats: dst <- dst - src (2 cycles)."""
-    add_f64(hw, dst=dst, src=src, negate_b=True)
+def sub_f64(hw: Hardware, src: Reg = Reg.BX):
+    """Subtracts two IEEE-754 double-precision floats: AX <- AX - src (2 cycles)."""
+    add_f64(hw, src=src, negate_b=True)

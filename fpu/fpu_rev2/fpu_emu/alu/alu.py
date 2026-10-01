@@ -100,29 +100,29 @@ class Alu:
     # -------------------------------------------------------------------------
     # Bitwise Logic & Sign Manipulator API (AND, OR, XOR, NOT, CHS, ABS)
     # -------------------------------------------------------------------------
-    def and32(self, src: Reg, dst: Reg = Reg.AL):
-        logic.and32(self._hw, src, dst)
+    def and32(self, src: Reg):
+        logic.and32(self._hw, src)
 
-    def or32(self, src: Reg, dst: Reg = Reg.AL):
-        logic.or32(self._hw, src, dst)
+    def or32(self, src: Reg):
+        logic.or32(self._hw, src)
 
-    def xor32(self, src: Reg, dst: Reg = Reg.AL):
-        logic.xor32(self._hw, src, dst)
+    def xor32(self, src: Reg):
+        logic.xor32(self._hw, src)
 
-    def not32(self, dst: Reg = Reg.AL):
-        logic.not32(self._hw, dst)
+    def not32(self):
+        logic.not32(self._hw)
 
-    def and64(self, src: Reg, dst: Reg = Reg.AX):
-        logic.and64(self._hw, src, dst)
+    def and64(self, src: Reg):
+        logic.and64(self._hw, src)
 
-    def or64(self, src: Reg, dst: Reg = Reg.AX):
-        logic.or64(self._hw, src, dst)
+    def or64(self, src: Reg):
+        logic.or64(self._hw, src)
 
-    def xor64(self, src: Reg, dst: Reg = Reg.AX):
-        logic.xor64(self._hw, src, dst)
+    def xor64(self, src: Reg):
+        logic.xor64(self._hw, src)
 
-    def not64(self, dst: Reg = Reg.AX):
-        logic.not64(self._hw, dst)
+    def not64(self):
+        logic.not64(self._hw)
 
     def chs(self, reg: Reg = Reg.AH):
         logic.chs(self._hw, reg)
@@ -145,29 +145,29 @@ class Alu:
     def mul64(self, src: Reg = Reg.BX):
         booth_mul.mul64(self._hw, src)
 
-    def add_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-        fp_mul_div.add_f32(self._hw, dst, src)
+    def add_f32(self, src: Reg = Reg.BL):
+        fp_mul_div.add_f32(self._hw, src)
 
-    def sub_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-        fp_mul_div.sub_f32(self._hw, dst, src)
+    def sub_f32(self, src: Reg = Reg.BL):
+        fp_mul_div.sub_f32(self._hw, src)
 
-    def mul_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-        fp_mul_div.mul_f32(self._hw, dst, src)
+    def mul_f32(self, src: Reg = Reg.BL):
+        fp_mul_div.mul_f32(self._hw, src)
 
-    def div_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-        fp_mul_div.div_f32(self._hw, dst, src)
+    def div_f32(self, src: Reg = Reg.BL):
+        fp_mul_div.div_f32(self._hw, src)
 
-    def add_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-        fp_mul_div.add_f64(self._hw, dst, src)
+    def add_f64(self, src: Reg = Reg.BX):
+        fp_mul_div.add_f64(self._hw, src)
 
-    def sub_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-        fp_mul_div.sub_f64(self._hw, dst, src)
+    def sub_f64(self, src: Reg = Reg.BX):
+        fp_mul_div.sub_f64(self._hw, src)
 
-    def mul_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-        fp_mul_div.mul_f64(self._hw, dst, src)
+    def mul_f64(self, src: Reg = Reg.BX):
+        fp_mul_div.mul_f64(self._hw, src)
 
-    def div_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-        fp_mul_div.div_f64(self._hw, dst, src)
+    def div_f64(self, src: Reg = Reg.BX):
+        fp_mul_div.div_f64(self._hw, src)
 
     # -------------------------------------------------------------------------
     # 12-Bit Exponent ALU API (alu_exp12 / ieee754_exp)
@@ -209,9 +209,8 @@ class Alu:
         sign: Optional[int] = None,
         src_mantissa: Reg = Reg.AL,
         src_exp: Reg = Reg.EA,
-        dst: Reg = Reg.AL,
     ):
-        ieee754_exp.pack_f32(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
+        ieee754_exp.pack_f32(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp)
 
     def unpack_f64(
         self,
@@ -226,9 +225,8 @@ class Alu:
         sign: Optional[int] = None,
         src_mantissa: Reg = Reg.AX,
         src_exp: Reg = Reg.EA,
-        dst: Reg = Reg.AX,
     ):
-        ieee754_exp.pack_f64(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp, dst=dst)
+        ieee754_exp.pack_f64(self._hw, sign=sign, src_mantissa=src_mantissa, src_exp=src_exp)
 
     def swap(self, reg_a: Reg, reg_b: Reg):
         swap.swap(self._hw, reg_a=reg_a, reg_b=reg_b)
@@ -254,12 +252,12 @@ class Alu:
             self._hw.reg.eb = new_ea
         return is_odd
 
-    def sqrt_core32(self, is_odd: bool, dst: Reg = Reg.AL):
+    def sqrt_core32(self, is_odd: bool):
         res = fp_sqrt.sqrt_mantissa_core_f32(self._hw, is_odd=is_odd)
         self._hw.clock.tick(1)
-        self._hw.reg.set_res_bus(dst, Registers.from_int(res, 4))
+        self._hw.reg.set_res_bus(Reg.AL, Registers.from_int(res, 4))
 
-    def sqrt_core64(self, is_odd: bool, dst: Reg = Reg.AX):
+    def sqrt_core64(self, is_odd: bool):
         res = fp_sqrt.sqrt_mantissa_core_f64(self._hw, is_odd=is_odd)
         res_bytes = Registers.from_int(res, 8)
         self._hw.clock.tick(1)
@@ -282,8 +280,8 @@ class Alu:
     def exp_f64(self):
         fp_exp.exp_f64(self._hw)
 
-    def pow_f32(self, dst: Reg = Reg.AL, src: Reg = Reg.BL):
-        fp_pow.pow_f32(self._hw, dst=dst, src=src)
+    def pow_f32(self, src: Reg = Reg.BL):
+        fp_pow.pow_f32(self._hw, src=src)
 
-    def pow_f64(self, dst: Reg = Reg.AX, src: Reg = Reg.BX):
-        fp_pow.pow_f64(self._hw, dst=dst, src=src)
+    def pow_f64(self, src: Reg = Reg.BX):
+        fp_pow.pow_f64(self._hw, src=src)

@@ -137,7 +137,7 @@ def _eval_exp_frac_f32(hw: Hardware, f_raw: int) -> int:
     """Evaluates 2^f = exp(f * ln(2)) via ALU primitives (32-bit)."""
     _write32(hw, Reg.AL, f_raw)
     _write32(hw, Reg.BL, LN2_F32)
-    mul_f32(hw, Reg.AL, Reg.BL)
+    mul_f32(hw, Reg.BL)
     u_raw = _read32(hw, Reg.AL)
 
     term_raw = ONE_F32
@@ -145,14 +145,14 @@ def _eval_exp_frac_f32(hw: Hardware, f_raw: int) -> int:
     for n_raw in FACTS_F32:
         _write32(hw, Reg.AL, term_raw)
         _write32(hw, Reg.BL, u_raw)
-        mul_f32(hw, Reg.AL, Reg.BL)
+        mul_f32(hw, Reg.BL)
 
         _write32(hw, Reg.BL, n_raw)
-        div_f32(hw, Reg.AL, Reg.BL)
+        div_f32(hw, Reg.BL)
         term_raw = _read32(hw, Reg.AL)
 
         _write32(hw, Reg.BL, acc_raw)
-        add_f32(hw, Reg.AL, Reg.BL)
+        add_f32(hw, Reg.BL)
         acc_raw = _read32(hw, Reg.AL)
 
     return acc_raw
@@ -162,7 +162,7 @@ def _eval_exp_frac_f64(hw: Hardware, f_raw: int) -> int:
     """Evaluates 2^f = exp(f * ln(2)) via ALU primitives (64-bit)."""
     _write64(hw, Reg.AX, f_raw)
     _write64(hw, Reg.BX, LN2_F64)
-    mul_f64(hw, Reg.AX, Reg.BX)
+    mul_f64(hw, Reg.BX)
     u_raw = _read64(hw, Reg.AX)
 
     term_raw = ONE_F64
@@ -170,14 +170,14 @@ def _eval_exp_frac_f64(hw: Hardware, f_raw: int) -> int:
     for n_raw in FACTS_F64:
         _write64(hw, Reg.AX, term_raw)
         _write64(hw, Reg.BX, u_raw)
-        mul_f64(hw, Reg.AX, Reg.BX)
+        mul_f64(hw, Reg.BX)
 
         _write64(hw, Reg.BX, n_raw)
-        div_f64(hw, Reg.AX, Reg.BX)
+        div_f64(hw, Reg.BX)
         term_raw = _read64(hw, Reg.AX)
 
         _write64(hw, Reg.BX, acc_raw)
-        add_f64(hw, Reg.AX, Reg.BX)
+        add_f64(hw, Reg.BX)
         acc_raw = _read64(hw, Reg.AX)
 
     return acc_raw
@@ -246,7 +246,7 @@ def exp_f32(hw: Hardware):
 
     # Range reduction: t = x * log2(e)
     _write32(hw, Reg.BL, LOG2E_F32)
-    mul_f32(hw, Reg.AL, Reg.BL)
+    mul_f32(hw, Reg.BL)
     t_raw = _read32(hw, Reg.AL)
 
     sign_t = (t_raw >> 31) & 1
@@ -262,7 +262,7 @@ def exp_f32(hw: Hardware):
             k = -1
             _write32(hw, Reg.AL, t_raw)
             _write32(hw, Reg.BL, ONE_F32)
-            add_f32(hw, Reg.AL, Reg.BL)
+            add_f32(hw, Reg.BL)
             f_raw = _read32(hw, Reg.AL)
     else:
         mant = frac_t | 0x800000
@@ -279,7 +279,7 @@ def exp_f32(hw: Hardware):
         k_f32_raw = _int_to_f32(hw, k)
         _write32(hw, Reg.AL, t_raw)
         _write32(hw, Reg.BL, k_f32_raw)
-        sub_f32(hw, Reg.AL, Reg.BL)
+        sub_f32(hw, Reg.BL)
         f_raw = _read32(hw, Reg.AL)
 
     # Overflow / Underflow bounds check for F32
@@ -377,7 +377,7 @@ def exp_f64(hw: Hardware):
 
     # Range reduction: t = x * log2(e)
     _write64(hw, Reg.BX, LOG2E_F64)
-    mul_f64(hw, Reg.AX, Reg.BX)
+    mul_f64(hw, Reg.BX)
     t_raw = _read64(hw, Reg.AX)
 
     sign_t = (t_raw >> 63) & 1
@@ -393,7 +393,7 @@ def exp_f64(hw: Hardware):
             k = -1
             _write64(hw, Reg.AX, t_raw)
             _write64(hw, Reg.BX, ONE_F64)
-            add_f64(hw, Reg.AX, Reg.BX)
+            add_f64(hw, Reg.BX)
             f_raw = _read64(hw, Reg.AX)
     else:
         mant = frac_t | 0x0010000000000000
@@ -410,7 +410,7 @@ def exp_f64(hw: Hardware):
         k_f64_raw = _int_to_f64(hw, k)
         _write64(hw, Reg.AX, t_raw)
         _write64(hw, Reg.BX, k_f64_raw)
-        sub_f64(hw, Reg.AX, Reg.BX)
+        sub_f64(hw, Reg.BX)
         f_raw = _read64(hw, Reg.AX)
 
     # Overflow / Underflow bounds check for F64

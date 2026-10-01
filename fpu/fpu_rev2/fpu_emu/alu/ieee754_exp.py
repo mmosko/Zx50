@@ -337,9 +337,8 @@ def pack_f32(
     sign: Optional[int] = None,
     src_mantissa: Reg = Reg.AL,
     src_exp: Reg = Reg.EA,
-    dst: Reg = Reg.AL,
 ):
-    """Packs sign, exponent, and mantissa into IEEE-754 single-precision float in `dst` (1 cycle)."""
+    """Packs sign, exponent, and mantissa into IEEE-754 single-precision float in AL (1 cycle)."""
     hw.clock.tick(1)
     exp = hw.reg.ea if src_exp == Reg.EA else hw.reg.eb
     if src_mantissa == Reg.AL:
@@ -357,7 +356,7 @@ def pack_f32(
     sign_val = sign if sign is not None else (hw.reg.sign_a if hw.reg.sign_res == 0 else hw.reg.sign_res)
 
     if exp <= 0 or mantissa_raw == 0:
-        hw.reg.set_res_bus(dst, Registers.from_int(0, 4))
+        hw.reg.set_res_bus(Reg.AL, Registers.from_int(0, 4))
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -371,7 +370,7 @@ def pack_f32(
     sign_bit = (sign_val & 1) << 31
 
     packed = sign_bit | (exp_clamped << 23) | mantissa
-    hw.reg.set_res_bus(dst, Registers.from_int(packed, 4))
+    hw.reg.set_res_bus(Reg.AL, Registers.from_int(packed, 4))
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, bool(sign_val & 1))
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -447,9 +446,8 @@ def pack_f64(
     sign: Optional[int] = None,
     src_mantissa: Reg = Reg.AX,
     src_exp: Reg = Reg.EA,
-    dst: Reg = Reg.AX,
 ):
-    """Packs sign, exponent, and mantissa into IEEE-754 double-precision float in `dst` (2 cycles)."""
+    """Packs sign, exponent, and mantissa into IEEE-754 double-precision float in AX (2 cycles)."""
     hw.clock.tick(1)
     exp = hw.reg.ea if src_exp == Reg.EA else hw.reg.eb
     if src_mantissa == Reg.AX:
@@ -469,13 +467,10 @@ def pack_f64(
 
     sign_val = sign if sign is not None else (hw.reg.sign_a if hw.reg.sign_res == 0 else hw.reg.sign_res)
 
-    dst_lo = Reg.AL if dst == Reg.AX else Reg.BL
-    dst_hi = Reg.AH if dst == Reg.AX else Reg.BH
-
     if exp <= 0 or mantissa_raw == 0:
-        hw.reg.set_res_bus(dst_lo, Registers.from_int(0, 4))
+        hw.reg.set_res_bus(Reg.AL, Registers.from_int(0, 4))
         hw.clock.tick(1)
-        hw.reg.set_res_bus(dst_hi, Registers.from_int(0, 4))
+        hw.reg.set_res_bus(Reg.AH, Registers.from_int(0, 4))
         hw.reg.set_flag(StatusFlag.ZERO, True)
         hw.reg.set_flag(StatusFlag.SIGN, False)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
@@ -490,9 +485,9 @@ def pack_f64(
 
     packed = sign_bit | (exp_clamped << 52) | mantissa
     packed_bytes = Registers.from_int(packed, 8)
-    hw.reg.set_res_bus(dst_lo, packed_bytes[0:4])
+    hw.reg.set_res_bus(Reg.AL, packed_bytes[0:4])
     hw.clock.tick(1)
-    hw.reg.set_res_bus(dst_hi, packed_bytes[4:8])
+    hw.reg.set_res_bus(Reg.AH, packed_bytes[4:8])
     hw.reg.set_flag(StatusFlag.ZERO, False)
     hw.reg.set_flag(StatusFlag.SIGN, bool(sign_val & 1))
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)

@@ -134,17 +134,10 @@ def _select_hb(hw: Hardware, src: Reg, half: Optional[HalfSelect] = None):
         raise ValueError(f"Invalid source register for HB_BUS: {src}")
 
 
-def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
-    """Executes a 32-bit bitwise logic operation taking 1 clock cycle."""
-    if dst == Reg.AL:
-        ha_half = HalfSelect.LO
-    elif dst == Reg.AH:
-        ha_half = HalfSelect.HI
-    else:
-        raise ValueError(f"Invalid 32-bit logic destination register: {dst}")
-
+def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg]):
+    """Executes a 32-bit bitwise logic operation on AL taking 1 clock cycle."""
     hw.clock.tick(1)
-    hw.reg.set_ha_bus_mux(ha_half)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
     a_bytes = hw.reg.read_ha_bus()
 
     if op != LogicOp.NOT:
@@ -157,17 +150,15 @@ def _apply_logic32(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
 
     res_bytes, zf, sf = logic_core(a_bytes, b_bytes, op, width_bytes=WIDTH_32_BYTES)
 
-    hw.reg.set_res_bus(dst, res_bytes)
+    hw.reg.set_res_bus(Reg.AL, res_bytes)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
     hw.reg.set_flag(StatusFlag.SIGN, sf)
     hw.reg.set_flag(StatusFlag.CARRY, False)
     hw.reg.set_flag(StatusFlag.OVERFLOW, False)
 
 
-def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
-    """Executes a 64-bit bitwise logic operation taking 2 clock cycles."""
-    if dst != Reg.AX:
-        raise ValueError(f"Invalid 64-bit logic destination register: {dst}")
+def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg]):
+    """Executes a 64-bit bitwise logic operation on AX taking 2 clock cycles."""
     if op != LogicOp.NOT and (src is None or src not in VALID_SRC_64):
         raise ValueError(f"Invalid 64-bit logic source register: {src}")
 
@@ -204,47 +195,47 @@ def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
 # -----------------------------------------------------------------------------
 # 32-Bit Micro-Operations (1 cycle)
 # -----------------------------------------------------------------------------
-def and32(hw: Hardware, src: Reg, dst: Reg = Reg.AL):
+def and32(hw: Hardware, src: Reg):
     """AND AL, src (1 cycle)."""
-    _apply_logic32(hw, LogicOp.AND, src, dst)
+    _apply_logic32(hw, LogicOp.AND, src)
 
 
-def or32(hw: Hardware, src: Reg, dst: Reg = Reg.AL):
+def or32(hw: Hardware, src: Reg):
     """OR AL, src (1 cycle)."""
-    _apply_logic32(hw, LogicOp.OR, src, dst)
+    _apply_logic32(hw, LogicOp.OR, src)
 
 
-def xor32(hw: Hardware, src: Reg, dst: Reg = Reg.AL):
+def xor32(hw: Hardware, src: Reg):
     """XOR AL, src (1 cycle)."""
-    _apply_logic32(hw, LogicOp.XOR, src, dst)
+    _apply_logic32(hw, LogicOp.XOR, src)
 
 
-def not32(hw: Hardware, dst: Reg = Reg.AL):
+def not32(hw: Hardware):
     """NOT AL (1 cycle)."""
-    _apply_logic32(hw, LogicOp.NOT, None, dst)
+    _apply_logic32(hw, LogicOp.NOT, None)
 
 
 # -----------------------------------------------------------------------------
 # 64-Bit Micro-Operations (2 cycles)
 # -----------------------------------------------------------------------------
-def and64(hw: Hardware, src: Reg, dst: Reg = Reg.AX):
+def and64(hw: Hardware, src: Reg):
     """AND AX, src (2 cycles)."""
-    _apply_logic64(hw, LogicOp.AND, src, dst)
+    _apply_logic64(hw, LogicOp.AND, src)
 
 
-def or64(hw: Hardware, src: Reg, dst: Reg = Reg.AX):
+def or64(hw: Hardware, src: Reg):
     """OR AX, src (2 cycles)."""
-    _apply_logic64(hw, LogicOp.OR, src, dst)
+    _apply_logic64(hw, LogicOp.OR, src)
 
 
-def xor64(hw: Hardware, src: Reg, dst: Reg = Reg.AX):
+def xor64(hw: Hardware, src: Reg):
     """XOR AX, src (2 cycles)."""
-    _apply_logic64(hw, LogicOp.XOR, src, dst)
+    _apply_logic64(hw, LogicOp.XOR, src)
 
 
-def not64(hw: Hardware, dst: Reg = Reg.AX):
+def not64(hw: Hardware):
     """NOT AX (2 cycles)."""
-    _apply_logic64(hw, LogicOp.NOT, None, dst)
+    _apply_logic64(hw, LogicOp.NOT, None)
 
 
 # -----------------------------------------------------------------------------

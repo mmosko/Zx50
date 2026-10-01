@@ -136,22 +136,22 @@ def _eval_ln_m_f32(hw: Hardware, m_raw: int) -> int:
     """Evaluates ln(M) for M in [1.0, 2.0) via ALU primitives (32-bit)."""
     _write32(hw, Reg.AL, m_raw)
     _write32(hw, Reg.BL, ONE_F32)
-    sub_f32(hw, Reg.AL, Reg.BL)
+    sub_f32(hw, Reg.BL)
     num_raw = _read32(hw, Reg.AL)
 
     _write32(hw, Reg.AL, m_raw)
     _write32(hw, Reg.BL, ONE_F32)
-    add_f32(hw, Reg.AL, Reg.BL)
+    add_f32(hw, Reg.BL)
     den_raw = _read32(hw, Reg.AL)
 
     _write32(hw, Reg.AL, num_raw)
     _write32(hw, Reg.BL, den_raw)
-    div_f32(hw, Reg.AL, Reg.BL)
+    div_f32(hw, Reg.BL)
     z_raw = _read32(hw, Reg.AL)
 
     _write32(hw, Reg.AL, z_raw)
     _write32(hw, Reg.BL, z_raw)
-    mul_f32(hw, Reg.AL, Reg.BL)
+    mul_f32(hw, Reg.BL)
     z2_raw = _read32(hw, Reg.AL)
 
     term_raw = z_raw
@@ -159,17 +159,17 @@ def _eval_ln_m_f32(hw: Hardware, m_raw: int) -> int:
     for d_raw in DENOMS_F32:
         _write32(hw, Reg.AL, term_raw)
         _write32(hw, Reg.BL, z2_raw)
-        mul_f32(hw, Reg.AL, Reg.BL)
+        mul_f32(hw, Reg.BL)
         term_raw = _read32(hw, Reg.AL)
 
         _write32(hw, Reg.AL, term_raw)
         _write32(hw, Reg.BL, d_raw)
-        div_f32(hw, Reg.AL, Reg.BL)
+        div_f32(hw, Reg.BL)
         term_k_raw = _read32(hw, Reg.AL)
 
         _write32(hw, Reg.AL, acc_raw)
         _write32(hw, Reg.BL, term_k_raw)
-        add_f32(hw, Reg.AL, Reg.BL)
+        add_f32(hw, Reg.BL)
         acc_raw = _read32(hw, Reg.AL)
 
     if acc_raw != 0:
@@ -182,22 +182,22 @@ def _eval_ln_m_f64(hw: Hardware, m_raw: int) -> int:
     """Evaluates ln(M) for M in [1.0, 2.0) via ALU primitives (64-bit)."""
     _write64(hw, Reg.AX, m_raw)
     _write64(hw, Reg.BX, ONE_F64)
-    sub_f64(hw, Reg.AX, Reg.BX)
+    sub_f64(hw, Reg.BX)
     num_raw = _read64(hw, Reg.AX)
 
     _write64(hw, Reg.AX, m_raw)
     _write64(hw, Reg.BX, ONE_F64)
-    add_f64(hw, Reg.AX, Reg.BX)
+    add_f64(hw, Reg.BX)
     den_raw = _read64(hw, Reg.AX)
 
     _write64(hw, Reg.AX, num_raw)
     _write64(hw, Reg.BX, den_raw)
-    div_f64(hw, Reg.AX, Reg.BX)
+    div_f64(hw, Reg.BX)
     z_raw = _read64(hw, Reg.AX)
 
     _write64(hw, Reg.AX, z_raw)
     _write64(hw, Reg.BX, z_raw)
-    mul_f64(hw, Reg.AX, Reg.BX)
+    mul_f64(hw, Reg.BX)
     z2_raw = _read64(hw, Reg.AX)
 
     term_raw = z_raw
@@ -205,17 +205,17 @@ def _eval_ln_m_f64(hw: Hardware, m_raw: int) -> int:
     for d_raw in DENOMS_F64:
         _write64(hw, Reg.AX, term_raw)
         _write64(hw, Reg.BX, z2_raw)
-        mul_f64(hw, Reg.AX, Reg.BX)
+        mul_f64(hw, Reg.BX)
         term_raw = _read64(hw, Reg.AX)
 
         _write64(hw, Reg.AX, term_raw)
         _write64(hw, Reg.BX, d_raw)
-        div_f64(hw, Reg.AX, Reg.BX)
+        div_f64(hw, Reg.BX)
         term_k_raw = _read64(hw, Reg.AX)
 
         _write64(hw, Reg.AX, acc_raw)
         _write64(hw, Reg.BX, term_k_raw)
-        add_f64(hw, Reg.AX, Reg.BX)
+        add_f64(hw, Reg.BX)
         acc_raw = _read64(hw, Reg.AX)
 
     if acc_raw != 0:
@@ -290,12 +290,12 @@ def ln_f32(hw: Hardware):
         e_f32_raw = _int_to_f32(hw, e_int)
         _write32(hw, Reg.AL, e_f32_raw)
         _write32(hw, Reg.BL, LN2_F32)
-        mul_f32(hw, Reg.AL, Reg.BL)
+        mul_f32(hw, Reg.BL)
         e_ln2_raw = _read32(hw, Reg.AL)
 
         _write32(hw, Reg.AL, e_ln2_raw)
         _write32(hw, Reg.BL, ln_m_raw)
-        add_f32(hw, Reg.AL, Reg.BL)
+        add_f32(hw, Reg.BL)
         res_raw = _read32(hw, Reg.AL)
     else:
         res_raw = ln_m_raw
@@ -361,12 +361,12 @@ def ln_f64(hw: Hardware):
         e_f64_raw = _int_to_f64(hw, e_int)
         _write64(hw, Reg.AX, e_f64_raw)
         _write64(hw, Reg.BX, LN2_F64)
-        mul_f64(hw, Reg.AX, Reg.BX)
+        mul_f64(hw, Reg.BX)
         e_ln2_raw = _read64(hw, Reg.AX)
 
         _write64(hw, Reg.AX, e_ln2_raw)
         _write64(hw, Reg.BX, ln_m_raw)
-        add_f64(hw, Reg.AX, Reg.BX)
+        add_f64(hw, Reg.BX)
         res_raw = _read64(hw, Reg.AX)
     else:
         res_raw = ln_m_raw

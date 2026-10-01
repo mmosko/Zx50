@@ -18,8 +18,6 @@ from fpu_emu.alu.logic import (
     abs_val,
     abs_int32,
     abs_int64,
-    _apply_logic32,
-    _apply_logic64,
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
@@ -356,26 +354,17 @@ def test_logic_core_error_paths():
         logic_core(bytearray(4), bytearray(4), cast(LogicOp, "UNKNOWN"), width_bytes=4)
 
 
-def test_logic_invalid_dst_registers():
-    hw = Hardware()
-    with pytest.raises(ValueError):
-        _apply_logic32(hw, LogicOp.AND, Reg.BL, dst=Reg.AX)
-
-    with pytest.raises(ValueError):
-        _apply_logic64(hw, LogicOp.AND, Reg.BX, dst=Reg.AL)
-
-
 def test_or64_xor64_not64():
     hw = Hardware()
     reg = RegTestHarness(hw.reg)
     reg.set(Reg.AX, Registers.from_int(0x00000000FFFFFFFF, 8))
     reg.set(Reg.BX, Registers.from_int(0xFFFFFFFF00000000, 8))
 
-    or64(hw, src=Reg.BX, dst=Reg.AX)
+    or64(hw, src=Reg.BX)
     assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFFFFFFFFFF
 
-    xor64(hw, src=Reg.BX, dst=Reg.AX)
+    xor64(hw, src=Reg.BX)
     assert Registers.to_int(reg.peek(Reg.AX)) == 0x00000000FFFFFFFF
 
-    not64(hw, dst=Reg.AX)
+    not64(hw)
     assert Registers.to_int(reg.peek(Reg.AX)) == 0xFFFFFFFF00000000

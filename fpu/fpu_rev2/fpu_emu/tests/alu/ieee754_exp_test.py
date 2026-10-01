@@ -278,7 +278,7 @@ def test_f32_unpack_and_pack_positive():
     assert Registers.to_int(reg.peek(Reg.AL)) == 0x80000000
 
     # Pack back
-    pack_f32(hw, sign=sign, src_mantissa=Reg.AL, src_exp=Reg.EA, dst=Reg.AL)
+    pack_f32(hw, sign=sign, src_mantissa=Reg.AL, src_exp=Reg.EA)
     assert Registers.to_f32(reg.peek(Reg.AL)) == 1.0
 
 
@@ -295,8 +295,8 @@ def test_f32_unpack_and_pack_negative():
     # Hidden bit inserted and left-justified: (0x800000 | 0x200000) << 8 = 0xA0000000
     assert Registers.to_int(reg.peek(Reg.BL)) == 0xA0000000
 
-    pack_f32(hw, sign=sign, src_mantissa=Reg.BL, src_exp=Reg.EB, dst=Reg.BL)
-    assert Registers.to_f32(reg.peek(Reg.BL)) == -2.5
+    pack_f32(hw, sign=sign, src_mantissa=Reg.BL, src_exp=Reg.EB)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == -2.5
 
 
 def test_f64_unpack_and_pack():
@@ -310,7 +310,7 @@ def test_f64_unpack_and_pack():
     assert hw.reg.ea == 1024  # Floor(log2(3.1415...)) = 1 -> exp = 1023 + 1 = 1024
 
     # Pack back
-    pack_f64(hw, sign=sign, src_mantissa=Reg.AX, src_exp=Reg.EA, dst=Reg.AX)
+    pack_f64(hw, sign=sign, src_mantissa=Reg.AX, src_exp=Reg.EA)
     assert Registers.to_f64(reg.peek(Reg.AX)) == -3.141592653589793
 
 
@@ -380,7 +380,7 @@ def test_pack_f32_default_sign_from_sign_a(val_float, expected_sign_bit):
     assert hw.reg.sign_a == expected_sign_bit
 
     # Pack without explicit sign parameter (as microcode does)
-    pack_f32(hw, src_mantissa=Reg.AL, src_exp=Reg.EA, dst=Reg.AL)
+    pack_f32(hw, src_mantissa=Reg.AL, src_exp=Reg.EA)
     result = Registers.to_f32(reg.peek(Reg.AL))
     assert result == val_float
 
@@ -404,7 +404,7 @@ def test_pack_f64_default_sign_from_sign_a(val_float, expected_sign_bit):
     assert hw.reg.sign_a == expected_sign_bit
 
     # Pack without explicit sign parameter
-    pack_f64(hw, src_mantissa=Reg.AX, src_exp=Reg.EA, dst=Reg.AX)
+    pack_f64(hw, src_mantissa=Reg.AX, src_exp=Reg.EA)
     result = Registers.to_f64(reg.peek(Reg.AX))
     assert result == val_float
 
