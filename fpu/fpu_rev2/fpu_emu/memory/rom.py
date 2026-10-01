@@ -5,7 +5,7 @@ Direct member variable manipulation is discouraged; callers must use the public 
 """
 
 import os
-from typing import Optional, Union
+from typing import Optional
 
 ROM_SIZE = 32768  # 32 KB active region for CA[14:0]
 

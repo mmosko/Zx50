@@ -15,7 +15,7 @@ from typing import Tuple
 from fpu_emu.alu.booth_mul import booth_core, WIDTH_32_BYTES, WIDTH_64_BYTES
 from fpu_emu.alu.ieee754_exp import BIAS_F32, BIAS_F64
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, Registers
+from fpu_emu.memory.registers import HalfSelect, Reg, Registers
 
 # Fixed-point constant 3.0 in Q3.29 (F32) and Q3.61 (F64)
 # In Q3.29: 3 << 29 = 0x6000_0000
@@ -78,7 +78,8 @@ def sqrt_mantissa_core_f32(hw: Hardware, is_odd: bool) -> int:
     :param is_odd: Parity of unbiased exponent.
     :return: 32-bit left-justified normalized mantissa (bit 31 = 1).
     """
-    mant32 = Registers.to_int(hw.reg._al)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    mant32 = Registers.to_int(hw.reg.read_ha_bus())
     mant29 = mant32 >> 2
 
     # 1. Fetch seed from Flash ROM table (2 cycles)
@@ -169,7 +170,11 @@ def sqrt_mantissa_core_f64(hw: Hardware, is_odd: bool) -> int:
     :param is_odd: Parity of unbiased exponent.
     :return: 64-bit left-justified normalized mantissa (bit 63 = 1).
     """
-    mant64 = Registers.to_int(bytearray(hw.reg._al) + bytearray(hw.reg._ah))
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    lo = hw.reg.read_ha_bus()
+    hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+    hi = hw.reg.read_hb_bus()
+    mant64 = Registers.to_int(lo + hi)
     mant61 = mant64 >> 2
 
     # 1. Fetch seed from Flash ROM table (2 cycles)

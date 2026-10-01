@@ -7,6 +7,7 @@ from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
 from fpu_emu.tests.testharness import RegTestHarness
+from fpu_emu.micro_opcodes import MicroInstruction, MicroOp
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -62,6 +63,7 @@ def test_add_i32_immediate_execution():
 
     start_cycles = hw.clock.cycles
     disp.execute(UserOpcode.ADD_I32)
+    assert hw.clock.cycles > start_cycles
 
     # Stack should now have 1 item (result = 40)
     assert hw.reg.sp == 4
@@ -366,7 +368,6 @@ def test_sub_f64_execution(val_a, val_b, expected, desc):
 # =============================================================================
 # Additional Dispatcher Edge Cases & 64-bit Coverage
 # =============================================================================
-from fpu_emu.micro_opcodes import MicroInstruction, MicroOp
 
 
 def test_dispatcher_bwait_n():

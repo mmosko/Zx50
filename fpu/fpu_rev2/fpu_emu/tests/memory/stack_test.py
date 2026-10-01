@@ -1,6 +1,5 @@
 """Unit tests for SysMEM hardware stack operations."""
 
-import pytest
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory import stack
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers

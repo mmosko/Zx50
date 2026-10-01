@@ -3,7 +3,8 @@
 import unittest
 from fpu_emu.clock import Clock
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag
+from fpu_emu.memory.registers import Reg
+from fpu_emu.tests.testharness import RegTestHarness
 
 
 class TestClock(unittest.TestCase):
@@ -36,7 +37,6 @@ class TestClock(unittest.TestCase):
             clk.tick(-1)
 
 
-from fpu_emu.tests.testharness import RegTestHarness
 
 
 class TestHardware(unittest.TestCase):

@@ -1,6 +1,5 @@
 """Unit tests for fp_mul_div.py (IEEE-754 single and double precision multiplication and division)."""
 
-import math
 import pytest
 from fpu_emu.alu import fp_mul_div
 from fpu_emu.hardware import Hardware

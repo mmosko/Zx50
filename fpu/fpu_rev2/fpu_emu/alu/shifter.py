@@ -139,33 +139,41 @@ def _apply_shift32(hw: Hardware, op: ShiftOp, shift: Optional[int], reg: Reg):
 
 def _apply_shift64(hw: Hardware, op: ShiftOp, shift: Optional[int], reg: Reg):
     """Executes a 64-bit compound shift on `reg` (default AX) taking 2 clock cycles."""
+    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
+    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
+
+    # Cycle 1:
+    hw.clock.tick(1)
     if reg == Reg.AX:
-        lo_bytes = bytearray(hw.reg._al)
-        hi_bytes = bytearray(hw.reg._ah)
-    elif reg == Reg.BX:
-        lo_bytes = bytearray(hw.reg._bl)
-        hi_bytes = bytearray(hw.reg._bh)
-    elif reg == Reg.DX:
-        lo_bytes = bytearray(hw.reg._dl)
-        hi_bytes = bytearray(hw.reg._dh)
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        lo_bytes = hw.reg.read_ha_bus()
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+        hi_bytes = hw.reg.read_hb_bus()
     else:
-        lo_bytes = bytearray(hw.reg._fl)
-        hi_bytes = bytearray(hw.reg._fh)
+        # Read low half in cycle 1
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, reg)
+        lo_bytes = hw.reg.read_hb_bus()
+        # Read high half in cycle 2
+        hw.clock.tick(1)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+        hi_bytes = hw.reg.read_hb_bus()
 
     val_bytes = lo_bytes + hi_bytes
     shift_count = shift if shift is not None else hw.reg.c
     res_bytes, cf, zf, sf, vf = shifter_core(val_bytes, shift_count, op, width_bytes=8)
 
-    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
-    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
-
-    # Cycle 1: Latch LO
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(lo_reg, res_bytes[:4])
-
-    # Cycle 2: Latch HI
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(hi_reg, res_bytes[4:])
+    if reg == Reg.AX:
+        # Cycle 1 writeback: AL
+        hw.reg.set_res_bus(Reg.AL, res_bytes[:4])
+        # Cycle 2 writeback: AH
+        hw.clock.tick(1)
+        hw.reg.set_res_bus(Reg.AH, res_bytes[4:])
+    else:
+        # Cycle 2 writeback: LO half
+        hw.reg.set_res_bus(lo_reg, res_bytes[:4])
+        # Cycle 3 writeback: HI half
+        hw.clock.tick(1)
+        hw.reg.set_res_bus(hi_reg, res_bytes[4:])
 
     hw.reg.set_flag(StatusFlag.CARRY, cf)
     hw.reg.set_flag(StatusFlag.ZERO, zf)
@@ -235,18 +243,22 @@ def rrc64(hw: Hardware, reg: Reg = Reg.AX):
     Shifts 64-bit reg right by 1 bit, with incoming CF shifting into bit 63.
     Sets outgoing CF <- reg[0].
     """
+    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
+    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
+
+    # Cycle 1:
+    hw.clock.tick(1)
     if reg == Reg.AX:
-        lo_bytes = bytearray(hw.reg._al)
-        hi_bytes = bytearray(hw.reg._ah)
-    elif reg == Reg.BX:
-        lo_bytes = bytearray(hw.reg._bl)
-        hi_bytes = bytearray(hw.reg._bh)
-    elif reg == Reg.DX:
-        lo_bytes = bytearray(hw.reg._dl)
-        hi_bytes = bytearray(hw.reg._dh)
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        lo_bytes = hw.reg.read_ha_bus()
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+        hi_bytes = hw.reg.read_hb_bus()
     else:
-        lo_bytes = bytearray(hw.reg._fl)
-        hi_bytes = bytearray(hw.reg._fh)
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, reg)
+        lo_bytes = hw.reg.read_hb_bus()
+        hw.clock.tick(1)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, reg)
+        hi_bytes = hw.reg.read_hb_bus()
 
     val = Registers.to_int(lo_bytes + hi_bytes)
     in_carry = 1 if hw.reg.get_flag(StatusFlag.CARRY) else 0
@@ -254,16 +266,16 @@ def rrc64(hw: Hardware, reg: Reg = Reg.AX):
     res = (in_carry << 63) | (val >> 1)
     res_bytes = Registers.from_int(res, 8)
 
-    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
-    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
-
-    # Cycle 1: Latch LO
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(lo_reg, res_bytes[:4])
-
-    # Cycle 2: Latch HI
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(hi_reg, res_bytes[4:])
+    if reg == Reg.AX:
+        # Cycle 1 writeback: AL
+        hw.reg.set_res_bus(Reg.AL, res_bytes[:4])
+        # Cycle 2 writeback: AH
+        hw.clock.tick(1)
+        hw.reg.set_res_bus(Reg.AH, res_bytes[4:])
+    else:
+        hw.reg.set_res_bus(lo_reg, res_bytes[:4])
+        hw.clock.tick(1)
+        hw.reg.set_res_bus(hi_reg, res_bytes[4:])
 
     hw.reg.set_flag(StatusFlag.CARRY, out_carry)
     hw.reg.set_flag(StatusFlag.ZERO, res == 0)

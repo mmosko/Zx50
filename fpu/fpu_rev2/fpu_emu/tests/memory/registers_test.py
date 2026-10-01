@@ -4,7 +4,6 @@ import unittest
 from fpu_emu.clock import Clock
 from fpu_emu.memory.registers import (
     HalfSelect,
-    HardwareAccessViolationError,
     HardwareBusError,
     HardwareTimingConflictError,
     Reg,

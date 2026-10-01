@@ -4,3 +4,4 @@ syn/*
 !syn/.git*
 .coverage
 .coveragerc
+!*.txt

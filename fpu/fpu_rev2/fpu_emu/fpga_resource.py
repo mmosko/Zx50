@@ -144,7 +144,7 @@ class FpgaResourceRegistry:
 
         lines.extend([
             "",
-            f"**Total Dedicated / Shared Hardware:**",
+            "**Total Dedicated / Shared Hardware:**",
             f"- **LUT4s:** {tot_luts} / {MACHXO2_2000_MAX_LUTS} ({tot_luts / MACHXO2_2000_MAX_LUTS * 100:.1f}%)",
             f"- **Carry Slices (CCU2C):** {tot_slices} / {MACHXO2_2000_MAX_SLICES} ({tot_slices / MACHXO2_2000_MAX_SLICES * 100:.1f}%)",
             f"- **Flip-Flops (FF):** {tot_ffs} / {MACHXO2_2000_MAX_FFS} ({tot_ffs / MACHXO2_2000_MAX_FFS * 100:.1f}%)",

@@ -1,14 +1,8 @@
 """Unit tests for FPGA resource accounting, decorators, and constraint validation."""
 
-import pytest
 from fpu_emu.fpga_resource import (
-    FpgaResource,
     FpgaResourceRegistry,
     fpga_resource,
-    MACHXO2_2000_MAX_LUTS,
-    MACHXO2_2000_MAX_FFS,
-    MACHXO2_2000_MAX_EBR_BLOCKS,
-    MACHXO2_2000_MAX_DSP,
 )
 
 
@@ -31,7 +25,7 @@ def test_fpga_resource_decorator():
         pass
 
     assert hasattr(dummy_adder, "__fpga_resource__")
-    res = dummy_adder.__fpga_resource__
+    res = getattr(dummy_adder, "__fpga_resource__")
     assert res.luts == 23
     assert res.slices_ccu2c == 16
     assert res.ffs == 4

@@ -215,14 +215,17 @@ def exp_diff(hw: Hardware, reg: Reg = Reg.AL):
     hw.clock.tick(1)
     _, shift_count, borrow = exp_core_diff(hw.reg.ea, hw.reg.eb)
     if hw.reg.ea == hw.reg.eb:
-        reg_b = Reg.BX if reg in (Reg.AX, Reg.BX) else Reg.BL
         reg_a = Reg.AX if reg in (Reg.AX, Reg.BX) else Reg.AL
         if reg_a == Reg.AX:
-            val_a = Registers.to_int(bytearray(hw.reg._al) + bytearray(hw.reg._ah))
-            val_b = Registers.to_int(bytearray(hw.reg._bl) + bytearray(hw.reg._bh))
+            hw.reg.set_ha_bus_mux(HalfSelect.HI)
+            val_a = Registers.to_int(hw.reg.read_ha_bus())
+            hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.BX)
+            val_b = Registers.to_int(hw.reg.read_hb_bus())
         else:
-            val_a = Registers.to_int(bytearray(hw.reg._al))
-            val_b = Registers.to_int(bytearray(hw.reg._bl))
+            hw.reg.set_ha_bus_mux(HalfSelect.LO)
+            val_a = Registers.to_int(hw.reg.read_ha_bus())
+            hw.reg.set_hb_bus_mux(HalfSelect.LO, Reg.BL)
+            val_b = Registers.to_int(hw.reg.read_hb_bus())
         borrow = val_a < val_b
     hw.reg.c = shift_count
     hw.reg.set_flag(StatusFlag.CARRY, borrow)
@@ -395,11 +398,16 @@ def unpack_f64(
     """
     hw.clock.tick(1)
     if src == Reg.AX:
-        raw_lo = Registers.to_int(hw.reg._al)
-        raw_hi = Registers.to_int(hw.reg._ah)
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        raw_lo = Registers.to_int(hw.reg.read_ha_bus())
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+        raw_hi = Registers.to_int(hw.reg.read_hb_bus())
     elif src == Reg.BX:
-        raw_lo = Registers.to_int(hw.reg._bl)
-        raw_hi = Registers.to_int(hw.reg._bh)
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, Reg.BX)
+        raw_lo = Registers.to_int(hw.reg.read_hb_bus())
+        hw.clock.tick(1)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.BX)
+        raw_hi = Registers.to_int(hw.reg.read_hb_bus())
     else:
         raw_lo, raw_hi = 0, 0
 
@@ -449,11 +457,16 @@ def pack_f64(
     hw.clock.tick(1)
     exp = hw.reg.ea if src_exp == Reg.EA else hw.reg.eb
     if src_mantissa == Reg.AX:
-        mant_lo = Registers.to_int(hw.reg._al)
-        mant_hi = Registers.to_int(hw.reg._ah)
+        hw.reg.set_ha_bus_mux(HalfSelect.LO)
+        mant_lo = Registers.to_int(hw.reg.read_ha_bus())
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+        mant_hi = Registers.to_int(hw.reg.read_hb_bus())
     elif src_mantissa == Reg.BX:
-        mant_lo = Registers.to_int(hw.reg._bl)
-        mant_hi = Registers.to_int(hw.reg._bh)
+        hw.reg.set_hb_bus_mux(HalfSelect.LO, Reg.BX)
+        mant_lo = Registers.to_int(hw.reg.read_hb_bus())
+        hw.clock.tick(1)
+        hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.BX)
+        mant_hi = Registers.to_int(hw.reg.read_hb_bus())
     else:
         mant_lo, mant_hi = 0, 0
     mantissa_raw = mant_lo | (mant_hi << 32)

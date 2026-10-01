@@ -98,18 +98,13 @@ def lzc32(hw: Hardware, reg: Reg = Reg.AL) -> int:
 def lzc64(hw: Hardware, reg: Reg = Reg.AX) -> int:
     """Executes single-cycle LZC on 64-bit register (default AX), loading result into C."""
     hw.clock.tick(1)
-    if reg == Reg.AX:
-        lo_bytes = bytearray(hw.reg._al)
-        hi_bytes = bytearray(hw.reg._ah)
-    elif reg == Reg.BX:
-        lo_bytes = bytearray(hw.reg._bl)
-        hi_bytes = bytearray(hw.reg._bh)
-    elif reg == Reg.DX:
-        lo_bytes = bytearray(hw.reg._dl)
-        hi_bytes = bytearray(hw.reg._dh)
-    else:
-        lo_bytes = bytearray(hw.reg._fl)
-        hi_bytes = bytearray(hw.reg._fh)
+    if reg != Reg.AX:
+        raise ValueError(f"LZC64 only supported on Reg.AX per microcode ISA, got {reg}")
+
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    lo_bytes = hw.reg.read_ha_bus()
+    hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+    hi_bytes = hw.reg.read_hb_bus()
 
     val_bytes = lo_bytes + hi_bytes
     count, zf = lzc_core(val_bytes, width_bytes=WIDTH_64_BYTES)

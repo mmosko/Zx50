@@ -1,6 +1,7 @@
 """Comprehensive unit tests for 32/64-bit Bitwise Logic and Sign Manipulator (alu_logic)."""
 
 import pytest
+from typing import cast
 from fpu_emu.alu.alu import Alu
 from fpu_emu.alu.logic import (
     logic_core,
@@ -15,6 +16,10 @@ from fpu_emu.alu.logic import (
     not64,
     chs,
     abs_val,
+    abs_int32,
+    abs_int64,
+    _apply_logic32,
+    _apply_logic64,
 )
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, StatusFlag, Registers
@@ -274,7 +279,6 @@ def test_alu_class_logic_delegation():
 # =============================================================================
 # 7. Integer Absolute Value (abs_int32 / abs_int64)
 # =============================================================================
-from fpu_emu.alu.logic import abs_int32, abs_int64, _apply_logic32, _apply_logic64
 
 
 def test_abs_int32():
@@ -352,7 +356,7 @@ def test_logic_core_error_paths():
         logic_core(bytearray(4), None, LogicOp.AND, width_bytes=4)
 
     with pytest.raises(ValueError, match="Unknown logic operation"):
-        logic_core(bytearray(4), bytearray(4), "UNKNOWN", width_bytes=4)
+        logic_core(bytearray(4), bytearray(4), cast(LogicOp, "UNKNOWN"), width_bytes=4)
 
 
 def test_logic_invalid_dst_registers():

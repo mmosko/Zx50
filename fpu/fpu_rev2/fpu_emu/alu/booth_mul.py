@@ -186,19 +186,27 @@ def mul64(hw: Hardware, src: Reg = Reg.BX):
     """MUL AX, src — 64-bit signed multiply yielding 128-bit product in {DX, AX} (32 cycles)."""
     _validate_src64(src)
 
-    q_bytes = bytearray(hw.reg._al) + bytearray(hw.reg._ah)
+    # Cycle 1: Read low words of Q (from AL) and M (from src LO)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    q_lo = hw.reg.read_ha_bus()
+    hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
+    m_lo = hw.reg.read_hb_bus()
 
-    if src == Reg.BX:
-        m_bytes = bytearray(hw.reg._bl) + bytearray(hw.reg._bh)
-    elif src == Reg.DX:
-        m_bytes = bytearray(hw.reg._dl) + bytearray(hw.reg._dh)
-    else:
-        m_bytes = bytearray(hw.reg._fl) + bytearray(hw.reg._fh)
+    # Cycle 2: Read high words of Q (from AH) and M (from src HI)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.HI)
+    q_hi = hw.reg.read_ha_bus()
+    hw.reg.set_hb_bus_mux(HalfSelect.HI, src)
+    m_hi = hw.reg.read_hb_bus()
+
+    q_bytes = q_lo + q_hi
+    m_bytes = m_lo + m_hi
 
     prod_bytes, cf, zf, sf, vf = booth_core(m_bytes, q_bytes, width_bytes=WIDTH_64_BYTES)
 
-    # 32 cycles: 28 compute cycles + 4 writeback cycles (AL, AH, DL, DH)
-    hw.clock.tick(CYCLES_64 - 4)
+    # 32 cycles: 2 operand read cycles + 26 compute cycles + 4 writeback cycles (AL, AH, DL, DH)
+    hw.clock.tick(CYCLES_64 - 4 - 2)
 
     # Cycle 29: write AL
     hw.clock.tick(1)

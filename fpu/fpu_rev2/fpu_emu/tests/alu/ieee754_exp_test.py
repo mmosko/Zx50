@@ -14,8 +14,6 @@ from fpu_emu.alu.ieee754_exp import (
     exp_add,
     exp_sub,
     exp_diff,
-    exp_add_mul,
-    exp_sub_div,
     exp_adj_norm,
     exp_inc,
     exp_dec,

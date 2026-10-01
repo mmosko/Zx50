@@ -6,9 +6,6 @@ import pytest
 from fpu_emu.memory.rom import (
     Rom,
     ROM_SIZE,
-    FLASH_SQRT_BASE,
-    FLASH_QS_BASE,
-    FLASH_RECIP_BASE,
 )
 
 

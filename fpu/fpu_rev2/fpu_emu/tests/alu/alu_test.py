@@ -2,7 +2,7 @@
 
 from fpu_emu.alu.alu import Alu
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.memory.registers import Reg, Registers
 from fpu_emu.tests.testharness import RegTestHarness
 
 
@@ -177,10 +177,14 @@ def test_alu_full():
     reg.eb = 129
     is_odd_a = alu.sqrt_exp32(Reg.EA)
     is_odd_b = alu.sqrt_exp32(Reg.EB)
+    assert is_odd_a
+    assert not is_odd_b
     alu.sqrt_core32(is_odd_a)
 
     reg.ea = 1024
     reg.eb = 1025
     is_odd_64_a = alu.sqrt_exp64(Reg.EA)
     is_odd_64_b = alu.sqrt_exp64(Reg.EB)
+    assert is_odd_64_a
+    assert not is_odd_64_b
     alu.sqrt_core64(is_odd_64_a)

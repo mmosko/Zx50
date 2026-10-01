@@ -175,7 +175,7 @@ def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     hw.clock.tick(1)
     hw.reg.set_ha_bus_mux(HalfSelect.LO)
     a_lo = hw.reg.read_ha_bus()
-    if op != LogicOp.NOT:
+    if op != LogicOp.NOT and src is not None:
         _select_hb(hw, src, HalfSelect.LO)
         b_lo = hw.reg.read_hb_bus()
     else:
@@ -187,7 +187,7 @@ def _apply_logic64(hw: Hardware, op: LogicOp, src: Optional[Reg], dst: Reg):
     hw.clock.tick(1)
     hw.reg.set_ha_bus_mux(HalfSelect.HI)
     a_hi = hw.reg.read_ha_bus()
-    if op != LogicOp.NOT:
+    if op != LogicOp.NOT and src is not None:
         _select_hb(hw, src, HalfSelect.HI)
         b_hi = hw.reg.read_hb_bus()
     else:
@@ -358,41 +358,35 @@ def abs_int64(hw: Hardware, reg: Reg = Reg.AX):
 
     If val < 0, computes -val. If val == 0x80000000_00000000, sets OVERFLOW = 1.
     """
-    # Sample current 64-bit value:
-    if reg == Reg.AX:
-        lo_bytes = bytearray(hw.reg._al)
-        hi_bytes = bytearray(hw.reg._ah)
-    elif reg == Reg.BX:
-        lo_bytes = bytearray(hw.reg._bl)
-        hi_bytes = bytearray(hw.reg._bh)
-    elif reg == Reg.DX:
-        lo_bytes = bytearray(hw.reg._dl)
-        hi_bytes = bytearray(hw.reg._dh)
-    else:
-        lo_bytes = bytearray(hw.reg._fl)
-        hi_bytes = bytearray(hw.reg._fh)
+    if reg != Reg.AX:
+        raise ValueError(f"ABS_I64 only supported on Reg.AX per microcode ISA, got {reg}")
+
+    # Cycle 1: Read inputs on HA_BUS (AL) and HB_BUS (AH)
+    hw.clock.tick(1)
+    hw.reg.set_ha_bus_mux(HalfSelect.LO)
+    lo_bytes = hw.reg.read_ha_bus()
+    hw.reg.set_hb_bus_mux(HalfSelect.HI, Reg.AX)
+    hi_bytes = hw.reg.read_hb_bus()
 
     val = Registers.to_int(lo_bytes + hi_bytes)
-    lo_reg = Reg.AL if reg == Reg.AX else (Reg.BL if reg == Reg.BX else (Reg.DL if reg == Reg.DX else Reg.FL))
-    hi_reg = Reg.AH if reg == Reg.AX else (Reg.BH if reg == Reg.BX else (Reg.DH if reg == Reg.DX else Reg.FH))
 
     if val & (1 << 63):
         if val == (1 << 63):
-            hw.clock.tick(1)
             hw.clock.tick(1)
             hw.reg.set_flag(StatusFlag.OVERFLOW, True)
             hw.reg.set_flag(StatusFlag.SIGN, True)
         else:
             neg_val = ((~val) + 1) & 0xFFFFFFFFFFFFFFFF
             res_bytes = Registers.from_int(neg_val, 8)
+            # Cycle 1 writeback: AL
+            hw.reg.set_res_bus(Reg.AL, res_bytes[:4])
+            # Cycle 2 writeback: AH
             hw.clock.tick(1)
-            hw.reg.set_res_bus(lo_reg, res_bytes[:4])
-            hw.clock.tick(1)
-            hw.reg.set_res_bus(hi_reg, res_bytes[4:])
+            hw.reg.set_res_bus(Reg.AH, res_bytes[4:])
             hw.reg.set_flag(StatusFlag.OVERFLOW, False)
             hw.reg.set_flag(StatusFlag.SIGN, False)
     else:
-        hw.clock.tick(1)
+        # Cycle 2: No writeback needed
         hw.clock.tick(1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, False)
         hw.reg.set_flag(StatusFlag.SIGN, False)

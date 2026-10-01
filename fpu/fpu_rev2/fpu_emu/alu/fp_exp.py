@@ -196,6 +196,35 @@ def exp2_frac_core(f: float, is_64: bool = False) -> float:
         return Registers.to_f32(Registers.from_int(res_raw, 4))
 
 
+def _check_special_exp_f32(hw: Hardware, exp: int, frac: int, sign: int) -> bool:
+    """Handles NaN, Inf, and 0.0 special cases for exp_f32. Returns True if handled."""
+    if exp == 0xFF:
+        hw.clock.tick(2)
+        if frac != 0:
+            hw.reg.set_flag(StatusFlag.ERR, True)
+            _write32(hw, Reg.AL, NAN_F32)
+        elif sign == 0:
+            hw.reg.set_flag(StatusFlag.OVERFLOW, True)
+            hw.reg.set_flag(StatusFlag.ERR, True)
+            _write32(hw, Reg.AL, POS_INF_F32)
+        else:
+            hw.reg.set_flag(StatusFlag.ZERO, True)
+            _write32(hw, Reg.AL, 0)
+        return True
+
+    if exp == 0 and frac == 0:
+        hw.clock.tick(2)
+        _write32(hw, Reg.AL, ONE_F32)
+        hw.reg.set_flag(StatusFlag.ZERO, False)
+        hw.reg.set_flag(StatusFlag.SIGN, False)
+        hw.reg.set_flag(StatusFlag.ERR, False)
+        hw.reg.set_flag(StatusFlag.OVERFLOW, False)
+        hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
+        return True
+
+    return False
+
+
 def exp_f32(hw: Hardware):
     """Computes natural exponential e^(AL) -> AL (IEEE-754 single precision).
 
@@ -212,29 +241,7 @@ def exp_f32(hw: Hardware):
     exp = (raw >> 23) & 0xFF
     frac = raw & 0x7FFFFF
 
-    if exp == 0xFF:
-        hw.clock.tick(2)
-        if frac != 0:
-            hw.reg.set_flag(StatusFlag.ERR, True)
-            _write32(hw, Reg.AL, NAN_F32)
-            return
-        if sign == 0:
-            hw.reg.set_flag(StatusFlag.OVERFLOW, True)
-            hw.reg.set_flag(StatusFlag.ERR, True)
-            _write32(hw, Reg.AL, POS_INF_F32)
-        else:
-            hw.reg.set_flag(StatusFlag.ZERO, True)
-            _write32(hw, Reg.AL, 0)
-        return
-
-    if exp == 0 and frac == 0:
-        hw.clock.tick(2)
-        _write32(hw, Reg.AL, ONE_F32)
-        hw.reg.set_flag(StatusFlag.ZERO, False)
-        hw.reg.set_flag(StatusFlag.SIGN, False)
-        hw.reg.set_flag(StatusFlag.ERR, False)
-        hw.reg.set_flag(StatusFlag.OVERFLOW, False)
-        hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
+    if _check_special_exp_f32(hw, exp, frac, sign):
         return
 
     # Range reduction: t = x * log2(e)
@@ -320,6 +327,35 @@ def exp_f32(hw: Hardware):
     hw.reg.set_flag(StatusFlag.SIGN, False)
 
 
+def _check_special_exp_f64(hw: Hardware, exp: int, frac: int, sign: int) -> bool:
+    """Handles NaN, Inf, and 0.0 special cases for exp_f64. Returns True if handled."""
+    if exp == 0x7FF:
+        hw.clock.tick(3)
+        if frac != 0:
+            hw.reg.set_flag(StatusFlag.ERR, True)
+            _write64(hw, Reg.AX, NAN_F64)
+        elif sign == 0:
+            hw.reg.set_flag(StatusFlag.OVERFLOW, True)
+            hw.reg.set_flag(StatusFlag.ERR, True)
+            _write64(hw, Reg.AX, POS_INF_F64)
+        else:
+            hw.reg.set_flag(StatusFlag.ZERO, True)
+            _write64(hw, Reg.AX, 0)
+        return True
+
+    if exp == 0 and frac == 0:
+        hw.clock.tick(3)
+        _write64(hw, Reg.AX, ONE_F64)
+        hw.reg.set_flag(StatusFlag.ZERO, False)
+        hw.reg.set_flag(StatusFlag.SIGN, False)
+        hw.reg.set_flag(StatusFlag.ERR, False)
+        hw.reg.set_flag(StatusFlag.OVERFLOW, False)
+        hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
+        return True
+
+    return False
+
+
 def exp_f64(hw: Hardware):
     """Computes natural exponential e^(AX) -> AX (IEEE-754 double precision).
 
@@ -336,29 +372,7 @@ def exp_f64(hw: Hardware):
     exp = (raw >> 52) & 0x7FF
     frac = raw & 0x000FFFFFFFFFFFFF
 
-    if exp == 0x7FF:
-        hw.clock.tick(3)
-        if frac != 0:
-            hw.reg.set_flag(StatusFlag.ERR, True)
-            _write64(hw, Reg.AX, NAN_F64)
-            return
-        if sign == 0:
-            hw.reg.set_flag(StatusFlag.OVERFLOW, True)
-            hw.reg.set_flag(StatusFlag.ERR, True)
-            _write64(hw, Reg.AX, POS_INF_F64)
-        else:
-            hw.reg.set_flag(StatusFlag.ZERO, True)
-            _write64(hw, Reg.AX, 0)
-        return
-
-    if exp == 0 and frac == 0:
-        hw.clock.tick(3)
-        _write64(hw, Reg.AX, ONE_F64)
-        hw.reg.set_flag(StatusFlag.ZERO, False)
-        hw.reg.set_flag(StatusFlag.SIGN, False)
-        hw.reg.set_flag(StatusFlag.ERR, False)
-        hw.reg.set_flag(StatusFlag.OVERFLOW, False)
-        hw.reg.set_flag(StatusFlag.UNDERFLOW, False)
+    if _check_special_exp_f64(hw, exp, frac, sign):
         return
 
     # Range reduction: t = x * log2(e)
