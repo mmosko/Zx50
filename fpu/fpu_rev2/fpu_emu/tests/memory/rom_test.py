@@ -188,3 +188,50 @@ def test_rom_trig_constants():
         rom.load_trig_const64(-1)
     with pytest.raises(IndexError):
         rom.load_trig_const64(16)
+
+
+def test_rom_fpu_constants():
+    """Verify loading constants via FpuConst enum and word slots."""
+    from fpu_emu.rom.fpu_const_map import FpuConst
+
+    rom = Rom()
+
+    # User math push constants
+    assert rom.load_const_word(FpuConst.PI_F32) == 0x40490FDB
+    assert rom.load_const_dword(FpuConst.PI_F64) == 0x400921FB54442D18
+    assert rom.load_const_word(FpuConst.E_F32) == 0x402DF854
+    assert rom.load_const_dword(FpuConst.E_F64) == 0x4005BF0A8B145769
+
+    # IEEE specials
+    assert rom.load_const_word(FpuConst.ONE_F32) == 0x3F800000
+    assert rom.load_const_dword(FpuConst.ONE_F64) == 0x3FF0000000000000
+    assert rom.load_const_word(FpuConst.NAN_F32) == 0x7FC00000
+    assert rom.load_const_dword(FpuConst.NAN_F64) == 0x7FF8000000000000
+    assert rom.load_const_word(FpuConst.POS_INF_F32) == 0x7F800000
+    assert rom.load_const_word(FpuConst.NEG_INF_F32) == 0xFF800000
+    assert rom.load_const_dword(FpuConst.POS_INF_F64) == 0x7FF0000000000000
+    assert rom.load_const_dword(FpuConst.NEG_INF_F64) == 0xFFF0000000000000
+
+    # Range reduction & Cody-Waite
+    assert rom.load_const_word(FpuConst.TWO_OVER_PI_F32) == 0x3F22F983
+    assert rom.load_const_dword(FpuConst.TWO_OVER_PI_F64) == 0x3FE45F306DC9C883
+    assert rom.load_const_word(FpuConst.CW_C1_F32) == 0x3FC90F80
+    assert rom.load_const_word(FpuConst.CW_C2_F32) == 0x37354443
+    assert rom.load_const_dword(FpuConst.CW_C1_F64) == 0x3FF921FB54400000
+    assert rom.load_const_dword(FpuConst.CW_C2_F64) == 0x3DD0B4611A626331
+    assert rom.load_const_dword(FpuConst.CW_C3_F64) == 0x3BA3198A2E037073
+
+    # CORDIC constants
+    assert rom.load_const_word(FpuConst.CORDIC_INV_K_32) == 0x26DD3B6A
+    assert rom.load_const_dword(FpuConst.CORDIC_INV_K_64) == 0x26DD3B6A10D7969A
+
+    # Bounds check
+    with pytest.raises(IndexError):
+        rom.load_const_word(-1)
+    with pytest.raises(IndexError):
+        rom.load_const_word(64)
+    with pytest.raises(IndexError):
+        rom.load_const_dword(-1)
+    with pytest.raises(IndexError):
+        rom.load_const_dword(63)
+

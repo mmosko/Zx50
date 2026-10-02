@@ -3,6 +3,7 @@
 from typing import Dict, List
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.memory.registers import Reg, StatusFlag
+from fpu_emu.rom.fpu_const_map import FpuConst
 from fpu_emu.micro_opcodes import MicroOp, MicroInstruction
 from fpu_emu.user_opcodes import UserOpcode
 
@@ -622,6 +623,60 @@ class MicroCode:
         UserOpcode.ZERO_MEM: [
             MicroInstruction(op=MicroOp.ZERO_MEM),
             MicroInstruction(op=MicroOp.RET),
+        ],
+        # SIN_F32:
+        # 0: POP AL                          ; Pop input angle theta
+        # 1: JNZ UNDERFLOW -> 11             ; Trap on stack underflow
+        # 2: TRIG_REDUCE                     ; Reduce angle: residual r (Q2.30) in DL, quadrant in C
+        # 3: JNZ ERR -> 11                   ; Trap on NaN or Inf
+        # 4: JNZ ZERO -> 9                   ; If input theta was 0, jump to push 0.0 directly
+        # 5: LOAD_ROM AL, TrigConstSlot.INV_K_32 ; Load 1/K constant (0x26DD3B6A) from ROM into AL (X0)
+        # 6: LD BL, 0                        ; Clear BL (Y0 = 0)
+        # 7: CORDIC_CORE                     ; Run 24-stage circular CORDIC: AL = cos(r), BL = sin(r)
+        # 8: TRIG_RECONSTRUCT                ; Apply quadrant q (C) and sign to select sin into AL
+        # 9: PUSH AL                         ; Push result to stack
+        # 10: RET                            ; Return to dispatcher
+        # 11: TRAP                           ; Trap on error
+        UserOpcode.SIN_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=11),
+            MicroInstruction(op=MicroOp.TRIG_REDUCE),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=11),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ZERO, target=9),
+            MicroInstruction(op=MicroOp.LOAD_ROM, dst=Reg.AL, imm=int(FpuConst.CORDIC_INV_K_32)),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=0),
+            MicroInstruction(op=MicroOp.CORDIC_CORE),
+            MicroInstruction(op=MicroOp.TRIG_RECONSTRUCT),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
+        ],
+        # SIN_F64:
+        # 0: POP64 AX                        ; Pop 64-bit input angle theta
+        # 1: JNZ UNDERFLOW -> 11             ; Trap on stack underflow
+        # 2: TRIG_REDUCE64                   ; Reduce angle: residual r (Q2.62) in DX, quadrant in C
+        # 3: JNZ ERR -> 11                   ; Trap on NaN or Inf
+        # 4: JNZ ZERO -> 9                   ; If input theta was 0, jump to push 0.0 directly
+        # 5: LOAD_ROM AX, FpuConst.CORDIC_INV_K_64 ; Load 1/K constant from ROM into AX (X0)
+        # 6: LD BX, 0                        ; Clear BX (Y0 = 0)
+        # 7: CORDIC_CORE64                   ; Run 53-stage circular CORDIC: AX = cos(r), BX = sin(r)
+        # 8: TRIG_RECONSTRUCT64              ; Apply quadrant q (C) and sign to select sin into AX
+        # 9: PUSH64 AX                       ; Push result to stack
+        # 10: RET                            ; Return to dispatcher
+        # 11: TRAP                           ; Trap on error
+        UserOpcode.SIN_F64: [
+            MicroInstruction(op=MicroOp.POP64, dst=Reg.AX),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, target=11),
+            MicroInstruction(op=MicroOp.TRIG_REDUCE64),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, target=11),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ZERO, target=9),
+            MicroInstruction(op=MicroOp.LOAD_ROM, dst=Reg.AX, imm=int(FpuConst.CORDIC_INV_K_64)),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BX, imm=0),
+            MicroInstruction(op=MicroOp.CORDIC_CORE64),
+            MicroInstruction(op=MicroOp.TRIG_RECONSTRUCT64),
+            MicroInstruction(op=MicroOp.PUSH64, src=Reg.AX),
+            MicroInstruction(op=MicroOp.RET),
+            MicroInstruction(op=MicroOp.TRAP),
         ],
     }
 

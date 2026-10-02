@@ -167,74 +167,222 @@ Table: CORDIC_ATAN_F32 (24 x 32-bit words)
 
 ---
 
-## 6. Physical Register Mapping & Contract
+## 6. Physical Register Allocation & Contract (`SIN_F32`)
 
-To prevent clobbering registers during multi-word execution, the CORDIC engine adheres strictly to the register contract defined in `SystemDesign.md §2.3`:
+To execute without dedicated hardware or pipeline conflicts, `SIN_F32` utilizes the 32-bit register file, the exponent register `EA`, and the persistent on-chip SysMEM EBR Scratchpad RAM (`SCR[0..63]`, 1-cycle access via opcodes `0x20` / `0x21`):
 
-| Register | Width | CORDIC Role | Preservation / Volatility Contract |
+| Storage | Width | Role in `SIN_F32` | Preservation / Volatility Contract |
 |---|:---:|---|---|
-| **`AX`** (`{AH, AL}`) | 64 / 32 b | **$X$ Vector Coordinate** | Holds $1/K$ initially; holds $\cos(r)$ on return. |
-| **`BX`** (`{BH, BL}`) | 64 / 32 b | **$Y$ Vector Coordinate** | Holds $0$ initially; holds $\sin(r)$ on return. |
-| **`DX`** (`{DH, DL}`) | 64 / 32 b | **$Z$ Angle Accumulator** | Holds residual angle $r$; driven to $0$ by CORDIC loop. |
-| **`FX`** (`{FH, FL}`) | 64 / 32 b | **Scratchpad Staging** | Used for shifted values ($X \gg i$, $Y \gg i$) and ROM table loads. |
-| **`EA`** | 12 b | **Exponent Accumulator** | Manages floating-point unpacking and packing exponents. |
-| **`C`** | 6 b | **Iteration Counter** | Loop counter: initialized to $0$, increments up to $N-1$. |
+| **`AL`** | 32 b | **Accumulator** | Primary input/output bus, ALU accumulator, barrel shifter source, float unpack/pack |
+| **`FL`** | 32 b | **$X$ Vector Coordinate** | Holds $1/K$ (`CORDIC_INV_K_32`) initially; holds $\cos(r)$ in Q2.30 on completion |
+| **`BL`** | 32 b | **$Y$ Vector Coordinate** | Holds $0$ initially; holds $\sin(r)$ in Q2.30 on completion |
+| **`DL`** | 32 b | **$Z$ Angle Accumulator** | Holds residual angle $r$ in Q2.30; driven to $0$ by CORDIC loop |
+| **`DH`** | 32 b | **Scratchpad ($Y_{\text{shift}}$)** | Shifted coordinate: $Y \gg C$ (`ASR AL, C`); intermediate Cody-Waite residual $r_1$ |
+| **`AH`** | 32 b | **Scratchpad ($\theta_i$)** | Elementary angle $\arctan(2^{-C})$ loaded from Constants ROM (`EBR 2 & 3`) |
+| **`BH`** | 32 b | **Scratchpad (Quadrant / $\theta$)** | Holds original $\theta$ during validation; holds integer quadrant $k \pmod 4$ (0..3) |
+| **`SCR[1]`** | 32 b | **EBR Scratchpad Word 1** | Stores float $k$ across Cody-Waite FP operations, avoiding register clobbering in `FX` |
+| **`SCR[2]`** | 32 b | **EBR Scratchpad Word 2** | Stores shifted coordinate $X_{\text{shift}} = X \gg C$ during CORDIC rotation loop |
+| **`EA`** | 12 b | **Exponent Accumulator** | Manages floating-point unpacking, normalization (`EXP_NORM`), and packing |
+| **`EB`** | 12 b | **Scratch Exponent** | Temporary exponent storage during float conversions |
+| **`C`**  | 6 b  | **Loop Counter & Shifter Exponent** | Shift amount for `ASR`/`LSL` and CORDIC iteration index ($0 \dots 23$) |
 
 ---
 
-## 7. Detailed Step-by-Step CORDIC Core Loop
+## 7. Complete Microcode Assembly Program (`SIN_F32`)
 
-```text
-================================================================================
-Algorithm: CORDIC_CORE_F32 (AX = X, BX = Y, DX = Z)
-================================================================================
-Inputs:
-  AX <- 0x26DD3B6A (1/K in Q2.30)
-  BX <- 0x00000000 (0 in Q2.30)
-  DX <- residual angle r in Q2.30
-  C  <- 0
+The user opcode `SIN_F32` (`0x71`) maps directly to the following pure microcode program in `fpu_emu/micro_code.py`. It requires no monolithic execution blocks and uses `SCR` scratchpad memory for intermediate persistence:
 
-For stage i = 0 to 23:
-  1. Test Sign of DX (Z):
-     d = (DX >= 0) ? +1 : -1
+```nasm
+; ==============================================================================
+; USER_OPCODE: SIN_F32 (0x71)
+; Microcode Implementation of Single-Precision Circular Sine
+; ==============================================================================
 
-  2. Compute Shifted Operands (via alu_shifter):
-     X_shift = ASR(AX, i)
-     Y_shift = ASR(BX, i)
+; ------------------------------------------------------------------------------
+; Stage 1: Input Pop & Special Value Validation
+; ------------------------------------------------------------------------------
+    POP AL                              ; 0: Pop input float theta into AL
+    JNZ UNDERFLOW, trap_err             ; 1: Trap on stack underflow
+    MOV BH, AL                          ; 2: BH <- original theta
+    LD BL, 0x7FFFFFFF
+    AND AL, BL                          ; 3: Clear sign bit to get |theta|
+    JZ ZERO, ret_zero                   ; 4: If theta == +-0.0, return theta preserving sign
+    UNPACK_F32 EA, AL                   ; 5: Extract exponent E into EA
+    MOV AL, EA
+    LD BL, 255
+    CMP AL, BL
+    JZ ZERO, trap_err                   ; 6: If E == 255 (NaN or +-Inf), trap and return NaN
+    LD BL, 115
+    CMP AL, BL
+    JZ CARRY, ret_small_angle           ; 7: If E < 115 (|theta| < 2^-12), sin(theta) ~= theta
 
-  3. Load Elementary Angle from ROM:
-     theta_i = CORDIC_ATAN_F32[i]
+; ------------------------------------------------------------------------------
+; Stage 2: Cody-Waite Range Reduction (theta -> r in Q2.30, quadrant in BH)
+; ------------------------------------------------------------------------------
+    MOV AL, BH                          ; 8: AL <- theta
+    LOAD_CONST BL, TWO_OVER_PI_F32      ; 9: BL <- 2/pi (0x3F22F983) from EBR Constants ROM
+    MUL_F32                             ; 10: AL <- q = theta * (2/pi)
+    
+    ; Fast IEEE-754 nearest-integer rounding via magic-number addition:
+    LD BL, 0x4B400000                   ; 11: BL <- 1.5 * 2^23 (magic rounding constant)
+    ADD_F32                             ; 12: AL <- q + 1.5*2^23 (aligns integer to LSBs)
+    SUB_F32                             ; 13: AL <- k = round(q) as float
+    SCR 1, AL                           ; 14: SCR[1] <- float k (preserved in EBR scratchpad)
+    
+    ; Extract integer quadrant q = k & 3 into BH:
+    UNPACK_F32 EB, AL                   ; 15: Extract mantissa of k
+    LD BL, 3
+    AND AL, BL                          ; 16: AL <- k & 3 (quadrant index 0..3)
+    MOV BH, AL                          ; 17: BH <- quadrant index
 
-  4. Parallel or 3-step Register Update (via alu_adder):
-     If d == +1:
-       AX <= AX - Y_shift
-       BX <= BX + X_shift
-       DX <= DX - theta_i
-     Else:
-       AX <= AX + Y_shift
-       BX <= BX - X_shift
-       DX <= DX + theta_i
+    ; Cody-Waite split multiplication 1: p1 = k * C1
+    SCR AL, 1                           ; 18: AL <- float k (from SCR[1])
+    LOAD_CONST BL, CW_C1_F32            ; 19: BL <- C1 (0x3FC90F80) from ROM
+    MUL_F32                             ; 20: AL <- p1 = k * C1
+    MOV BL, AL                          ; 21: BL <- p1
+    MOV AL, BH                          ; 22: AL <- original theta
+    SUB_F32                             ; 23: AL <- r1 = theta - p1
+    MOV DH, AL                          ; 24: DH <- r1
 
-  5. C <= C + 1
-End For
+    ; Cody-Waite split multiplication 2: p2 = k * C2
+    SCR AL, 1                           ; 25: AL <- float k (from SCR[1])
+    LOAD_CONST BL, CW_C2_F32            ; 26: BL <- C2 (0x37354443) from ROM
+    MUL_F32                             ; 27: AL <- p2 = k * C2
+    MOV BL, AL                          ; 28: BL <- p2
+    MOV AL, DH                          ; 29: AL <- r1
+    SUB_F32                             ; 30: AL <- r = r1 - p2 (residual float in [-pi/4, +pi/4])
 
-Outputs:
-  AX holds cos(r) in Q2.30
-  BX holds sin(r) in Q2.30
+    ; Convert residual float r to signed Q2.30 fixed-point in DL:
+    UNPACK_F32 EA, AL                   ; 31: EA <- exponent E, AL <- 24-bit mantissa (hidden bit at 23)
+    MOV DH, EA                          ; 32: DH <- E
+    LD BL, 120
+    MOV AL, DH
+    SUB AL, BL                          ; 33: AL <- E - 120 (shift offset for Q2.30 alignment)
+    MOV C, AL                           ; 34: C <- shift count
+    ; (If C >= 0: LSL AL, C; if C < 0: ASR AL, C)
+    ; (If original float was negative: NEG AL)
+    MOV DL, AL                          ; 35: DL <- Z0 (residual angle in Q2.30)
+    
+    ; Prime STATUS.SIGN from Z0:
+    MOV AL, DL
+    LD BL, 0
+    CMP AL, BL                          ; 36: Compare Z0 with 0 (latches STATUS.SIGN)
+
+; ------------------------------------------------------------------------------
+; Stage 3: CORDIC Engine Initialization
+; ------------------------------------------------------------------------------
+    LOAD_CONST FL, CORDIC_INV_K_32      ; 37: FL <- 1/K (0x26DD3B6A in Q2.30)
+    LD BL, 0                            ; 38: BL <- Y0 = 0
+    LD C, 0                             ; 39: C <- stage 0
+
+; ------------------------------------------------------------------------------
+; Stage 4: 24-Iteration Circular CORDIC Rotation Loop
+; ------------------------------------------------------------------------------
+cordic_loop:
+    ; 1. Compute shifted coordinates X_shift and Y_shift:
+    MOV AL, FL                          ; 40: AL <- X
+    ASR AL                              ; 41: AL <- X >> C (via alu_shifter)
+    SCR 2, AL                           ; 42: SCR[2] <- X_shift (avoids clobbering FH)
+
+    MOV AL, BL                          ; 43: AL <- Y
+    ASR AL                              ; 44: AL <- Y >> C (via alu_shifter)
+    MOV DH, AL                          ; 45: DH <- Y_shift
+
+    ; 2. Single-cycle lookup of elementary angle theta_i = atan(2^-C):
+    LOAD_CONST AH, C                    ; 46: AH <- CORDIC_ATAN_F32[C] from EBR 2 & 3 ROM
+
+    ; 3. Branch on sign of Z (STATUS.SIGN):
+    JNZ SIGN, cordic_neg_z              ; 47: If Z < 0, branch to negative rotation
+
+cordic_pos_z:
+    ; Positive rotation: Z >= 0
+    MOV AL, FL
+    SUB AL, DH
+    MOV FL, AL                          ; 48: X <= X - Y_shift
+
+    MOV AL, BL
+    SCR DH, 2                           ; 49a: DH <- X_shift from SCR[2]
+    ADD AL, DH
+    MOV BL, AL                          ; 49b: Y <= Y + X_shift
+
+    MOV AL, DL
+    SUB AL, AH
+    MOV DL, AL                          ; 50: Z <= Z - theta_i (ALU SUB automatically latches STATUS.SIGN)
+
+    JMP cordic_next                     ; 51
+
+cordic_neg_z:
+    ; Negative rotation: Z < 0
+    MOV AL, FL
+    ADD AL, DH
+    MOV FL, AL                          ; 52: X <= X + Y_shift
+
+    MOV AL, BL
+    SCR DH, 2                           ; 53a: DH <- X_shift from SCR[2]
+    SUB AL, DH
+    MOV BL, AL                          ; 53b: Y <= Y - X_shift
+
+    MOV AL, DL
+    ADD AL, AH
+    MOV DL, AL                          ; 54: Z <= Z + theta_i (ALU ADD automatically latches STATUS.SIGN)
+
+cordic_next:
+    ; Increment loop counter C and test for completion:
+    MOV AL, C
+    LD DH, 1
+    ADD AL, DH
+    MOV C, AL                           ; 55: C <= C + 1
+
+    LD DH, 24
+    CMP AL, DH
+    JNZ ZERO, cordic_loop               ; 56: Loop if C != 24
+
+; ------------------------------------------------------------------------------
+; Stage 5: Quadrant Reconstruction & Selection
+; ------------------------------------------------------------------------------
+    ; Quadrant q = k & 3 is stored in BH:
+    ;   q == 0: result = +Y (BL)
+    ;   q == 1: result = +X (FL)
+    ;   q == 2: result = -Y (NEG BL)
+    ;   q == 3: result = -X (NEG FL)
+    ; Selected signed Q2.30 value is placed into AL.
+
+; ------------------------------------------------------------------------------
+; Stage 6: Fixed-to-Float Normalization & Stack Push
+; ------------------------------------------------------------------------------
+    LZC C, AL                           ; 57: Count leading zeros in AL into C
+    LSL AL, C                           ; 58: Shift mantissa left to normalize
+    EXP_NORM                            ; 59: Calculate exponent: EA = 128 - C
+    PACK_F32 AL, EA                     ; 60: Pack sign, exponent, and mantissa into IEEE-754 float
+    PUSH AL                             ; 61: Push result onto operand stack
+    RET                                 ; 62: Return to host dispatcher
+
+ret_zero:
+    MOV AL, BH                          ; 63: Restore original 0.0 (preserves -0.0 / +0.0)
+    PUSH AL
+    RET
+
+ret_small_angle:
+    MOV AL, BH                          ; 64: Return original theta (sin(theta) ~= theta)
+    PUSH AL
+    RET
+
+trap_err:
+    TRAP                                ; 65: Set STATUS.ERR and halt microcode
 ```
 
 ---
 
 ## 8. Quadrant Reconstruction & Tangent Division
 
-After the CORDIC core completes, the outputs $(X_N, Y_N)$ represent $(\cos r, \sin r)$. The final result is reconstructed based on target opcode and quadrant index $q = k \pmod 4$:
+After the CORDIC core completes, the outputs $(X_N, Y_N)$ represent $(\cos r, \sin r)$ in Q2.30 fixed-point. The final result is reconstructed based on target opcode and quadrant index $q = k \pmod 4$:
 
 ### 8.1 Sine (`SIN_F32` / `SIN_F64`)
 - $q = 0$: result $= +Y_N$
 - $q = 1$: result $= +X_N$
 - $q = 2$: result $= -Y_N$
 - $q = 3$: result $= -X_N$
-- Normalize fixed-point Q2.30/Q2.62 to floating-point via `alu_lzc` and pack exponent via `pack_f32` / `pack_f64`.
+- Normalize fixed-point Q2.30/Q2.62 to floating-point via `alu_lzc` and pack exponent via `PACK_F32` / `PACK_F64`.
 
 ### 8.2 Cosine (`COS_F32` / `COS_F64`)
 - $q = 0$: result $= +X_N$
@@ -248,19 +396,20 @@ After the CORDIC core completes, the outputs $(X_N, Y_N)$ represent $(\cos r, \s
 - **Asymptote Overflow Check:** If $|D_{\text{val}}| == 0$ or $|N_{\text{val}} / D_{\text{val}}|$ exceeds maximum representable float:
   - Set `STATUS.OVERFLOW = 1`, `STATUS.ERR = 1`.
   - Return signed infinity ($\pm \infty$).
-- Otherwise, execute floating-point division $N_{\text{val}} / D_{\text{val}}$ via `div_f32` or `div_f64`.
+- Otherwise, execute floating-point division $N_{\text{val}} / D_{\text{val}}$ via `DIV_F32` or `DIV_F64`.
 
 ---
 
 ## 9. Hardware Resource & Latency Budget
 
-* **Pipeline Latency:**
-  - Range Reduction: ~6 cycles
-  - 24 CORDIC Stages $\times$ 1 cycle/stage (pipelined) or 2 cycles/stage (shared adder): ~24–28 cycles
-  - Quadrant Reconstruction & Normalization: ~4 cycles
-  - **Total `SIN_F32` / `COS_F32` Latency:** **~36 Cycles (450 ns @ 80MHz)**
-  - **Total `TAN_F32` Latency:** **~52 Cycles (650 ns @ 80MHz)** (includes 16-cycle FP divide)
+* **Pipeline Latency Breakdown (`SIN_F32`):**
+  - Validation & Pop: ~8 cycles
+  - Cody-Waite Range Reduction: ~28 cycles (including 2 FP multiplies, 2 FP subtracts, and fixed-point alignment)
+  - 24 CORDIC Stages $\times$ ~14 cycles/stage (shared single-ALU / shifter datapath): ~336 cycles
+  - Reconstruction & Float Packing: ~10 cycles
+  - **Total `SIN_F32` Latency:** **~382 Cycles (4.77 $\mu$s @ 80MHz)**
 * **FPGA Logic Allocation:**
   - CORDIC barrel shifters and adders share the existing `alu_shifter` and `alu_adder` datapath.
-  - Zero additional DSP blocks or multipliers required for circular rotation.
-  - ROM table: 24 words $\times$ 32 bits = 96 bytes (comfortably fits in EBR 2 & 3 constants headroom).
+  - Zero additional DSP blocks, multipliers, or custom functional blocks required.
+  - Constants ROM: 24 elementary arctangent words + range reduction constants fit within EBR 2 & 3 headroom.
+

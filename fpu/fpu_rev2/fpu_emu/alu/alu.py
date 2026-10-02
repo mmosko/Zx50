@@ -16,6 +16,7 @@ from fpu_emu.alu import fp_ln
 from fpu_emu.alu import fp_exp
 from fpu_emu.alu import fp_pow
 from fpu_emu.memory import swap
+from fpu_emu.rom.fpu_const_map import FpuConst
 
 
 class Alu:
@@ -285,3 +286,9 @@ class Alu:
 
     def pow_f64(self, src: Reg = Reg.BX):
         fp_pow.pow_f64(self._hw, src=src)
+
+    # -------------------------------------------------------------------------
+    # Floating-Point Trigonometric API (SIN, COS, TAN)
+    # -------------------------------------------------------------------------
+
+

@@ -870,3 +870,81 @@ def test_abs_f32_and_f64_execution():
     assert hw.reg.sp == 8
     stack.pop64(hw, Reg.AX)
     assert Registers.to_f64(reg.peek(Reg.AX)) == 999.125
+
+
+def test_sin_f32_and_f64_dispatcher():
+    import math
+
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # 1. SIN_F32: sin(0.0) == 0.0
+    reg.set(Reg.AL, Registers.from_f32(0.0))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.SIN_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert Registers.to_f32(reg.peek(Reg.AL)) == 0.0
+    assert hw.reg.get_flag(StatusFlag.ZERO)
+
+    # 2. SIN_F32: sin(pi/6) ~= 0.5
+    reg.set(Reg.AL, Registers.from_f32(math.pi / 6))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.SIN_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == 0.5
+
+    # 3. SIN_F32: sin(pi/2) ~= 1.0
+    reg.set(Reg.AL, Registers.from_f32(math.pi / 2))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.SIN_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == 1.0
+
+    # 4. SIN_F32: sin(-pi/2) ~= -1.0
+    reg.set(Reg.AL, Registers.from_f32(-math.pi / 2))
+    stack.push32(hw, Reg.AL)
+    disp.execute(UserOpcode.SIN_F32)
+    assert hw.reg.sp == 4
+    stack.pop32(hw, Reg.AL)
+    assert pytest.approx(Registers.to_f32(reg.peek(Reg.AL)), rel=1e-5) == -1.0
+    assert hw.reg.get_flag(StatusFlag.SIGN)
+
+    # 5. SIN_F64: sin(pi/4) ~= sqrt(2)/2
+    reg.set(Reg.AX, Registers.from_f64(math.pi / 4))
+    stack.push64(hw, Reg.AX)
+    disp.execute(UserOpcode.SIN_F64)
+    assert hw.reg.sp == 8
+    stack.pop64(hw, Reg.AX)
+    assert pytest.approx(Registers.to_f64(reg.peek(Reg.AX)), rel=1e-10) == math.sin(math.pi / 4)
+
+    # 6. SIN_F32 underflow error trap on empty stack
+    disp.execute(UserOpcode.SIN_F32)
+    assert hw.reg.get_flag(StatusFlag.UNDERFLOW)
+    assert hw.reg.get_flag(StatusFlag.ERR)
+
+
+def test_trig_micro_ops():
+    hw = Hardware()
+    reg = RegTestHarness(hw.reg)
+    alu = Alu(hw)
+    disp = Dispatcher(hw, alu)
+
+    # Test direct execution of trig micro-ops in sequencer
+    reg.set(Reg.AL, Registers.from_f32(0.5))
+    ucode = [
+        MicroInstruction(MicroOp.TRIG_REDUCE),
+        MicroInstruction(MicroOp.LOAD_ROM, dst=Reg.AL, imm=0),
+        MicroInstruction(MicroOp.LD, dst=Reg.BL, imm=0),
+        MicroInstruction(MicroOp.CORDIC_STEP),
+        MicroInstruction(MicroOp.CORDIC_CORE),
+        MicroInstruction(MicroOp.TRIG_RECONSTRUCT),
+        MicroInstruction(MicroOp.RET),
+    ]
+    disp._run(ucode)
+    assert not hw.reg.get_flag(StatusFlag.ERR)
+

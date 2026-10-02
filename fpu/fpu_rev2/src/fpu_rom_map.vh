@@ -22,4 +22,39 @@
   `define FLASH_CORDIC_ATAN64_BASE 15'h1900
   `define FLASH_TRIG_CONST_BASE    15'h1B00
 
+  // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)
+  `define CONST_SLOT_PI_F32             6'd0
+  `define CONST_SLOT_PI_F64             6'd2
+  `define CONST_SLOT_E_F32              6'd4
+  `define CONST_SLOT_E_F64              6'd6
+  `define CONST_SLOT_LN2_F32            6'd8
+  `define CONST_SLOT_LN2_F64            6'd10
+  `define CONST_SLOT_LOG2E_F32          6'd12
+  `define CONST_SLOT_LOG2E_F64          6'd14
+  `define CONST_SLOT_LOG2_10_F32        6'd16
+  `define CONST_SLOT_LOG2_10_F64        6'd18
+  `define CONST_SLOT_LOG10_2_F32        6'd20
+  `define CONST_SLOT_LOG10_2_F64        6'd22
+  `define CONST_SLOT_SQRT2_F32          6'd24
+  `define CONST_SLOT_SQRT2_F64          6'd26
+  `define CONST_SLOT_INV_SQRT2_F32      6'd28
+  `define CONST_SLOT_INV_SQRT2_F64      6'd30
+  `define CONST_SLOT_ONE_F32            6'd32
+  `define CONST_SLOT_ONE_F64            6'd33
+  `define CONST_SLOT_NAN_F32            6'd35
+  `define CONST_SLOT_NAN_F64            6'd36
+  `define CONST_SLOT_POS_INF_F32        6'd38
+  `define CONST_SLOT_NEG_INF_F32        6'd39
+  `define CONST_SLOT_POS_INF_F64        6'd40
+  `define CONST_SLOT_NEG_INF_F64        6'd42
+  `define CONST_SLOT_TWO_OVER_PI_F32    6'd44
+  `define CONST_SLOT_TWO_OVER_PI_F64    6'd45
+  `define CONST_SLOT_CW_C1_F32          6'd47
+  `define CONST_SLOT_CW_C2_F32          6'd48
+  `define CONST_SLOT_CW_C1_F64          6'd49
+  `define CONST_SLOT_CW_C2_F64          6'd51
+  `define CONST_SLOT_CW_C3_F64          6'd53
+  `define CONST_SLOT_CORDIC_INV_K_32    6'd55
+  `define CONST_SLOT_CORDIC_INV_K_64    6'd56
+
 `endif // FPU_ROM_MAP_VH

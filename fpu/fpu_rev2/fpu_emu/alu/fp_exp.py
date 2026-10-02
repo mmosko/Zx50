@@ -9,6 +9,7 @@ and f in [0.0, 1.0) is evaluated via synthesizable Taylor polynomial convergence
 Zero Python `math` module; all arithmetic is performed via synthesizable ALU primitives.
 """
 
+from fpu_emu.alu.bus import read_bus32, read_bus64, write_bus32, write_bus64
 from fpu_emu.alu.fp_mul_div import add_f32, sub_f32, mul_f32, div_f32, add_f64, sub_f64, mul_f64, div_f64
 from fpu_emu.alu.lzc import lzc32, lzc64
 from fpu_emu.alu.shifter import lsl32, lsr32, lsl64, lsr64
@@ -64,27 +65,19 @@ FACTS_F64 = [
 
 
 def _read32(hw: Hardware, reg: Reg) -> int:
-    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+    return read_bus32(hw, reg)
 
 
 def _read64(hw: Hardware, reg: Reg) -> int:
-    lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
-    hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
-    return Registers.to_int(bytearray(lo) + bytearray(hi))
+    return read_bus64(hw, reg)
 
 
 def _write32(hw: Hardware, reg: Reg, val: int) -> None:
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+    write_bus32(hw, reg, val)
 
 
 def _write64(hw: Hardware, reg: Reg, val: int) -> None:
-    hw.clock.tick(1)
-    lo_name = reg.name[0] + "L"
-    hi_name = reg.name[0] + "H"
-    hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+    write_bus64(hw, reg, val)
 
 
 def _int_to_f32(hw: Hardware, val: int) -> int:

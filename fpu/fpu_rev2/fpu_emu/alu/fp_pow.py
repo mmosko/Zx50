@@ -12,11 +12,12 @@ Rules Enforced:
 - Chained cycle-by-cycle execution via synthesizable ALU primitives.
 """
 
+from fpu_emu.alu.bus import read_bus32, read_bus64, write_bus32, write_bus64
 from fpu_emu.alu.fp_exp import exp_f32, exp_f64
 from fpu_emu.alu.fp_ln import ln_f32, ln_f64
 from fpu_emu.alu.fp_mul_div import mul_f32, mul_f64
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, Registers, StatusFlag
+from fpu_emu.memory.registers import Reg, StatusFlag
 
 ONE_F32 = 0x3F800000
 ONE_F64 = 0x3FF0000000000000
@@ -29,27 +30,19 @@ NEG_INF_F64 = 0xFFF0000000000000
 
 
 def _read32(hw: Hardware, reg: Reg) -> int:
-    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+    return read_bus32(hw, reg)
 
 
 def _read64(hw: Hardware, reg: Reg) -> int:
-    lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
-    hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
-    return Registers.to_int(bytearray(lo) + bytearray(hi))
+    return read_bus64(hw, reg)
 
 
 def _write32(hw: Hardware, reg: Reg, val: int) -> None:
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+    write_bus32(hw, reg, val)
 
 
 def _write64(hw: Hardware, reg: Reg, val: int) -> None:
-    hw.clock.tick(1)
-    lo_name = reg.name[0] + "L"
-    hi_name = reg.name[0] + "H"
-    hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
-    hw.clock.tick(1)
-    hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+    write_bus64(hw, reg, val)
 
 
 def pow_f32(hw: Hardware, src: Reg = Reg.BL):

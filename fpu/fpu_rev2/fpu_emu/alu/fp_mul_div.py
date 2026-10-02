@@ -11,6 +11,7 @@ Rules Enforced:
 """
 
 from fpu_emu.alu.booth_mul import booth_core, WIDTH_32_BYTES, WIDTH_64_BYTES
+from fpu_emu.alu.bus import read_bus32, read_bus64, write_bus32, write_bus64
 from fpu_emu.alu.ieee754_exp import BIAS_F32, BIAS_F64
 from fpu_emu.hardware import Hardware
 from fpu_emu.memory.registers import Reg, Registers, StatusFlag
@@ -28,22 +29,14 @@ F64_EXP_MAX = 0x7FF
 
 
 def _read_fp_operand(hw: Hardware, reg: Reg, is_64: bool) -> int:
-    if is_64:
-        lo = getattr(hw.reg, f"_{reg.name[0].lower()}l")
-        hi = getattr(hw.reg, f"_{reg.name[0].lower()}h")
-        return Registers.to_int(bytearray(lo) + bytearray(hi))
-    return Registers.to_int(getattr(hw.reg, f"_{reg.name.lower()}"))
+    return read_bus64(hw, reg) if is_64 else read_bus32(hw, reg)
 
 
 def _write_fp_result(hw: Hardware, reg: Reg, val: int, is_64: bool) -> None:
     if is_64:
-        lo_name = reg.name[0] + "L"
-        hi_name = reg.name[0] + "H"
-        hw.reg.set_res_bus(Reg[lo_name], Registers.from_int(val & 0xFFFFFFFF, 4))
-        hw.clock.tick(1)
-        hw.reg.set_res_bus(Reg[hi_name], Registers.from_int((val >> 32) & 0xFFFFFFFF, 4))
+        write_bus64(hw, reg, val)
     else:
-        hw.reg.set_res_bus(reg, Registers.from_int(val & 0xFFFFFFFF, 4))
+        write_bus32(hw, reg, val)
 
 
 def mul_f32(hw: Hardware, src: Reg = Reg.BL):
@@ -217,12 +210,12 @@ def mul_f64(hw: Hardware, src: Reg = Reg.BX):
     Synthesizable datapath:
       - Sign XOR: sign_r = sign_a ^ sign_b
       - Exponent addition: exp_r = exp_a + exp_b - 1023
-      - 53-bit Mantissa multiplication via 64-bit Radix-4 Booth multiplier (32 cycles)
+      - 53-bit Mantissa multiplication via 64-bit Radix-4 Booth multiplier (32 cycles total)
       - Normalization: if product MSB is set, shift right by 1 and increment exponent.
     """
-    hw.clock.tick(31)
     a_raw = _read_fp_operand(hw, Reg.AX, True)
     b_raw = _read_fp_operand(hw, src, True)
+    hw.clock.tick(29)
 
     sign_a = (a_raw >> 63) & 1
     sign_b = (b_raw >> 63) & 1
@@ -295,9 +288,9 @@ def div_f64(hw: Hardware, src: Reg = Reg.BX):
       - Exponent subtraction: exp_r = exp_a - exp_b + 1023
       - 55-step shift-and-subtract restoring divider for mantissa quotient
     """
-    hw.clock.tick(31)
     a_raw = _read_fp_operand(hw, Reg.AX, True)
     b_raw = _read_fp_operand(hw, src, True)
+    hw.clock.tick(29)
 
     sign_a = (a_raw >> 63) & 1
     sign_b = (b_raw >> 63) & 1

@@ -8,6 +8,7 @@ from enum import IntEnum
 import os
 from typing import Optional
 from fpu_emu.fpga_resource import fpga_resource
+from fpu_emu.rom.fpu_const_map import FpuConst
 
 ROM_SIZE = 32768  # 32 KB active region for CA[14:0]
 
@@ -147,6 +148,40 @@ class Rom:
             raise IndexError(f"Constant opcode 0x{opcode:02X} out of range (0xA0..0xAF)")
         addr = FLASH_CONST_BASE + ((opcode - 0xA0) * 8)
         return self.load(addr, 8)
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=1,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_const_word(self, slot: int | FpuConst) -> int:
+        """Loads 32-bit constant word from slot offset in FLASH_CONST_BASE (1 cycle)."""
+        slot_int = int(slot)
+        if not (0 <= slot_int < 64):
+            raise IndexError(f"Constant slot {slot_int} out of range (0..63)")
+        addr = FLASH_CONST_BASE + (slot_int << 2)
+        return int.from_bytes(self.load(addr, 4), byteorder="little")
+
+    @fpga_resource(
+        approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",
+        luts=0,
+        ffs=0,
+        ebr=2,
+        delay_ns=3.2,
+        cycles=2,
+        shared_unit="ebr_constants_rom",
+    )
+    def load_const_dword(self, slot: int | FpuConst) -> int:
+        """Loads 64-bit constant dword from slot offset in FLASH_CONST_BASE (2 cycles)."""
+        slot_int = int(slot)
+        if not (0 <= slot_int < 63):
+            raise IndexError(f"Constant slot {slot_int} out of range for 64-bit read (0..62)")
+        addr = FLASH_CONST_BASE + (slot_int << 2)
+        return int.from_bytes(self.load(addr, 8), byteorder="little")
 
     @fpga_resource(
         approach="Paired Single-Port SysMEM EBR (EBR 2 & 3, 512x32) for trig/cordic angles and IEEE-754 constants",

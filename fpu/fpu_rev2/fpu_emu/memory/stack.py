@@ -8,7 +8,7 @@ Per SystemDesign.md Section 5.1 & Section 4.3:
 """
 
 from fpu_emu.hardware import Hardware
-from fpu_emu.memory.registers import Reg, StatusFlag
+from fpu_emu.memory.registers import HalfSelect, Reg, StatusFlag
 
 STACK_BASE = 0x0000
 STACK_LIMIT = 256  # 256 bytes total stack space
@@ -23,7 +23,9 @@ def push32(hw: Hardware, src: Reg):
         hw.reg.set_flag(StatusFlag.ERR, True)
         return
 
-    data = bytearray(getattr(hw.reg, f"_{src.name.lower()}"))
+    half = HalfSelect.HI if src.is_hi()  else HalfSelect.LO
+    hw.reg.set_hb_bus_mux(half, src)
+    data = hw.reg.read_hb_bus()
     hw.mem.store(STACK_BASE + sp, data)
     hw.reg.sp = sp + 4
 
@@ -45,17 +47,24 @@ def pop32(hw: Hardware, dst: Reg):
 
 def push64(hw: Hardware, src: Reg):
     """Pushes a 64-bit register onto the stack (2 memory cycles)."""
-    hw.clock.tick(2)
     sp = hw.reg.sp
     if sp + 8 > STACK_LIMIT:
+        hw.clock.tick(1)
         hw.reg.set_flag(StatusFlag.OVERFLOW, True)
         hw.reg.set_flag(StatusFlag.ERR, True)
         return
 
-    lo = getattr(hw.reg, f"_{src.name[0].lower()}l")
-    hi = getattr(hw.reg, f"_{src.name[0].lower()}h")
-    data = bytearray(lo) + bytearray(hi)
-    hw.mem.store(STACK_BASE + sp, data)
+    # Cycle 1: push low half
+    hw.clock.tick(1)
+    hw.reg.set_hb_bus_mux(HalfSelect.LO, src)
+    data_lo = hw.reg.read_hb_bus()
+    hw.mem.store(STACK_BASE + sp, data_lo)
+
+    # Cycle 2: push high half
+    hw.clock.tick(1)
+    hw.reg.set_hb_bus_mux(HalfSelect.HI, src)
+    data_hi = hw.reg.read_hb_bus()
+    hw.mem.store(STACK_BASE + sp + 4, data_hi)
     hw.reg.sp = sp + 8
 
 

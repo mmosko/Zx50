@@ -57,6 +57,8 @@ BootLdr -->|Cold Boot SBC BIOS Copy|ExtSRAM
 QSPI <-->| F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N|BootLdr
 ```
 
+![FPGA Data Path Layout](fpu_alu.svg)
+
 ### 1.1 Key Hardware Specifications
 
 * **Host CPU:** Zilog Z80C @ 10 MHz (`CLK` / `BZCLK`).
@@ -134,13 +136,20 @@ At power-up reset:
 
 ## 3. Internal Memory Subsystem (SysMEM EBR)
 
-The MachXO2-2000 provides **8 independent physical SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total capacity). 
+The MachXO2-2000 provides **8 independent physical SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total
+capacity).
 
 Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
-* A single EBR block supports a maximum data width of **18 bits** in ROM/Single-Port mode (`512 × 18`), or **9 bits** in True Dual-Port mode (`1,024 × 9`).
-* To provide native **32-bit single-cycle word access** for the datapath without multi-cycle serialization, **two EBR blocks are paired in parallel** (`512 × 32` bits = 2,048 bytes per pair).
-* High-speed host command queuing (the 32-byte **Command Stack / Operation Stack**) is implemented directly in **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), completely isolating host command writes from the primary memory blocks.
-* Z80 host data I/O on Port `0x70` uses dedicated 32-bit staging registers (**`HOST_IN`** on `HB_BUS` and **`HOST_OUT`** on `RES_BUS`), enabling standard Single-Port RAM mode for the stack and eliminating complex dual-port arbitration.
+
+* A single EBR block supports a maximum data width of **18 bits** in ROM/Single-Port mode (`512 × 18`), or **9 bits** in
+  True Dual-Port mode (`1,024 × 9`).
+* To provide native **32-bit single-cycle word access** for the datapath without multi-cycle serialization, **two EBR
+  blocks are paired in parallel** (`512 × 32` bits = 2,048 bytes per pair).
+* High-speed host command queuing (the 32-byte **Command Stack / Operation Stack**) is implemented directly in
+  **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), completely isolating host command writes from the
+  primary memory blocks.
+* Z80 host data I/O on Port `0x70` uses dedicated 32-bit staging registers (**`HOST_IN`** on `HB_BUS` and **`HOST_OUT`**
+  on `RES_BUS`), enabling standard Single-Port RAM mode for the stack and eliminating complex dual-port arbitration.
 
 ### 3.1 Physical SysMEM EBR Allocation Map (8 Blocks Total)
 
@@ -376,6 +385,16 @@ Arithmetic operations are executed using single-cycle dedicated datapath blocks:
 > For the internal register models, microcode ISA ($\mu$-ops), dispatcher state machine, microcode programs for each
 user opcode, and FPGA gate budget calculations, refer
 to [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md).
+
+### 8.3 ALU Block Isolation
+
+**Synplify Pro Automatic Operand Isolation**:  Synplify Pro includes built-in compiler directives to infer operand
+isolation automatically during synthesis:
+
+You can add `/* syn_isolate_operands = 1 */` to specific block module declarations in Verilog.
+
+The tool will automatically insert input-gating logic at the boundaries of large operators (like multipliers or complex
+ALUs) to prevent unneeded switching activity.
 
 ---
 

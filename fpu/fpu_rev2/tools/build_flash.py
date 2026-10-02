@@ -46,6 +46,7 @@ HEADER_FILE = "src/fpu_rom_map.vh"
 HEX_FILE = "sim/fpu_rom.hex"
 BIN_FILE = "bin/fpu_flash.bin"
 EMU_BIN_FILE = "fpu_emu/rom/fpu_flash.bin"
+PY_CONST_MAP_FILE = "fpu_emu/rom/fpu_const_map.py"
 
 
 # =============================================================================
@@ -168,30 +169,58 @@ def generate_log10_table() -> bytearray:
     return data
 
 
+CONSTANTS_DEF = [
+    # (enum_name, slot, hex_val, num_bytes, description)
+    # Mathematical Constants (0xA0..0xAF push opcodes)
+    ("PI_F32", 0, 0x40490FDB, 4, "pi in IEEE-754 single precision"),
+    ("PI_F64", 2, 0x400921FB54442D18, 8, "pi in IEEE-754 double precision"),
+    ("E_F32", 4, 0x402DF854, 4, "e in IEEE-754 single precision"),
+    ("E_F64", 6, 0x4005BF0A8B145769, 8, "e in IEEE-754 double precision"),
+    ("LN2_F32", 8, 0x3F317218, 4, "ln(2) in IEEE-754 single precision"),
+    ("LN2_F64", 10, 0x3FE62E42FEFA39EF, 8, "ln(2) in IEEE-754 double precision"),
+    ("LOG2E_F32", 12, 0x3FB8AA3B, 4, "log2(e) in IEEE-754 single precision"),
+    ("LOG2E_F64", 14, 0x3FF71547652B82FE, 8, "log2(e) in IEEE-754 double precision"),
+    ("LOG2_10_F32", 16, 0x40549A78, 4, "log2(10) in IEEE-754 single precision"),
+    ("LOG2_10_F64", 18, 0x400A934F0979A371, 8, "log2(10) in IEEE-754 double precision"),
+    ("LOG10_2_F32", 20, 0x3E9A209B, 4, "log10(2) in IEEE-754 single precision"),
+    ("LOG10_2_F64", 22, 0x3FD34413509F79FF, 8, "log10(2) in IEEE-754 double precision"),
+    ("SQRT2_F32", 24, 0x3FB504F3, 4, "sqrt(2) in IEEE-754 single precision"),
+    ("SQRT2_F64", 26, 0x3FF6A09E667F3BCD, 8, "sqrt(2) in IEEE-754 double precision"),
+    ("INV_SQRT2_F32", 28, 0x3F3504F3, 4, "1/sqrt(2) in IEEE-754 single precision"),
+    ("INV_SQRT2_F64", 30, 0x3FE6A09E667F3BCD, 8, "1/sqrt(2) in IEEE-754 double precision"),
+
+    # IEEE-754 Special Constants
+    ("ONE_F32", 32, 0x3F800000, 4, "1.0 in IEEE-754 single precision"),
+    ("ONE_F64", 33, 0x3FF0000000000000, 8, "1.0 in IEEE-754 double precision"),
+    ("NAN_F32", 35, 0x7FC00000, 4, "Quiet NaN in IEEE-754 single precision"),
+    ("NAN_F64", 36, 0x7FF8000000000000, 8, "Quiet NaN in IEEE-754 double precision"),
+    ("POS_INF_F32", 38, 0x7F800000, 4, "+Infinity in IEEE-754 single precision"),
+    ("NEG_INF_F32", 39, 0xFF800000, 4, "-Infinity in IEEE-754 single precision"),
+    ("POS_INF_F64", 40, 0x7FF0000000000000, 8, "+Infinity in IEEE-754 double precision"),
+    ("NEG_INF_F64", 42, 0xFFF0000000000000, 8, "-Infinity in IEEE-754 double precision"),
+
+    # Range Reduction Constants
+    ("TWO_OVER_PI_F32", 44, 0x3F22F983, 4, "2/pi in IEEE-754 single precision"),
+    ("TWO_OVER_PI_F64", 45, 0x3FE45F306DC9C883, 8, "2/pi in IEEE-754 double precision"),
+
+    # Cody-Waite Split Constants
+    ("CW_C1_F32", 47, 0x3FC90F80, 4, "Cody-Waite C1 in IEEE-754 single precision"),
+    ("CW_C2_F32", 48, 0x37354443, 4, "Cody-Waite C2 in IEEE-754 single precision"),
+    ("CW_C1_F64", 49, 0x3FF921FB54400000, 8, "Cody-Waite C1 in IEEE-754 double precision"),
+    ("CW_C2_F64", 51, 0x3DD0B4611A626331, 8, "Cody-Waite C2 in IEEE-754 double precision"),
+    ("CW_C3_F64", 53, 0x3BA3198A2E037073, 8, "Cody-Waite C3 in IEEE-754 double precision"),
+
+    # CORDIC Constants
+    ("CORDIC_INV_K_32", 55, 0x26DD3B6A, 4, "CORDIC 1/K scale factor in Q2.30"),
+    ("CORDIC_INV_K_64", 56, 0x26DD3B6A10D7969A, 8, "CORDIC 1/K scale factor in Q2.62"),
+]
+
+
 def generate_constants_table() -> bytearray:
-    """Table 11: Mathematical Constants (0xA0..0xAF). 16 entries * 8 bytes = 128 bytes."""
-    data = bytearray(16 * 8)
-    constants_def = [
-        # (index, hex_value, num_bytes)
-        (0x00, 0x40490FDB, 4),  # 0xA0: PUSH_PI_32
-        (0x01, 0x400921FB54442D18, 8),  # 0xA1: PUSH_PI_64
-        (0x02, 0x402DF854, 4),  # 0xA2: PUSH_E_32
-        (0x03, 0x4005BF0A8B145769, 8),  # 0xA3: PUSH_E_64
-        (0x04, 0x3F317218, 4),  # 0xA4: PUSH_LN2_32
-        (0x05, 0x3FE62E42FEFA39EF, 8),  # 0xA5: PUSH_LN2_64
-        (0x06, 0x3FB8AA3B, 4),  # 0xA6: PUSH_LOG2E_32
-        (0x07, 0x3FF71547652B82FE, 8),  # 0xA7: PUSH_LOG2E_64
-        (0x08, 0x40549A78, 4),  # 0xA8: PUSH_LOG2_10_32
-        (0x09, 0x400A934F0979A371, 8),  # 0xA9: PUSH_LOG2_10_64
-        (0x0A, 0x3E9A209B, 4),  # 0xAA: PUSH_LOG10_2_32
-        (0x0B, 0x3FD34413509F79FF, 8),  # 0xAB: PUSH_LOG10_2_64
-        (0x0C, 0x3FB504F3, 4),  # 0xAC: PUSH_SQRT2_32
-        (0x0D, 0x3FF6A09E667F3BCD, 8),  # 0xAD: PUSH_SQRT2_64
-        (0x0E, 0x3F3504F3, 4),  # 0xAE: PUSH_INV_SQRT2_32
-        (0x0F, 0x3FE6A09E667F3BCD, 8),  # 0xAF: PUSH_INV_SQRT2_64
-    ]
-    for idx, hex_val, nbytes in constants_def:
-        offset = idx * 8
+    """Table 11: Mathematical & Algorithm Constants (256 bytes / 64 word slots)."""
+    data = bytearray(256)
+    for _, slot, hex_val, nbytes, _ in CONSTANTS_DEF:
+        offset = slot * 4
         raw = hex_val.to_bytes(nbytes, byteorder="little")
         data[offset : offset + nbytes] = raw
     return data
@@ -380,7 +409,26 @@ def write_verilog_header(header_path: str):
         f.write(f"  `define FLASH_CORDIC_ATAN32_BASE 15'h{FLASH_CORDIC_ATAN32_BASE:04X}\n")
         f.write(f"  `define FLASH_CORDIC_ATAN64_BASE 15'h{FLASH_CORDIC_ATAN64_BASE:04X}\n")
         f.write(f"  `define FLASH_TRIG_CONST_BASE    15'h{FLASH_TRIG_CONST_BASE:04X}\n\n")
+        f.write("  // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)\n")
+        for name, slot, _, _, _ in CONSTANTS_DEF:
+            f.write(f"  `define CONST_SLOT_{name:<18} 6'd{slot}\n")
+        f.write("\n")
         f.write("`endif // FPU_ROM_MAP_VH\n")
+
+
+def write_python_constants(py_path: str):
+    os.makedirs(os.path.dirname(py_path), exist_ok=True)
+    with open(py_path, "w") as f:
+        f.write('"""Auto-generated by tools/build_flash.py - DO NOT EDIT MANUALLY.\n\n')
+        f.write("FPU Constants Word Slot Map for EBR Constants ROM.\n")
+        f.write("Each slot represents a 32-bit word offset from FLASH_CONST_BASE.\n")
+        f.write("Byte address in ROM = FLASH_CONST_BASE + (slot << 2).\n")
+        f.write('"""\n\n')
+        f.write("from enum import IntEnum\n\n\n")
+        f.write("class FpuConst(IntEnum):\n")
+        for name, slot, _, _, desc in CONSTANTS_DEF:
+            f.write(f"    {name} = {slot}  # {desc}\n")
+        f.write("\n")
 
 
 def write_verilog_hex(hex_path: str, flash_image: bytearray):
@@ -405,11 +453,13 @@ def main():
 
     write_verilog_hex(HEX_FILE, image)
     write_verilog_header(HEADER_FILE)
+    write_python_constants(PY_CONST_MAP_FILE)
 
     print(f"[*] Generated Binary Image: {BIN_FILE} ({len(image)} bytes)")
     print(f"[*] Generated Emulator Image: {EMU_BIN_FILE} ({len(image)} bytes)")
     print(f"[*] Generated Simulation Hex: {HEX_FILE}")
     print(f"[*] Generated Verilog Header: {HEADER_FILE}")
+    print(f"[*] Generated Python Map: {PY_CONST_MAP_FILE}")
 
 
 if __name__ == "__main__":

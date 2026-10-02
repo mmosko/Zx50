@@ -86,7 +86,7 @@ class Reg(Enum):
     @property
     def byte_length(self) -> int:
         """Expected byte length for the register."""
-        if self in (Reg.AX, Reg.BX, Reg.DX, Reg.FX):
+        if self.is_64():
             return 8
         elif self in (Reg.AL, Reg.AH, Reg.BL, Reg.BH, Reg.DL, Reg.DH, Reg.FL, Reg.FH):
             return 4
@@ -214,10 +214,11 @@ class Registers:
         self._osp = bytearray(1)
         self._upc = bytearray(2)
 
-        # Operand Sign latches
+        # Operand Sign and Trig Latches
         self.sign_a: int = 0
         self.sign_b: int = 0
         self.sign_res: int = 0
+        self.quadrant: int = 0
 
         # Clock binding and bus cycle tracking
         self._clock: Optional[Any] = clock
@@ -314,10 +315,22 @@ class Registers:
             return bytearray(self._dl if half == HalfSelect.LO else self._dh)
         elif src == Reg.FX:
             return bytearray(self._fl if half == HalfSelect.LO else self._fh)
-        elif src in (Reg.AL, Reg.BL, Reg.DL, Reg.FL):
-            return bytearray(getattr(self, f"_{src.name.lower()}"))
-        elif src in (Reg.AH, Reg.BH, Reg.DH, Reg.FH):
-            return bytearray(getattr(self, f"_{src.name.lower()}"))
+        elif src == Reg.AL:
+            return bytearray(self._al)
+        elif src == Reg.AH:
+            return bytearray(self._ah)
+        elif src == Reg.BL:
+            return bytearray(self._bl)
+        elif src == Reg.BH:
+            return bytearray(self._bh)
+        elif src == Reg.DL:
+            return bytearray(self._dl)
+        elif src == Reg.DH:
+            return bytearray(self._dh)
+        elif src == Reg.FL:
+            return bytearray(self._fl)
+        elif src == Reg.FH:
+            return bytearray(self._fh)
         elif src == Reg.EA:
             return bytearray(self.ea.to_bytes(4, byteorder="little"))
         elif src == Reg.EB:
@@ -326,6 +339,30 @@ class Registers:
             return bytearray(self.c.to_bytes(4, byteorder="little"))
         else:
             raise HardwareBusError(f"Unsupported register source for HB_BUS: {src}")
+
+    @property
+    def ha_bus_half(self) -> Optional[HalfSelect]:
+        return self._ha_bus_half
+
+    @property
+    def last_ha_tick(self) -> Optional[int]:
+        return self._last_ha_tick
+
+    @property
+    def hb_bus_half(self) -> Optional[HalfSelect]:
+        return self._hb_bus_half
+
+    @property
+    def hb_bus_reg(self) -> Optional[Reg]:
+        return self._hb_bus_reg
+
+    @property
+    def last_hb_tick(self) -> Optional[int]:
+        return self._last_hb_tick
+
+    @property
+    def last_res_tick(self) -> Optional[int]:
+        return self._last_res_tick
 
     @fpga_resource(
         approach="32-bit 6:1 PFU multiplexer and 4-to-11 WE decoder",
@@ -506,6 +543,7 @@ class Registers:
         self.sign_a = 0
         self.sign_b = 0
         self.sign_res = 0
+        self.quadrant = 0
 
         self._last_ha_tick = -1
         self._last_hb_tick = -1

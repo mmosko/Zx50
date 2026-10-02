@@ -1,3 +1,4 @@
+ast-grep-cli==0.45.3
 coverage==7.16.2
 iniconfig==2.3.0
 nodeenv==1.11.0

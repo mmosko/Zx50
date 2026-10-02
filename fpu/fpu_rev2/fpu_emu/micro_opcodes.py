@@ -100,7 +100,7 @@ class MicroOp(Enum):
     # Register Transfer & Immediate Load
     LD = auto()  # LD dst, imm
     MOV = auto()  # MOV dst, src
-    SWAP = auto()  # SWAP dst, src
+    SWAP = auto()  # SWAP dst, src, overwrites FL or FX
 
     # Branch & Control
     JMP = auto()  # Unconditional jump to target index

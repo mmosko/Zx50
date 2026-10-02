@@ -50,6 +50,14 @@ class UserOpcode(Enum):
     ABS_I64 = 0x5A
     ABS_F64 = 0x5B
 
+    # Trigonometric Operations
+    SIN_F32 = 0x71
+    SIN_F64 = 0x73
+    COS_F32 = 0x79
+    COS_F64 = 0x7B
+    TAN_F32 = 0x81
+    TAN_F64 = 0x83
+
     # Mathematical Constants (0xA0..0xAF)
     PUSH_PI_32 = 0xA0
     PUSH_PI_64 = 0xA1

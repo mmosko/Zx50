@@ -19,6 +19,7 @@ in Verilog. Do not cheat the rules. Cheating invalidates the whole purpose of th
 
 Execute the following verification steps in order. If any step fails, resolve the issue and restart from Step 1.
 
+- **Ban Dynamic getattr:** Run `bash tools/check_no_getattr.sh` (Ensures zero usage of `getattr()` in production code).
 1. **Format & Lint:** Run `ruff check --fix .` and `ruff format .` (Fix all errors and eliminate warnings).
 2. **Type Check:** Run `pyright` (Ensure zero type errors).
 3. **Tests & Coverage:** Run `pytest --xdoctest --cov=src --cov-fail-under=90` (Executes unit tests, verifies docstring
