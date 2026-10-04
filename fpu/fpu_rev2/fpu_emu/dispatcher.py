@@ -91,8 +91,8 @@ class Dispatcher:
             self._blocking_mode = False
             return
         elif user_opcode == UserOpcode.CLEAR_STACK:
-            self._sp.write(b'\x00')
-            self._osp.write(b'\x00')
+            self._sp.write(0)
+            self._osp.write(0)
             return
         elif user_opcode == UserOpcode.RESET:
             self._batch_mode = False
@@ -131,9 +131,10 @@ class Dispatcher:
         """Micro-sequencer execution loop.
 
         Fetches each micro-instruction (pipelined), then executes it.
-        Cycle T0 (pipeline prime): fetch _upc (0), calculate _upc_next.
-        Cycle T1..TN: execute reg.instr, set _upc <- _upc_next (or jump target),
-        present to memory, and calculate _upc_next.
+        Cycle T0 (pipeline prime): fetch _upc, calculate _upc_next via UpcAdder,
+        latch instruction into reg.instr on clock edge, and latch upc_next into _upc.
+        Cycle T1..TN: execute reg.instr, update UPC from upc_mux on writeback edge,
+        and latch next fetched instruction into reg.instr.
         """
         if not microcode:
             raise NotImplementedError()
@@ -148,10 +149,16 @@ class Dispatcher:
         fetch_instr = microcode[current_upc]
 
         # The UpcAdder is always executing in parallel
+        self._upc_mux.select(0)
+        upc_next = self._upc_mux.read_int()
+        if upc_next & 0x400 > 0:
+            self._status.set_bit(StatusFlag.ERR, True)
+            raise UpcOverflowError("UPC overflow/carry during fetch")
 
         # T0 clock tick to present result to reg.instr / imm_reg on T1
         self._clock.tick(1)
         fetch_instr.to_register(self._instr_reg, self._imm_reg)
+        self._upc.write(upc_next & 0x3FF)
 
         try:
             while not self._halted:
@@ -161,37 +168,38 @@ class Dispatcher:
                 self._writeback_mux.set_block(block_num)
 
                 # Execute current instruction
-                # This will take 1 or more cycles
+                # This advances the clock for edge-triggered writeback (1 tick per instruction)
                 self._blocks[block_num].execute()
 
-                # Reading the UPC mux has to hapen after the execute, as it might need the result
-                # of the JUMP address
-
-                # If we executed a CONTROL block that sets the ADDR, we use that, otherwise, we use upc +1
-                # TODO don't use magic numbers
-                if block_num == 3 and self._writeback_mux.res_sel_mux.read_int() == 14:
+                # Reading the UPC mux happens after execute, as it might need the result of a JUMP address
+                if block_num == 3 and self._writeback_mux.res_sel_mux.read_int() == Reg.UPC.value:
                     # The JUMP writeback
                     self._upc_mux.select(1)
+                    is_jump = True
                 else:
                     # The adder output
                     self._upc_mux.select(0)
+                    is_jump = False
 
                 upc_next = self._upc_mux.read_int()
                 if upc_next & 0x400 > 0:
-                    raise HardwareAccessViolationError(f"UPC overflow/carry during fetch")
+                    self._status.set_bit(StatusFlag.ERR, True)
+                    raise UpcOverflowError("UPC overflow/carry during fetch")
 
-                self._upc.write(current_upc & 0x3FF)
-                # We present the memory with the address this cycle
-                fetch_instr = microcode[upc_next]
-
-                # If execution requested halt or reached end of microcode
-                if self._halted or current_upc >= len(microcode):
-                    break
-
-                self._clock.tick(1)
-                # Latch in the next instruction
-                # Next instruction ready in registers for subsequent execution cycle
-                fetch_instr.to_register(self._instr_reg, self._imm_reg)
+                if is_jump:
+                    branch_target = upc_next & 0x3FF
+                    self._upc.write(branch_target)
+                    if self._halted or branch_target >= len(microcode):
+                        break
+                    fetch_instr = microcode[branch_target]
+                    fetch_instr.to_register(self._instr_reg, self._imm_reg)
+                else:
+                    executed_upc = self._upc.read_int()
+                    if self._halted or executed_upc >= len(microcode):
+                        break
+                    self._upc.write(upc_next & 0x3FF)
+                    fetch_instr = microcode[executed_upc]
+                    fetch_instr.to_register(self._instr_reg, self._imm_reg)
 
         finally:
             self._halted = saved_halted

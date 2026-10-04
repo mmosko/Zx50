@@ -29,15 +29,19 @@ class Reg(IntEnum):
     NONE = 0b1111
 
     # Control, Status, and Pointers
+    UPC = 14
     STATUS = 16
     SP = 17
     OSP = 18
-    UPC = 19
 
     INSTR = 20
     EXEC_READY = 21
     EXEC_WB = 22
     EXEC_DONE = 23
+
+    # This is stored in the control block, not the register file
+    RET = 24
+    RET_SET = 25
 
     # These are virtual registers only used in Assembly MicroInstructions.  The functional block needs to
     # resolve them down to the actual registers used in the HA and HB and RES muxes

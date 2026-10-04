@@ -26,7 +26,7 @@ class AdderBlock(FunctionalBlock):
             case MicroOp.SBB:
                 self._sbb(instr)
             case MicroOp.CMP:
-                self.cmp32(instr)
+                self._cmp32(instr)
             case MicroOp.EXP_ADD:
                 raise NotImplementedError
             case MicroOp.EXP_SUB:
@@ -124,7 +124,7 @@ class AdderBlock(FunctionalBlock):
         # must be the low word of a 64-bit pair
         assert(src in [Reg.AL, Reg.BL, Reg.DL, Reg.FL])
 
-    def cmp32(self, instr: MicroInstruction):
+    def _cmp32(self, instr: MicroInstruction):
         """CMP AL, src: 32-bit compare AL - src without modifying AL (1 cycle)."""
         assert (instr.src is not None)
         self._inputs.ha_mux.select(Reg.AL.value)

@@ -1,9 +1,8 @@
 """Top-level FPGA system model."""
 from fpu_emu.blocks.adder.adder_block import AdderBlock
-from fpu_emu.blocks.adder.empty_block import EmptyBlock
+from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
 from fpu_emu.dispatcher import Dispatcher
-from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
@@ -32,7 +31,8 @@ class FpgaModel:
             self.reg_file.ea,
             self.reg_file.eb,
             self.reg_file.imm,
-            self.reg_file.c
+            self.reg_file.c,
+            self.reg_file.upc
         ])
 
         self.hb_mux = Mux(name="hb", inputs=[
@@ -74,9 +74,18 @@ class FpgaModel:
             clock=self.clock
         )
 
+        self.control_inputs = BlockInputs(
+            # HA hardwired to UPC register output
+            ha_mux = self.reg_file.upc,
+            hb_mux = self.hb_mux,
+            status = self.reg_file.status,
+            instr = self.reg_file.instr,
+            exec_ready = self.reg_file.exec_ready
+        )
+
         self.control_block = EmptyBlock(
             name="control",
-            inputs=self.inputs,
+            inputs=self.control_inputs,
             memory=self.memory,
             writeback=self._writeback,
             clock=self.clock
