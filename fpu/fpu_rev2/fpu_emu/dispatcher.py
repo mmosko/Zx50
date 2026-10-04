@@ -19,7 +19,7 @@ class Dispatcher:
     def __init__(self, blocks: List[FunctionalBlock], upc: Register, status: StatusRegister, sp: Register, osp: Register,
                  instr_reg: Register, imm_reg: Register, memory: Memory, clock: Clock,
                  writeback_mux: WritebackMux):
-        self._blocks = blocks,
+        self._blocks = blocks
         self._memory = memory
         self._clock = clock
         self._upc = upc

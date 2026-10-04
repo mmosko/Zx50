@@ -72,13 +72,16 @@ class FpgaModel:
             clock=self.clock
         )
 
-        # This is not hardware, but our map of the opcode block to the function
+        # Map of the opcode block (0..7) to functional blocks
         self.blocks = [
-            self.adder,         # 0
-            self.adder,         # 1
-            self.empty_block,   # 2
-            self.empty_block,   # 3
-            self.empty_block    # 4
+            self.adder,         # 0 (0b000): Arithmetic / Adder
+            self.adder,         # 1 (0b001): Math / Float / Divider
+            self.empty_block,   # 2 (0b010): Logic
+            self.empty_block,   # 3 (0b011): Control
+            self.empty_block,   # 4 (0b100): Memory / Stack
+            self.empty_block,   # 5 (0b101): Memory / Storage
+            self.empty_block,   # 6 (0b110): Shifter / LZC
+            self.empty_block,   # 7 (0b111): Reserved / Empty
         ]
 
         self.writeback_mux = WritebackMux(blocks=self.blocks)
@@ -112,49 +115,33 @@ class FpgaModel:
 
         # this is really just trigger a single write line, as all the register inputs are tied
         # to the res_mux output
-        match dst:
-            case Reg.AL:
-                self.reg_file.al.write(res)
-            case Reg.AH:
-                self.reg_file.ah.write(res)
-            case Reg.BL:
-                self.reg_file.bl.write(res)
-            case Reg.BH:
-                self.reg_file.bh.write(res)
-            case Reg.DL:
-                self.reg_file.dl.write(res)
-            case Reg.DH:
-                self.reg_file.dh.write(res)
-            case Reg.FL:
-                self.reg_file.fl.write(res)
-            case Reg.FH:
-                self.reg_file.fh.write(res)
-            case Reg.EA:
-                self.reg_file.ea.write(res)
-            case Reg.EB:
-                self.reg_file.eb.write(res)
-            case _:
-                raise HardwareBusError(f"Unsupported dst register {dst}")
+        reg_map = {
+            Reg.AL.value: self.reg_file.al,
+            Reg.AH.value: self.reg_file.ah,
+            Reg.BL.value: self.reg_file.bl,
+            Reg.BH.value: self.reg_file.bh,
+            Reg.DL.value: self.reg_file.dl,
+            Reg.DH.value: self.reg_file.dh,
+            Reg.FL.value: self.reg_file.fl,
+            Reg.FH.value: self.reg_file.fh,
+            Reg.EA.value: self.reg_file.ea,
+            Reg.EB.value: self.reg_file.eb,
+        }
+        if dst in reg_map:
+            reg_map[dst].write(res)
+        elif dst == Reg.C:
+            self.reg_file.c.write(res[:1])
+        elif dst in (Reg.NONE, Reg.STATUS):
+            pass
+        else:
+            raise HardwareBusError(f"Unsupported dst register {dst}")
 
-        # Writeback the status register
+        # Writeback the status register using proper bit masks
         status_byte: int = self.writeback_mux.status_mux.read_int()
         status_sel: int = self.writeback_mux.status_wr_sel_mux.read_int()
-        if status_sel & StatusFlag.ZERO.value:
-            flag: bool = status_byte & StatusFlag.ZERO.value != 0
-            self.reg_file.status.set_bit(StatusFlag.ZERO, flag)
-        if status_sel & StatusFlag.SIGN.value:
-            flag: bool = status_byte & StatusFlag.SIGN.value != 0
-            self.reg_file.status.set_bit(StatusFlag.SIGN, flag)
-        if status_sel & StatusFlag.CARRY.value:
-            flag: bool = status_byte & StatusFlag.CARRY.value != 0
-            self.reg_file.status.set_bit(StatusFlag.CARRY, flag)
-        if status_sel & StatusFlag.OVERFLOW.value:
-            flag: bool = status_byte & StatusFlag.OVERFLOW.value != 0
-            self.reg_file.status.set_bit(StatusFlag.OVERFLOW, flag)
-        if status_sel & StatusFlag.UNDERFLOW.value:
-            flag: bool = status_byte & StatusFlag.UNDERFLOW.value != 0
-            self.reg_file.status.set_bit(StatusFlag.UNDERFLOW, flag)
-        if status_sel & StatusFlag.ERR.value:
-            flag: bool = status_byte & StatusFlag.ERR.value != 0
-            self.reg_file.status.set_bit(StatusFlag.ERR, flag)
+        for flag in StatusFlag:
+            mask = 1 << flag.value
+            if status_sel & mask:
+                bit_val: bool = (status_byte & mask) != 0
+                self.reg_file.status.set_bit(flag, bit_val)
 

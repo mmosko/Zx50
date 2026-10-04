@@ -30,13 +30,20 @@ class Bus(Readable):
         """Returns an immutable snapshot of raw bytes containing the masked bit state."""
         return bytes(self._data)
 
-    def set(self, buf: Union[bytes, bytearray]) -> None:
-        """Asynchronously sets the bus value."""
-        assert len(buf) == self._num_bytes, (
-            f"Bus {self._name}: Expected {self._num_bytes} bytes for "
-            f"{self._size_in_bits}-bit bus, got {len(buf)}"
-        )
+    def read_int(self) -> int:
+        """Convenience method to read bus value directly as an unsigned int."""
+        return int.from_bytes(self._data, byteorder="little")
 
-        raw_val = int.from_bytes(buf, byteorder="big")
+    def set(self, buf: Union[bytes, bytearray, int]) -> None:
+        """Asynchronously sets the bus value."""
+        if isinstance(buf, int):
+            raw_val = buf
+        else:
+            assert len(buf) == self._num_bytes, (
+                f"Bus {self._name}: Expected {self._num_bytes} bytes for "
+                f"{self._size_in_bits}-bit bus, got {len(buf)}"
+            )
+            raw_val = int.from_bytes(buf, byteorder="little")
+
         masked_val = raw_val & self._mask
-        self._data[:] = masked_val.to_bytes(self._num_bytes, byteorder="big")
+        self._data[:] = masked_val.to_bytes(self._num_bytes, byteorder="little")

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class Reg(Enum):
+class Reg(IntEnum):
     """
     Register enumeration.
 
@@ -25,16 +25,19 @@ class Reg(Enum):
     FL = 0b1010
     FH = 0b1011
 
-    # Control, Status, and Pointers
-    STATUS = 15
-    SP = 16
-    OSP = 17
-    UPC = 18
+    # Used as a flag to writeback that there is no writeback result register
+    NONE = 0b1111
 
-    INSTR = 20,
+    # Control, Status, and Pointers
+    STATUS = 16
+    SP = 17
+    OSP = 18
+    UPC = 19
+
+    INSTR = 20
     EXEC_READY = 21
-    EXEC_WB = 22,
-    EXEC_DONE = 23,
+    EXEC_WB = 22
+    EXEC_DONE = 23
 
     # These are virtual registers only used in Assembly MicroInstructions.  The functional block needs to
     # resolve them down to the actual registers used in the HA and HB and RES muxes
@@ -42,3 +45,4 @@ class Reg(Enum):
     # BX = 31,
     # DX = 32,
     # FX = 33,
+

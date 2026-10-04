@@ -11,7 +11,7 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 class AdderBlock(FunctionalBlock):
-    def __init__(self, name: str, inputs: BlockInputs, memory: Memory, writeback: Callable, clock: Clock, **kwargs):
+    def __init__(self, name: str, inputs: BlockInputs, memory: Memory, writeback: Callable, clock: Clock):
         super().__init__(name, inputs, memory, writeback, clock)
 
     def execute(self):
@@ -26,7 +26,7 @@ class AdderBlock(FunctionalBlock):
             case MicroOp.SBB:
                 self._sbb(instr)
             case MicroOp.CMP:
-                raise NotImplementedError
+                self.cmp32(instr)
             case MicroOp.EXP_ADD:
                 raise NotImplementedError
             case MicroOp.EXP_SUB:
@@ -39,7 +39,8 @@ class AdderBlock(FunctionalBlock):
                 raise NotImplementedError
             case MicroOp.DIV:
                 raise NotImplementedError
-        raise HardwareBusError(f"Unsupported opcode: {instr.op}")
+            case _:
+                raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
     def _add(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.ADD)
@@ -60,70 +61,62 @@ class AdderBlock(FunctionalBlock):
         if instr.is_w32():
             self._add_32(instr, cin=0, sub=True)
         else:
-            self._add_32(instr, cin=0, sub=True)
+            self._add_64(instr, cin=0, sub=True)
 
     def _sbb(self, instr: MicroInstruction):
         borrow_in = 1 if self._inputs.status.is_bit_set(StatusFlag.CARRY) else 0
         if instr.is_w32():
             self._add_32(instr, cin=borrow_in, sub=True)
         else:
-            self._add_32(instr, cin=borrow_in, sub=True)
+            self._add_64(instr, cin=borrow_in, sub=True)
 
     def _combinatorial_add(self, cin: int, sub: bool) -> AdderResult:
         ha_bus = self._inputs.ha_mux.read()
         hb_bus = self._inputs.hb_mux.read()
         return AdderCore.adder_core(a=ha_bus, b=hb_bus, cin=cin, sub=sub)
 
-        self._outputs.block_res.set(adder_result.res)
-        self._outputs.block_res_sel.set(Reg.AL.value.to_bytes(1, 'big'))
-
     def _add_32(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
         """32-bit Add with carry"""
         assert (instr.src is not None)
 
-        # This is all combinatorial in the current clock tick
-
+        # Combinatorial setup in current cycle
         self._inputs.ha_mux.select(Reg.AL.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=cin, sub=sub)
-        self._clock.tick(1)
 
-        # Writeback AL (implicit tick)
+        # Writeback AL (edge-triggered tick in writeback)
         self._outputs.block_res.set(adder_result.res)
-        self._outputs.block_res_sel.set(Reg.AL.value.to_bytes(1, 'big'))
+        self._outputs.block_res_sel.set(Reg.AL.value)
         self._wb_flags(adder_result)
         self._writeback()
-
-        return
 
     def _add_64(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
         """ADC AX, src: 64-bit addition with carry (2 cycles)."""
         assert (instr.src is not None)
         self._validate_src64(instr.src)
 
+        # Low word (AL)
         self._inputs.ha_mux.select(Reg.AL.value)
         self._inputs.hb_mux.select(instr.src.value)
-        adder_result = self._combinatorial_add(cin=cin, sub=sub)
-        self._clock.tick(1)
+        low_result = self._combinatorial_add(cin=cin, sub=sub)
 
-        # Writeback AL (implicit tick)
-        # If we latch the result, this could be done in parallel with the upper word
-        self._outputs.status_wr_sel.set(b'0x00')
-        self._outputs.block_res.set(adder_result.res)
-        self._outputs.block_res_sel.set(Reg.AL.value.to_bytes(1, 'big'))
+        # Writeback AL (status write disabled for intermediate low word)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(low_result.res)
+        self._outputs.block_res_sel.set(Reg.AL.value)
         self._writeback()
 
-        # Upper word
+        # Upper word (AH) with carry from lower word
+        cin_high = 1 if low_result.cf else 0
         self._inputs.ha_mux.select(Reg.AH.value)
         src_h = instr.src.value | 0b0001
         self._inputs.hb_mux.select(src_h)
-        adder_result = self._combinatorial_add(cin=cin, sub=sub)
-        self._clock.tick(1)
+        high_result = self._combinatorial_add(cin=cin_high, sub=sub)
 
-        # Writeback AH (implicit tick)
-        self._wb_flags(adder_result)
-        self._outputs.block_res.set(adder_result.res)
-        self._outputs.block_res_sel.set(Reg.AH.value.to_bytes(1, 'big'))
+        # Writeback AH and commit final status flags
+        self._wb_flags(high_result)
+        self._outputs.block_res.set(high_result.res)
+        self._outputs.block_res_sel.set(Reg.AH.value)
         self._writeback()
 
     @staticmethod
@@ -138,8 +131,9 @@ class AdderBlock(FunctionalBlock):
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=0, sub=True)
 
-        self._clock.tick(1)
+        self._outputs.block_res_sel.set(Reg.NONE.value)  # No register writeback
         self._wb_flags(adder_result)
+        self._writeback()
 
     def _wb_flags(self, result: AdderResult):
         status_byte = 0
@@ -150,7 +144,7 @@ class AdderBlock(FunctionalBlock):
         self._outputs.res_status.set(status_byte)
 
         status_wr_select = (1 << StatusFlag.CARRY.value) | \
-                             (1 << StatusFlag.SIGN.value) | \
+                           (1 << StatusFlag.SIGN.value) | \
                            (1 << StatusFlag.OVERFLOW.value) | \
                            (1 << StatusFlag.ZERO.value)
 

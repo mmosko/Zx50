@@ -3,8 +3,6 @@
 Models off-chip ROM
 """
 
-from enum import IntEnum
-import os
 from pathlib import Path
 
 
@@ -13,7 +11,7 @@ class Rom:
 
     def __init__(self, size: int, rom_path: Path):
         self._rom_path = rom_path
-        if os.path.exists(rom_path):
+        if rom_path.exists():
             with open(rom_path, "rb") as f:
                 self._data = bytearray(f.read())
             if len(self._data) != size:

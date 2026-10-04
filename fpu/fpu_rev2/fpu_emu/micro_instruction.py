@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from enum import IntEnum, auto
-from typing import Optional
+from enum import IntEnum
+from typing import Optional, Union
 
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register
@@ -21,11 +21,12 @@ class MicroInstruction:
     w: IW = IW.W32
     dst: Optional[Reg] = None
     src: Optional[Reg] = None
-    flag: Optional[StatusFlag] = None
+    flag: Union[StatusFlag, int] = 0
     imm: int = 0
 
     def is_w32(self) -> bool:
         return self.w == IW.W32
+
     def is_w64(self) -> bool:
         return self.w == IW.W64
 
@@ -33,9 +34,9 @@ class MicroInstruction:
         """Encodes bits [31:14] (18 bits) into an 18-bit Register instance."""
         op_val = int(self.op.value) & 0x3F
         w_val = self.w.value
-        dst_val = (int(self.dst.value) & 0x0F) if self.dst is not None else 0
-        src_val = (int(self.src.value) & 0x0F) if self.src is not None else 0
-        flag_val = self.flag.value & 0x07 if self.flag is not None else 0
+        dst_val = (int(self.dst) & 0x0F) if self.dst is not None else 0
+        src_val = (int(self.src) & 0x0F) if self.src is not None else 0
+        flag_val = self.flag.value if isinstance(self.flag, StatusFlag) else (int(self.flag) & 0x07)
 
         # Pack into 18-bit integer
         inst_18 = (
@@ -46,22 +47,19 @@ class MicroInstruction:
             | flag_val
         )
 
-        buf = inst_18.to_bytes(instr_reg.size_in_bytes, byteorder="big")
-        instr_reg.write(buf)
+        instr_reg.write(inst_18)
 
         imm_val = self.imm & 0x3FF
-        buf = imm_val.to_bytes(imm_reg.size_in_bytes, byteorder="big")
-        imm_reg.write(buf)
+        imm_reg.write(imm_val)
 
     @classmethod
     def from_register(cls, r: Register) -> "MicroInstruction":
         """
         Decodes bits [31:14] (18 bits) from an 18-bit Register instance.
 
-        N.B.: There is no immedaite value, will always be 0
+        N.B.: There is no immediate value in this register, imm will always be 0.
         """
-        raw_bytes = r.read()
-        inst_18 = int.from_bytes(raw_bytes, byteorder="big")
+        inst_18 = r.read_int()
 
         # Unpack 18-bit fields
         flag_val = inst_18 & 0x07
@@ -72,7 +70,7 @@ class MicroInstruction:
 
         op = MicroOp(op_val)
         w = IW.W64 if w_val == 1 else IW.W32
-        flag = StatusFlag(flag_val) if flag_val > 0 else None
+        flag = flag_val
 
         try:
             dst = Reg(dst_val)

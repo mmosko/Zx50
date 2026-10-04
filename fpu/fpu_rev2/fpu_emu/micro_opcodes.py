@@ -1,9 +1,6 @@
 """Micro-operation codes and MicroInstruction dataclass for the micro-sequencer."""
 
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional
-from fpu_emu.hardware.registers import Reg, StatusFlag
+from enum import Enum
 
 
 class MicroOp(Enum):

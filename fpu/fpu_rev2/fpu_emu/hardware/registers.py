@@ -5,11 +5,20 @@ timing rules, and clock-enabled writeback via RES_BUS. Direct access to math
 and compound registers is strictly forbidden during execution.
 """
 
-from enum import Enum
-
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.reg import Reg
-from fpu_emu.hardware.register import Register, StatusRegister
+from fpu_emu.hardware.register import Register, StatusRegister, StatusFlag
+
+__all__ = [
+    "Registers",
+    "Register",
+    "StatusRegister",
+    "StatusFlag",
+    "Reg",
+    "HardwareTimingConflictError",
+    "HardwareBusError",
+    "HardwareAccessViolationError",
+]
 
 
 class HardwareTimingConflictError(Exception):
@@ -28,21 +37,6 @@ class HardwareAccessViolationError(Exception):
     """Raised when direct register access is attempted on bus-gated registers."""
 
     pass
-
-
-
-
-class StatusFlag(Enum):
-    """Status register flag bit allocations (SystemDesign.md Section 2.1)."""
-
-    DIFF_SIGN = 0  # Bit 0: Effective subtraction / operand signs differ
-    ERR = 1  # Bit 1: Error flag (Division by zero, domain errors, stack traps)
-    UNDERFLOW = 2  # Bit 2: Stack or floating-point underflow
-    OVERFLOW = 3  # Bit 3: Stack, integer, or floating-point overflow
-    CARRY = 4  # Bit 4: Arithmetic carry or borrow
-    SIGN = 5  # Bit 5: Sign flag (1 = Negative)
-    ZERO = 6  # Bit 6: Zero flag (1 = Result is zero)
-    BUSY = 7  # Bit 7: Hardware execution busy flag
 
 
 class Registers:

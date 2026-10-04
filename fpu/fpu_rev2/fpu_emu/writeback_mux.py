@@ -1,11 +1,11 @@
-from typing import List, Optional
+from typing import List
 
 from fpu_emu.blocks.functional_block import FunctionalBlock
 from fpu_emu.hardware.mux import Mux
 
 
 class WritebackMux:
-    def __init__(self, blocks: List[Optional[FunctionalBlock]]):
+    def __init__(self, blocks: List[FunctionalBlock]):
         # 32-bit result mux
         self.res_mux = Mux(name="res", inputs=[
             b.outputs.block_res for b in blocks
@@ -34,6 +34,9 @@ class WritebackMux:
         self.exec_done_mux = Mux(name="exec_done", inputs=[
             b.outputs.exec_done for b in blocks
         ])
+
+        # Default reset state selects block 0
+        self.set_block(0)
 
     def set_block(self, block_num: int):
         self.res_mux.select(block_num)

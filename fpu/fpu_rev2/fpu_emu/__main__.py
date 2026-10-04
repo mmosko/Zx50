@@ -6,12 +6,9 @@ Prints the MachXO2 FPGA resource utilization report from FpgaResourceRegistry.
 from fpu_emu.fpga_resource import FpgaResourceRegistry
 
 # Ensure all annotated hardware modules are imported and registered
-import fpu_emu.alu.adder  # noqa: F401
-import fpu_emu.alu.booth_mul  # noqa: F401
-import fpu_emu.alu.ieee754_exp  # noqa: F401
-import fpu_emu.alu.logic  # noqa: F401
-import fpu_emu.alu.lzc  # noqa: F401
-import fpu_emu.alu.shifter  # noqa: F401
+import fpu_emu.blocks.adder.adder_block  # noqa: F401
+import fpu_emu.blocks.adder.adder_core  # noqa: F401
+import fpu_emu.blocks.adder.booth_mul  # noqa: F401
 import fpu_emu.dispatcher  # noqa: F401
 import fpu_emu.hardware.memory  # noqa: F401
 import fpu_emu.hardware.registers  # noqa: F401
