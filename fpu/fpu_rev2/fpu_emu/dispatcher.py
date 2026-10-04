@@ -5,8 +5,11 @@ from typing import List
 from fpu_emu.blocks.functional_block import FunctionalBlock
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
+from fpu_emu.hardware.mux import Mux
+from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register, StatusRegister
-from fpu_emu.hardware.registers import StatusFlag
+from fpu_emu.hardware.registers import StatusFlag, UpcOverflowError, HardwareAccessViolationError
+from fpu_emu.hardware.upc_adder import UpcAdder
 from fpu_emu.micro_code import MicroCode
 from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.user_opcodes import UserOpcode
@@ -16,15 +19,23 @@ from fpu_emu.writeback_mux import WritebackMux
 class Dispatcher:
     """Dispatches user opcodes and executes microcode instruction streams."""
 
-    def __init__(self, blocks: List[FunctionalBlock], upc: Register, status: StatusRegister, sp: Register, osp: Register,
-                 instr_reg: Register, imm_reg: Register, memory: Memory, clock: Clock,
-                 writeback_mux: WritebackMux):
+    def __init__(self,
+                 blocks: List[FunctionalBlock],
+                 upc: Register,
+                 status: StatusRegister,
+                 sp: Register,
+                 osp: Register,
+                 instr_reg: Register,
+                 imm_reg: Register,
+                 memory: Memory,
+                 clock: Clock,
+                 writeback_mux: WritebackMux,
+                 upc_mux: Mux):
         self._blocks = blocks
         self._memory = memory
         self._clock = clock
         self._upc = upc
-        # we are cheating for a bit with a local pc int
-        self._pc = 0
+        self._upc_mux = upc_mux
         self._sp = sp
         self._osp = osp
         self._instr_reg = instr_reg
@@ -35,6 +46,11 @@ class Dispatcher:
         self._blocking_mode: bool = True
         self._zero = bytes(0)
         self._writeback_mux = writeback_mux
+
+    @property
+    def upc(self) -> int:
+        """Returns current UPC register value."""
+        return self._upc.read_int()
 
     @property
     def batch_mode(self) -> bool:
@@ -82,7 +98,6 @@ class Dispatcher:
             self._batch_mode = False
             self._blocking_mode = True
             raise NotImplementedError()
-            return
         elif user_opcode == UserOpcode.EXEC_BATCH:
             raise NotImplementedError()
             # self._execute_batch()
@@ -103,9 +118,84 @@ class Dispatcher:
             # TODO: We should burn the microcode into the EBR, but for now it is much easier to
             # be writing and reading micro instructions.
             ucode = MicroCode.get(user_opcode)
+
+            # In the FPGA, this needs to initialize the UPC to the full memory address of the microcode
+            # instruction.  For ease of use in Python, we use a small array per User opcode, so we always
+            # use 0
+            self._upc.write(0)
             self._run(ucode)
         finally:
             self._status.set_bit(StatusFlag.BUSY, False)
+
+    def _run(self, microcode: List[MicroInstruction]):
+        """Micro-sequencer execution loop.
+
+        Fetches each micro-instruction (pipelined), then executes it.
+        Cycle T0 (pipeline prime): fetch _upc (0), calculate _upc_next.
+        Cycle T1..TN: execute reg.instr, set _upc <- _upc_next (or jump target),
+        present to memory, and calculate _upc_next.
+        """
+        if not microcode:
+            raise NotImplementedError()
+
+        saved_halted = self._halted
+        self._halted = False
+
+        # Read initial UPC (defaults to 0 unless set by caller)
+        current_upc = self._upc.read_int()
+
+        # Cycle T0: Fetch instruction at _upc, calculate _upc_next
+        fetch_instr = microcode[current_upc]
+
+        # The UpcAdder is always executing in parallel
+
+        # T0 clock tick to present result to reg.instr / imm_reg on T1
+        self._clock.tick(1)
+        fetch_instr.to_register(self._instr_reg, self._imm_reg)
+
+        try:
+            while not self._halted:
+                # Read and decode instruction from reg.instr
+                instr = MicroInstruction.from_register(self._instr_reg)
+                block_num = (instr.op.value >> 3) & 0x07
+                self._writeback_mux.set_block(block_num)
+
+                # Execute current instruction
+                # This will take 1 or more cycles
+                self._blocks[block_num].execute()
+
+                # Reading the UPC mux has to hapen after the execute, as it might need the result
+                # of the JUMP address
+
+                # If we executed a CONTROL block that sets the ADDR, we use that, otherwise, we use upc +1
+                # TODO don't use magic numbers
+                if block_num == 3 and self._writeback_mux.res_sel_mux.read_int() == 14:
+                    # The JUMP writeback
+                    self._upc_mux.select(1)
+                else:
+                    # The adder output
+                    self._upc_mux.select(0)
+
+                upc_next = self._upc_mux.read_int()
+                if upc_next & 0x400 > 0:
+                    raise HardwareAccessViolationError(f"UPC overflow/carry during fetch")
+
+                self._upc.write(current_upc & 0x3FF)
+                # We present the memory with the address this cycle
+                fetch_instr = microcode[upc_next]
+
+                # If execution requested halt or reached end of microcode
+                if self._halted or current_upc >= len(microcode):
+                    break
+
+                self._clock.tick(1)
+                # Latch in the next instruction
+                # Next instruction ready in registers for subsequent execution cycle
+                fetch_instr.to_register(self._instr_reg, self._imm_reg)
+
+        finally:
+            self._halted = saved_halted
+
 
     # def _execute_batch(self):
     #     """Executes all queued commands in RAM sequentially with BUSY held high."""
@@ -140,35 +230,3 @@ class Dispatcher:
     #
     #     self._hw.mem[CMD_STACK_BASE + osp] = user_opcode.value
     #     self._hw.reg.osp = osp + 1
-
-    def _run(self, microcode: List[MicroInstruction]):
-        """Micro-sequencer execution loop.
-
-        Fetches each micro-instruction (1 tick), then executes it.
-        """
-        saved_pc, saved_halted = self._pc, self._halted
-
-        # N.B. Using the micro_code dictionary, we only use the UPC from 0:N words
-        self._upc.write(b'0x00')
-        self._halted = False
-
-        # TODO: for now we are cheating with a Python pc
-        self._pc = 0
-        try:
-            while not self._halted and self._pc < len(microcode):
-                # 1 cycle micro-instruction fetch
-                self._clock.tick(1)
-                instr = microcode[self._pc]
-                self._pc += 1
-                instr.to_register(self._instr_reg, self._imm_reg)
-
-                block_num = instr.op.value >> 3 & 0x07
-
-                self._writeback_mux.set_block(block_num)
-
-                # TODO: Some blocks (i.e. control) will modify the PC.  We really need to switch to using
-                # self._upc register rather than self._pc
-                self._blocks[block_num].execute()
-
-        finally:
-            self._pc, self._halted = saved_pc, saved_halted

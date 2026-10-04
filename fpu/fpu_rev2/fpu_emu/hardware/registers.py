@@ -18,6 +18,7 @@ __all__ = [
     "HardwareTimingConflictError",
     "HardwareBusError",
     "HardwareAccessViolationError",
+    "UpcOverflowError",
 ]
 
 
@@ -35,6 +36,12 @@ class HardwareBusError(Exception):
 
 class HardwareAccessViolationError(Exception):
     """Raised when direct register access is attempted on bus-gated registers."""
+
+    pass
+
+
+class UpcOverflowError(HardwareBusError):
+    """Raised when the 10-bit UPC adder asserts carry (overflow past 1023)."""
 
     pass
 

@@ -3,12 +3,14 @@ from fpu_emu.blocks.adder.adder_block import AdderBlock
 from fpu_emu.blocks.adder.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
 from fpu_emu.dispatcher import Dispatcher
+from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.registers import Registers, HardwareBusError, StatusFlag
 from fpu_emu.hardware.rom import Rom
+from fpu_emu.hardware.upc_adder import UpcAdder
 from fpu_emu.writeback_mux import WritebackMux
 
 
@@ -72,12 +74,20 @@ class FpgaModel:
             clock=self.clock
         )
 
+        self.control_block = EmptyBlock(
+            name="control",
+            inputs=self.inputs,
+            memory=self.memory,
+            writeback=self._writeback,
+            clock=self.clock
+        )
+
         # Map of the opcode block (0..7) to functional blocks
         self.blocks = [
             self.adder,         # 0 (0b000): Arithmetic / Adder
             self.adder,         # 1 (0b001): Math / Float / Divider
             self.empty_block,   # 2 (0b010): Logic
-            self.empty_block,   # 3 (0b011): Control
+            self.control_block,   # 3 (0b011): Control
             self.empty_block,   # 4 (0b100): Memory / Stack
             self.empty_block,   # 5 (0b101): Memory / Storage
             self.empty_block,   # 6 (0b110): Shifter / LZC
@@ -85,18 +95,30 @@ class FpgaModel:
         ]
 
         self.writeback_mux = WritebackMux(blocks=self.blocks)
+        self.upc_adder = UpcAdder(self.reg_file.upc)
+
+        # The UPC takes its value either from the pre-calculated +1 or from the result
+        # of a control JUMP.
+        # Bit 11 is the overflow (carray) bit
+        self.upc_mux = Mux(name="upc", inputs=[
+            # 11 bits
+            self.upc_adder,
+            # 32-bits, but we only use the bottom 11
+            self.control_block.outputs.block_res
+        ])
 
         self.dispatcher = Dispatcher(
             blocks=self.blocks,
             clock=self.clock,
             upc=self.reg_file.upc,
+            upc_mux=self.upc_mux,
             status=self.reg_file.status,
             sp=self.reg_file.sp,
             osp=self.reg_file.osp,
             instr_reg=self.reg_file.instr,
             imm_reg=self.reg_file.imm,
             memory=self.memory,
-            writeback_mux=self.writeback_mux
+            writeback_mux=self.writeback_mux,
         )
 
     def _writeback(self):
@@ -131,6 +153,8 @@ class FpgaModel:
             reg_map[dst].write(res)
         elif dst == Reg.C:
             self.reg_file.c.write(res[:1])
+        elif dst == Reg.UPC:
+            self.reg_file.upc.write(res[:2])
         elif dst in (Reg.NONE, Reg.STATUS):
             pass
         else:
