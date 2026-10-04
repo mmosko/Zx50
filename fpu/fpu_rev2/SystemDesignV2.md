@@ -198,11 +198,11 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | CMP dst, src     | 0b000_100 | 0/1   | NONE    | dst    | src    | `dst - src` (updates flags)        | sets ZF, SF, CF, VF                   |
 | EXP_ADD EA, src  | 0b000_101 | 0     | EA      | EA     | src    | `EA <- EA + EB` or immediate       | sets ZF, SF, VF (>1023), UF (<-1022)  |
 | EXP_SUB EA, src  | 0b000_110 | 0     | EA      | EA     | src    | `EA <- EA - EB` or immediate       | sets ZF, SF, VF (>1023), UF (<-1022)  |
-| MUL dst, src     | 0b000_111 | 0/1   | dst     | dst    | src    | `dst <- dst * src` (Booth mul)     | sets ZF, SF, VF                       |
+| MOD dst, src     | 0b000_111 | 0/1   | dst     | dst    | src    | `dst <- dst % src` (remainder)     | sets ZF, SF, VF, ERR (on div-by-zero) |
 | PACK dst, exp    | 0b001_000 | 0/1   | dst     | exp    | dst    | `dst <- dst & exp & sign`          | sets ZF, SF, VF, UF                   |
 | UNPACK dst, exp  | 0b001_001 | 0/1   | dst     | exp    | dst    | exp <- dst.exp, dst <- mantissa    | sets ZF, SF, DF (sign_A ^ sign_B)     |
-| DIV dst, src     | 0b001_010 | 0/1   | dst     | dst    | src    | `dst <- dst / src`, DL/DX <- rem   | sets ZF, SF, VF, ERR (on div-by-zero) |
-| MOD dst, src     | 0b001_011 | 0/1   | dst     | dst    | src    | `dst <- dst % src` (remainder)     | sets ZF, SF, VF, ERR (on div-by-zero) |
+| MUL dst, src     | 0b001_010 | 0/1   | dst     | dst    | src    | `dst <- dst * src` (Booth mul)     | sets ZF, SF, VF                       |
+| DIV dst, src     | 0b001_011 | 0/1   | dst     | dst    | src    | `dst <- dst / src`, DL/DX <- rem   | sets ZF, SF, VF, ERR (on div-by-zero) |
 | -----            | -----     | ----- | -----   | -----  | -----  | -----                              | -----                                 |
 | AND dst, src     | 0b010_000 | 0/1   | dst     | dst    | src    | `dst <- dst & src`                 | sets ZF, SF, clears CF <- 0, VF <- 0  |
 | OR dst, src      | 0b010_001 | 0/1   | dst     | dst    | src    | `dst <- dst \| src`                | sets ZF, SF, clears CF <- 0, VF <- 0  |
@@ -239,3 +239,6 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | TRAP             | 0b011_110 | 0     | UPC     | n/a    | n/a    | assert ERR flag, end execution     | sets ERR                              |
 | NOP              | 0b011_111 | 0     | n/a     | n/a    | n/a    | 1 tick do nothing                  | none                                  |
 
+---
+
+For detailed documentation, status flags, register transfers, bit patterns, and concrete examples for every instruction, see the [Microcode Instruction Reference Manual](SystemReference.md).
