@@ -1,17 +1,18 @@
 from dataclasses import dataclass
+from typing import Callable
 
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
-from fpu_emu.hardware.register import Register
+from fpu_emu.hardware.register import Register, StatusRegister
 
 
 @dataclass
 class BlockInputs:
     ha_mux: Mux
     hb_mux: Mux
-    status: Register
+    status: StatusRegister
     instr: Register
     exec_ready: Register
 
@@ -31,11 +32,20 @@ class FunctionalBlock:
     A Functional block is a set of logic that is behind one AND wall to regulate power consumption.
     """
 
-    def __init__(self, name: str, inputs: BlockInputs, memory: Memory, clock: Clock) -> None:
+    def __init__(self, name: str, inputs: BlockInputs, memory: Memory, writeback: Callable, clock: Clock) -> None:
+        """
+
+        :param name:
+        :param inputs:
+        :param memory:
+        :param writeback:  The logic block that looks for the EXEC_WB flag
+        :param clock:
+        """
         self._name = name
         self._inputs = inputs
         self._memory = memory
         self._clock = clock
+        self._writeback = writeback
 
         self._outputs = BlockOutputs(
             block_res=Bus(name=f"{name}_res", size_in_bits=32),

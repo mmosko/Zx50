@@ -9,7 +9,7 @@ from enum import Enum
 
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.reg import Reg
-from fpu_emu.hardware.register import Register
+from fpu_emu.hardware.register import Register, StatusRegister
 
 
 class HardwareTimingConflictError(Exception):
@@ -67,7 +67,7 @@ class Registers:
         self.c = Register(name=Reg.C, size_in_bits=6, clock=clock)
 
         # Control and Pointer registers
-        self.status = Register(name=Reg.STATUS, size_in_bits=8, clock=clock)
+        self.status = StatusRegister(name=Reg.STATUS, size_in_bits=8, clock=clock)
         self.sp = Register(name=Reg.SP, size_in_bits=8, clock=clock)
         self.osp =Register(name=Reg.OSP, size_in_bits=8, clock=clock)
         self.upc = Register(name=Reg.UPC, size_in_bits=10, clock=clock)

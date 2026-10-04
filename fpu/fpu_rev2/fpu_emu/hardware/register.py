@@ -2,6 +2,7 @@ from typing import Union
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.readable import Readable
 from fpu_emu.hardware.reg import Reg
+from fpu_emu.hardware.registers import StatusFlag
 
 
 class Register(Readable):
@@ -35,12 +36,6 @@ class Register(Readable):
         """Convenience method to read register payload directly as an unsigned int."""
         return int.from_bytes(self._data, byteorder="big")
 
-    def is_bit_set(self, bit_index: int) -> bool:
-        """Returns True if the specified bit index is set."""
-        assert 0 <= bit_index < self._size_in_bits, f"Bit index {bit_index} out of bounds"
-        val = int.from_bytes(self._data, byteorder="big")
-        return bool(val & (1 << bit_index))
-
     def write(self, buf: Union[bytes, bytearray]) -> None:
         """Writes raw bytes into the register, automatically masking to size_in_bits."""
         assert self._last_write_tick != self._clock.cycles, (
@@ -57,26 +52,45 @@ class Register(Readable):
         masked_val = raw_val & self._mask
         self._data[:] = masked_val.to_bytes(self._num_bytes, byteorder="big")
 
-    def set_bit(self, index: int, value: Union[bool, int]) -> None:
+    def reset(self) -> None:
+        self._data = bytearray(self._num_bytes)
+        self._last_write_tick = -1
+
+
+class StatusRegister(Register):
+    def __init__(self, name: Reg, size_in_bits: int, clock: Clock):
+        super().__init__(name, size_in_bits, clock)
+        # We allow each bit to be set individually
+        self._last_bit_write_tick = [0] * 8
+
+    def is_bit_set(self, bit: StatusFlag) -> bool:
+        """Returns True if the specified bit index is set."""
+        assert 0 <= bit.value < self._size_in_bits, f"Bit index {bit} out of bounds"
+        val = int.from_bytes(self._data, byteorder="big")
+        return bool(val & (1 << bit.value))
+
+    def set_bit(self, bit: StatusFlag, value: Union[bool, int]) -> None:
         """
         Sets (True/1) or clears (False/0) a specific bit index (0 to size_in_bits - 1).
 
-        TODO: We should define a StatusFlag Register type.  We ignore write clock checks for this.
         """
-        assert 0 <= index < self._size_in_bits, (
-            f"Register {self._name}: Bit index {index} out of bounds (0..{self._size_in_bits - 1})"
+        assert 0 <= bit.value < self._size_in_bits, (
+            f"Register {self._name}: Bit index {bit} out of bounds (0..{self._size_in_bits - 1})"
+        )
+        assert self._last_bit_write_tick[bit.value] != self._clock.cycles, (
+            f"Register {self._name} bit {bit}: Multiple writes in cycle {self._clock.cycles}"
         )
 
         current_val = int.from_bytes(self._data, byteorder="big")
 
         if value:
-            new_val = current_val | (1 << index)
+            new_val = current_val | (1 << bit.value)
         else:
-            new_val = current_val & ~(1 << index)
+            new_val = current_val & ~(1 << bit.value)
 
-        # Route through self.write() to enforce clock tick tracking & bounds
-        self.write(new_val.to_bytes(self._num_bytes, byteorder="big"))
+        self._last_bit_write_tick[bit.value] = self._clock.cycles
+        self._data[:] = new_val.to_bytes(self._num_bytes, byteorder="big")
 
     def reset(self) -> None:
-        self._data = bytearray(self._num_bytes)
-        self._last_write_tick = -1
+        super().reset()
+        self._last_bit_write_tick = [0] * 8

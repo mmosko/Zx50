@@ -1,24 +1,24 @@
 """Command Dispatcher and Micro-sequencer execution engine."""
 
-from typing import Callable, List
+from typing import List
 
 from fpu_emu.blocks.functional_block import FunctionalBlock
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
-from fpu_emu.hardware.register import Register
+from fpu_emu.hardware.register import Register, StatusRegister
 from fpu_emu.hardware.registers import StatusFlag
 from fpu_emu.micro_code import MicroCode
 from fpu_emu.micro_instruction import MicroInstruction
-from fpu_emu.micro_opcodes import MicroOp
 from fpu_emu.user_opcodes import UserOpcode
+from fpu_emu.writeback_mux import WritebackMux
 
 
 class Dispatcher:
     """Dispatches user opcodes and executes microcode instruction streams."""
 
-    def __init__(self, blocks: List[FunctionalBlock], upc: Register, status: Register, sp: Register, osp: Register,
-                 instr_reg: Register, imm_reg: Register,
-                 memory: Memory, clock: Clock):
+    def __init__(self, blocks: List[FunctionalBlock], upc: Register, status: StatusRegister, sp: Register, osp: Register,
+                 instr_reg: Register, imm_reg: Register, memory: Memory, clock: Clock,
+                 writeback_mux: WritebackMux):
         self._blocks = blocks,
         self._memory = memory
         self._clock = clock
@@ -34,6 +34,7 @@ class Dispatcher:
         self._batch_mode: bool = False
         self._blocking_mode: bool = True
         self._zero = bytes(0)
+        self._writeback_mux = writeback_mux
 
     @property
     def batch_mode(self) -> bool:
@@ -48,7 +49,7 @@ class Dispatcher:
     @property
     def bwait_n(self) -> bool:
         """Active-low ~BWAIT line to host CPU: 0 (False) = hold CPU, 1 (True) = ready."""
-        is_busy = self._status.is_bit_set(StatusFlag.BUSY.value)
+        is_busy = self._status.is_bit_set(StatusFlag.BUSY)
         # BWAIT_N is driven low (0) when BLOCKING and BUSY
         return not (self._blocking_mode and is_busy)
 
@@ -97,14 +98,14 @@ class Dispatcher:
 
     def _execute_immediate(self, user_opcode: UserOpcode):
         """Executes a single computational opcode immediately with BUSY management."""
-        self._status.set_bit(StatusFlag.BUSY.value, True)
+        self._status.set_bit(StatusFlag.BUSY, True)
         try:
             # TODO: We should burn the microcode into the EBR, but for now it is much easier to
             # be writing and reading micro instructions.
             ucode = MicroCode.get(user_opcode)
             self._run(ucode)
         finally:
-            self._status.set_bit(StatusFlag.BUSY.value, False)
+            self._status.set_bit(StatusFlag.BUSY, False)
 
     # def _execute_batch(self):
     #     """Executes all queued commands in RAM sequentially with BUSY held high."""
@@ -162,6 +163,8 @@ class Dispatcher:
                 instr.to_register(self._instr_reg, self._imm_reg)
 
                 block_num = instr.op.value >> 3 & 0x07
+
+                self._writeback_mux.set_block(block_num)
 
                 # TODO: Some blocks (i.e. control) will modify the PC.  We really need to switch to using
                 # self._upc register rather than self._pc
