@@ -27,9 +27,9 @@ def test_control_jmp(fpga: FpgaModel):
         # 0: JMP to 2
         MicroInstruction(op=MicroOp.JMP, imm=target_upc),
         # 1: Skipped
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
         # 2: Target
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.DL),
     ]
 
     fpga.dispatcher._run(microcode)
@@ -47,9 +47,9 @@ def test_control_jz_branch_taken_and_not_taken(fpga: FpgaModel):
     fpga.reg_file.dl.write(0x50)
 
     microcode = [
-        MicroInstruction(op=MicroOp.JZ, imm=2),
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=2),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.DL),
     ]
     fpga.dispatcher._run(microcode)
     assert fpga.reg_file.al.read_int() == 0x60
@@ -74,9 +74,9 @@ def test_control_jnz_branch_taken_and_not_taken(fpga: FpgaModel):
     fpga.reg_file.dl.write(0x50)
 
     microcode = [
-        MicroInstruction(op=MicroOp.JNZ, imm=2),
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ZERO, imm=2),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.DL),
     ]
     fpga.dispatcher._run(microcode)
     assert fpga.reg_file.al.read_int() == 0x60
@@ -101,7 +101,7 @@ def test_control_djnz_loop(fpga: FpgaModel):
 
     microcode = [
         # 0: Loop body: AL += 1
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
         # 1: DJNZ back to 0
         MicroInstruction(op=MicroOp.DJNZ, imm=0),
     ]
@@ -124,11 +124,11 @@ def test_control_call_and_ret(fpga: FpgaModel):
         # 0: CALL subroutine at address 3
         MicroInstruction(op=MicroOp.CALL, imm=3),
         # 1: After return: AL += DL (0x05)
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.DL),
         # 2: JMP to end (address 5) to skip subroutine body
         MicroInstruction(op=MicroOp.JMP, imm=5),
         # 3: Subroutine body: AL += BL (0x20)
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
         # 4: RET to saved address (1)
         MicroInstruction(op=MicroOp.RET),
         # 5: End

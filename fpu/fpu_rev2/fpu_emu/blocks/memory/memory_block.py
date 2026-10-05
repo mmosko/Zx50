@@ -45,17 +45,6 @@ class MemoryBlock(FunctionalBlock):
         self._sp = sp_reg
         self._stack_adder = StackAdder(sp_reg)
 
-    # | PUSH src         | 0b100_000 | 0/1   | TOS     | n/a    | src    | `TOS <- src`, sp <- sp + W + 1     | sets VF, ERR (on stack overflow)      |
-    # | POP dst          | 0b100_001 | 0/1   | dst     | n/a    | TOS    | `dst <- TOS`, sp <- sp - (W+1)     | sets UF, ERR (on stack underflow)     |
-    # | LDC dst, addr    | 0b100_010 | 0/1   | dst     | IMM    | n/a    | `dst <- CONST_ADDR + [addr]`       | none (flags unaffected)               |
-    # | LDI dst, imm     | 0b100_011 | 0/1   | dst     | IMM    | n/a    | `dst <- imm`                       | none (flags unaffected)               |
-    # | LD  dst, addr    | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- SCR_ADDR + [addr]`         | none (flags unaffected)               |
-    # | ST  addr, src    | 0b100_101 | 0/1   | IMM     | n/a    | src    | `SCR_ADDR + [addr] <- src`         | none (flags unaffected)               |
-    # | LDU dst, addr    | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- USER_ADDR + [addr]`        | none (flags unaffected)               |
-    # | STU addr, src    | 0b101_001 | 0/1   | dst     | IMM    | n/a    | `USER_ADDR + [addr] <- src`        | none (flags unaffected)               |
-    # | MOV dst, src     | 0b100_110 | 0/1   | dst     | n/a    | src    | `dst <- src`                       | none (flags unaffected)               |
-    # | SWAP dst, src    | 0b100_111 | 0/1   | dst     | n/a    | src    | `F_ <- src, src <- dst, dst <- F_` | none (flags unaffected)               |
-
     def execute(self):
         instr = MicroInstruction.from_register(self._inputs.instr)
         match instr.op:
@@ -88,7 +77,7 @@ class MemoryBlock(FunctionalBlock):
     def _push(self, instr: MicroInstruction) -> None:
         """push src to TOS"""
         assert (instr.op == MicroOp.PUSH)
-        assert (instr.src is not None)
+        assert (instr.src is not Reg.NONE)
         if instr.is_w32():
             self._push32(instr)
         else:
@@ -96,7 +85,7 @@ class MemoryBlock(FunctionalBlock):
 
     def _push32(self, instr: MicroInstruction) -> None:
         """push src to TOS"""
-        assert instr.src is not None
+        assert instr.src is not Reg.NONE
         self._inputs.hb_mux.select(instr.src.value)
         self._inner_push32()
         self._outputs.exec_done.set(1)
@@ -104,7 +93,7 @@ class MemoryBlock(FunctionalBlock):
 
     def _push64(self, instr: MicroInstruction) -> None:
         """push src to TOS, pushes low order bytes first"""
-        assert instr.src is not None
+        assert instr.src is not Reg.NONE
         assert (instr.src.is_lo_half())
         self._inputs.hb_mux.select(instr.src.value)
         self._inner_push32()
@@ -153,7 +142,7 @@ class MemoryBlock(FunctionalBlock):
     def _pop(self, instr: MicroInstruction) -> None:
         """Pops TOS to dst"""
         assert instr.op == MicroOp.POP
-        assert instr.dst is not None
+        assert instr.dst is not Reg.NONE
         if instr.is_w32():
             self._pop32(instr)
         else:
@@ -161,7 +150,7 @@ class MemoryBlock(FunctionalBlock):
 
     def _pop32(self, instr: MicroInstruction) -> None:
         """Pops TOS to dst (32-bit)"""
-        assert instr.dst is not None
+        assert instr.dst is not Reg.NONE
         self._inner_pop32()
         self._outputs.exec_done.set(1)
         if self._outputs.res_status.read_int() != 0:
@@ -174,7 +163,7 @@ class MemoryBlock(FunctionalBlock):
 
     def _pop64(self, instr: MicroInstruction) -> None:
         """Pops TOS to dst (64-bit), pops high order word first"""
-        assert instr.dst is not None
+        assert instr.dst is not Reg.NONE
         assert instr.dst.is_lo_half()
 
         # 1. Read HI word from TOS

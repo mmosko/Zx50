@@ -19,9 +19,9 @@ class MicroInstruction:
 
     op: MicroOp
     w: IW = IW.W32
-    dst: Optional[Reg] = None
-    src: Optional[Reg] = None
-    flag: Union[StatusFlag, int] = 0
+    dst: Reg = Reg.NONE
+    src: Reg = Reg.NONE
+    flag: Optional[StatusFlag] = None
     imm: int = 0
 
     def is_w32(self) -> bool:
@@ -34,9 +34,9 @@ class MicroInstruction:
         """Encodes bits [31:14] (18 bits) into an 18-bit Register instance."""
         op_val = int(self.op.value) & 0x3F
         w_val = self.w.value
-        dst_val = (int(self.dst) & 0x0F) if self.dst is not None else 0
-        src_val = (int(self.src) & 0x0F) if self.src is not None else 0
-        flag_val = self.flag.value if isinstance(self.flag, StatusFlag) else (int(self.flag) & 0x07)
+        dst_val = self.dst.value & 0x0F
+        src_val = self.src.value & 0x0F
+        flag_val = self.flag.value if self.flag is not None else 0
 
         # Pack into 18-bit integer
         inst_18 = (
@@ -70,17 +70,11 @@ class MicroInstruction:
 
         op = MicroOp(op_val)
         w = IW.W64 if w_val == 1 else IW.W32
-        flag = flag_val
 
-        try:
-            dst = Reg(dst_val)
-        except ValueError:
-            dst = None
+        dst = Reg(dst_val)
+        src = Reg(src_val)
 
-        try:
-            src = Reg(src_val)
-        except ValueError:
-            src = None
+        flag = StatusFlag(flag_val) if src is Reg.NONE else None
 
         return cls(
             op=op,

@@ -1687,7 +1687,7 @@ After execution of JMP 0x040:
 
 ```
 ================================================================================
-JNZ addr — JUMP IF NOT ZERO
+JNZ [src,] addr — JUMP IF NOT ZERO
 ================================================================================
 ```
 
@@ -1700,9 +1700,11 @@ JNZ addr — JUMP IF NOT ZERO
 ```
 * **Flags**: None affected.
 
+If `src` is omitted, the source is the `ZF` flag.  Otherwise, `src` may be any other flag.
+
 #### Register Transfer & Datapath Flow
 ```text
-if STATUS.Z == 0:
+if src == 0:
     UPC [9:0] <- INSTR [9:0]  (addr)
 else:
     UPC [9:0] <- UPC [9:0] + 1
@@ -1713,6 +1715,7 @@ else:
 
 #### Description
 Branches to `addr` if the zero flag (`STATUS.Z`) is 0. If `STATUS.Z` is 1, execution falls through to `UPC + 1`.
+If `src` is specified, it is used instead of `STATUS.Z`.  It may be any other status flag.
 
 #### Concrete Numeric Example
 ```text
@@ -1722,13 +1725,20 @@ After execution of JNZ 0x030:
   Flags are unaffected.
 ```
 
+#### Examples:
+```text
+JNZ 0x32 ; uses STATUS.Z
+JNZ VF, 0x10; uses OVERLOW
+```
 ---
 
 ```
 ================================================================================
-JZ addr — JUMP IF ZERO
+JZ [src,] addr — JUMP IF ZERO
 ================================================================================
 ```
+
+As with `JNZ`, the optional `src` may be any status flag.  If not present, the `ZF` is used.
 
 #### Status Flags Affected
 ```text

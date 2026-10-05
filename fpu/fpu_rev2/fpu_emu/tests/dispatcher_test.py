@@ -23,7 +23,7 @@ def test_dispatcher_single_instruction_pipeline(fpga: FpgaModel):
     fpga.reg_file.bl.write(0x25)
 
     microcode = [
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL)
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     ]
 
     start_cycle = fpga.clock.cycles
@@ -46,8 +46,8 @@ def test_dispatcher_multi_instruction_pipeline(fpga: FpgaModel):
 
     # microcode: AL = AL + BL (0x150), then AL = AL - DL (0x120)
     microcode = [
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
-        MicroInstruction(op=MicroOp.SUB, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
+        MicroInstruction(op=MicroOp.SUB, w=IW.W32, dst=Reg.AL, src=Reg.DL),
     ]
 
     start_cycle = fpga.clock.cycles
@@ -87,9 +87,9 @@ def test_dispatcher_branch_updates_upc(fpga: FpgaModel):
         # 0: Jump to target 2
         MicroInstruction(op=MicroOp.JMP, imm=target_upc),
         # 1: Should be skipped by the branch!
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL),
         # 2: Target of jump: add DL (0x50) to AL (0x10)
-        MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.DL),
+        MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.DL),
     ]
 
     fpga.dispatcher._run(microcode)

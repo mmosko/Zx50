@@ -12,7 +12,7 @@ def test_micro_instruction_round_trip():
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode ADD AL, BL
-    orig = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL, flag=0, imm=0)
+    orig = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL, flag=None, imm=0)
     orig.to_register(instr_reg, imm_reg)
 
     decoded = MicroInstruction.from_register(instr_reg)
@@ -20,7 +20,7 @@ def test_micro_instruction_round_trip():
     assert decoded.w == IW.W32
     assert decoded.dst == Reg.AL
     assert decoded.src == Reg.BL
-    assert decoded.flag == 0
+    assert decoded.flag == None
 
 
 def test_micro_instruction_jump_with_flag():

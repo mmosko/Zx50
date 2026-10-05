@@ -92,8 +92,8 @@ class AdderBlock(FunctionalBlock):
         :param sub:
         :return:
         """
-        assert (instr.src is not None)
-        assert (instr.dst is not None)
+        assert (instr.src is not Reg.NONE)
+        assert (instr.dst is not Reg.NONE)
 
         # Combinatorial setup in current cycle
         self._ha_mux.select(instr.dst.value)
@@ -108,7 +108,7 @@ class AdderBlock(FunctionalBlock):
 
     def _add_64(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
         """ADD AX, src: 64-bit addition with carry (2 cycles)."""
-        assert (instr.src is not None)
+        assert (instr.src is not Reg.NONE)
         self._validate_src64(instr.src)
 
         # Low word (AL)

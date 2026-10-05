@@ -72,16 +72,18 @@ class ControlBlock(FunctionalBlock):
 
     def _jnz(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.JNZ)
+        assert instr.flag is not None
         # If ZF is 0 (not zero), select UPC (index 1), else NONE (index 0)
-        flag = 0 if self._inputs.status.is_bit_set(StatusFlag.ZERO) else 1
+        flag = 0 if self._inputs.status.is_bit_set(instr.flag) else 1
         self._jump_zero(flag)
         self._clock.tick()
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
     def _jz(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.JZ)
+        assert instr.flag is not None
         # If ZF is 1 (zero), select UPC (index 1), else NONE (index 0)
-        flag = 1 if self._inputs.status.is_bit_set(StatusFlag.ZERO) else 0
+        flag = 1 if self._inputs.status.is_bit_set(instr.flag) else 0
         self._jump_zero(flag)
         self._clock.tick()
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux

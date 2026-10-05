@@ -68,7 +68,7 @@ def test_adder_block_add_32(fpga: FpgaModel):
     fpga.reg_file.al.write(0x1000)
     fpga.reg_file.bl.write(0x2345)
 
-    instr = MicroInstruction(op=MicroOp.ADD, w=IW.W32, src=Reg.BL)
+    instr = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
 
     fpga.adder.execute()
@@ -84,7 +84,7 @@ def test_adder_block_sub_32_flags(fpga: FpgaModel):
     fpga.reg_file.al.write(0x10)
     fpga.reg_file.bl.write(0x10)
 
-    instr = MicroInstruction(op=MicroOp.SUB, w=IW.W32, src=Reg.BL)
+    instr = MicroInstruction(op=MicroOp.SUB, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
 
     fpga.adder.execute()
@@ -99,7 +99,7 @@ def test_adder_block_cmp_32(fpga: FpgaModel):
     fpga.reg_file.al.write(0x20)
     fpga.reg_file.bl.write(0x50)
 
-    instr = MicroInstruction(op=MicroOp.CMP, w=IW.W32, src=Reg.BL)
+    instr = MicroInstruction(op=MicroOp.CMP, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
 
     fpga.adder.execute()

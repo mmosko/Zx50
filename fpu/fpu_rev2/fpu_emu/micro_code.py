@@ -26,7 +26,7 @@ class MicroCode:
             MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
             MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
-            MicroInstruction(op=MicroOp.ADD, src=Reg.BL),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BL),
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
             MicroInstruction(op=MicroOp.RET),
             MicroInstruction(op=MicroOp.TRAP),
