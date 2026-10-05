@@ -129,8 +129,15 @@ class AdderBlock(FunctionalBlock):
         self._inputs.hb_mux.select(src_h)
         high_result = self._combinatorial_add(cin=cin_high, sub=sub)
 
-        # Writeback AH and commit final status flags
-        self._wb_flags(high_result)
+        # Writeback AH and commit final status flags (ZF is 1 only if both halves are zero)
+        final_result = AdderResult(
+            res=high_result.res,
+            cf=high_result.cf,
+            zf=low_result.zf and high_result.zf,
+            sf=high_result.sf,
+            vf=high_result.vf,
+        )
+        self._wb_flags(final_result)
         self._outputs.block_res.set(high_result.res)
         self._outputs.block_res_sel.set(Reg.AH.value)
         self._writeback()
