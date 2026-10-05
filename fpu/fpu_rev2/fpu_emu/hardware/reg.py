@@ -50,3 +50,6 @@ class Reg(IntEnum):
     # DX = 32,
     # FX = 33,
 
+    def is_lo_half(self) -> bool:
+        return self in [Reg.AL, Reg.BL, Reg.DL, Reg.FL]
+

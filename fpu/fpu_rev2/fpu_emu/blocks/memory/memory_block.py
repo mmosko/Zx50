@@ -1,12 +1,10 @@
-from typing import Callable, Optional
+from typing import Callable
 
-from fpu_emu.blocks.control.count_adder import CountAdder
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.blocks.memory.stack_adder import StackAdder
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
-from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
@@ -85,17 +83,45 @@ class MemoryBlock(FunctionalBlock):
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
     STATUS_OVERFLOW_ERR_MASK = (1 << StatusFlag.OVERFLOW.value) | (1 << StatusFlag.ERR.value)
+    STATUS_UNDERFLOW_ERR_MASK = (1 << StatusFlag.UNDERFLOW.value) | (1 << StatusFlag.ERR.value)
 
     def _push(self, instr: MicroInstruction) -> None:
-        """
-        push src to TOS
-        :param instr:
-        :return:
-        """
+        """push src to TOS"""
         assert (instr.op == MicroOp.PUSH)
         assert (instr.src is not None)
+        if instr.is_w32():
+            self._push32(instr)
+        else:
+            self._push64(instr)
 
+    def _push32(self, instr: MicroInstruction) -> None:
+        """push src to TOS"""
+        assert instr.src is not None
         self._inputs.hb_mux.select(instr.src.value)
+        self._inner_push32()
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _push64(self, instr: MicroInstruction) -> None:
+        """push src to TOS, pushes low order bytes first"""
+        assert instr.src is not None
+        assert (instr.src.is_lo_half())
+        self._inputs.hb_mux.select(instr.src.value)
+        self._inner_push32()
+        self._writeback()
+
+        if self._outputs.res_status.read_int() != 0:
+            # It was an error, we abort
+            self._outputs.exec_done.set(1)
+            return
+
+        # select the HI register
+        self._inputs.hb_mux.select(instr.src.value | 1)
+        self._inner_push32()
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _inner_push32(self):
         value = self._inputs.hb_mux.read_int()
 
         # Set it up to calculate SP+1
@@ -103,13 +129,12 @@ class MemoryBlock(FunctionalBlock):
 
         self._outputs.block_res.set(0)
         self._outputs.block_res_sel.set(Reg.NONE.value)
-        self._outputs.exec_done.set(1)
         self._outputs.status_wr_sel.set(self.STATUS_OVERFLOW_ERR_MASK)
 
         if self._stack_adder.is_overflow:
             # Stack overflow: set VF and ERR, do not write memory or update SP
             self._outputs.res_status.set(self.STATUS_OVERFLOW_ERR_MASK)
-            self._writeback()
+            # calls to _writeback() done in caller
             return
 
         # No overflow: clear VF and ERR
@@ -123,12 +148,85 @@ class MemoryBlock(FunctionalBlock):
 
         # Writeback the updated SP
         self._sp.write(self._stack_adder.read())
-
-        self._writeback()
+        # Calls to _writeback() are always done in the caller
 
     def _pop(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.POP)
-        raise NotImplementedError
+        """Pops TOS to dst"""
+        assert instr.op == MicroOp.POP
+        assert instr.dst is not None
+        if instr.is_w32():
+            self._pop32(instr)
+        else:
+            self._pop64(instr)
+
+    def _pop32(self, instr: MicroInstruction) -> None:
+        """Pops TOS to dst (32-bit)"""
+        assert instr.dst is not None
+        self._inner_pop32()
+        self._outputs.exec_done.set(1)
+        if self._outputs.res_status.read_int() != 0:
+            # Underflow error: commit UF/ERR without writing dst
+            self._writeback()
+            return
+
+        self._outputs.block_res_sel.set(instr.dst.value)
+        self._writeback()
+
+    def _pop64(self, instr: MicroInstruction) -> None:
+        """Pops TOS to dst (64-bit), pops high order word first"""
+        assert instr.dst is not None
+        assert instr.dst.is_lo_half()
+
+        # 1. Read HI word from TOS
+        self._inner_pop32()
+        if self._outputs.res_status.read_int() != 0:
+            self._outputs.exec_done.set(1)
+            self._writeback()
+            return
+
+        self._outputs.block_res_sel.set(instr.dst.value | 1)
+        self._writeback()
+
+        # 2. Read LO word from TOS
+        self._inner_pop32()
+        self._outputs.exec_done.set(1)
+        if self._outputs.res_status.read_int() != 0:
+            self._writeback()
+            return
+
+        self._outputs.block_res_sel.set(instr.dst.value)
+        self._writeback()
+
+    def _inner_pop32(self) -> None:
+        # Set it up to calculate SP-1
+        self._stack_adder.set_op(StackAdder.OP_DEC)
+
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE.value)
+        self._outputs.status_wr_sel.set(self.STATUS_UNDERFLOW_ERR_MASK)
+
+        if self._stack_adder.is_underflow:
+            # Stack underflow: set UF and ERR, do not write memory or update SP
+            self._outputs.res_status.set(self.STATUS_UNDERFLOW_ERR_MASK)
+            return
+
+        new_sp = self._stack_adder.read_int()
+
+        # No underflow: clear UF and ERR
+        self._outputs.res_status.set(0)
+        self._clock.tick()
+
+        # 1 cycle to present address and data
+        addr = self.MTH_BASE | new_sp
+        val_lo = self._memory.read(0, addr)
+        val_hi = self._memory.read(1, addr)
+
+        # Writeback the updated SP
+        self._sp.write(self._stack_adder.read())
+
+        # writeback the destination register
+        self._outputs.block_res.set(val_hi << 16 | val_lo)
+
 
     def _ldc(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.LDC)
