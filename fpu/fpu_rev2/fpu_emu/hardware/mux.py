@@ -21,4 +21,5 @@ class Mux(Readable):
 
     def read_int(self) -> int:
         """Convenience method to read directly as an unsigned int."""
-        return int.from_bytes(self.read(), byteorder="big")
+        assert self._select is not None, f"Mux {self._name}: Read attempted before select() was set"
+        return self._inputs[self._select].read_int()

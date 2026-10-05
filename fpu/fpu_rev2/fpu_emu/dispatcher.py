@@ -8,8 +8,7 @@ from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register, StatusRegister
-from fpu_emu.hardware.registers import StatusFlag, UpcOverflowError, HardwareAccessViolationError
-from fpu_emu.hardware.upc_adder import UpcAdder
+from fpu_emu.hardware.registers import StatusFlag, UpcOverflowError
 from fpu_emu.micro_code import MicroCode
 from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.user_opcodes import UserOpcode
@@ -172,7 +171,7 @@ class Dispatcher:
                 self._blocks[block_num].execute()
 
                 # Reading the UPC mux happens after execute, as it might need the result of a JUMP address
-                if block_num == 3 and self._writeback_mux.res_sel_mux.read_int() == Reg.UPC.value:
+                if block_num == 3 and self._blocks[3].outputs.block_res_sel.read_int() == Reg.UPC.value:
                     # The JUMP writeback
                     self._upc_mux.select(1)
                     is_jump = True
@@ -188,9 +187,9 @@ class Dispatcher:
 
                 if is_jump:
                     branch_target = upc_next & 0x3FF
-                    self._upc.write(branch_target)
                     if self._halted or branch_target >= len(microcode):
                         break
+                    self._upc.write((branch_target + 1) & 0x3FF)
                     fetch_instr = microcode[branch_target]
                     fetch_instr.to_register(self._instr_reg, self._imm_reg)
                 else:

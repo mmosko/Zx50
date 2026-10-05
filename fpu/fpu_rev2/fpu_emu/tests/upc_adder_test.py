@@ -1,4 +1,3 @@
-import pytest
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register

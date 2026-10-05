@@ -1,8 +1,10 @@
 """Top-level FPGA system model."""
 from fpu_emu.blocks.adder.adder_block import AdderBlock
+from fpu_emu.blocks.control.control_block import ControlBlock
 from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
 from fpu_emu.dispatcher import Dispatcher
+from fpu_emu.hardware.bus_pad import BusPad
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
@@ -30,9 +32,8 @@ class FpgaModel:
             self.reg_file.ah,
             self.reg_file.ea,
             self.reg_file.eb,
-            self.reg_file.imm,
-            self.reg_file.c,
-            self.reg_file.upc
+            BusPad(self.reg_file.imm, 32),
+            BusPad(self.reg_file.c, 32),
         ])
 
         self.hb_mux = Mux(name="hb", inputs=[
@@ -40,8 +41,8 @@ class FpgaModel:
             self.reg_file.ah,
             self.reg_file.ea,
             self.reg_file.eb,
-            self.reg_file.imm,
-            self.reg_file.c,
+            BusPad(self.reg_file.imm, 32),
+            BusPad(self.reg_file.c, 32),
             self.reg_file.bl,
             self.reg_file.bh,
             self.reg_file.dl,
@@ -83,12 +84,13 @@ class FpgaModel:
             exec_ready = self.reg_file.exec_ready
         )
 
-        self.control_block = EmptyBlock(
+        self.control_block = ControlBlock(
             name="control",
             inputs=self.control_inputs,
             memory=self.memory,
             writeback=self._writeback,
-            clock=self.clock
+            clock=self.clock,
+            c_reg=self.reg_file.c
         )
 
         # Map of the opcode block (0..7) to functional blocks

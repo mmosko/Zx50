@@ -69,8 +69,9 @@ class Registers:
 
         # Control and Pointer registers
         self.status = StatusRegister(name=Reg.STATUS, size_in_bits=8, clock=clock)
-        self.sp = Register(name=Reg.SP, size_in_bits=8, clock=clock)
-        self.osp =Register(name=Reg.OSP, size_in_bits=8, clock=clock)
+        # 128 words in EBR 0 & 1
+        self.sp = Register(name=Reg.SP, size_in_bits=7, clock=clock)
+        self.osp =Register(name=Reg.OSP, size_in_bits=7, clock=clock)
         self.upc = Register(name=Reg.UPC, size_in_bits=10, clock=clock)
 
         # The instruction registers (read from u_code memory)

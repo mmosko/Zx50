@@ -1,4 +1,5 @@
 from typing import Callable
+from unittest import case
 
 from fpu_emu.blocks.adder.adder_core import AdderCore, AdderResult
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
@@ -76,22 +77,34 @@ class AdderBlock(FunctionalBlock):
         return AdderCore.adder_core(a=ha_bus, b=hb_bus, cin=cin, sub=sub)
 
     def _add_32(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
-        """32-bit Add with carry"""
+        """
+        32-bit Add with carry
+
+            instr.dst <- instr.dst - instr.src
+
+        This allows 32-bit math on EA, EB, and C, in addition to AL or AH
+
+        :param instr:
+        :param cin:
+        :param sub:
+        :return:
+        """
         assert (instr.src is not None)
+        assert (instr.dst is not None)
 
         # Combinatorial setup in current cycle
-        self._inputs.ha_mux.select(Reg.AL.value)
+        self._inputs.ha_mux.select(instr.dst.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=cin, sub=sub)
 
         # Writeback AL (edge-triggered tick in writeback)
         self._outputs.block_res.set(adder_result.res)
-        self._outputs.block_res_sel.set(Reg.AL.value)
+        self._outputs.block_res_sel.set(instr.dst.value)
         self._wb_flags(adder_result)
         self._writeback()
 
     def _add_64(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
-        """ADC AX, src: 64-bit addition with carry (2 cycles)."""
+        """ADD AX, src: 64-bit addition with carry (2 cycles)."""
         assert (instr.src is not None)
         self._validate_src64(instr.src)
 
@@ -125,9 +138,10 @@ class AdderBlock(FunctionalBlock):
         assert(src in [Reg.AL, Reg.BL, Reg.DL, Reg.FL])
 
     def _cmp32(self, instr: MicroInstruction):
-        """CMP AL, src: 32-bit compare AL - src without modifying AL (1 cycle)."""
+        """CMP dst, src: 32-bit compare dst - src without modifying dst (1 cycle)."""
         assert (instr.src is not None)
-        self._inputs.ha_mux.select(Reg.AL.value)
+        assert (instr.dst is not None)
+        self._inputs.ha_mux.select(instr.dst.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=0, sub=True)
 

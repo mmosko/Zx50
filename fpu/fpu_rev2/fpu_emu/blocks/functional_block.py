@@ -1,16 +1,17 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Union
 
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
+from fpu_emu.hardware.readable import Readable
 from fpu_emu.hardware.register import Register, StatusRegister
 
 
 @dataclass
 class BlockInputs:
-    ha_mux: Mux
+    ha_mux: Union[Mux, Readable]
     hb_mux: Mux
     status: StatusRegister
     instr: Register
