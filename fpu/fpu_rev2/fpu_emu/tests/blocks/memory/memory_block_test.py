@@ -333,3 +333,4 @@ def test_pop64_invalid_dst_raises(fpga: FpgaModel, invalid_reg):
     ]
     with pytest.raises(AssertionError):
         fpga.dispatcher._run(microcode)
+

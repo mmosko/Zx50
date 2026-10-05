@@ -39,6 +39,8 @@ class ControlBlock(FunctionalBlock):
         ])
 
     def execute(self):
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
         instr = MicroInstruction.from_register(self._inputs.instr)
         match instr.op:
             case MicroOp.JMP:
@@ -53,10 +55,10 @@ class ControlBlock(FunctionalBlock):
                 self._call(instr)
             case MicroOp.RET:
                 self._ret(instr)
-            case MicroOp.TRAP:
-                self._trap(instr)
             case MicroOp.NOP:
                 self._nop(instr)
+            case MicroOp.HALT:
+                self._halt(instr)
             case _:
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
@@ -70,20 +72,33 @@ class ControlBlock(FunctionalBlock):
         self._clock.tick()
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
+    def _test_condition(self, instr: MicroInstruction) -> bool:
+        """Evaluates whether a conditional jump (JZ, JNZ) should be taken.
+
+        For StatusFlag.ZERO:
+            JZ branches if ZF == 1 (result is zero).
+            JNZ branches if ZF == 0 (result is not zero).
+        For all other flags (UNDERFLOW, OVERFLOW, CARRY, ERR, SIGN, etc.):
+            JNZ branches if flag == 1 (flag is set / not zero).
+            JZ branches if flag == 0 (flag is clear / zero).
+        """
+        flag_to_test = instr.flag if instr.flag is not None else StatusFlag.ZERO
+        bit_is_set = self._inputs.status.is_bit_set(flag_to_test)
+        if flag_to_test == StatusFlag.ZERO:
+            return bit_is_set if instr.op == MicroOp.JZ else not bit_is_set
+        else:
+            return not bit_is_set if instr.op == MicroOp.JZ else bit_is_set
+
     def _jnz(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.JNZ)
-        assert instr.flag is not None
-        # If ZF is 0 (not zero), select UPC (index 1), else NONE (index 0)
-        flag = 0 if self._inputs.status.is_bit_set(instr.flag) else 1
+        flag = 1 if self._test_condition(instr) else 0
         self._jump_zero(flag)
         self._clock.tick()
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
     def _jz(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.JZ)
-        assert instr.flag is not None
-        # If ZF is 1 (zero), select UPC (index 1), else NONE (index 0)
-        flag = 1 if self._inputs.status.is_bit_set(instr.flag) else 0
+        flag = 1 if self._test_condition(instr) else 0
         self._jump_zero(flag)
         self._clock.tick()
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
@@ -98,7 +113,6 @@ class ControlBlock(FunctionalBlock):
 
     def _djnz(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.DJNZ)
-        c_reg = self._c_reg
         count_adder = self._count_adder
         new_c = count_adder.val
         is_zero = count_adder.is_zero
@@ -106,12 +120,15 @@ class ControlBlock(FunctionalBlock):
         # DJNZ branches if NOT zero (!ZF)
         flag = 0 if is_zero else 1
         self._jump_zero(flag)
-        self._clock.tick()
 
-        # Edge-triggered updates on clock edge
-        c_reg.write(new_c)
-        self._inputs.status.set_bit(StatusFlag.ZERO, is_zero)
-        # N.B.: No call to _writeback, the UPC is handled by the upc_mux
+        # Status writeback for ZERO flag
+        zf_mask = 1 << StatusFlag.ZERO.value
+        self._outputs.status_wr_sel.set(zf_mask)
+        self._outputs.res_status.set(zf_mask if is_zero else 0)
+
+        # Edge-triggered updates on clock edge via writeback
+        self._c_reg.write(new_c)
+        self._writeback()
 
     def _call(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.CALL)
@@ -142,17 +159,20 @@ class ControlBlock(FunctionalBlock):
         self._ret_set.write(0)
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
-    def _trap(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.TRAP)
-        self._inputs.status.set_bit(StatusFlag.ERR, True)
-        self._outputs.block_res.set(0)
+    def _nop(self, instr: MicroInstruction) -> None:
+        assert (instr.op == MicroOp.NOP)
+        self._outputs.exec_wb.set(0)
+        self._outputs.status_wr_sel.set(0)
         self._outputs.block_res_sel.set(Reg.NONE.value)
         self._outputs.exec_done.set(1)
         self._clock.tick()
 
-    def _nop(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.NOP)
-        self._outputs.block_res.set(0)
-        self._outputs.block_res_sel.set(Reg.NONE.value)
+    def _halt(self, instr: MicroInstruction) -> None:
+        assert (instr.op == MicroOp.HALT)
+        bsy_mask = 1 << StatusFlag.BUSY.value
+        self._outputs.status_wr_sel.set(bsy_mask)
+        self._outputs.res_status.set(0)  # BUSY=0
+        self._outputs.block_res.set(0x3FF)
+        self._outputs.block_res_sel.set(Reg.UPC.value)
         self._outputs.exec_done.set(1)
-        self._clock.tick()
+        self._writeback()

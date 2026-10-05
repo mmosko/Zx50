@@ -150,7 +150,7 @@ BLK by the first three bits for the purpose of activating the AND walls.
 | Arithmetic / Adder | 0b000  | Shared AND wall with 0b001 (co-located fast math block) |
 | Math / Float / Div | 0b001  | Pack/Unpack, Hardware Divide/Mod, co-located with 0b000 |
 | Logic              | 0b010  | AND, OR, XOR, ABS, CHS, NOT                             |
-| Ctrl               | 0b011  | Branch, Call, Return, NOP                               |
+| Ctrl               | 0b011  | Branch, Call, Return, Trap, Halt                        |
 | Mem                | 0b100  | Stack PUSH/POP, Internal RAM load/store                 |
 | Mem (User)         | 0b101  | User storage load/store                                 |
 | Shifter            | 0b110  | LSL, LSR, ASL, ASR, RRC, RLC, LZC                       |
@@ -251,8 +251,8 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | DJNZ addr         | 0b011_011 | 0     | UPC     | IMM    | n/a    | `dec C, upc <- addr` if !ZF        | sets ZF (from dec C)                  |
 | CALL addr         | 0b011_100 | 0     | UPC     | IMM    | n/a    | `ret <- upc, upc <- addr`          | none                                  |
 | RET               | 0b011_101 | 0     | UPC     | n/a    | n/a    | `upc <- ret`                       | none                                  |
-| TRAP              | 0b011_110 | 0     | UPC     | n/a    | n/a    | assert ERR flag, end execution     | sets ERR                              |
-| NOP               | 0b011_111 | 0     | n/a     | n/a    | n/a    | 1 tick do nothing                  | none                                  |
+| NOP               | 0b011_110 | 0     | NONE    | n/a    | n/a    | No operation (pipeline bubble)     | none (flags unaffected)               |
+| HALT              | 0b011_111 | 0     | UPC     | n/a    | n/a    | end execution normally, pulse EXEC_DONE | clears BSY <- 0                   |
 
 ---
 

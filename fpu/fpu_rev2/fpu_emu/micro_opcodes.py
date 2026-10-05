@@ -57,6 +57,6 @@ class MicroOp(Enum):
     DJNZ = 0b011_011
     CALL = 0b011_100
     RET = 0b011_101
-    TRAP = 0b011_110
-    NOP = 0b011_111
+    NOP = 0b011_110
+    HALT = 0b011_111
 

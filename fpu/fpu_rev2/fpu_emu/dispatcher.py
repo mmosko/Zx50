@@ -11,6 +11,7 @@ from fpu_emu.hardware.register import Register, StatusRegister
 from fpu_emu.hardware.registers import StatusFlag, UpcOverflowError
 from fpu_emu.micro_code import MicroCode
 from fpu_emu.micro_instruction import MicroInstruction
+from fpu_emu.micro_opcodes import MicroOp
 from fpu_emu.user_opcodes import UserOpcode
 from fpu_emu.writeback_mux import WritebackMux
 
@@ -124,7 +125,8 @@ class Dispatcher:
             self._upc.write(0)
             self._run(ucode)
         finally:
-            self._status.set_bit(StatusFlag.BUSY, False)
+            if self._status.is_bit_set(StatusFlag.BUSY):
+                self._status.set_bit(StatusFlag.BUSY, False)
 
     def _run(self, microcode: List[MicroInstruction]):
         """Micro-sequencer execution loop.
@@ -159,6 +161,7 @@ class Dispatcher:
         fetch_instr.to_register(self._instr_reg, self._imm_reg)
         self._upc.write(upc_next & 0x3FF)
 
+        nop_instr = MicroInstruction(op=MicroOp.NOP)
         try:
             while not self._halted:
                 # Read and decode instruction from reg.instr
@@ -189,16 +192,20 @@ class Dispatcher:
                     branch_target = upc_next & 0x3FF
                     if self._halted or branch_target >= len(microcode):
                         break
-                    self._upc.write((branch_target + 1) & 0x3FF)
-                    fetch_instr = microcode[branch_target]
-                    fetch_instr.to_register(self._instr_reg, self._imm_reg)
+                    # Branch taken:
+                    # 1. UPC <= branch_target (from UPC_MUX input 1, no second adder)
+                    self._upc.write(branch_target)
+                    # 2. Insert NOP bubble to flush the prefetched instruction
+                    nop_instr.to_register(self._instr_reg, self._imm_reg)
                 else:
-                    executed_upc = self._upc.read_int()
-                    if self._halted or executed_upc >= len(microcode):
+                    current_upc = self._upc.read_int()
+                    if self._halted or current_upc >= len(microcode):
                         break
-                    self._upc.write(upc_next & 0x3FF)
-                    fetch_instr = microcode[executed_upc]
+                    # Latch fetched instruction into reg.instr
+                    fetch_instr = microcode[current_upc]
                     fetch_instr.to_register(self._instr_reg, self._imm_reg)
+                    # UPC <= UPC + 1 (from UpcAdder)
+                    self._upc.write(upc_next & 0x3FF)
 
         finally:
             self._halted = saved_halted

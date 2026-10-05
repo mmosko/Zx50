@@ -1892,48 +1892,7 @@ After execution of RET:
 
 ```
 ================================================================================
-TRAP — ASSERT ERROR AND TERMINATE
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  0  |  -  |  -  |  -  |  -  |  -  |  1  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`BSY`**: Cleared to 0 (operation completed).
-* **`ERR`**: Set to 1 (fatal microcode fault / invalid operation).
-* **`Z`, `S`, `C`, `V`, `U`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-STATUS.ERR <- 1'b1
-STATUS.BSY <- 1'b0
-EXEC_DONE  <- 1'b1  (pulse)
-UPC [9:0]  <- 10'd0 (idle loop)
-```
-
-#### Instruction Word Format
-`OPCODE = 011110`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = n/a`, `HB_MUX = n/a`.
-
-#### Description
-Asserts `STATUS.ERR = 1`, halts the microprogram by resetting `STATUS.BSY = 0`, pulses `EXEC_DONE` to notify host or dispatcher, and vectors `UPC` back to the dispatch/idle state.
-
-#### Concrete Numeric Example
-```text
-After execution of TRAP:
-  STATUS.ERR <- 1
-  STATUS.BSY <- 0
-  EXEC_DONE pulses for 1 cycle.
-```
-
----
-
-```
-================================================================================
-NOP — NO OPERATION
+NOP — NO OPERATION (PIPELINE BUBBLE)
 ================================================================================
 ```
 
@@ -1944,23 +1903,65 @@ NOP — NO OPERATION
 |  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **Flags**: None affected.
+* **Flags**: All flags unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
-UPC [9:0] <- UPC [9:0] + 1
+EXEC_WB     <- 1'b0
+STATUS_WREN <- 8'h00
+RES_SEL     <- 4'hF (NONE)
+EXEC_DONE   <- 1'b1
+UPC [9:0]   <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 011111`. `W = 0` (1 cycle). `RES_SEL = n/a`, `HA_MUX = n/a`, `HB_MUX = n/a`.
+`OPCODE = 011110`. `W = 0` (1 cycle). `RES_SEL = NONE`, `HA_MUX = n/a`, `HB_MUX = n/a`.
 
 #### Description
-Takes no operational action; advances microprogram counter `UPC` by 1. Used for pipeline alignment or delay padding.
+Performs no operation. Used as a 1-cycle pipeline bubble / flush slot on branch mispredictions or when delaying for multi-cycle memory alignment. Advances `UPC` without modifying any registers or flags.
 
 #### Concrete Numeric Example
 ```text
-Suppose current UPC = 0x012.
 After execution of NOP:
-  UPC becomes 0x013.
-  All registers and flags remain completely unchanged.
+  Registers and STATUS remain unchanged.
+  UPC advances by 1.
+```
+
+---
+
+```
+================================================================================
+HALT — NORMAL EXECUTION TERMINATION
+================================================================================
+```
+
+#### Status Flags Affected
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  0  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **`BSY`**: Cleared to 0 (operation completed successfully).
+* **`ERR`, `Z`, `S`, `C`, `V`, `U`, `D`**: Unaffected.
+
+#### Register Transfer & Datapath Flow
+```text
+STATUS.BSY <- 1'b0
+EXEC_DONE  <- 1'b1  (pulse)
+UPC [9:0]  <- 10'd0 (idle loop)
+```
+
+#### Instruction Word Format
+`OPCODE = 011111`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = n/a`, `HB_MUX = n/a`.
+
+#### Description
+Halts the microprogram normally by resetting `STATUS.BSY = 0`, pulses `EXEC_DONE` to notify host or dispatcher that execution completed successfully, and vectors `UPC` back to the dispatch/idle state.
+
+#### Concrete Numeric Example
+```text
+After execution of HALT:
+  STATUS.BSY <- 0
+  EXEC_DONE pulses for 1 cycle.
+  UPC vectors to 0x000 (idle state).
 ```

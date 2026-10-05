@@ -184,9 +184,7 @@ class FpgaModel:
             self.reg_file.eb.write(res[:2])
         elif dst == Reg.C:
             self.reg_file.c.write(res[:1])
-        elif dst == Reg.UPC:
-            self.reg_file.upc.write(res[:2])
-        elif dst in (Reg.NONE, Reg.STATUS):
+        elif dst in (Reg.NONE, Reg.STATUS, Reg.UPC):
             pass
         else:
             raise HardwareBusError(f"Unsupported dst register {dst}")

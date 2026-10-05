@@ -14,22 +14,20 @@ class MicroCode:
     _ucode: Dict[UserOpcode, List[MicroInstruction]] = {
         # ADD_I32:
         # 0: POP BL
-        # 1: JNZ UNDERFLOW -> 7 (TRAP)
+        # 1: JNZ UNDERFLOW -> 6 (HALT)
         # 2: POP AL
-        # 3: JNZ UNDERFLOW -> 7 (TRAP)
+        # 3: JNZ UNDERFLOW -> 6 (HALT)
         # 4: ADD AL, BL
         # 5: PUSH AL
-        # 6: RET
-        # 7: TRAP
+        # 6: HALT
         UserOpcode.ADD_I32: [
             MicroInstruction(op=MicroOp.POP, w=IW.W32, dst=Reg.BL),
-            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
-            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
             MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BL),
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
-            MicroInstruction(op=MicroOp.RET),
-            MicroInstruction(op=MicroOp.TRAP),
+            MicroInstruction(op=MicroOp.HALT),
         ]
     }
 
