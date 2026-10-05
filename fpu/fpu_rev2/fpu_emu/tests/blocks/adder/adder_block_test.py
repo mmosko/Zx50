@@ -449,3 +449,104 @@ def test_adder_block_mul_w64_not_implemented(fpga: FpgaModel):
     with pytest.raises(NotImplementedError, match="orchestrated via microcode"):
         fpga.adder.execute()
 
+
+def test_adder_block_div_32_basic(fpga: FpgaModel):
+    # 23 / 5 = 4 rem 3 (32 cycles)
+    fpga.reg_file.al.write(23)
+    fpga.reg_file.bl.write(5)
+
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 32
+    assert fpga.reg_file.al.read_int() == 4
+    assert fpga.reg_file.dl.read_int() == 3
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_adder_block_div_32_signed_negative(fpga: FpgaModel):
+    # (-23) / 5 = -4 rem -3
+    fpga.reg_file.al.write((-23) & 0xFFFFFFFF)
+    fpga.reg_file.bl.write(5)
+
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == ((-4) & 0xFFFFFFFF)
+    assert fpga.reg_file.dl.read_int() == ((-3) & 0xFFFFFFFF)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_adder_block_divu_32(fpga: FpgaModel):
+    # Unsigned 0xFFFFFFFF / 2 = 0x7FFFFFFF rem 1
+    fpga.reg_file.al.write(0xFFFFFFFF)
+    fpga.reg_file.bl.write(2)
+
+    instr = MicroInstruction(op=MicroOp.DIVU, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0x7FFFFFFF
+    assert fpga.reg_file.dl.read_int() == 1
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_div_by_zero(fpga: FpgaModel):
+    # Divide-by-zero: aborts immediately (1 cycle), AL and DL unmodified, sets ERR and V
+    fpga.reg_file.al.write(42)
+    fpga.reg_file.dl.write(99)
+    fpga.reg_file.bl.write(0)
+
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 1
+    assert fpga.reg_file.al.read_int() == 42
+    assert fpga.reg_file.dl.read_int() == 99
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+
+
+def test_adder_block_div_default_dst(fpga: FpgaModel):
+    # dst=Reg.NONE defaults to Reg.AL
+    fpga.reg_file.al.write(10)
+    fpga.reg_file.bl.write(2)
+
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W32, dst=Reg.NONE, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 5
+    assert fpga.reg_file.dl.read_int() == 0
+
+
+def test_adder_block_div_invalid_dst(fpga: FpgaModel):
+    from fpu_emu.hardware.registers import HardwareBusError
+
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W32, dst=Reg.DL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    with pytest.raises(HardwareBusError, match="DIV destination on HA_MUX must be AL"):
+        fpga.adder.execute()
+
+
+def test_adder_block_div_w64_not_implemented(fpga: FpgaModel):
+    instr = MicroInstruction(op=MicroOp.DIV, w=IW.W64, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    with pytest.raises(NotImplementedError, match="orchestrated via microcode"):
+        fpga.adder.execute()
+
+

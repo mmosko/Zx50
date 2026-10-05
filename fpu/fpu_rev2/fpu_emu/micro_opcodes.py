@@ -15,12 +15,12 @@ class MicroOp(Enum):
     CMP = 0b000_100
     EXP_ADD = 0b000_101
     EXP_SUB = 0b000_110
-    MOD = 0b000_111
     PACK = 0b001_000
     UNPACK = 0b001_001
     MUL = 0b001_010
     DIV = 0b001_011
     MULU = 0b001_110
+    DIVU = 0b001_111
     # ====================
     # LOGIC (prefix 0b010)
     AND = 0b010_000

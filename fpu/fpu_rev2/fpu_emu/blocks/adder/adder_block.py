@@ -2,6 +2,7 @@ from typing import Callable, Union
 
 from fpu_emu.blocks.adder.adder_core import AdderCore, AdderResult
 from fpu_emu.blocks.adder.booth_mul import BoothMulCore, BoothMulResult
+from fpu_emu.blocks.adder.div_core import DivCore, DivResult
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
@@ -44,16 +45,18 @@ class AdderBlock(FunctionalBlock):
                 self._exp_add(instr)
             case MicroOp.EXP_SUB:
                 self._exp_sub(instr)
-            case MicroOp.MOD:
-                raise NotImplementedError
             case MicroOp.PACK:
+                raise NotImplementedError
+            case MicroOp.UNPACK:
                 raise NotImplementedError
             case MicroOp.MUL:
                 self._mul(instr, signed=True)
             case MicroOp.MULU:
                 self._mul(instr, signed=False)
             case MicroOp.DIV:
-                raise NotImplementedError
+                self._div(instr, signed=True)
+            case MicroOp.DIVU:
+                self._div(instr, signed=False)
             case _:
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
@@ -173,18 +176,22 @@ class AdderBlock(FunctionalBlock):
         self._outputs.exec_done.set(1)
         self._writeback()
 
-    def _wb_flags(self, result: Union[AdderResult, BoothMulResult]):
+    def _wb_flags(self, result: Union[AdderResult, BoothMulResult, DivResult]):
         status_byte = 0
         status_byte |= result.cf << StatusFlag.CARRY.value
         status_byte |= result.sf << StatusFlag.SIGN.value
         status_byte |= result.vf << StatusFlag.OVERFLOW.value
         status_byte |= result.zf << StatusFlag.ZERO.value
+        err = getattr(result, "err", False)
+        status_byte |= err << StatusFlag.ERR.value
         self._outputs.res_status.set(status_byte)
 
         status_wr_select = (1 << StatusFlag.CARRY.value) | \
                            (1 << StatusFlag.SIGN.value) | \
                            (1 << StatusFlag.OVERFLOW.value) | \
                            (1 << StatusFlag.ZERO.value)
+        if hasattr(result, "err"):
+            status_wr_select |= (1 << StatusFlag.ERR.value)
 
         self._outputs.status_wr_sel.set(status_wr_select)
 
@@ -279,4 +286,53 @@ class AdderBlock(FunctionalBlock):
         self._outputs.exec_done.set(1)
         self._wb_flags(mul_result)
         self._writeback()
+
+    def _div(self, instr: MicroInstruction, signed: bool = True) -> None:
+        """DIV dst, src: 32-bit division yielding quotient in AL and remainder in DL (32 cycles).
+
+        :param instr: MicroInstruction with dst (e.g. AL) and src (e.g. BL)
+        :param signed: True for signed two's-complement division, False for unsigned
+        """
+        assert instr.src is not Reg.NONE
+        if not instr.is_w32():
+            raise NotImplementedError("64-bit division is orchestrated via microcode")
+
+        if instr.dst not in (Reg.NONE, Reg.AL):
+            raise HardwareBusError(f"DIV destination on HA_MUX must be AL, got {instr.dst}")
+
+        dst = Reg.AL
+        rem_reg = Reg.DL
+
+        # Step 1: Combinatorial latch of inputs from HA_MUX and HB_MUX
+        self._ha_mux.select(dst.value)
+        self._inputs.hb_mux.select(instr.src.value)
+        ha_val = self._inputs.ha_mux.read()
+        hb_val = self._inputs.hb_mux.read()
+
+        div_result = DivCore.div_core(a=ha_val, b=hb_val, signed=signed)
+
+        if div_result.err:
+            # Divide-by-zero aborts immediately without modifying registers (1 cycle via _writeback)
+            self._outputs.block_res_sel.set(Reg.NONE.value)
+            self._outputs.exec_done.set(1)
+            self._wb_flags(div_result)
+            self._writeback()
+            return
+
+        # Step 2: 30 compute cycles (Non-Restoring Division iterations)
+        self._clock.tick(30)
+
+        # Step 3: Cycle 31 - Writeback quotient to AL without status write
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(div_result.quotient)
+        self._outputs.block_res_sel.set(dst.value)
+        self._writeback()
+
+        # Step 4: Cycle 32 - Writeback remainder to DL and commit status flags
+        self._outputs.block_res.set(div_result.remainder)
+        self._outputs.block_res_sel.set(rem_reg.value)
+        self._outputs.exec_done.set(1)
+        self._wb_flags(div_result)
+        self._writeback()
+
 
