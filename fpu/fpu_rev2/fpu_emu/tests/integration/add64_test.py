@@ -2,39 +2,9 @@
 
 import pytest
 from fpu_emu.fpga_model import FpgaModel
-from fpu_emu.hardware.registers import Reg, StatusFlag
-from fpu_emu.micro_instruction import MicroInstruction, IW
-from fpu_emu.micro_opcodes import MicroOp
+from fpu_emu.hardware.registers import StatusFlag
+from fpu_emu.tests.test_helpers import user_pop64, user_push32, user_push64
 from fpu_emu.user_opcodes import UserOpcode
-
-MASK_32 = 0xFFFFFFFF
-MASK_64 = 0xFFFFFFFFFFFFFFFF
-
-
-def _push32(fpga: FpgaModel, val: int) -> None:
-    """Helper to push a single 32-bit word onto the math stack."""
-    fpga.reg_file.al.write(val & MASK_32)
-    fpga.reg_file.upc.write(0)
-    fpga.dispatcher._run([MicroInstruction(op=MicroOp.PUSH, w=IW.W32, src=Reg.AL)])
-
-
-def _push64(fpga: FpgaModel, val: int) -> None:
-    """Helper to push a 64-bit word onto the math stack (low word then high word)."""
-    val_lo = val & MASK_32
-    val_hi = (val >> 32) & MASK_32
-    fpga.reg_file.al.write(val_lo)
-    fpga.reg_file.ah.write(val_hi)
-    fpga.reg_file.upc.write(0)
-    fpga.dispatcher._run([MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL)])
-
-
-def _pop64(fpga: FpgaModel) -> int:
-    """Helper to pop a 64-bit word from the math stack into DX (DH:DL)."""
-    fpga.reg_file.upc.write(0)
-    fpga.dispatcher._run([MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.DL)])
-    res_lo = fpga.reg_file.dl.read_int()
-    res_hi = fpga.reg_file.dh.read_int()
-    return ((res_hi << 32) | res_lo) & MASK_64
 
 
 @pytest.mark.parametrize(
@@ -67,8 +37,8 @@ def test_user_opcode_add_i64(
 ) -> None:
     """Tests executing UserOpcode.ADD_I64 via dispatcher with 64-bit stack operands."""
     # Push operand a then operand b
-    _push64(fpga, a)
-    _push64(fpga, b)
+    user_push64(fpga, a)
+    user_push64(fpga, b)
     assert fpga.reg_file.sp.read_int() == 4
 
     # Execute user opcode ADD_I64
@@ -87,7 +57,7 @@ def test_user_opcode_add_i64(
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
 
     # Pop result from stack
-    res = _pop64(fpga)
+    res = user_pop64(fpga)
     assert res == expected_res
     assert fpga.reg_file.sp.read_int() == 0
 
@@ -105,7 +75,7 @@ def test_add_i64_underflow_empty_stack(fpga: FpgaModel) -> None:
 
 def test_add_i64_underflow_single_word_on_stack(fpga: FpgaModel) -> None:
     """Executing ADD_I64 with only one 32-bit word must trigger underflow during first 64-bit pop."""
-    _push32(fpga, 42)
+    user_push32(fpga, 42)
     assert fpga.reg_file.sp.read_int() == 1
 
     fpga.dispatcher.execute(UserOpcode.ADD_I64)
@@ -117,7 +87,7 @@ def test_add_i64_underflow_single_word_on_stack(fpga: FpgaModel) -> None:
 
 def test_add_i64_underflow_single_64bit_operand(fpga: FpgaModel) -> None:
     """Executing ADD_I64 with only one 64-bit operand must trigger underflow during second 64-bit pop."""
-    _push64(fpga, 42)
+    user_push64(fpga, 42)
     assert fpga.reg_file.sp.read_int() == 2
 
     fpga.dispatcher.execute(UserOpcode.ADD_I64)
@@ -129,8 +99,8 @@ def test_add_i64_underflow_single_64bit_operand(fpga: FpgaModel) -> None:
 
 def test_add_i64_underflow_three_words_on_stack(fpga: FpgaModel) -> None:
     """Executing ADD_I64 with 3 words (1 full operand + half of second) must trigger underflow."""
-    _push64(fpga, 100)
-    _push32(fpga, 200)
+    user_push64(fpga, 100)
+    user_push32(fpga, 200)
     assert fpga.reg_file.sp.read_int() == 3
 
     fpga.dispatcher.execute(UserOpcode.ADD_I64)

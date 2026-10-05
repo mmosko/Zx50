@@ -2,24 +2,9 @@
 
 import pytest
 from fpu_emu.fpga_model import FpgaModel
-from fpu_emu.hardware.registers import Reg, StatusFlag
-from fpu_emu.micro_instruction import MicroInstruction, IW
-from fpu_emu.micro_opcodes import MicroOp
+from fpu_emu.hardware.registers import StatusFlag
+from fpu_emu.tests.test_helpers import user_pop32, user_push32
 from fpu_emu.user_opcodes import UserOpcode
-
-
-def _push32(fpga: FpgaModel, val: int) -> None:
-    """Helper to push a 32-bit word onto the math stack."""
-    fpga.reg_file.al.write(val)
-    fpga.reg_file.upc.write(0)
-    fpga.dispatcher._run([MicroInstruction(op=MicroOp.PUSH, src=Reg.AL)])
-
-
-def _pop32(fpga: FpgaModel) -> int:
-    """Helper to pop a 32-bit word from the math stack into DL."""
-    fpga.reg_file.upc.write(0)
-    fpga.dispatcher._run([MicroInstruction(op=MicroOp.POP, dst=Reg.DL)])
-    return fpga.reg_file.dl.read_int()
 
 
 @pytest.mark.parametrize(
@@ -48,8 +33,8 @@ def test_user_opcode_add_i32(
 ) -> None:
     """Tests executing UserOpcode.ADD_I32 via dispatcher with stack operands."""
     # Push operand a then operand b
-    _push32(fpga, a)
-    _push32(fpga, b)
+    user_push32(fpga, a)
+    user_push32(fpga, b)
     assert fpga.reg_file.sp.read_int() == 2
 
     # Execute user opcode ADD_I32
@@ -68,7 +53,7 @@ def test_user_opcode_add_i32(
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
 
     # Pop result from stack
-    res = _pop32(fpga)
+    res = user_pop32(fpga)
     assert res == expected_res
     assert fpga.reg_file.sp.read_int() == 0
 
@@ -86,7 +71,7 @@ def test_add_i32_underflow_empty_stack(fpga: FpgaModel) -> None:
 
 def test_add_i32_underflow_single_operand(fpga: FpgaModel) -> None:
     """Executing ADD_I32 with only 1 item on stack must trigger underflow on 2nd pop."""
-    _push32(fpga, 42)
+    user_push32(fpga, 42)
     assert fpga.reg_file.sp.read_int() == 1
 
     fpga.dispatcher.execute(UserOpcode.ADD_I32)

@@ -128,3 +128,24 @@ def test_adder_block_add_64(fpga: FpgaModel):
     assert fpga.reg_file.ah.read_int() == 0x00000004
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_sub_64(fpga: FpgaModel):
+    # AX = 0x00000004_00000000, BX = 0x00000002_00000001
+    # Result: AX = 0x00000001_FFFFFFFF (low word borrow from high word)
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.ah.write(0x00000004)
+    fpga.reg_file.bl.write(0x00000001)
+    fpga.reg_file.bh.write(0x00000002)
+
+    instr = MicroInstruction(op=MicroOp.SUB, w=IW.W64, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0xFFFFFFFF
+    assert fpga.reg_file.ah.read_int() == 0x00000001
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)  # No 64-bit borrow out
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+

@@ -46,6 +46,40 @@ class MicroCode:
             MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ],
+        # SUB_I32:
+        # 0: POP BL
+        # 1: JNZ UNDERFLOW -> 6 (HALT)
+        # 2: POP AL
+        # 3: JNZ UNDERFLOW -> 6 (HALT)
+        # 4: SUB AL, BL
+        # 5: PUSH AL
+        # 6: HALT
+        UserOpcode.SUB_I32: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W32, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # SUB_I64:
+        # 0: POP BX
+        # 1: JNZ UNDERFLOW -> 6 (HALT)
+        # 2: POP AX
+        # 3: JNZ UNDERFLOW -> 6 (HALT)
+        # 4: SUB AX, BX
+        # 5: PUSH AX
+        # 6: HALT
+        UserOpcode.SUB_I64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
+            MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
     }
 
     @classmethod
