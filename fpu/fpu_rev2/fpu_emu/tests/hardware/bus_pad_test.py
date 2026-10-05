@@ -61,3 +61,23 @@ def test_bus_pad_invalid_size():
     bus = Bus(name="b", size_in_bits=8)
     with pytest.raises(AssertionError):
         BusPad(bus, 0)
+    with pytest.raises(AssertionError):
+        BusPad(bus, 4)  # Target smaller than source
+
+
+def test_bus_pad_signed_extension():
+    clock = Clock()
+    reg = Register(name=Reg.EA, size_in_bits=12, clock=clock)
+    pad = BusPad(reg, 32, signed=True)
+
+    # Positive value: bit 11 is 0
+    reg.write(50)
+    assert pad.read_int() == 50
+    assert pad.read() == b"\x32\x00\x00\x00"
+
+    # Negative value: -1000 in 12-bit is 0xC18 (bit 11 is 1)
+    clock.tick(1)
+    reg.write((-1000) & 0x0FFF)
+    assert pad.read_int() == 0xFFFFFC18
+    assert pad.read() == b"\x18\xFC\xFF\xFF"
+

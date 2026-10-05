@@ -32,9 +32,9 @@ class AdderBlock(FunctionalBlock):
             case MicroOp.CMP:
                 self._cmp32(instr)
             case MicroOp.EXP_ADD:
-                raise NotImplementedError
+                self._exp_add(instr)
             case MicroOp.EXP_SUB:
-                raise NotImplementedError
+                self._exp_sub(instr)
             case MicroOp.MOD:
                 raise NotImplementedError
             case MicroOp.PACK:
@@ -173,4 +173,55 @@ class AdderBlock(FunctionalBlock):
                            (1 << StatusFlag.ZERO.value)
 
         self._outputs.status_wr_sel.set(status_wr_select)
+
+    LIMIT_EXP_MAX = 1023
+    LIMIT_EXP_MIN = -1022
+    MASK_12BIT = 0x0FFF
+    SIGN_12BIT = 0x0800
+    MOD_12BIT = 0x1000
+
+    STATUS_EXP_MASK = (
+        (1 << StatusFlag.ZERO.value)
+        | (1 << StatusFlag.SIGN.value)
+        | (1 << StatusFlag.OVERFLOW.value)
+        | (1 << StatusFlag.UNDERFLOW.value)
+    )
+
+    def _exp_add(self, instr: MicroInstruction) -> None:
+        assert instr.op == MicroOp.EXP_ADD
+        self._exp_op(instr, sub=False)
+
+    def _exp_sub(self, instr: MicroInstruction) -> None:
+        assert instr.op == MicroOp.EXP_SUB
+        self._exp_op(instr, sub=True)
+
+    def _exp_op(self, instr: MicroInstruction, sub: bool) -> None:
+        assert instr.src is not Reg.NONE
+        dst = instr.dst if instr.dst is not Reg.NONE else Reg.EA
+
+        self._ha_mux.select(dst.value)
+        self._inputs.hb_mux.select(instr.src.value)
+        adder_result = self._combinatorial_add(cin=0, sub=sub)
+
+        # Result is computed entirely by adder_core on sign-extended inputs
+        res_s = int.from_bytes(adder_result.res, byteorder="little", signed=True)
+        res_12 = res_s & self.MASK_12BIT
+
+        ovf = res_s > self.LIMIT_EXP_MAX
+        uf = res_s < self.LIMIT_EXP_MIN
+        zf = res_12 == 0
+        sf = bool(res_12 & self.SIGN_12BIT)
+
+        self._outputs.block_res.set(res_12)
+        self._outputs.block_res_sel.set(dst.value)
+
+        status_byte = (
+            (int(zf) << StatusFlag.ZERO.value)
+            | (int(sf) << StatusFlag.SIGN.value)
+            | (int(ovf) << StatusFlag.OVERFLOW.value)
+            | (int(uf) << StatusFlag.UNDERFLOW.value)
+        )
+        self._outputs.res_status.set(status_byte)
+        self._outputs.status_wr_sel.set(self.STATUS_EXP_MASK)
+        self._writeback()
 

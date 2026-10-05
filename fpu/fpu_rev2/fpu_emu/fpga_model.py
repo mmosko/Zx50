@@ -31,8 +31,8 @@ class FpgaModel:
         self.ha_mux = Mux(name="ha", inputs=[
             self.reg_file.al,
             self.reg_file.ah,
-            self.reg_file.ea,
-            self.reg_file.eb,
+            BusPad(self.reg_file.ea, 32, signed=True),
+            BusPad(self.reg_file.eb, 32, signed=True),
             BusPad(self.reg_file.imm, 32),
             BusPad(self.reg_file.c, 32),
         ])
@@ -40,8 +40,8 @@ class FpgaModel:
         self.hb_mux = Mux(name="hb", inputs=[
             self.reg_file.al,
             self.reg_file.ah,
-            self.reg_file.ea,
-            self.reg_file.eb,
+            BusPad(self.reg_file.ea, 32, signed=True),
+            BusPad(self.reg_file.eb, 32, signed=True),
             BusPad(self.reg_file.imm, 32),
             BusPad(self.reg_file.c, 32),
             self.reg_file.bl,

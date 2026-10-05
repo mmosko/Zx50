@@ -149,3 +149,194 @@ def test_adder_block_sub_64(fpga: FpgaModel):
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
 
+
+def test_adder_block_exp_add_basic(fpga: FpgaModel):
+    fpga.reg_file.ea.write(10)
+    fpga.reg_file.eb.write(20)
+
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 30
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+
+def test_adder_block_exp_add_overflow(fpga: FpgaModel):
+    # SystemReference.md example: EA = 1000, EB = 50 -> 1050 > +1023 (VF=1, UF=0, ZF=0, SF=0)
+    fpga.reg_file.ea.write(1000)
+    fpga.reg_file.eb.write(50)
+
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 1050
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is True
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is False
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_exp_add_underflow(fpga: FpgaModel):
+    # EA = -1000 (3096), EB = -30 (4066) -> -1030 < -1022 (UF=1, VF=0, SF=1, ZF=0)
+    fpga.reg_file.ea.write((-1000) & 0x0FFF)
+    fpga.reg_file.eb.write((-30) & 0x0FFF)
+
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == ((-1030) & 0x0FFF)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is True
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is False
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN) is True
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_exp_add_zero(fpga: FpgaModel):
+    # EA = 50, EB = -50 -> sum = 0
+    fpga.reg_file.ea.write(50)
+    fpga.reg_file.eb.write((-50) & 0x0FFF)
+
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 0
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO) is True
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+
+def test_adder_block_exp_add_imm(fpga: FpgaModel):
+    # EA = 100, IMM = 25 -> EA = 125
+    fpga.reg_file.ea.write(100)
+
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.IMM, imm=25)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 125
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_exp_sub_basic(fpga: FpgaModel):
+    fpga.reg_file.ea.write(30)
+    fpga.reg_file.eb.write(10)
+
+    instr = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 20
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+
+def test_adder_block_exp_sub_underflow(fpga: FpgaModel):
+    # SystemReference.md example: EA = -1000, EB = 50 -> -1050 < -1022 (UF=1, VF=0, SF=1, ZF=0)
+    fpga.reg_file.ea.write((-1000) & 0x0FFF)
+    fpga.reg_file.eb.write(50)
+
+    instr = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == ((-1050) & 0x0FFF)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is True
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is False
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN) is True
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_exp_sub_overflow(fpga: FpgaModel):
+    # EA = 1000, EB = -50 -> 1000 - (-50) = 1050 > 1023 (VF=1, UF=0)
+    fpga.reg_file.ea.write(1000)
+    fpga.reg_file.eb.write((-50) & 0x0FFF)
+
+    instr = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 1050
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is True
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is False
+
+
+def test_adder_block_exp_sub_zero(fpga: FpgaModel):
+    fpga.reg_file.ea.write(100)
+    fpga.reg_file.eb.write(100)
+
+    instr = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 0
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO) is True
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_exp_preserves_carry_flag(fpga: FpgaModel):
+    # CARRY flag must be unaffected by EXP_ADD and EXP_SUB
+    fpga.reg_file.status.set_bit(StatusFlag.CARRY, True)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.CARRY) is True
+
+    fpga.reg_file.ea.write(10)
+    fpga.reg_file.eb.write(20)
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.CARRY) is True
+
+    instr_sub = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr_sub.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.CARRY) is True
+
+
+def test_adder_block_exp_boundary_conditions(fpga: FpgaModel):
+    # Max valid exponent: +1023 (VF=0)
+    fpga.reg_file.ea.write(1023)
+    fpga.reg_file.eb.write(0)
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+
+    # Overflow threshold: +1024 (VF=1)
+    fpga.clock.tick(1)
+    fpga.reg_file.ea.write(1023)
+    fpga.reg_file.eb.write(1)
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is True
+
+    # Min valid exponent: -1022 (UF=0)
+    fpga.clock.tick(1)
+    fpga.reg_file.ea.write((-1022) & 0x0FFF)
+    fpga.reg_file.eb.write(0)
+    instr = MicroInstruction(op=MicroOp.EXP_ADD, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+    # Underflow threshold: -1023 (UF=1)
+    fpga.clock.tick(1)
+    fpga.reg_file.ea.write((-1022) & 0x0FFF)
+    fpga.reg_file.eb.write(1)
+    instr = MicroInstruction(op=MicroOp.EXP_SUB, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is True
+
