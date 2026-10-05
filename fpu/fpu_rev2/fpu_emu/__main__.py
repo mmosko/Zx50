@@ -8,12 +8,17 @@ from fpu_emu.fpga_resource import FpgaResourceRegistry
 # Ensure all annotated hardware modules are imported and registered
 import fpu_emu.blocks.adder.adder_block  # noqa: F401
 import fpu_emu.blocks.adder.adder_core  # noqa: F401
-import fpu_emu.blocks.adder.booth_mul  # noqa: F401
+import fpu_emu.blocks.control.control_block  # noqa: F401
+import fpu_emu.blocks.control.count_adder  # noqa: F401
+import fpu_emu.blocks.memory.memory_block  # noqa: F401
+import fpu_emu.blocks.memory.stack_adder  # noqa: F401
 import fpu_emu.dispatcher  # noqa: F401
+import fpu_emu.fpga_model  # noqa: F401
 import fpu_emu.hardware.memory  # noqa: F401
 import fpu_emu.hardware.registers  # noqa: F401
-import fpu_emu.hardware.rom  # noqa: F401
+import fpu_emu.hardware.upc_adder  # noqa: F401
 import fpu_emu.micro_code  # noqa: F401
+import fpu_emu.writeback_mux  # noqa: F401
 
 
 def print_resource_report() -> None:

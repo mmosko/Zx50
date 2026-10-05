@@ -1,11 +1,19 @@
 from typing import List
 
 from fpu_emu.blocks.functional_block import FunctionalBlock
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 
 
+@fpga_resource(
+    approach="8:1 PFU multiplexers for result, select, status, and control buses",
+    luts=216,
+    delay_ns=2.4,
+    cycles=1,
+    shared_unit="writeback_mux",
+)
 class WritebackMux:
     def __init__(self, blocks: List[FunctionalBlock]):
         # 32-bit result mux

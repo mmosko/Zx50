@@ -5,6 +5,7 @@ from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
 from fpu_emu.blocks.memory.memory_block import MemoryBlock
 from fpu_emu.dispatcher import Dispatcher
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus_pad import BusPad
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
@@ -14,6 +15,42 @@ from fpu_emu.hardware.registers import Registers, HardwareBusError, StatusFlag
 from fpu_emu.hardware.rom import Rom
 from fpu_emu.hardware.upc_adder import UpcAdder
 from fpu_emu.writeback_mux import WritebackMux
+
+
+@fpga_resource(
+    approach="Datapath operand multiplexers (HA_MUX 6:1 32b, HB_MUX 12:1 32b, UPC_MUX 2:1 11b)",
+    luts=299,
+    delay_ns=2.8,
+    cycles=1,
+    shared_unit="datapath_muxes",
+)
+class DatapathMuxes:
+    """Encloses top-level datapath routing multiplexers (HA_MUX, HB_MUX)."""
+
+    def __init__(self, reg_file: Registers):
+        self.ha_mux = Mux(name="ha", inputs=[
+            reg_file.al,
+            reg_file.ah,
+            BusPad(reg_file.ea, 32, signed=True),
+            BusPad(reg_file.eb, 32, signed=True),
+            BusPad(reg_file.imm, 32),
+            BusPad(reg_file.c, 32),
+        ])
+
+        self.hb_mux = Mux(name="hb", inputs=[
+            reg_file.al,
+            reg_file.ah,
+            BusPad(reg_file.ea, 32, signed=True),
+            BusPad(reg_file.eb, 32, signed=True),
+            BusPad(reg_file.imm, 32),
+            BusPad(reg_file.c, 32),
+            reg_file.bl,
+            reg_file.bh,
+            reg_file.dl,
+            reg_file.dh,
+            reg_file.fl,
+            reg_file.fh,
+        ])
 
 
 class FpgaModel:
@@ -27,30 +64,9 @@ class FpgaModel:
             clock = self.clock
         )
         self.reg_file = Registers(clock=self.clock)
-
-        self.ha_mux = Mux(name="ha", inputs=[
-            self.reg_file.al,
-            self.reg_file.ah,
-            BusPad(self.reg_file.ea, 32, signed=True),
-            BusPad(self.reg_file.eb, 32, signed=True),
-            BusPad(self.reg_file.imm, 32),
-            BusPad(self.reg_file.c, 32),
-        ])
-
-        self.hb_mux = Mux(name="hb", inputs=[
-            self.reg_file.al,
-            self.reg_file.ah,
-            BusPad(self.reg_file.ea, 32, signed=True),
-            BusPad(self.reg_file.eb, 32, signed=True),
-            BusPad(self.reg_file.imm, 32),
-            BusPad(self.reg_file.c, 32),
-            self.reg_file.bl,
-            self.reg_file.bh,
-            self.reg_file.dl,
-            self.reg_file.dh,
-            self.reg_file.fl,
-            self.reg_file.fh,
-        ])
+        self.datapath_muxes = DatapathMuxes(self.reg_file)
+        self.ha_mux = self.datapath_muxes.ha_mux
+        self.hb_mux = self.datapath_muxes.hb_mux
 
         self.inputs = BlockInputs(
             ha_mux = self.ha_mux,

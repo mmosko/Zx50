@@ -3,6 +3,7 @@ from unittest import case
 
 from fpu_emu.blocks.adder.adder_core import AdderCore, AdderResult
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
@@ -12,6 +13,14 @@ from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
 
 
+@fpga_resource(
+    approach="Adder controller, 32/64-bit sequencer, and exponent bounds comparators",
+    luts=45,
+    ffs=8,
+    delay_ns=2.5,
+    cycles=1,
+    shared_unit="adder_block",
+)
 class AdderBlock(FunctionalBlock):
     def __init__(self, name: str, inputs: BlockInputs, memory: Memory, writeback: Callable, clock: Clock):
         super().__init__(name, inputs, memory, writeback, clock)

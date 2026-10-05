@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.readable import Readable
 from fpu_emu.hardware.register import Register
@@ -15,6 +16,14 @@ class UpcAdderResult:
     carry: bool
 
 
+@fpga_resource(
+    approach="10-bit dedicated CCU2C carry-chain adder for UPC + 1",
+    luts=10,
+    slices_ccu2c=5,
+    delay_ns=2.2,
+    cycles=1,
+    shared_unit="upc_adder",
+)
 class UpcAdder(Readable):
     """Dedicated 10-bit adder for UPC + 1.
 

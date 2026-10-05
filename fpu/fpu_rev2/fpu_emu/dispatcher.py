@@ -3,6 +3,7 @@
 from typing import List
 
 from fpu_emu.blocks.functional_block import FunctionalBlock
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
@@ -16,6 +17,14 @@ from fpu_emu.user_opcodes import UserOpcode
 from fpu_emu.writeback_mux import WritebackMux
 
 
+@fpga_resource(
+    approach="Micro-sequencer execution FSM and user opcode dispatch decoder",
+    luts=65,
+    ffs=16,
+    delay_ns=3.0,
+    cycles=1,
+    shared_unit="dispatcher_sequencer",
+)
 class Dispatcher:
     """Dispatches user opcodes and executes microcode instruction streams."""
 

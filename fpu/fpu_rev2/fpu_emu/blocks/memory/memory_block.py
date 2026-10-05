@@ -2,6 +2,7 @@ from typing import Callable
 
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.blocks.memory.stack_adder import StackAdder
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
@@ -12,6 +13,14 @@ from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
 
 
+@fpga_resource(
+    approach="Memory controller, stack push/pop sequencer, and EBR interface",
+    luts=40,
+    ffs=8,
+    delay_ns=2.8,
+    cycles=1,
+    shared_unit="memory_block",
+)
 class MemoryBlock(FunctionalBlock):
     """
     Manipulates the math Stack, the scratch memory and the user memory.

@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from fpu_emu.fpga_resource import fpga_resource
+
 
 @dataclass
 class AdderResult:
@@ -10,6 +12,15 @@ class AdderResult:
     vf: bool
 
 
+@fpga_resource(
+    approach="32 XOR gates + MachXO2 CCU2C fast carry-chain",
+    luts=23,
+    slices_ccu2c=16,
+    ffs=4,
+    delay_ns=3.9,
+    cycles=1,
+    shared_unit="alu_adder32",
+)
 class AdderCore:
     @staticmethod
     def adder_core(a: bytes, b: bytes, cin: int, sub: bool) -> AdderResult:

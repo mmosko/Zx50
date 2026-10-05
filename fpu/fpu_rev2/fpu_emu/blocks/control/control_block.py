@@ -2,6 +2,7 @@ from typing import Callable, Optional
 
 from fpu_emu.blocks.control.count_adder import CountAdder
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
@@ -13,6 +14,14 @@ from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
 
 
+@fpga_resource(
+    approach="Branch condition evaluator, jump routing, and loop control",
+    luts=40,
+    ffs=4,
+    delay_ns=2.5,
+    cycles=1,
+    shared_unit="control_block",
+)
 class ControlBlock(FunctionalBlock):
     def __init__(self,
                  name: str,

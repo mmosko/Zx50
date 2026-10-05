@@ -1,10 +1,19 @@
 """Dedicated 9-bit counter adder for SP."""
 
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.readable import Readable
 from fpu_emu.hardware.register import Register
 
 
+@fpga_resource(
+    approach="7-bit dedicated CCU2C carry-chain adder/subtractor for SP pointer",
+    luts=8,
+    slices_ccu2c=4,
+    delay_ns=2.0,
+    cycles=1,
+    shared_unit="stack_adder",
+)
 class StackAdder(Readable):
     """8-bit dedicated adder for SP+1 or SP-1. (SP is 7 bits)
 

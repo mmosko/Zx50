@@ -5,6 +5,7 @@ timing rules, and clock-enabled writeback via RES_BUS. Direct access to math
 and compound registers is strictly forbidden during execution.
 """
 
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register, StatusRegister, StatusFlag
@@ -46,6 +47,14 @@ class UpcOverflowError(HardwareBusError):
     pass
 
 
+@fpga_resource(
+    approach="MachXO2 PFU Slice Flip-Flops for 17 Hardware Registers",
+    luts=0,
+    ffs=350,
+    delay_ns=1.5,
+    cycles=1,
+    shared_unit="register_file",
+)
 class Registers:
     """Register file holding all physical FPU registers and enforcing bus architecture."""
 

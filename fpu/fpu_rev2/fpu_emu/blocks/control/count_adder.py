@@ -1,10 +1,19 @@
 """Dedicated 6-bit counter adder / decrementer for register C."""
 
+from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.readable import Readable
 from fpu_emu.hardware.register import Register
 
 
+@fpga_resource(
+    approach="6-bit dedicated CCU2C carry-chain decrementer for C counter",
+    luts=6,
+    slices_ccu2c=3,
+    delay_ns=1.8,
+    cycles=1,
+    shared_unit="count_adder",
+)
 class CountAdder(Readable):
     """6-bit dedicated adder for C (really a dedicated DEC by 1).
 
