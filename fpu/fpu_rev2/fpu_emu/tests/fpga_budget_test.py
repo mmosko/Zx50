@@ -6,6 +6,7 @@ from fpu_emu.fpga_resource import FpgaResourceRegistry
 # Import all annotated modules to populate registry
 import fpu_emu.blocks.adder.adder_block  # noqa: F401
 import fpu_emu.blocks.adder.adder_core  # noqa: F401
+import fpu_emu.blocks.adder.booth_mul  # noqa: F401
 import fpu_emu.blocks.control.control_block  # noqa: F401
 import fpu_emu.blocks.control.count_adder  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
@@ -56,6 +57,7 @@ class TestFpgaBudget(unittest.TestCase):
         self.assertIn("# MachXO2-2000 FPGA Resource Utilization Report", report)
         self.assertIn("register_file", report)
         self.assertIn("alu_adder32", report)
+        self.assertIn("alu_booth_mul", report)
         self.assertIn("adder_block", report)
         self.assertIn("control_block", report)
         self.assertIn("count_adder", report)

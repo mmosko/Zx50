@@ -8,6 +8,7 @@ from fpu_emu.fpga_resource import FpgaResourceRegistry
 # Ensure all annotated hardware modules are imported and registered
 import fpu_emu.blocks.adder.adder_block  # noqa: F401
 import fpu_emu.blocks.adder.adder_core  # noqa: F401
+import fpu_emu.blocks.adder.booth_mul  # noqa: F401
 import fpu_emu.blocks.control.control_block  # noqa: F401
 import fpu_emu.blocks.control.count_adder  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
