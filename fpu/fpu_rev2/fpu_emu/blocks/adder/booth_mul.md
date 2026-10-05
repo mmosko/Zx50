@@ -12,14 +12,20 @@ The Zx50 FPU Rev2 features a hardware **Radix-4 Modified Booth Multiplier** co-l
 
 ---
 
-## 2. Multiplier Requirements Across Data Types
+## 2. Multiplier Requirements & Stack Semantics
 
-| Operation | Inputs | Product Width | Multiplier Mode | Execution Strategy |
-|---|---|:---:|---|---|
-| **`MUL_I32`** | 32-bit signed $\times$ 32-bit signed | 64 bits | Signed (`MUL`) | 16-cycle single pass $\to$ $\{AH, AL\}$. |
-| **`MUL_F32`** | 24-bit mantissa $\times$ 24-bit mantissa | 48 bits | Unsigned (`MULU`) | Single pass using 32-bit unsigned multiplier. Fits in 64 bits. |
-| **`MUL_I64`** | 64-bit signed $\times$ 64-bit signed | 128 bits | Unsigned (`MULU`) | Microcode magnitude extraction $\to$ 4 unsigned $32 \times 32 \to 64$ cross products $\to$ `ADD`/`ADC` sum $\to$ negate if negative. |
-| **`MUL_F64`** | 53-bit mantissa $\times$ 53-bit mantissa | 106 bits | Unsigned (`MULU`) | Split 53-bit mantissas into 32-bit LO and 21-bit HI $\to$ 4 unsigned $32 \times 32 \to 64$ passes $\to$ `ADD`/`ADC` accumulation. |
+| Operation | Inputs | Product Width (Internal) | Stack Result Width | Multiplier Mode | Execution Strategy |
+|---|---|:---:|:---:|---|---|
+| **`MUL_I32`** | 32-bit signed $\times$ 32-bit signed | 64 bits | **32 bits** (`AL`) + `VF` | Signed (`MUL`) | 16-cycle single pass $\to$ $\{AH, AL\}$. Pops 2 words, pushes `AL`. `VF=1` on overflow. |
+| **`MUL_F32`** | 24-bit mantissa $\times$ 24-bit mantissa | 48 bits | **32 bits** (IEEE-754) | Unsigned (`MULU`) | Single pass using 32-bit unsigned multiplier. Fits in 64 bits. Normalizes mantissa & adjusts exp. |
+| **`MUL_I64`** | 64-bit signed $\times$ 64-bit signed | 128 bits | **64 bits** (`AX`) + `VF` | Unsigned (`MULU`) | Microcode cross-products $\to$ `ADD`/`ADC` sum $\to$ pushes 64-bit result. `VF=1` if true product $> 2^{63}-1$ or $< -2^{63}$. |
+| **`MUL_F64`** | 53-bit mantissa $\times$ 53-bit mantissa | 106 bits | **64 bits** (IEEE-754) | Unsigned (`MULU`) | Split 53-bit mantissas into 32-bit LO and 21-bit HI $\to$ 4 unsigned $32 \times 32 \to 64$ passes $\to$ `ADD`/`ADC` accumulation. |
+
+### Stack Invariants & Widening Multiplication ($32 \times 32 \to 64$)
+* **Stack Invariant:** Binary arithmetic operations are stack-neutral: `( a: i32, b: i32 -- res: i32 )` and `( a: i64, b: i64 -- res: i64 )`. This prevents type proliferation and maintains Forth RPN composability.
+* **Widening Multiplication:** When a non-truncated 64-bit product of two 32-bit operands is required:
+  - **Signed:** Convert both operands with `CONV_I32_I64` ($0xC8$) and execute `MUL_I64` ($0x12$).
+  - **Unsigned:** Convert both operands with `CONV_U32_U64` ($0xC2$) and execute `MUL_I64` ($0x12$).
 
 ---
 

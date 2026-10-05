@@ -354,19 +354,31 @@ MUL dst, src / MUL AX, src — MULTIPLY (RADIX-4 BOOTH MULTIPLIER)
 
 #### Register Transfer & Datapath Flow
 ```text
-if W == 0:  # 32-bit x 32-bit -> 64-bit product (16 cycles)
-    {AH [31:0], AL [31:0]} <- AL [31:0] * src [31:0]
-    UPC                    <- UPC + 1
-else:       # 64-bit x 64-bit -> 128-bit product (32 cycles)
-    {DX [63:0], AX [63:0]} <- AX [63:0] * src [63:0]
-    UPC                    <- UPC + 1
+# Hardware Booth Multiplier Core (W = 0, 16 cycles):
+{AH [31:0], AL [31:0]} <- AL [31:0] * src [31:0]
+UPC                    <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000111`. `W = 0` (32-bit $\to$ 64-bit, 16 cycles) or `W = 1` (64-bit $\to$ 128-bit, 32 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000111` (`MUL` / `MULU`). `W = 0` (32-bit $\times$ 32-bit $\to$ 64-bit product, 16 cycles). `RES_SEL = dst` (must be `AL` on `HA_MUX`), `HB_MUX = src`.
+* `MicroOp.MUL`: Signed two's-complement multiplication.
+* `MicroOp.MULU`: Unsigned multiplication.
 
 #### Description
-Performs signed two's-complement multiplication using the Radix-4 Booth multiplier engine co-located with the adder block. The engine processes 2 bits per cycle. In 32-bit mode, the 64-bit product is placed into `{AH, AL}` (or `AX`). In 64-bit mode, the 128-bit product is placed into `{DX, AX}`. `VF` is asserted if the upper half is non-zero (indicating that the result cannot fit into the original register width).
+Performs Radix-4 Booth multiplication using the shared multiplier core co-located with the adder block. The engine computes 2 bits per cycle over 16 clock cycles, placing the full 64-bit product into `{AH, AL}`.
+
+* **Flag Behavior:**
+  - `VF` is asserted if the product cannot be represented within 32 bits (for signed `MUL`, when `AH` is not a sign-extension of `AL`; for unsigned `MULU`, when `AH != 0`).
+  - `ZF` is asserted if the full 64-bit product is zero.
+  - `SF` reflects MSB (bit 63) of the product.
+  - `CF` is cleared to 0.
+
+* **User Opcode Stack Semantics & Result Widths:**
+  - **`MUL_I32` ($32 \times 32 \to 32 + \text{VF}$):** Consumes two 32-bit integers from the stack, runs `MicroOp.MUL`, and pushes the 32-bit low product (`AL`) back onto the stack. `VF` is retained in the status register.
+  - **`MUL_I64` ($64 \times 64 \to 64 + \text{VF}$):** Consumes two 64-bit integers from the stack and orchestrates partial cross-products ($A_L \times B_L$, $A_L \times B_H$, $A_H \times B_L$) via microcode over 32-bit multiplier cycles, pushing a 64-bit product to the stack and asserting `VF` if the mathematical product exceeds 64 bits.
+  - **Widening Multiplication ($32 \times 32 \to 64$):** If the programmer requires a wide 64-bit product without truncation risk, operands are converted before multiplying:
+    - *Signed:* Convert operands with `CONV_I32_I64`, then execute `MUL_I64`.
+    - *Unsigned:* Convert operands with `CONV_U32_U64`, then execute `MUL_I64`.
 
 #### Concrete Numeric Example
 ```text

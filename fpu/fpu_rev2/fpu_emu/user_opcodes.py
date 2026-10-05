@@ -81,6 +81,8 @@ class UserOpcode(Enum):
     DUP8 = 0xC1
 
     # Type Conversions
+    CONV_U32_U64 = 0xC2
+    CONV_U64_U32 = 0xC3
     CONV_I32_I64 = 0xC8
     CONV_F32_F64 = 0xC9
     CONV_I64_I32 = 0xCA

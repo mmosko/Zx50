@@ -20,6 +20,7 @@ class MicroOp(Enum):
     UNPACK = 0b001_001
     MUL = 0b001_010
     DIV = 0b001_011
+    MULU = 0b001_110
     # ====================
     # LOGIC (prefix 0b010)
     AND = 0b010_000

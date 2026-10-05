@@ -1,7 +1,7 @@
-from typing import Callable
-from unittest import case
+from typing import Callable, Union
 
 from fpu_emu.blocks.adder.adder_core import AdderCore, AdderResult
+from fpu_emu.blocks.adder.booth_mul import BoothMulCore, BoothMulResult
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
@@ -49,7 +49,9 @@ class AdderBlock(FunctionalBlock):
             case MicroOp.PACK:
                 raise NotImplementedError
             case MicroOp.MUL:
-                raise NotImplementedError
+                self._mul(instr, signed=True)
+            case MicroOp.MULU:
+                self._mul(instr, signed=False)
             case MicroOp.DIV:
                 raise NotImplementedError
             case _:
@@ -112,6 +114,7 @@ class AdderBlock(FunctionalBlock):
         # Writeback AL (edge-triggered tick in writeback)
         self._outputs.block_res.set(adder_result.res)
         self._outputs.block_res_sel.set(instr.dst.value)
+        self._outputs.exec_done.set(1)
         self._wb_flags(adder_result)
         self._writeback()
 
@@ -149,6 +152,7 @@ class AdderBlock(FunctionalBlock):
         self._wb_flags(final_result)
         self._outputs.block_res.set(high_result.res)
         self._outputs.block_res_sel.set(Reg.AH.value)
+        self._outputs.exec_done.set(1)
         self._writeback()
 
     @staticmethod
@@ -166,9 +170,10 @@ class AdderBlock(FunctionalBlock):
 
         self._outputs.block_res_sel.set(Reg.NONE.value)  # No register writeback
         self._wb_flags(adder_result)
+        self._outputs.exec_done.set(1)
         self._writeback()
 
-    def _wb_flags(self, result: AdderResult):
+    def _wb_flags(self, result: Union[AdderResult, BoothMulResult]):
         status_byte = 0
         status_byte |= result.cf << StatusFlag.CARRY.value
         status_byte |= result.sf << StatusFlag.SIGN.value
@@ -232,5 +237,46 @@ class AdderBlock(FunctionalBlock):
         )
         self._outputs.res_status.set(status_byte)
         self._outputs.status_wr_sel.set(self.STATUS_EXP_MASK)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _mul(self, instr: MicroInstruction, signed: bool = True) -> None:
+        """MUL dst, src: 32-bit multiply yielding 64-bit product in {dst_hi, dst} (16 cycles).
+
+        :param instr: MicroInstruction with dst (e.g. AL) and src (e.g. BL)
+        :param signed: True for signed two's-complement multiplication, False for unsigned
+        """
+        assert instr.src is not Reg.NONE
+        if not instr.is_w32():
+            raise NotImplementedError("64-bit multiplication is orchestrated via microcode")
+
+        if instr.dst not in (Reg.NONE, Reg.AL):
+            raise HardwareBusError(f"MUL destination on HA_MUX must be AL, got {instr.dst}")
+
+        dst = Reg.AL
+        dst_hi = Reg.AH
+
+        # Step 1: Combinatorial latch of inputs from HA_MUX and HB_MUX
+        self._ha_mux.select(dst.value)
+        self._inputs.hb_mux.select(instr.src.value)
+        ha_val = self._inputs.ha_mux.read()
+        hb_val = self._inputs.hb_mux.read()
+
+        mul_result = BoothMulCore.booth_mul_core(a=ha_val, b=hb_val, signed=signed)
+
+        # Step 2: 14 compute cycles (Radix-4 Booth iteration)
+        self._clock.tick(14)
+
+        # Step 3: Cycle 15 - Writeback low word (e.g. AL) without status write
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(mul_result.res[0:4])
+        self._outputs.block_res_sel.set(dst.value)
+        self._writeback()
+
+        # Step 4: Cycle 16 - Writeback high word (e.g. AH) and commit status flags
+        self._outputs.block_res.set(mul_result.res[4:8])
+        self._outputs.block_res_sel.set(dst_hi.value)
+        self._outputs.exec_done.set(1)
+        self._wb_flags(mul_result)
         self._writeback()
 

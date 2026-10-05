@@ -340,3 +340,112 @@ def test_adder_block_exp_boundary_conditions(fpga: FpgaModel):
     fpga.adder.execute()
     assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW) is True
 
+
+def test_adder_block_mul_signed_basic(fpga: FpgaModel):
+    # AL = 3, BL = 5 -> MUL AL, BL -> AL = 15, AH = 0 (16 cycles)
+    fpga.reg_file.al.write(3)
+    fpga.reg_file.bl.write(5)
+
+    start_ticks = fpga.clock.cycles
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 15
+    assert fpga.reg_file.ah.read_int() == 0
+    assert fpga.clock.cycles - start_ticks == 16
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+
+
+def test_adder_block_mul_signed_overflow(fpga: FpgaModel):
+    # SystemReference.md example: AL = 65536, BL = 131072
+    # Product = 8,589,934,592 = 0x00000002_00000000 -> AH = 2, AL = 0, VF = 1
+    fpga.reg_file.al.write(65536)
+    fpga.reg_file.bl.write(131072)
+
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0
+    assert fpga.reg_file.ah.read_int() == 2
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is True
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_mul_signed_negative(fpga: FpgaModel):
+    # AL = -20, BL = 5 -> Product = -100 (AH = 0xFFFFFFFF, AL = 0xFFFFFF9C, VF = 0, SF = 1)
+    fpga.reg_file.al.write((-20) & 0xFFFFFFFF)
+    fpga.reg_file.bl.write(5)
+
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == ((-100) & 0xFFFFFFFF)
+    assert fpga.reg_file.ah.read_int() == 0xFFFFFFFF
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN) is True
+
+
+def test_adder_block_mulu_unsigned(fpga: FpgaModel):
+    # AL = 0xFFFFFFFF, BL = 2 -> Product = 0x1_FFFFFFFE -> AH = 1, AL = 0xFFFFFFFE, VF = 1
+    fpga.reg_file.al.write(0xFFFFFFFF)
+    fpga.reg_file.bl.write(2)
+
+    instr = MicroInstruction(op=MicroOp.MULU, w=IW.W32, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0xFFFFFFFE
+    assert fpga.reg_file.ah.read_int() == 1
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW) is True
+
+
+def test_adder_block_mul_with_fl_src(fpga: FpgaModel):
+    # AL = 10, FL = 20 -> MUL AL, FL -> AL = 200, AH = 0
+    fpga.reg_file.al.write(10)
+    fpga.reg_file.fl.write(20)
+
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.AL, src=Reg.FL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 200
+    assert fpga.reg_file.ah.read_int() == 0
+
+
+def test_adder_block_mul_default_dst(fpga: FpgaModel):
+    # dst=Reg.NONE defaults to Reg.AL
+    fpga.reg_file.al.write(6)
+    fpga.reg_file.bl.write(7)
+
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.NONE, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 42
+    assert fpga.reg_file.ah.read_int() == 0
+
+
+def test_adder_block_mul_invalid_dst(fpga: FpgaModel):
+    # Only AL is valid destination for MUL on HA_MUX
+    from fpu_emu.hardware.registers import HardwareBusError
+
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W32, dst=Reg.DL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    with pytest.raises(HardwareBusError, match="MUL destination on HA_MUX must be AL"):
+        fpga.adder.execute()
+
+
+def test_adder_block_mul_w64_not_implemented(fpga: FpgaModel):
+    # 64-bit multiplication is orchestrated via microcode
+    instr = MicroInstruction(op=MicroOp.MUL, w=IW.W64, dst=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    with pytest.raises(NotImplementedError, match="orchestrated via microcode"):
+        fpga.adder.execute()
+

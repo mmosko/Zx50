@@ -157,6 +157,8 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b1010_xxxx` | `0xA0`–`0xAF` | `PUSH_CONST`| `( -- const )` | $+4$ / $+8$ | 0 B | 2–3 | X | 0 | 0 | 0 | * | - | * | Stack Overflow ($V=1, ERR=1$ if $SP + \text{bytes} > 256$) |
 | `0b1100_0000` | `0xC0` | `DUP4` | `( a -- a a )` | $+4$ | 4 B | 2 | X | - | - | - | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_0001` | `0xC1` | `DUP8` | `( a -- a a )` | $+8$ | 8 B | 3 | X | - | - | - | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
+| `0b1100_0010` | `0xC2` | `CONV_U32_U64`| `( u32 -- u64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Zero-extends 32-bit uint to 64-bit uint |
+| `0b1100_0011` | `0xC3` | `CONV_U64_U32`| `( u64 -- u32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Truncates 64-bit uint to 32-bit uint ($V=1$ on overflow) |
 | `0b1100_0110` | `0xC6` | `CLEAR_STACK` | `( ... -- )` | $SP \leftarrow 0$ | 0 B | 1 | X | 1 | 0 | 0 | 0 | 0 | 0 | Clears $SP \leftarrow 0$, $OSP \leftarrow 0$, all error flags cleared |
 | `0b1100_1000` | `0xC8` | `CONV_I32_I64`| `( i32 -- i64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_1001` | `0xC9` | `CONV_F32_F64`| `( f32 -- f64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
@@ -308,6 +310,14 @@ Evaluates: Product = NOS * TOS
 * **`V`**: In integer modes, set to 1 if the high word(s) of the product contain significant non-sign bits (truncated integer overflow). In float modes, set on exponent overflow.
 * **`U`**: In float modes, set on exponent underflow.
 * **Stack Underflow:** Asserts `U = 1` and `ERR = 1` if $SP < 8$ (32-bit) or $SP < 16$ (64-bit).
+
+#### Result Widths & Widening Multiplication
+* **Stack-Neutral Result Widths:** In keeping with Forth and RPN stack invariants, integer multiplication produces a result of the same width as its operands:
+  - `MUL_I32`: $32 \times 32 \to 32\text{-bit}$ product + `VF` (overflow asserted if true product exceeds 32 bits signed).
+  - `MUL_I64`: $64 \times 64 \to 64\text{-bit}$ product + `VF` (overflow asserted if true product exceeds 64 bits signed).
+* **Widening Multiplication ($32 \times 32 \to 64$):** If a full 64-bit product of two 32-bit values is desired without risk of truncation, convert the operands to 64-bit prior to multiplying:
+  - **Signed widening multiply:** Convert operands via `CONV_I32_I64` and execute `MUL_I64`.
+  - **Unsigned widening multiply:** Convert operands via `CONV_U32_U64` and execute `MUL_I64`.
 
 ---
 
@@ -465,9 +475,11 @@ CONV_xxx_yyy — DATA TYPE CONVERSIONS
 #### Opcode Encodings & Execution Timing
 | Mnemonic | Hex | Binary | Conversion Operation | Required Depth | Net $\Delta SP$ | Side Effects / Flags |
 |---|:---:|:---:|---|:---:|:---:|---|
+| **`CONV_U32_U64`** | `0xC2` | `0b1100_0010` | Zero-extends 32-bit uint to 64-bit uint | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
+| **`CONV_U64_U32`** | `0xC3` | `0b1100_0011` | Truncates 64-bit uint to 32-bit uint    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{32}-1$ |
 | **`CONV_I32_I64`** | `0xC8` | `0b1100_1000` | Sign-extends 32-bit int to 64-bit int | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
 | **`CONV_F32_F64`** | `0xC9` | `0b1100_1001` | Expands IEEE single to double float   | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
-| **`CONV_I64_I32`** | `0xCA` | `0b1100_1010` | Truncates 64-bit int to 32-bit int    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{31}-1$ |
+| **`CONV_I64_I32`** | `0xCA` | `0b1100_1010` | Truncates 64-bit int to 32-bit int    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{31}-1$ or $< -2^{31}$ |
 | **`CONV_F64_F32`** | `0xCB` | `0b1100_1011` | Converts IEEE double to single float  | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW`/`UNDERFLOW` on exp limits |
 | **`CONV_I32_F32`** | `0xCC` | `0b1100_1100` | Converts signed 32-bit int to single  | 4 Bytes | $0$ Bytes  | Normalizes via LZC; no precision loss |
 | **`CONV_F32_I32`** | `0xCD` | `0b1100_1101` | Truncates single to signed 32-bit int | 4 Bytes | $0$ Bytes  | Sets `OVERFLOW = 1` if $|val| \ge 2^{31}$ |
@@ -477,6 +489,7 @@ CONV_xxx_yyy — DATA TYPE CONVERSIONS
 #### Status Flags & Side Effects
 * **Stack Underflow:** Asserts `U = 1` and `ERR = 1` if source operand is missing.
 * **Truncation Overflow in `CONV_I64_I32`:** If upper 32 bits of 64-bit int are not a valid sign extension of lower 32 bits, sets **`OVERFLOW = 1`**.
+* **Truncation Overflow in `CONV_U64_U32`:** If upper 32 bits of 64-bit uint are non-zero, sets **`OVERFLOW = 1`**.
 * **Float-to-Int Range Overflow (`CONV_F32_I32`, `CONV_F64_I64`):** If the float magnitude exceeds the representable signed integer range, sets **`OVERFLOW = 1`** and clamps to maximum/minimum integer value.
 
 ---
