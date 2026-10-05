@@ -3,6 +3,7 @@ from fpu_emu.blocks.adder.adder_block import AdderBlock
 from fpu_emu.blocks.control.control_block import ControlBlock
 from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
+from fpu_emu.blocks.memory.memory_block import MemoryBlock
 from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.hardware.bus_pad import BusPad
 from fpu_emu.hardware.clock import Clock
@@ -93,14 +94,31 @@ class FpgaModel:
             c_reg=self.reg_file.c
         )
 
+        self.memory_inputs = BlockInputs(
+            ha_mux=self.ha_mux,
+            hb_mux=self.hb_mux,
+            status=self.reg_file.status,
+            instr=self.reg_file.instr,
+            exec_ready=self.reg_file.exec_ready,
+        )
+
+        self.memory_block = MemoryBlock(
+            name="memory",
+            inputs=self.memory_inputs,
+            memory=self.memory,
+            writeback=self._writeback,
+            clock=self.clock,
+            sp_reg=self.reg_file.sp,
+        )
+
         # Map of the opcode block (0..7) to functional blocks
         self.blocks = [
             self.adder,         # 0 (0b000): Arithmetic / Adder
             self.adder,         # 1 (0b001): Math / Float / Divider
             self.empty_block,   # 2 (0b010): Logic
             self.control_block,   # 3 (0b011): Control
-            self.empty_block,   # 4 (0b100): Memory / Stack
-            self.empty_block,   # 5 (0b101): Memory / Storage
+            self.memory_block,  # 4 (0b100): Memory / Stack
+            self.memory_block,  # 5 (0b101): Memory / Storage
             self.empty_block,   # 6 (0b110): Shifter / LZC
             self.empty_block,   # 7 (0b111): Reserved / Empty
         ]

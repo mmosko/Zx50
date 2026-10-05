@@ -5,6 +5,7 @@ from fpu_emu.blocks.adder.adder_core import AdderCore, AdderResult
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
+from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction
@@ -14,6 +15,8 @@ from fpu_emu.micro_opcodes import MicroOp
 class AdderBlock(FunctionalBlock):
     def __init__(self, name: str, inputs: BlockInputs, memory: Memory, writeback: Callable, clock: Clock):
         super().__init__(name, inputs, memory, writeback, clock)
+        assert isinstance(inputs.ha_mux, Mux)
+        self._ha_mux: Mux = inputs.ha_mux
 
     def execute(self):
         instr = MicroInstruction.from_register(self._inputs.instr)
@@ -93,7 +96,7 @@ class AdderBlock(FunctionalBlock):
         assert (instr.dst is not None)
 
         # Combinatorial setup in current cycle
-        self._inputs.ha_mux.select(instr.dst.value)
+        self._ha_mux.select(instr.dst.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=cin, sub=sub)
 
@@ -109,7 +112,7 @@ class AdderBlock(FunctionalBlock):
         self._validate_src64(instr.src)
 
         # Low word (AL)
-        self._inputs.ha_mux.select(Reg.AL.value)
+        self._ha_mux.select(Reg.AL.value)
         self._inputs.hb_mux.select(instr.src.value)
         low_result = self._combinatorial_add(cin=cin, sub=sub)
 
@@ -121,7 +124,7 @@ class AdderBlock(FunctionalBlock):
 
         # Upper word (AH) with carry from lower word
         cin_high = 1 if low_result.cf else 0
-        self._inputs.ha_mux.select(Reg.AH.value)
+        self._ha_mux.select(Reg.AH.value)
         src_h = instr.src.value | 0b0001
         self._inputs.hb_mux.select(src_h)
         high_result = self._combinatorial_add(cin=cin_high, sub=sub)
@@ -141,7 +144,7 @@ class AdderBlock(FunctionalBlock):
         """CMP dst, src: 32-bit compare dst - src without modifying dst (1 cycle)."""
         assert (instr.src is not None)
         assert (instr.dst is not None)
-        self._inputs.ha_mux.select(instr.dst.value)
+        self._ha_mux.select(instr.dst.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=0, sub=True)
 

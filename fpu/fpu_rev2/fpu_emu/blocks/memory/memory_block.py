@@ -84,6 +84,8 @@ class MemoryBlock(FunctionalBlock):
             case _:
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
+    STATUS_OVERFLOW_ERR_MASK = (1 << StatusFlag.OVERFLOW.value) | (1 << StatusFlag.ERR.value)
+
     def _push(self, instr: MicroInstruction) -> None:
         """
         push src to TOS
@@ -95,25 +97,34 @@ class MemoryBlock(FunctionalBlock):
 
         self._inputs.hb_mux.select(instr.src.value)
         value = self._inputs.hb_mux.read_int()
-        # This is a bit prefix, not an add
-        addr = self.MTH_BASE | self._sp.read_int()
 
         # Set it up to calculate SP+1
         self._stack_adder.set_op(StackAdder.OP_INC)
 
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE.value)
+        self._outputs.exec_done.set(1)
+        self._outputs.status_wr_sel.set(self.STATUS_OVERFLOW_ERR_MASK)
+
+        if self._stack_adder.is_overflow:
+            # Stack overflow: set VF and ERR, do not write memory or update SP
+            self._outputs.res_status.set(self.STATUS_OVERFLOW_ERR_MASK)
+            self._writeback()
+            return
+
+        # No overflow: clear VF and ERR
+        self._outputs.res_status.set(0)
+
         # 1 cycle to present address and data
+        addr = self.MTH_BASE | self._sp.read_int()
         self._memory.write(0, addr, value & 0xFFFF)
         self._memory.write(1, addr, (value >> 16) & 0xFFFF)
         self._clock.tick()
 
-        self._outputs.exec_done.set(1)
-        # 1 cycle for write to complete
+        # Writeback the updated SP
+        self._sp.write(self._stack_adder.read())
 
-        self._outputs.block_res.set(0)
-        self._outputs.block_res_sel.set(Reg.NONE.value)
-        self._clock.tick()
-
-        # N.B.: No call to _writeback, the UPC is handled by the upc_mux
+        self._writeback()
 
     def _pop(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.POP)
