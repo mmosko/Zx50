@@ -175,11 +175,13 @@ class FpgaModel:
             Reg.DH.value: self.reg_file.dh,
             Reg.FL.value: self.reg_file.fl,
             Reg.FH.value: self.reg_file.fh,
-            Reg.EA.value: self.reg_file.ea,
-            Reg.EB.value: self.reg_file.eb,
         }
         if dst in reg_map:
             reg_map[dst].write(res)
+        elif dst == Reg.EA.value:
+            self.reg_file.ea.write(res[:2])
+        elif dst == Reg.EB.value:
+            self.reg_file.eb.write(res[:2])
         elif dst == Reg.C:
             self.reg_file.c.write(res[:1])
         elif dst == Reg.UPC:

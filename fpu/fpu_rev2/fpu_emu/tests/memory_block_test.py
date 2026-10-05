@@ -16,6 +16,10 @@ def fpga(tmp_path: Path):
     return FpgaModel(rom=rom)
 
 
+def get_reg(fpga: FpgaModel, reg: Reg):
+    return getattr(fpga.reg_file, reg.name.lower())
+
+
 def test_push_basic(fpga: FpgaModel):
     """PUSH AL should write to EBR and increment SP by 1, clearing ERR/VF."""
     fpga.reg_file.al.write(0x12345678)
@@ -107,3 +111,225 @@ def test_push_clears_previous_overflow(fpga: FpgaModel):
     assert fpga.reg_file.sp.read_int() == 1
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+@pytest.mark.parametrize(
+    "src,dst,val,desc",
+    [
+        (Reg.AL, Reg.BL, 0x12345678, "standard 32-bit value AL -> BL"),
+        (Reg.BL, Reg.DL, 0x00000000, "zero value BL -> DL"),
+        (Reg.DL, Reg.FL, 0xFFFFFFFF, "all ones DL -> FL"),
+        (Reg.FL, Reg.AL, 0x80000000, "sign bit set FL -> AL"),
+        (Reg.AH, Reg.BH, 0x5555AAAA, "high-half registers AH -> BH"),
+        (Reg.EA, Reg.EB, 0x0ABC, "12-bit register EA -> EB"),
+    ],
+)
+def test_push_pop_32_roundtrip(fpga: FpgaModel, src, dst, val, desc):
+    """Test 32-bit PUSH and POP preserves values across various registers."""
+    get_reg(fpga, src).write(val)
+    initial_sp = fpga.reg_file.sp.read_int()
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=src, w=IW.W32),
+        MicroInstruction(op=MicroOp.POP, dst=dst, w=IW.W32),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == initial_sp
+    assert get_reg(fpga, dst).read_int() == val
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+@pytest.mark.parametrize(
+    "src_lo,dst_lo,val_lo,val_hi,desc",
+    [
+        (Reg.AL, Reg.BL, 0x11112222, 0x33334444, "AX -> BX standard 64-bit pair"),
+        (Reg.BL, Reg.DL, 0x00000000, 0x00000000, "BX -> DX zeros"),
+        (Reg.DL, Reg.FL, 0xFFFFFFFF, 0xFFFFFFFF, "DX -> FX all ones"),
+        (Reg.FL, Reg.AL, 0x12345678, 0x9ABCDEF0, "FX -> AX distinct half-words"),
+    ],
+)
+def test_push_pop_64_roundtrip(fpga: FpgaModel, src_lo, dst_lo, val_lo, val_hi, desc):
+    """Test 64-bit PUSH and POP preserves values across 64-bit register pairs."""
+    src_hi = Reg(src_lo.value | 1)
+    dst_hi = Reg(dst_lo.value | 1)
+
+    get_reg(fpga, src_lo).write(val_lo)
+    get_reg(fpga, src_hi).write(val_hi)
+    initial_sp = fpga.reg_file.sp.read_int()
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=src_lo, w=IW.W64),
+        MicroInstruction(op=MicroOp.POP, dst=dst_lo, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == initial_sp
+    assert get_reg(fpga, dst_lo).read_int() == val_lo
+    assert get_reg(fpga, dst_hi).read_int() == val_hi
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_pop32_underflow(fpga: FpgaModel):
+    """POP when SP=0 should assert UNDERFLOW and ERR, without altering SP or dst."""
+    fpga.reg_file.bl.write(0xCAFEBABE)
+    assert fpga.reg_file.sp.read_int() == 0
+
+    microcode = [
+        MicroInstruction(op=MicroOp.POP, dst=Reg.BL, w=IW.W32),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == 0
+    assert fpga.reg_file.bl.read_int() == 0xCAFEBABE
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_pop64_underflow_empty(fpga: FpgaModel):
+    """64-bit POP when SP=0 asserts UNDERFLOW and ERR; neither dst register is modified."""
+    fpga.reg_file.bl.write(0x11111111)
+    fpga.reg_file.bh.write(0x22222222)
+    assert fpga.reg_file.sp.read_int() == 0
+
+    microcode = [
+        MicroInstruction(op=MicroOp.POP, dst=Reg.BL, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == 0
+    assert fpga.reg_file.bl.read_int() == 0x11111111
+    assert fpga.reg_file.bh.read_int() == 0x22222222
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_pop64_underflow_one_item(fpga: FpgaModel):
+    """64-bit POP when SP=1 pops HI word into BH, but underflows on LO word (BL untouched)."""
+    fpga.reg_file.al.write(0x55556666)
+    fpga.reg_file.bl.write(0xAAAAAAAA)
+    fpga.reg_file.bh.write(0xBBBBBBBB)
+
+    # Push 1 32-bit word, so SP becomes 1
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=Reg.AL, w=IW.W32),
+        MicroInstruction(op=MicroOp.POP, dst=Reg.BL, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == 0
+    assert fpga.reg_file.bh.read_int() == 0x55556666  # Hi word popped from TOS
+    assert fpga.reg_file.bl.read_int() == 0xAAAAAAAA  # Lo word untouched on underflow
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_push64_overflow_at_127(fpga: FpgaModel):
+    """64-bit PUSH when SP=127 overflows on word 1; memory and SP untouched."""
+    fpga.reg_file.sp.write(127)
+    fpga.reg_file.al.write(0x12345678)
+    fpga.reg_file.ah.write(0x9ABCDEF0)
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=Reg.AL, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == 127
+    assert fpga.memory.read(0, 127) == 0
+    assert fpga.memory.read(1, 127) == 0
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_push64_overflow_at_126(fpga: FpgaModel):
+    """64-bit PUSH when SP=126 pushes word 1 at 126, but overflows on word 2 at 127."""
+    fpga.reg_file.sp.write(126)
+    fpga.reg_file.al.write(0x12345678)
+    fpga.reg_file.ah.write(0x9ABCDEF0)
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=Reg.AL, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.sp.read_int() == 127  # Incremented once by low word
+    assert fpga.memory.read(0, 126) == 0x5678  # Low word was written
+    assert fpga.memory.read(1, 126) == 0x1234
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_pop32_clears_previous_underflow(fpga: FpgaModel):
+    """A successful 32-bit POP clears previously asserted UNDERFLOW and ERR flags."""
+    fpga.reg_file.status.set_bit(StatusFlag.UNDERFLOW, True)
+    fpga.reg_file.status.set_bit(StatusFlag.ERR, True)
+    fpga.reg_file.al.write(0x1234)
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=Reg.AL, w=IW.W32),
+        MicroInstruction(op=MicroOp.POP, dst=Reg.BL, w=IW.W32),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.bl.read_int() == 0x1234
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_pop64_clears_previous_underflow(fpga: FpgaModel):
+    """A successful 64-bit POP clears previously asserted UNDERFLOW and ERR flags."""
+    fpga.reg_file.status.set_bit(StatusFlag.UNDERFLOW, True)
+    fpga.reg_file.status.set_bit(StatusFlag.ERR, True)
+    fpga.reg_file.al.write(0x11112222)
+    fpga.reg_file.ah.write(0x33334444)
+
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=Reg.AL, w=IW.W64),
+        MicroInstruction(op=MicroOp.POP, dst=Reg.BL, w=IW.W64),
+    ]
+
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.bl.read_int() == 0x11112222
+    assert fpga.reg_file.bh.read_int() == 0x33334444
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+@pytest.mark.parametrize(
+    "invalid_reg",
+    [Reg.AH, Reg.BH, Reg.DH, Reg.FH, Reg.EA, Reg.EB, Reg.IMM, Reg.C],
+)
+def test_push64_invalid_src_raises(fpga: FpgaModel, invalid_reg):
+    """PUSH64 requires a low-half register (AL, BL, DL, FL); others raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.PUSH, src=invalid_reg, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError):
+        fpga.dispatcher._run(microcode)
+
+
+@pytest.mark.parametrize(
+    "invalid_reg",
+    [Reg.AH, Reg.BH, Reg.DH, Reg.FH, Reg.EA, Reg.EB, Reg.IMM, Reg.C],
+)
+def test_pop64_invalid_dst_raises(fpga: FpgaModel, invalid_reg):
+    """POP64 requires a low-half register (AL, BL, DL, FL); others raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.POP, dst=invalid_reg, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError):
+        fpga.dispatcher._run(microcode)
