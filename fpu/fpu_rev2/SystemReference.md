@@ -1435,15 +1435,17 @@ if W == 0:
     dst [31:0] <- SCRATCHPAD [addr [5:0]]
     UPC        <- UPC + 1
 else:
-    {dst_H, dst_L} <- { SCRATCHPAD [addr+1], SCRATCHPAD [addr] }
-    UPC            <- UPC + 1
+    // 64-bit load requires an even base memory address (addr % 2 == 0)
+    dst_L      <- SCRATCHPAD [addr [5:0]]
+    dst_H      <- SCRATCHPAD [(addr [5:0]) | 1]
+    UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
 `OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = n/a`.
 
 #### Description
-Loads 32 or 64 bits from the internal scratchpad memory (used by microcode routines for temporaries) into `dst`.
+Loads 32 or 64 bits from the internal scratchpad memory (used by microcode routines for temporaries) into `dst`. For 64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `dst_L` is loaded from `addr` and `dst_H` from `addr | 1`.
 
 #### Concrete Numeric Example
 ```text
@@ -1457,7 +1459,7 @@ After execution of LD AL, 0x04:
 
 ```
 ================================================================================
-ST addr, src — STORE TO SCRATCHPAD MEMORY
+STO addr, src — STORE TO SCRATCHPAD MEMORY
 ================================================================================
 ```
 
@@ -1476,20 +1478,22 @@ if W == 0:
     SCRATCHPAD [addr [5:0]] <- src [31:0]
     UPC                     <- UPC + 1
 else:
-    { SCRATCHPAD [addr+1], SCRATCHPAD [addr] } <- { src_H [31:0], src_L [31:0] }
-    UPC                     <- UPC + 1
+    // 64-bit store requires an even base memory address (addr % 2 == 0)
+    SCRATCHPAD [addr [5:0]]       <- src_L [31:0]
+    SCRATCHPAD [(addr [5:0]) | 1] <- src_H [31:0]
+    UPC                           <- UPC + 1
 ```
 
 #### Instruction Word Format
 `OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = IMM`, `HA_MUX = n/a`, `HB_MUX = src`.
 
 #### Description
-Stores 32 or 64 bits from register `src` into internal scratchpad memory at `addr`.
+Stores 32 or 64 bits from register `src` into internal scratchpad memory at `addr`. For 64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `src_L` is stored into `addr` and `src_H` into `addr | 1`.
 
 #### Concrete Numeric Example
 ```text
 Suppose AL = 0xDEADBEEF.
-After execution of ST 0x08, AL:
+After execution of STO 0x08, AL:
   SCRATCHPAD[0x08] <- 0xDEADBEEF
   Flags are unaffected.
 ```

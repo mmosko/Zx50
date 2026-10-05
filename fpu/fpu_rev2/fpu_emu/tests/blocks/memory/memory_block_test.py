@@ -334,3 +334,69 @@ def test_pop64_invalid_dst_raises(fpga: FpgaModel, invalid_reg):
     with pytest.raises(AssertionError):
         fpga.dispatcher._run(microcode)
 
+
+def test_mov_32(fpga: FpgaModel):
+    """MOV copies 32-bit register without affecting flags."""
+    fpga.reg_file.bl.write(0xDEADBEEF)
+    microcode = [
+        MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.BL),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 0xDEADBEEF
+
+
+def test_mov_64(fpga: FpgaModel):
+    """MOV copies 64-bit register pair (LO then HI) without affecting flags."""
+    fpga.reg_file.bl.write(0x12345678)
+    fpga.reg_file.bh.write(0x9ABCDEF0)
+    microcode = [
+        MicroInstruction(op=MicroOp.MOV, dst=Reg.DL, src=Reg.BL, w=IW.W64),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.dl.read_int() == 0x12345678
+    assert fpga.reg_file.dh.read_int() == 0x9ABCDEF0
+
+
+def test_scratchpad_ld_sto_32(fpga: FpgaModel):
+    """STO writes 32-bit word to scratchpad and LD reads it back."""
+    fpga.reg_file.al.write(0xCAFEBABE)
+    microcode = [
+        MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=4),
+        MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=4),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.bl.read_int() == 0xCAFEBABE
+
+
+def test_scratchpad_ld_sto_64(fpga: FpgaModel):
+    """STO writes 64-bit pair to scratchpad and LD reads it back."""
+    fpga.reg_file.al.write(0x11223344)
+    fpga.reg_file.ah.write(0x55667788)
+    microcode = [
+        MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=8, w=IW.W64),
+        MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=8, w=IW.W64),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.bl.read_int() == 0x11223344
+    assert fpga.reg_file.bh.read_int() == 0x55667788
+
+
+def test_scratchpad_ld_64_odd_base_raises(fpga: FpgaModel):
+    """64-bit LD with odd base address must raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=3, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError, match="64-bit LD must use even base"):
+        fpga.dispatcher._run(microcode)
+
+
+def test_scratchpad_sto_64_odd_base_raises(fpga: FpgaModel):
+    """64-bit STO with odd base address must raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=5, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError, match="64-bit STO must use even base"):
+        fpga.dispatcher._run(microcode)
+
+
+

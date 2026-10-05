@@ -97,6 +97,58 @@ class MicroCode:
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ],
+        # MUL_I64:
+        # Scratchpad mapping:
+        # SCR[0] = BL (B_low), SCR[1] = BH (B_high)
+        # SCR[2] = AL (A_low), SCR[3] = AH (A_high)
+        # SCR[4] = cross-terms sum
+        #
+        #  0: POP W64 BL
+        #  1: JNZ UNDERFLOW -> 21 (HALT)
+        #  2: STO 0, BL, W64
+        #  3: POP W64 AL
+        #  4: JNZ UNDERFLOW -> 21 (HALT)
+        #  5: STO 2, AL, W64
+        #  6: LD BL, 1            # BL = B_high
+        #  7: MULU BL             # {AH, AL} = A_low * B_high
+        #  8: STO 4, AL           # SCR[4] = (A_low * B_high)_low
+        #  9: LD AL, 3            # AL = A_high
+        # 10: LD BL, 0            # BL = B_low
+        # 11: MULU BL             # {AH, AL} = A_high * B_low
+        # 12: LD BL, 4            # BL = (A_low * B_high)_low
+        # 13: ADD AL, BL          # AL = sum of cross terms
+        # 14: STO 4, AL           # SCR[4] = sum of cross terms
+        # 15: LD AL, 2            # AL = A_low
+        # 16: LD BL, 0            # BL = B_low
+        # 17: MULU BL             # {AH, AL} = A_low * B_low (AL is final product low word)
+        # 18: LD BL, 4            # BL = sum of cross terms (AL untouched)
+        # 19: ADD AH, BL          # AH = (A_low * B_low)_high + cross terms
+        # 20: PUSH W64 AL         # Push {AH, AL}
+        # 21: HALT
+        UserOpcode.MUL_I64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=21),
+            MicroInstruction(op=MicroOp.STO, w=IW.W64, src=Reg.BL, imm=0),
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=21),
+            MicroInstruction(op=MicroOp.STO, w=IW.W64, src=Reg.AL, imm=2),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=1),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=4),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=3),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=0),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=4),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=4),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=2),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=0),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.LD, dst=Reg.BL, imm=4),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
     }
 
     @classmethod

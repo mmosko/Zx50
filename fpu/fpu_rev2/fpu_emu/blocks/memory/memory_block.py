@@ -6,6 +6,7 @@ from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
+from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
@@ -47,6 +48,8 @@ class MemoryBlock(FunctionalBlock):
                  clock: Clock,
                  sp_reg: Register):
         super().__init__(name, inputs, memory, writeback, clock)
+        assert isinstance(inputs.ha_mux, Mux)
+        self._ha_mux: Mux = inputs.ha_mux
         self._none_bus = Bus(name="none_bus", size_in_bits=4)
         self._upc_bus = Bus(name="upc_bus", size_in_bits=4)
         self._none_bus.set(Reg.NONE.value)
@@ -235,12 +238,79 @@ class MemoryBlock(FunctionalBlock):
         raise NotImplementedError
 
     def _ld(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.LD)
-        raise NotImplementedError
+        """Loads 32-bit or 64-bit from scratchpad RAM SCR[imm]."""
+        assert instr.op == MicroOp.LD
+        assert instr.dst is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+
+        self._ha_mux.select(Reg.IMM.value)
+        imm = self._ha_mux.read_int()
+
+        if instr.is_w32():
+            self._ld_core(dst=instr.dst.value, addr=imm)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.dst.is_lo_half()
+            assert imm % 2 == 0, "64-bit LD must use even base"
+
+            # 1. Read LO word from addr
+            self._ld_core(dst=instr.dst.value, addr=imm)
+            self._writeback()
+
+            # 2. Read HI word from addr + 1
+            self._ld_core(dst=instr.dst.value | 1, addr=imm | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+
+    def _ld_core(self, dst: int, addr: int):
+        addr = self.SCR_BASE | (addr & 0x3F)
+        val_lo = self._memory.read(0, addr)
+        val_hi = self._memory.read(1, addr)
+        val = (val_hi << 16) | val_lo
+        self._clock.tick()
+        self._outputs.block_res.set(val)
+        self._outputs.block_res_sel.set(dst)
 
     def _sto(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.STO)
-        raise NotImplementedError
+        """Stores 32-bit or 64-bit from register src into scratchpad RAM SCR[imm]."""
+        assert instr.op == MicroOp.STO
+        assert instr.src is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE.value)
+
+        self._ha_mux.select(Reg.IMM.value)
+        imm = self._ha_mux.read_int()
+
+        if instr.is_w32():
+            self._sto_core(src=instr.src.value, addr=imm)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.src.is_lo_half()
+            assert imm % 2 == 0, "64-bit STO must use even base"
+
+            # 1. Write LO word to addr
+            self._sto_core(src=instr.src.value, addr=imm)
+            self._writeback()
+
+            # 2. Write HI word to addr + 1
+            self._sto_core(src=instr.src.value | 1, addr=imm | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+
+    def _sto_core(self, src: int, addr: int):
+        self._inputs.hb_mux.select(src)
+        val = self._inputs.hb_mux.read_int()
+        addr = self.SCR_BASE | (addr & 0x3F)
+        self._memory.write(0, addr, val & 0xFFFF)
+        self._memory.write(1, addr, (val >> 16) & 0xFFFF)
+        self._clock.tick()
 
     def _ldu(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.LDU)
@@ -252,7 +322,33 @@ class MemoryBlock(FunctionalBlock):
 
     def _mov(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.MOV)
-        raise NotImplementedError
+        assert (instr.src is not Reg.NONE)
+        assert (instr.dst is not Reg.NONE)
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+
+        if instr.is_w32():
+            self._inputs.hb_mux.select(instr.src.value)
+            self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+            self._outputs.block_res_sel.set(instr.dst.value)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.src.is_lo_half()
+            assert instr.dst.is_lo_half()
+            # 1. Transfer LO word
+            self._inputs.hb_mux.select(instr.src.value)
+            self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+            self._outputs.block_res_sel.set(instr.dst.value)
+            self._writeback()
+
+            # 2. Transfer HI word
+            self._inputs.hb_mux.select(instr.src.value | 1)
+            self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+            self._outputs.block_res_sel.set(instr.dst.value | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
 
     def _swap(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.SWAP)

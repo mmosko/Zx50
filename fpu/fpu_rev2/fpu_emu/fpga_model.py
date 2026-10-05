@@ -110,17 +110,9 @@ class FpgaModel:
             c_reg=self.reg_file.c
         )
 
-        self.memory_inputs = BlockInputs(
-            ha_mux=self.ha_mux,
-            hb_mux=self.hb_mux,
-            status=self.reg_file.status,
-            instr=self.reg_file.instr,
-            exec_ready=self.reg_file.exec_ready,
-        )
-
         self.memory_block = MemoryBlock(
             name="memory",
-            inputs=self.memory_inputs,
+            inputs=self.inputs,
             memory=self.memory,
             writeback=self._writeback,
             clock=self.clock,
