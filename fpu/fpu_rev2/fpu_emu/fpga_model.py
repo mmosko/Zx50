@@ -3,6 +3,7 @@ from fpu_emu.blocks.adder.adder_block import AdderBlock
 from fpu_emu.blocks.control.control_block import ControlBlock
 from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
+from fpu_emu.blocks.logic.logic_block import LogicBlock
 from fpu_emu.blocks.memory.memory_block import MemoryBlock
 from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.fpga_resource import fpga_resource
@@ -110,6 +111,14 @@ class FpgaModel:
             c_reg=self.reg_file.c
         )
 
+        self.logic_block = LogicBlock(
+            name="logic",
+            inputs=self.inputs,
+            memory=self.memory,
+            writeback=self._writeback,
+            clock=self.clock
+        )
+
         self.memory_block = MemoryBlock(
             name="memory",
             inputs=self.inputs,
@@ -123,7 +132,7 @@ class FpgaModel:
         self.blocks = [
             self.adder,         # 0 (0b000): Arithmetic / Adder
             self.adder,         # 1 (0b001): Math / Float / Divider
-            self.empty_block,   # 2 (0b010): Logic
+            self.logic_block,   # 2 (0b010): Logic
             self.control_block,   # 3 (0b011): Control
             self.memory_block,  # 4 (0b100): Memory / Stack
             self.memory_block,  # 5 (0b101): Memory / Storage
