@@ -166,6 +166,110 @@ class MicroCode:
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ],
+        # SUB_F32:
+        # A - B = A + (-B)
+        # 0: POP BL (pop operand B)
+        # 1: JNZ UNDERFLOW -> 49 (TRAP)
+        # 2: FCHS BL (invert sign bit: B <- -B)
+        # 3: MOV DL, BL (stash packed -B into DL)
+        # 4: POP AL (pop operand A)
+        # 5: JNZ UNDERFLOW -> 49 (TRAP)
+        # 6: MOV AH, AL (stash packed A into AH for sign preservation)
+        # 7: UNPACK BL, EB (unpack -B)
+        # 8: JZ ZERO -> 43 (RETURN_A: jump to PUSH AL, HALT)
+        # 9: UNPACK AL, EA (unpack A)
+        # 10: JZ ZERO -> 45 (RETURN_B: jump to PUSH DL, HALT)
+        # 11: CMP EA, EB
+        # 12: JNZ CARRY -> 17 (SWAP_OPS: EA < EB)
+        # 13: JNZ ZERO -> 20 (ALIGN_EXP: EA > EB)
+        # 14: CMP AL, BL
+        # 15: JNZ CARRY -> 17 (SWAP_OPS: AL < BL)
+        # 16: JMP 20 (ALIGN_EXP: AL >= BL)
+        # 17: SWAP AL, BL (larger mantissa in AL)
+        # 18: SWAP EA, EB (larger exponent in EA)
+        # 19: MOV AH, DL (AH now holds packed larger operand sign)
+        # 20: EXP_SUB C, EA, EB (C <- EA - EB; EA preserved!)
+        # 21: CMP C, IMM=32
+        # 22: JNZ CARRY -> 25 (DO_SHIFT: diff < 32)
+        # 23: MOV BL, IMM=0 (diff >= 32: smaller mantissa shifts to 0)
+        # 24: JMP 26 (DO_ARITH)
+        # 25: LSR BL, C (shift BL right by C)
+        # 26: JNZ DIFF_SIGN -> 29 (DO_SUB)
+        # 27: ADD AL, BL
+        # 28: JMP 30 (NORMALIZE)
+        # 29: SUB AL, BL
+        # 30: LZC AL (leading zero count into C)
+        # 31: JZ ZERO -> 47 (PACK_ZERO: exact cancellation)
+        # 32: CMP C, IMM=8
+        # 33: JNZ CARRY -> 39 (OVERFLOW_RIGHT: C < 8)
+        # 34: JZ ZERO -> 41 (DONE_NORM: C == 8)
+        # 35: SUB C, IMM=8 (C <- C - 8)
+        # 36: LSL AL, C (AL <- AL << C)
+        # 37: EXP_SUB EA, C (EA <- EA - C)
+        # 38: JMP 41 (DONE_NORM)
+        # 39: LSR AL, IMM=1
+        # 40: EXP_ADD EA, IMM=1
+        # 41: OR AH, AH (restores status.sign from bit 31 of AH)
+        # 42: PACK AL, EA
+        # 43: PUSH AL
+        # 44: HALT
+        # 45: PUSH DL (RETURN_B: -B)
+        # 46: HALT
+        # 47: SUB AL, AL (PACK_ZERO: AL <- 0)
+        # 48: JMP 43 (PUSH AL, HALT)
+        # 49: HALT (TRAP)
+        UserOpcode.SUB_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=49),
+            MicroInstruction(op=MicroOp.FCHS, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=49),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.UNPACK, dst=Reg.EB, src=Reg.BL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=43),
+            MicroInstruction(op=MicroOp.UNPACK, dst=Reg.EA, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=45),
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.EA, src=Reg.EB),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=17),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ZERO, imm=20),
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=17),
+            MicroInstruction(op=MicroOp.JMP, imm=20),
+            MicroInstruction(op=MicroOp.SWAP, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.SWAP, dst=Reg.EA, src=Reg.EB),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AH, src=Reg.DL),
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.C, src1=Reg.EA, src=Reg.EB),
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.C, src=Reg.IMM, imm=32),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=25),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.IMM, imm=0),
+            MicroInstruction(op=MicroOp.JMP, imm=26),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.BL, src=Reg.C),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.DIFF_SIGN, imm=29),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.JMP, imm=30),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.LZC, dst=Reg.C, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=47),
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.C, src=Reg.IMM, imm=8),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=39),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=41),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.C, src=Reg.IMM, imm=8),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.C),
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.EA, src=Reg.C),
+            MicroInstruction(op=MicroOp.JMP, imm=41),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AL, src=Reg.IMM, imm=1),
+            MicroInstruction(op=MicroOp.EXP_ADD, dst=Reg.EA, src=Reg.IMM, imm=1),
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AH),
+            MicroInstruction(op=MicroOp.PACK, dst=Reg.AL, src=Reg.EA),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.DL),
+            MicroInstruction(op=MicroOp.HALT),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JMP, imm=43),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
         # SUB_I64:
         # 0: POP BX
         # 1: JNZ UNDERFLOW -> 6 (HALT)
