@@ -1338,7 +1338,7 @@ After execution of POP BL:
 
 ```
 ================================================================================
-LDC dst, addr — LOAD FROM CONSTANT ROM
+LDC dst, tbl, addr — LOAD FROM CONSTANT / LUT ROM
 ================================================================================
 ```
 
@@ -1353,25 +1353,64 @@ LDC dst, addr — LOAD FROM CONSTANT ROM
 
 #### Register Transfer & Datapath Flow
 ```text
-if W == 0:
-    dst [31:0] <- CONST_ROM [addr]
-    UPC        <- UPC + 1
-else:
-    {dst_H, dst_L} <- { CONST_ROM [addr+1], CONST_ROM [addr] }
-    UPC            <- UPC + 1
+effective_offset <- (HA_MUX == IMM) ? INSTR[9:0] : HA_MUX_REG
+
+case tbl of
+    RECIP (0b000):  # EBR 4 (16-bit width), base 0x000 (words 0..255)
+        dst [15:0]  <- EBR4 [0x000 + (effective_offset & 0x0FF)]
+        dst [31:16] <- 0
+    SQRT  (0b001):  # EBR 4 (16-bit width), base 0x100 (words 256..511)
+        dst [15:0]  <- EBR4 [0x100 + (effective_offset & 0x0FF)]
+        dst [31:16] <- 0
+    TRIG  (0b100):  # EBR 2 & 3 (paired 32-bit width), base 0x000 (words 0..127)
+        dst [31:0]  <- { EBR3 [0x000 + (effective_offset & 0x07F)], EBR2 [0x000 + (effective_offset & 0x07F)] }
+    CHEB  (0b101):  # EBR 2 & 3 (paired 32-bit width), base 0x080 (words 128..255)
+        dst [31:0]  <- { EBR3 [0x080 + (effective_offset & 0x07F)], EBR2 [0x080 + (effective_offset & 0x07F)] }
+    CONST (0b110):  # EBR 2 & 3 (paired 32-bit width), base 0x100 (words 256..319)
+        if W == 0:
+            dst [31:0] <- { EBR3 [0x100 + (effective_offset & 0x07F)], EBR2 [0x100 + (effective_offset & 0x07F)] }
+        else:
+            dst_L [31:0] <- { EBR3 [0x100 + (effective_offset & 0x07E)], EBR2 [0x100 + (effective_offset & 0x07E)] }
+            dst_H [31:0] <- { EBR3 [0x101 + (effective_offset & 0x07E)], EBR2 [0x101 + (effective_offset & 0x07E)] }
+
+UPC <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 100010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles).
+- `RES_SEL = dst` (4 bits): Destination register (`AL`, `AH`, `BL`, etc.).
+- `src = tbl` (4 bits): Table selector (`RECIP=0b000`, `SQRT=0b001`, `TRIG=0b100`, `CHEB=0b101`, `CONST=0b110`).
+- `HA_MUX = addr` (3 bits via `src1`): Selects address source:
+  - `HA_MUX = IMM (4)`: Address is supplied as an immediate constant in `INSTR[9:0]`.
+  - `HA_MUX = C (5)` or `AL (0)` / `BL (6)`: Address is supplied dynamically from a register at runtime.
+- `HB_MUX = n/a`.
 
 #### Description
-Loads a 32-bit or 64-bit IEEE-754 constant (such as $0.0, 1.0, \pi, \ln(2), \dots$) from on-chip Constant ROM into `dst`.
+Loads a constant or lookup table entry from on-chip Embedded Block RAM (EBR) into destination register `dst`.
+- **EBR 4 (Single 512 x 16-bit ROM)**: Contains the 256-word Reciprocal / Division Seed LUT at offset `0x000` and the 256-word Square Root Seed LUT at offset `0x100`. Loaded 16-bit values are zero-extended into `dst[31:0]`.
+- **EBR 2 & 3 (Paired 512 x 32-bit ROM)**: Contains Trigonometric & CORDIC angles at `0x000`, Chebyshev coefficients at `0x080`, and IEEE-754 mathematical constants ($\pi, e, \ln 2, 1.0, \dots$) at `0x100`.
+- **Zero-Cost Addressing (2-LUT Prefix MUX)**:
+  Address derivation uses zero adders:
+  - `ADDR[8] = tbl[2] ? tbl[1] : tbl[0]`
+  - `ADDR[7] = tbl[2] ? tbl[0] : offset[7]`
+  - `ADDR[6:0] = offset[6:0]`
+- **Dynamic Register Addressing**: In addition to static immediate table offsets, `addr` can be routed from any `HA_MUX` register (such as counter `C`), enabling single-cycle dynamic seed table indexing during `SQRT` and `DIV` execution.
 
-#### Concrete Numeric Example
+#### Concrete Numeric Examples
 ```text
-Suppose CONST_ROM[0x02] = 0x3F800000 (+1.0f).
-After execution of LDC AL, 0x02:
-  AL <- 0x3F800000
+Example 1: Loading static constant (pi)
+LDC AL, CONST, PI_F32
+  Machine encoding: OPCODE=LDC, DST=AL, SRC=CONST (6), SRC1=IMM, IMM=PI_F32 (0)
+  Reads 32-bit IEEE-754 float (+3.1415927) from EBR 2/3 base 0x100 + 0 into AL.
+  AL <- 0x40490FDB
+  Flags are unaffected.
+
+Example 2: Loading dynamic SQRT seed using runtime index in C
+LDC AH, SQRT, C
+  Suppose C = 0x4A (mantissa fraction and exponent parity index).
+  Machine encoding: OPCODE=LDC, DST=AH, SRC=SQRT (1), SRC1=C
+  Reads 16-bit Q0.16 seed from EBR 4 at address 0x100 + 0x4A = 0x14A into AH.
+  AH <- zero_extend(EBR4[0x14A])
   Flags are unaffected.
 ```
 

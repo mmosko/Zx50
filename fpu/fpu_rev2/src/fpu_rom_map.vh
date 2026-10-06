@@ -7,7 +7,6 @@
 `ifndef FPU_ROM_MAP_VH
 `define FPU_ROM_MAP_VH
 
-  `define FLASH_QS_BASE            15'h0000
   `define FLASH_RECIP_BASE         15'h0400
   `define FLASH_SQRT_BASE          15'h0600
   `define FLASH_EXP2_BASE          15'h0800

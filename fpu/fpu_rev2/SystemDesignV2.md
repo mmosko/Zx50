@@ -240,7 +240,7 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | -----             | -----     | ----- | -----   | -----  | -----  | -----                              | -----                                 |
 | PUSH src          | 0b100_000 | 0/1   | TOS     | n/a    | src    | `TOS <- src`, sp <- sp + W + 1     | sets VF, ERR (on stack overflow)      |
 | POP dst           | 0b100_001 | 0/1   | dst     | n/a    | TOS    | `dst <- TOS`, sp <- sp - (W+1)     | sets UF, ERR (on stack underflow)     |
-| LDC dst, addr     | 0b100_010 | 0/1   | dst     | IMM    | n/a    | `dst <- CONST_ADDR + [addr]`       | none (flags unaffected)               |
+| LDC dst, tbl, addr | 0b100_010 | 0/1   | dst     | IMM    | n/a    | `dst <- [TBL_ADDR] + [addr]`      | none (flags unaffected)               |
 | LDI dst, imm      | 0b100_011 | 0/1   | dst     | IMM    | n/a    | `dst <- imm`                       | none (flags unaffected)               |
 | LDI flag, val     | 0b100_011 | 0     | NONE    | IMM    | n/a    | `status[flag] <- imm & 1`          | sets/clears selected flag (0 or 1)    |
 | LD  dst, addr     | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- SCR_ADDR + [addr]`         | none (flags unaffected)               |
@@ -260,6 +260,34 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | RET               | 0b011_101 | 0     | UPC     | n/a    | n/a    | `upc <- ret`                       | none                                  |
 | NOP               | 0b011_110 | 0     | NONE    | n/a    | n/a    | No operation (pipeline bubble)     | none (flags unaffected)               |
 | HALT              | 0b011_111 | 0     | UPC     | n/a    | n/a    | end execution normally, pulse EXEC_DONE | clears BSY <- 0                   |
+
+### LDC Address Generator & Constant ROM Interface
+
+To eliminate arithmetic adders and avoid carry chain delays on the critical address path, `LDC` uses a **2-LUT prefix address generator**.
+
+All table sizes and base addresses are power-of-2 aligned in physical EBR:
+- **EBR 4** (Single 512 $\times$ 16-bit ROM):
+  - `RECIP` (`0b000`): Words 0..255 (Base `0x000`, 256 entries $\implies$ 8-bit offset)
+  - `SQRT`  (`0b001`): Words 256..511 (Base `0x100`, 256 entries $\implies$ 8-bit offset)
+- **EBR 2 & 3** (Paired 512 $\times$ 32-bit ROM):
+  - `TRIG`  (`0b100`): Words 0..127 (Base `0x000`, 128 entries $\implies$ 7-bit offset)
+  - `CHEB`  (`0b101`): Words 128..255 (Base `0x080`, 128 entries $\implies$ 7-bit offset)
+  - `CONST` (`0b110`): Words 256..319+ (Base `0x100`, 128 entries $\implies$ 7-bit offset)
+
+The 3-bit table selector `SRC[2:0]` encodes both the physical EBR bank and the base offset:
+- `SRC[2]` selects between EBR 4 (`0`) and EBR 2/3 (`1`).
+- `SRC[1:0]` directly supplies the high address prefix for EBR 2/3 (`00` for TRIG, `01` for CHEB, `10` for CONST).
+
+#### 9-Bit Address Logic (`ADDR[8:0]`):
+- `ADDR[8]   = SRC[2] ? SRC[1] : SRC[0];`
+- `ADDR[7]   = SRC[2] ? SRC[0] : OFFSET[7];`
+- `ADDR[6:0] = OFFSET[6:0];`
+
+#### Chip Enables:
+- `EBR4_CEN  = is_ldc && !SRC[2];`
+- `EBR23_CEN = is_ldc &&  SRC[2];`
+
+Total FPGA hardware cost: **2 LUTs** for 9-bit address generation, 0 adders, 0 carry chains.
 
 ---
 

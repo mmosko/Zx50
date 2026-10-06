@@ -549,3 +549,120 @@ def test_ldi_flag_set_and_clear(fpga: FpgaModel):
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
     assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
 
+
+def test_ldc_immediate_const_pi_f32(fpga: FpgaModel):
+    """LDC AL, CONST, PI_F32 loads 32-bit float pi (0x40490FDB) from EBR 2/3."""
+    from fpu_emu.rom.fpu_const_map import FpuTable, FpuConst
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            dst=Reg.AL,
+            src=FpuTable.CONST,
+            imm=FpuConst.PI_F32,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 0x40490FDB
+
+
+def test_ldc_immediate_const_64bit(fpga: FpgaModel):
+    """LDC AL, CONST, PI_F64 with W64 loads 64-bit IEEE double pi into (AL, AH)."""
+    import math
+    import struct
+    from fpu_emu.rom.fpu_const_map import FpuTable, FpuConst
+
+    pi_bytes = struct.pack("<d", math.pi)
+    lo_word, hi_word = struct.unpack("<II", pi_bytes)
+
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            w=IW.W64,
+            dst=Reg.AL,
+            src=FpuTable.CONST,
+            imm=FpuConst.PI_F64,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == lo_word
+    assert fpga.reg_file.ah.read_int() == hi_word
+
+
+def test_ldc_dynamic_reg_sqrt_c(fpga: FpgaModel):
+    """LDC AH, SQRT, C loads zero-extended 16-bit seed from EBR 4 at offset 0x100 + C using 6-bit counter C."""
+    from fpu_emu.rom.fpu_const_map import FpuTable
+
+    # Test index C = 0x25 (fits within 6-bit counter register C)
+    fpga.reg_file.c.write(0x25)
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            dst=Reg.AH,
+            src=FpuTable.SQRT,
+            src1=Reg.C,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    expected_seed = fpga.memory.read(4, 0x125)
+    assert fpga.reg_file.ah.read_int() == expected_seed
+    assert fpga.reg_file.ah.read_int() & 0xFFFF0000 == 0
+
+
+def test_ldc_dynamic_reg_sqrt_bl(fpga: FpgaModel):
+    """LDC AH, SQRT, BL loads seed using full 8-bit index in BL (testing offset bit 7 = 1)."""
+    from fpu_emu.rom.fpu_const_map import FpuTable
+
+    # Test 8-bit index with bit 7 = 1: BL = 0x95
+    fpga.reg_file.bl.write(0x95)
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            dst=Reg.AH,
+            src=FpuTable.SQRT,
+            src1=Reg.BL,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    expected_seed = fpga.memory.read(4, 0x195)
+    assert fpga.reg_file.ah.read_int() == expected_seed
+    assert fpga.reg_file.ah.read_int() & 0xFFFF0000 == 0
+
+
+def test_ldc_dynamic_reg_recip(fpga: FpgaModel):
+    """LDC BL, RECIP, AL loads zero-extended 16-bit seed from EBR 4 at offset 0x000 + AL."""
+    from fpu_emu.rom.fpu_const_map import FpuTable
+
+    # Test 8-bit index AL = 0x85
+    fpga.reg_file.al.write(0x85)
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            dst=Reg.BL,
+            src=FpuTable.RECIP,
+            src1=Reg.AL,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    expected_seed = fpga.memory.read(4, 0x085)
+    assert fpga.reg_file.bl.read_int() == expected_seed
+    assert fpga.reg_file.bl.read_int() & 0xFFFF0000 == 0
+
+
+def test_ldc_immediate_trig_cordic(fpga: FpgaModel):
+    """LDC DL, TRIG, imm=0 loads 32-bit CORDIC atan constant from EBR 2/3 at offset 0x000."""
+    from fpu_emu.rom.fpu_const_map import FpuTable
+
+    microcode = [
+        MicroInstruction(
+            op=MicroOp.LDC,
+            dst=Reg.DL,
+            src=FpuTable.TRIG,
+            imm=0,
+        ),
+    ]
+    fpga.dispatcher._run(microcode)
+    lo = fpga.memory.read(2, 0x000)
+    hi = fpga.memory.read(3, 0x000)
+    assert fpga.reg_file.dl.read_int() == ((hi << 16) | lo)
+
+

@@ -6,6 +6,7 @@ from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import Register
 from fpu_emu.hardware.registers import StatusFlag
 from fpu_emu.micro_opcodes import MicroOp
+from fpu_emu.rom.fpu_const_map import FpuTable
 
 
 class IW(IntEnum):
@@ -20,7 +21,7 @@ class MicroInstruction:
     op: MicroOp
     w: IW = IW.W32
     dst: Reg = Reg.NONE
-    src: Reg = Reg.NONE
+    src: Union[Reg, FpuTable, int] = Reg.NONE
     src1: Reg = Reg.NONE
     flag: Optional[StatusFlag] = None
     imm: int = 0
@@ -36,7 +37,7 @@ class MicroInstruction:
         op_val = int(self.op.value) & 0x3F
         w_val = self.w.value
         dst_val = self.dst.value & 0x0F
-        src_val = self.src.value & 0x0F
+        src_val = int(self.src.value if hasattr(self.src, "value") else self.src) & 0x0F
         flag_val = self.flag.value if self.flag is not None else 0
 
         effective_dst = self.dst
@@ -45,6 +46,8 @@ class MicroInstruction:
 
         if self.src1 is not Reg.NONE:
             src1_val = self.src1.value & 0x07
+        elif self.op == MicroOp.LDC:
+            src1_val = Reg.IMM.value & 0x07
         elif effective_dst is not Reg.NONE and effective_dst.value < 8:
             src1_val = effective_dst.value & 0x07
         else:
@@ -112,6 +115,12 @@ class MicroInstruction:
                 src1 = Reg.NONE
             else:
                 src1 = Reg(src1_val)
+        elif op == MicroOp.LDC:
+            try:
+                src = FpuTable(src_val)
+            except ValueError:
+                src = Reg(src_val)
+            src1 = Reg(src1_val)
         else:
             src1 = Reg.NONE
 

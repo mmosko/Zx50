@@ -82,3 +82,49 @@ def test_micro_instruction_ldi_flag_round_trip():
     assert imm_reg.read_int() == 1
 
 
+def test_micro_instruction_ldc_immediate_round_trip():
+    clock = Clock()
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
+
+    # Encode LDC AL, CONST, PI_F32 (imm=0)
+    from fpu_emu.rom.fpu_const_map import FpuTable, FpuConst
+    orig = MicroInstruction(
+        op=MicroOp.LDC,
+        dst=Reg.AL,
+        src=FpuTable.CONST,
+        imm=FpuConst.PI_F32,
+    )
+    orig.to_register(instr_reg, imm_reg)
+
+    decoded = MicroInstruction.from_register(instr_reg)
+    assert decoded.op == MicroOp.LDC
+    assert decoded.dst == Reg.AL
+    assert decoded.src == FpuTable.CONST
+    assert decoded.src1 == Reg.IMM
+    assert imm_reg.read_int() == FpuConst.PI_F32
+
+
+def test_micro_instruction_ldc_dynamic_reg_round_trip():
+    clock = Clock()
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
+
+    # Encode LDC AH, SQRT, C
+    from fpu_emu.rom.fpu_const_map import FpuTable
+    orig = MicroInstruction(
+        op=MicroOp.LDC,
+        dst=Reg.AH,
+        src=FpuTable.SQRT,
+        src1=Reg.C,
+    )
+    orig.to_register(instr_reg, imm_reg)
+
+    decoded = MicroInstruction.from_register(instr_reg)
+    assert decoded.op == MicroOp.LDC
+    assert decoded.dst == Reg.AH
+    assert decoded.src == FpuTable.SQRT
+    assert decoded.src1 == Reg.C
+
+
+

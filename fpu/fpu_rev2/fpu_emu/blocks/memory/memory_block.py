@@ -15,8 +15,8 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 @fpga_resource(
-    approach="Memory controller, stack push/pop sequencer, and EBR interface",
-    luts=40,
+    approach="Memory controller, stack sequencer, scratch/user RAM, and LDC 2-LUT prefix ROM interface",
+    luts=60,
     ffs=8,
     delay_ns=2.8,
     cycles=1,
@@ -24,13 +24,33 @@ from fpu_emu.micro_opcodes import MicroOp
 )
 class MemoryBlock(FunctionalBlock):
     """
-    Manipulates the math Stack, the scratch memory and the user memory.
+    Manipulates the math Stack, scratch memory, user memory, and constant ROMs.
 
-    EBR 0 & EBR 1 (paired 512 words x 36 bits)
-      - Hardware Math Stack (128 words x 32-bit)
-      - Scratchpad RAM SCR[0..63] (64 x 32-bit)
-      - User Word Storage (16 words x 32-bit)
-      - Reserved / Working Headroom (304 words)
+    FPGA Resource Breakdown:
+      - Baseline memory controller, stack push/pop sequencer, scratch/user RAM: 40 LUTs, 8 FFs
+      - LDC Zero-Cost Prefix Address Generator:
+          ADDR[8]   = tbl_src[2] ? tbl_src[1] : tbl_src[0]  (1 LUT)
+          ADDR[7]   = tbl_src[2] ? tbl_src[0] : offset[7]   (1 LUT)
+          ADDR[6:0] = offset[6:0]                           (0 LUTs, direct wire pass-through)
+      - LDC EBR Chip Enables:
+          EBR4_CEN  = is_ldc && !tbl_src[2]                 (1 LUT)
+          EBR23_CEN = is_ldc &&  tbl_src[2]                 (1 LUT)
+      - LDC Output Data Multiplexer (EBR 4 zero-extended vs paired EBR 2/3): 16 LUTs
+      Total MemoryBlock LUTs: 40 + 2 + 2 + 16 = 60 LUTs.
+
+    Physical EBR Allocation:
+      EBR 0 & 1 (paired 512 words x 36 bits):
+        - Hardware Math Stack (128 words x 32-bit)
+        - Scratchpad RAM SCR[0..63] (64 x 32-bit)
+        - User Word Storage (16 words x 32-bit)
+        - Reserved / Working Headroom (304 words)
+      EBR 2 & 3 (paired 512 words x 36 bits ROM):
+        - Trigonometric & CORDIC Angles (128 words x 32-bit)
+        - Chebyshev Polynomial Coefficients (128 words x 32-bit)
+        - IEEE-754 Math Constants (64 words x 32-bit)
+      EBR 4 (single 512 words x 18 bits ROM):
+        - Reciprocal / Division Seed LUT (256 words x 16-bit)
+        - Square Root Seed LUT (256 words x 16-bit)
     """
 
     # TODO: For these to be pure prefixes (not adds), we need the prefix to align at 7 bits, so
@@ -235,8 +255,78 @@ class MemoryBlock(FunctionalBlock):
 
 
     def _ldc(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.LDC)
-        raise NotImplementedError
+        """Loads from constant/seed EBR tables using zero-cost 2-LUT prefix address generator.
+
+        Instruction format: LDC dst, tbl, addr
+          - dst: Destination register (e.g. AL, AH, or even register AX for 64-bit W=1)
+          - tbl (src): 3-bit table selector:
+              * RECIP: 0b000 (EBR 4, base 0x000, 256 words x 16-bit)
+              * SQRT:  0b001 (EBR 4, base 0x100, 256 words x 16-bit)
+              * TRIG:  0b100 (EBR 2/3, base 0x000, 128 words x 32-bit)
+              * CHEB:  0b101 (EBR 2/3, base 0x080, 128 words x 32-bit)
+              * CONST: 0b110 (EBR 2/3, base 0x100, 128 words x 32-bit)
+          - addr (src1 / imm):
+              * If src1 is Reg.IMM or Reg.NONE: offset from HA_MUX(Reg.IMM)
+              * Else: offset dynamically from HA_MUX(src1) (e.g. Reg.C, Reg.AL)
+
+        Hardware 2-LUT zero-cost address derivation:
+          ADDR[8] = tbl[2] ? tbl[1] : tbl[0]
+          ADDR[7] = tbl[2] ? tbl[0] : offset[7]
+          ADDR[6:0] = offset[6:0]
+        """
+        assert instr.op == MicroOp.LDC
+        assert instr.dst is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+
+        # 1. Resolve offset from HA_MUX
+        if instr.src1 is not Reg.NONE and instr.src1 is not Reg.IMM:
+            self._ha_mux.select(instr.src1.value)
+        else:
+            self._ha_mux.select(Reg.IMM.value)
+        offset = self._ha_mux.read_int()
+
+        # 2. Extract 3-bit table code
+        tbl_val = int(instr.src.value if hasattr(instr.src, "value") else instr.src) & 0x07
+
+        if instr.is_w32():
+            self._ldc_core(dst=instr.dst.value, tbl_val=tbl_val, offset=offset)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.dst.is_lo_half(), "64-bit LDC destination must be an even register (low half)"
+            assert offset % 2 == 0, "64-bit LDC offset must be even"
+
+            # 1. Read LO word from offset
+            self._ldc_core(dst=instr.dst.value, tbl_val=tbl_val, offset=offset)
+            self._writeback()
+
+            # 2. Read HI word from offset + 1
+            self._ldc_core(dst=instr.dst.value | 1, tbl_val=tbl_val, offset=offset + 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+
+    def _ldc_core(self, dst: int, tbl_val: int, offset: int) -> None:
+        """Evaluates 2-LUT prefix address and reads from EBR 4 or paired EBR 2 & 3."""
+        # 2-LUT Prefix Address Generation (ADDR[8:0])
+        bit8 = (tbl_val >> 1) & 1 if (tbl_val & 4) else (tbl_val & 1)
+        bit7 = (tbl_val & 1) if (tbl_val & 4) else ((offset >> 7) & 1)
+        ebr_addr = (bit8 << 8) | (bit7 << 7) | (offset & 0x7F)
+
+        # EBR Bank Select:
+        # If tbl_val[2] == 0: EBR 4 (16-bit single ROM, zero-extended to 32 bits)
+        # If tbl_val[2] == 1: EBR 2 & 3 (paired 32-bit ROM)
+        if not (tbl_val & 4):
+            val = self._memory.read(4, ebr_addr) & 0xFFFF
+        else:
+            val_lo = self._memory.read(2, ebr_addr)
+            val_hi = self._memory.read(3, ebr_addr)
+            val = ((val_hi << 16) | val_lo) & 0xFFFFFFFF
+
+        self._clock.tick()
+        self._outputs.block_res.set(val)
+        self._outputs.block_res_sel.set(dst)
 
     def _ldi(self, instr: MicroInstruction) -> None:
         """Loads 10-bit immediate into a register or modifies a single status flag.

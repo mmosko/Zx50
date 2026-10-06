@@ -373,8 +373,11 @@ class AdderBlock(FunctionalBlock):
         # Read exponent from exp_reg via HA_MUX
         self._ha_mux.select(exp_reg.value)
         exp_s = self._ha_mux.read_int()
-        if exp_s & self.SIGN_12BIT:
-            exp_s -= self.MOD_12BIT
+        exp_12 = exp_s & self.MASK_12BIT
+        if exp_12 & self.SIGN_12BIT:
+            exp_s = exp_12 - self.MOD_12BIT
+        else:
+            exp_s = exp_12
 
         # Read mantissa from mantissa_reg via HB_MUX
         self._inputs.hb_mux.select(mantissa_reg.value)
@@ -426,8 +429,11 @@ class AdderBlock(FunctionalBlock):
         # Read exponent from exp_reg via HA_MUX
         self._ha_mux.select(exp_reg.value)
         exp_s = self._ha_mux.read_int()
-        if exp_s & self.SIGN_12BIT:
-            exp_s -= self.MOD_12BIT
+        exp_12 = exp_s & self.MASK_12BIT
+        if exp_12 & self.SIGN_12BIT:
+            exp_s = exp_12 - self.MOD_12BIT
+        else:
+            exp_s = exp_12
 
         # Read mantissa low and high words via HB_MUX
         self._inputs.hb_mux.select(mantissa_reg.value)

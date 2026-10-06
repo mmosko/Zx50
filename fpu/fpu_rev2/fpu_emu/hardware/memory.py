@@ -6,10 +6,10 @@ from fpu_emu.hardware.ebr import EBR
 
 
 @fpga_resource(
-    approach="Paired Single-Port SysMEM EBR (EBR 0 & 1, 512x32) for stack and scratchpad RAM",
+    approach="SysMEM EBR Blocks (EBR 0/1 Stack/Scratch RAM, EBR 2/3 Constants ROM, EBR 4 Seed LUT ROM)",
     luts=0,
     ffs=0,
-    ebr=2,
+    ebr=5,
     delay_ns=3.2,
     cycles=1,
     shared_unit="ebr_sysmem_ram",

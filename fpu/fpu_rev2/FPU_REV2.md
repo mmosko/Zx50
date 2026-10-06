@@ -182,6 +182,31 @@ Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
 Total EBR Utilization:  7 of 8 blocks (87.5% used, 1 block / 12.5% free margin)
 ```
 
+### 3.1 Zero-Cost Addressing for ROM Lookup Tables (`LDC`)
+
+To eliminate arithmetic adders and carry-chain delay on the memory address path, the constant and seed ROM tables in EBR 2/3 and EBR 4 utilize a **2-LUT prefix address generator**:
+
+* **EBR 4** (Single 512 $\times$ 16-bit ROM):
+  * `RECIP` (`0b000`): Words 0..255 (Base `0x000`, 8-bit offset `[7:0]`)
+  * `SQRT`  (`0b001`): Words 256..511 (Base `0x100`, 8-bit offset `[7:0]`)
+* **EBR 2 & EBR 3** (Paired 512 $\times$ 32-bit ROM):
+  * `TRIG`  (`0b100`): Words 0..127 (Base `0x000`, 7-bit offset `[6:0]`)
+  * `CHEB`  (`0b101`): Words 128..255 (Base `0x080`, 7-bit offset `[6:0]`)
+  * `CONST` (`0b110`): Words 256..319+ (Base `0x100`, 7-bit offset `[6:0]`)
+
+**9-Bit Address Logic (`ADDR[8:0]`):**
+```verilog
+assign ebr_addr[8]   = tbl_src[2] ? tbl_src[1] : tbl_src[0];
+assign ebr_addr[7]   = tbl_src[2] ? tbl_src[0] : offset[7];
+assign ebr_addr[6:0] = offset[6:0];
+```
+
+**Chip Enables:**
+* `EBR4_CEN  = is_ldc && !tbl_src[2];`
+* `EBR23_CEN = is_ldc &&  tbl_src[2];`
+
+Total FPGA hardware cost: **2 LUTs** for 9-bit address generation, 0 adders, 0 carry chains.
+
 ### 3.2 User Memory Allocation (Intermediate Storage)
 
 A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and

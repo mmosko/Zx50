@@ -57,6 +57,9 @@ class DatapathMuxes:
         ])
 
 
+from fpu_emu.rom.ebr_loader import load_ebr_rom_buffers
+
+
 @fpga_resource(
     approach="HA_SEL_MUX (8:1 3b) and HB_SEL_MUX (8:1 4b) functional block select multiplexers and control registers",
     luts=28,
@@ -80,8 +83,9 @@ class FpgaModel:
     def __init__(self, rom: Rom):
         self.clock = Clock()
         self.rom = rom
+        rom_path = rom._rom_path if hasattr(rom, "_rom_path") else None
         self.memory = Memory(
-            rom_blocks=[None, None, None, None, None, None, None, None],
+            rom_blocks=load_ebr_rom_buffers(rom_path),
             clock = self.clock
         )
         self.reg_file = Registers(clock=self.clock)
