@@ -28,6 +28,8 @@ The Zx50 reimagines the Z80 as a modern distributed computing workstation.
 * **Deep Visibility**: Built-in microcontroller instrumentation (RP2040 and Microchip PIC) allows real-time bus
   snooping, cycle-by-cycle single stepping, and telemetry via an active front panel and bus probe.
 
+![Zx50 Bush Architecture](docs/Zx50_Architecture.drawio.svg)
+
 ---
 
 ## 2. Core Silicon & Chip Manifest
