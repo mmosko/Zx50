@@ -55,7 +55,16 @@ class DatapathMuxes:
 
 
 class FpgaModel:
-    """Complete FPGA system model combining Hardware, ALU, Sequencer, and Host Interface."""
+    """
+    Complete FPGA system model combining Hardware, ALU, Sequencer, and Host Interface.
+
+    NOTES:
+    - The HA_MUX and HB_MUX select lines are controlled by the functional blocks,
+      This means we need an HA_SEL_MUX and HB_SEL_MUX to choose between the select lines coming
+      out of the functional block into the MUX selects.  The dispatcher would set these muxes
+      during opcode parsing.  The muxes are not modeled, so we just add some extra LUT and FF
+      to the total count.
+    """
 
     def __init__(self, rom: Rom):
         self.clock = Clock()

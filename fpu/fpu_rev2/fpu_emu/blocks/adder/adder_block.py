@@ -46,9 +46,9 @@ class AdderBlock(FunctionalBlock):
             case MicroOp.EXP_SUB:
                 self._exp_sub(instr)
             case MicroOp.PACK:
-                raise NotImplementedError
+                self._pack(instr)
             case MicroOp.UNPACK:
-                raise NotImplementedError
+                self._unpack(instr)
             case MicroOp.MUL:
                 self._mul(instr, signed=True)
             case MicroOp.MULU:
@@ -246,6 +246,241 @@ class AdderBlock(FunctionalBlock):
         self._outputs.status_wr_sel.set(self.STATUS_EXP_MASK)
         self._outputs.exec_done.set(1)
         self._writeback()
+
+    LIMIT_F32_EXP_MAX = 255
+    LIMIT_F32_EXP_MIN = 0
+    LIMIT_F64_EXP_MAX = 2047
+    LIMIT_F64_EXP_MIN = 0
+
+    STATUS_PACK_MASK = (
+        (1 << StatusFlag.ZERO.value)
+        | (1 << StatusFlag.SIGN.value)
+        | (1 << StatusFlag.OVERFLOW.value)
+        | (1 << StatusFlag.UNDERFLOW.value)
+    )
+
+    STATUS_UNPACK_MASK = (
+        (1 << StatusFlag.ZERO.value)
+        | (1 << StatusFlag.SIGN.value)
+        | (1 << StatusFlag.DIFF_SIGN.value)
+    )
+
+    @staticmethod
+    def _resolve_unpack_pack_regs(instr: MicroInstruction) -> tuple[Reg, Reg]:
+        """Resolves (mantissa_reg, exp_reg) from instruction dst and src."""
+        assert instr.dst is not Reg.NONE, "Destination register cannot be NONE"
+        assert instr.src is not Reg.NONE, "Source register cannot be NONE"
+        if instr.dst in (Reg.EA, Reg.EB):
+            return instr.src, instr.dst
+        return instr.dst, instr.src
+
+    def _unpack(self, instr: MicroInstruction) -> None:
+        if instr.is_w32():
+            self._unpack_32(instr)
+        else:
+            self._unpack_64(instr)
+
+    def _unpack_32(self, instr: MicroInstruction) -> None:
+        mantissa_reg, exp_reg = self._resolve_unpack_pack_regs(instr)
+
+        # Read float value from mantissa_reg via HB_MUX
+        self._inputs.hb_mux.select(mantissa_reg.value)
+        raw_val = self._inputs.hb_mux.read_int()
+
+        sign_bit = (raw_val >> 31) & 1
+        exp_val = (raw_val >> 23) & 0xFF
+        frac = raw_val & 0x007FFFFF
+        is_zero = (raw_val & 0x7FFFFFFF) == 0
+
+        # Hidden bit at bit 23 restored for normalized float (exp != 0)
+        mantissa = ((1 << 23) | frac) if exp_val != 0 else frac
+
+        prev_s = 1 if self._inputs.status.is_bit_set(StatusFlag.SIGN) else 0
+        diff_sign = prev_s ^ sign_bit
+        status_byte = (
+            (int(is_zero) << StatusFlag.ZERO.value)
+            | (sign_bit << StatusFlag.SIGN.value)
+            | (diff_sign << StatusFlag.DIFF_SIGN.value)
+        )
+
+        # Cycle 1: Write exponent into exp_reg (EA or EB)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(exp_val)
+        self._outputs.block_res_sel.set(exp_reg.value)
+        self._writeback()
+
+        # Cycle 2: Write restored mantissa into mantissa_reg and commit status flags
+        self._outputs.res_status.set(status_byte)
+        self._outputs.status_wr_sel.set(self.STATUS_UNPACK_MASK)
+        self._outputs.block_res.set(mantissa)
+        self._outputs.block_res_sel.set(mantissa_reg.value)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _unpack_64(self, instr: MicroInstruction) -> None:
+        mantissa_reg, exp_reg = self._resolve_unpack_pack_regs(instr)
+        self._validate_src64(mantissa_reg)
+        mantissa_reg_hi = Reg(mantissa_reg.value | 0b0001)
+
+        # Read high and low words via HB_MUX
+        self._inputs.hb_mux.select(mantissa_reg_hi.value)
+        raw_hi = self._inputs.hb_mux.read_int()
+        self._inputs.hb_mux.select(mantissa_reg.value)
+        raw_lo = self._inputs.hb_mux.read_int()
+
+        sign_bit = (raw_hi >> 31) & 1
+        exp_val = (raw_hi >> 20) & 0x7FF
+        frac_hi = raw_hi & 0x000FFFFF
+        is_zero = ((raw_hi & 0x7FFFFFFF) == 0) and (raw_lo == 0)
+
+        # Hidden bit at bit 20 restored for normalized float (exp != 0)
+        mantissa_hi = ((1 << 20) | frac_hi) if exp_val != 0 else frac_hi
+
+        prev_s = 1 if self._inputs.status.is_bit_set(StatusFlag.SIGN) else 0
+        diff_sign = prev_s ^ sign_bit
+        status_byte = (
+            (int(is_zero) << StatusFlag.ZERO.value)
+            | (sign_bit << StatusFlag.SIGN.value)
+            | (diff_sign << StatusFlag.DIFF_SIGN.value)
+        )
+
+        # Cycle 1: Write exponent into exp_reg (EA or EB)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(exp_val)
+        self._outputs.block_res_sel.set(exp_reg.value)
+        self._writeback()
+
+        # Cycle 2: Write restored high mantissa into mantissa_reg_hi and commit status flags
+        self._outputs.res_status.set(status_byte)
+        self._outputs.status_wr_sel.set(self.STATUS_UNPACK_MASK)
+        self._outputs.block_res.set(mantissa_hi)
+        self._outputs.block_res_sel.set(mantissa_reg_hi.value)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _pack(self, instr: MicroInstruction) -> None:
+        if instr.is_w32():
+            self._pack_32(instr)
+        else:
+            self._pack_64(instr)
+
+    def _pack_32(self, instr: MicroInstruction) -> None:
+        mantissa_reg, exp_reg = self._resolve_unpack_pack_regs(instr)
+
+        # Read exponent from exp_reg via HA_MUX
+        self._ha_mux.select(exp_reg.value)
+        exp_s = self._ha_mux.read_int()
+        if exp_s & self.SIGN_12BIT:
+            exp_s -= self.MOD_12BIT
+
+        # Read mantissa from mantissa_reg via HB_MUX
+        self._inputs.hb_mux.select(mantissa_reg.value)
+        mantissa = self._inputs.hb_mux.read_int()
+
+        sign = 1 if self._inputs.status.is_bit_set(StatusFlag.SIGN) else 0
+
+        is_zero_mantissa = (mantissa == 0)
+        vf = False
+        uf = False
+        zf = False
+
+        if is_zero_mantissa:
+            packed = sign << 31
+            zf = True
+        elif exp_s >= self.LIMIT_F32_EXP_MAX:
+            # Exponent overflow to +/-infinity
+            vf = True
+            packed = (sign << 31) | (0xFF << 23)
+        elif exp_s <= self.LIMIT_F32_EXP_MIN:
+            # Exponent underflow to signed zero
+            uf = True
+            zf = True
+            packed = sign << 31
+        else:
+            # Normal float: strip implicit hidden bit 23 and pack
+            frac = mantissa & 0x007FFFFF
+            packed = (sign << 31) | ((exp_s & 0xFF) << 23) | frac
+
+        status_byte = (
+            (int(zf) << StatusFlag.ZERO.value)
+            | (sign << StatusFlag.SIGN.value)
+            | (int(vf) << StatusFlag.OVERFLOW.value)
+            | (int(uf) << StatusFlag.UNDERFLOW.value)
+        )
+
+        self._outputs.res_status.set(status_byte)
+        self._outputs.status_wr_sel.set(self.STATUS_PACK_MASK)
+        self._outputs.block_res.set(packed)
+        self._outputs.block_res_sel.set(mantissa_reg.value)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _pack_64(self, instr: MicroInstruction) -> None:
+        mantissa_reg, exp_reg = self._resolve_unpack_pack_regs(instr)
+        self._validate_src64(mantissa_reg)
+        mantissa_reg_hi = Reg(mantissa_reg.value | 0b0001)
+
+        # Read exponent from exp_reg via HA_MUX
+        self._ha_mux.select(exp_reg.value)
+        exp_s = self._ha_mux.read_int()
+        if exp_s & self.SIGN_12BIT:
+            exp_s -= self.MOD_12BIT
+
+        # Read mantissa low and high words via HB_MUX
+        self._inputs.hb_mux.select(mantissa_reg.value)
+        mantissa_lo = self._inputs.hb_mux.read_int()
+        self._inputs.hb_mux.select(mantissa_reg_hi.value)
+        mantissa_hi = self._inputs.hb_mux.read_int()
+
+        sign = 1 if self._inputs.status.is_bit_set(StatusFlag.SIGN) else 0
+
+        is_zero_mantissa = (mantissa_hi == 0 and mantissa_lo == 0)
+        vf = False
+        uf = False
+        zf = False
+
+        if is_zero_mantissa:
+            packed_hi = sign << 31
+            packed_lo = 0
+            zf = True
+        elif exp_s >= self.LIMIT_F64_EXP_MAX:
+            # Exponent overflow to +/-infinity
+            vf = True
+            packed_hi = (sign << 31) | (0x7FF << 20)
+            packed_lo = 0
+        elif exp_s <= self.LIMIT_F64_EXP_MIN:
+            # Exponent underflow to signed zero
+            uf = True
+            zf = True
+            packed_hi = sign << 31
+            packed_lo = 0
+        else:
+            # Normal float64: strip implicit hidden bit 20 and pack
+            frac_hi = mantissa_hi & 0x000FFFFF
+            packed_hi = (sign << 31) | ((exp_s & 0x7FF) << 20) | frac_hi
+            packed_lo = mantissa_lo & 0xFFFFFFFF
+
+        status_byte = (
+            (int(zf) << StatusFlag.ZERO.value)
+            | (sign << StatusFlag.SIGN.value)
+            | (int(vf) << StatusFlag.OVERFLOW.value)
+            | (int(uf) << StatusFlag.UNDERFLOW.value)
+        )
+
+        # Cycle 1: write low word to mantissa_reg
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.block_res.set(packed_lo)
+        self._outputs.block_res_sel.set(mantissa_reg.value)
+        self._writeback()
+
+        # Cycle 2: write high word to mantissa_reg_hi and commit status flags
+        self._outputs.res_status.set(status_byte)
+        self._outputs.status_wr_sel.set(self.STATUS_PACK_MASK)
+        self._outputs.block_res.set(packed_hi)
+        self._outputs.block_res_sel.set(mantissa_reg_hi.value)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
 
     def _mul(self, instr: MicroInstruction, signed: bool = True) -> None:
         """MUL dst, src: 32-bit multiply yielding 64-bit product in {dst_hi, dst} (16 cycles).

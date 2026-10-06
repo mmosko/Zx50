@@ -550,3 +550,259 @@ def test_adder_block_div_w64_not_implemented(fpga: FpgaModel):
         fpga.adder.execute()
 
 
+# =============================================================================
+# UNPACK and PACK Tests
+# =============================================================================
+
+def test_adder_block_unpack_f32_one(fpga: FpgaModel):
+    # +1.0f = 0x3F800000: EA -> 127, AL -> 0x00800000
+    fpga.reg_file.al.write(0x3F800000)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)  # Previous sign negative
+
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 2
+    assert fpga.reg_file.ea.read_int() == 127
+    assert fpga.reg_file.al.read_int() == 0x00800000
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    # DIFF_SIGN: prev_s(1) ^ current_sign(0) == 1
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.DIFF_SIGN)
+
+
+def test_adder_block_unpack_f32_negative(fpga: FpgaModel):
+    # -1.5f = 0xBFC00000 (sign=1, exp=127, frac=0x400000)
+    fpga.reg_file.al.write(0xBFC00000)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 127
+    assert fpga.reg_file.al.read_int() == 0x00C00000  # (1 << 23) | 0x400000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.DIFF_SIGN)
+
+
+def test_adder_block_unpack_f32_zero(fpga: FpgaModel):
+    # -0.0f = 0x80000000
+    fpga.reg_file.al.write(0x80000000)
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 0
+    assert fpga.reg_file.al.read_int() == 0
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_unpack_f32_secondary_regs(fpga: FpgaModel):
+    # Test unpacking into BL and EB
+    fpga.reg_file.bl.write(0x40000000)  # +2.0f (exp=128, frac=0)
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W32, dst=Reg.BL, src=Reg.EB)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.eb.read_int() == 128
+    assert fpga.reg_file.bl.read_int() == 0x00800000
+
+
+def test_adder_block_unpack_f64_one(fpga: FpgaModel):
+    # +1.0 double = 0x3FF00000_00000000 (exp=1023, frac=0)
+    fpga.reg_file.ah.write(0x3FF00000)
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W64, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 2
+    assert fpga.reg_file.ea.read_int() == 1023
+    assert fpga.reg_file.ah.read_int() == 0x00100000  # (1 << 20)
+    assert fpga.reg_file.al.read_int() == 0x00000000  # Unchanged
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.DIFF_SIGN)
+
+
+def test_adder_block_unpack_f64_negative_zero(fpga: FpgaModel):
+    # -0.0 double = 0x80000000_00000000
+    fpga.reg_file.ah.write(0x80000000)
+    fpga.reg_file.al.write(0x00000000)
+
+    instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W64, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ea.read_int() == 0
+    assert fpga.reg_file.ah.read_int() == 0
+    assert fpga.reg_file.al.read_int() == 0
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_pack_f32_normal(fpga: FpgaModel):
+    # Mantissa = 0x00800000, EA = 127, SIGN = 0 -> 0x3F800000 (+1.0f)
+    fpga.reg_file.al.write(0x00800000)
+    fpga.reg_file.ea.write(127)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 1
+    assert fpga.reg_file.al.read_int() == 0x3F800000
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+
+def test_adder_block_pack_f32_negative(fpga: FpgaModel):
+    # Mantissa = 0x00C00000, EA = 127, SIGN = 1 -> 0xBFC00000 (-1.5f)
+    fpga.reg_file.al.write(0x00C00000)
+    fpga.reg_file.ea.write(127)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0xBFC00000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_pack_f32_zero_mantissa(fpga: FpgaModel):
+    # Zero mantissa -> signed zero
+    fpga.reg_file.al.write(0)
+    fpga.reg_file.ea.write(127)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0x80000000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+
+
+def test_adder_block_pack_f32_overflow(fpga: FpgaModel):
+    # Exponent >= 255 -> overflow to +/- inf
+    fpga.reg_file.al.write(0x00800000)
+    fpga.reg_file.ea.write(255)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0x7F800000  # +inf
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_pack_f32_underflow(fpga: FpgaModel):
+    # Exponent <= 0 -> underflow to signed zero
+    fpga.reg_file.al.write(0x00800000)
+    fpga.reg_file.ea.write(0)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 0x80000000  # -0.0f
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_pack_f64_normal(fpga: FpgaModel):
+    # Mantissa AH = 0x00100000, AL = 0x00000000, EA = 1023 -> 0x3FF00000_00000000 (+1.0)
+    fpga.reg_file.ah.write(0x00100000)
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.ea.write(1023)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W64, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+
+    clk_start = fpga.clock.cycles
+    fpga.adder.execute()
+
+    assert fpga.clock.cycles - clk_start == 2
+    assert fpga.reg_file.ah.read_int() == 0x3FF00000
+    assert fpga.reg_file.al.read_int() == 0x00000000
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+
+
+def test_adder_block_pack_f64_overflow(fpga: FpgaModel):
+    # Overflow: exp >= 2047 -> +inf (0x7FF00000_00000000)
+    fpga.reg_file.ah.write(0x00100000)
+    fpga.reg_file.al.write(0x12345678)
+    fpga.reg_file.ea.write(2047)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W64, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ah.read_int() == 0x7FF00000
+    assert fpga.reg_file.al.read_int() == 0x00000000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+
+
+def test_adder_block_pack_f64_underflow(fpga: FpgaModel):
+    # Underflow: exp <= 0 -> -0.0 (0x80000000_00000000)
+    fpga.reg_file.ah.write(0x00100000)
+    fpga.reg_file.al.write(0x12345678)
+    fpga.reg_file.ea.write(0)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)
+
+    instr = MicroInstruction(op=MicroOp.PACK, w=IW.W64, dst=Reg.AL, src=Reg.EA)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.ah.read_int() == 0x80000000
+    assert fpga.reg_file.al.read_int() == 0x00000000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.UNDERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_unpack_pack_roundtrip(fpga: FpgaModel):
+    # Verify exact round-trip for arbitrary float32 value: 12.375f = 0x41460000
+    original = 0x41460000
+    fpga.reg_file.al.write(original)
+
+    # UNPACK AL, EA
+    unpack_instr = MicroInstruction(op=MicroOp.UNPACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    unpack_instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    # PACK AL, EA
+    pack_instr = MicroInstruction(op=MicroOp.PACK, w=IW.W32, dst=Reg.AL, src=Reg.EA)
+    pack_instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == original
+
+
+
