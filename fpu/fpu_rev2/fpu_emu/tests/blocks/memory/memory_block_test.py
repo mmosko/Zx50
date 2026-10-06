@@ -399,4 +399,51 @@ def test_scratchpad_sto_64_odd_base_raises(fpga: FpgaModel):
         fpga.dispatcher._run(microcode)
 
 
+def test_swap_basic(fpga: FpgaModel):
+    """SWAP AL, BL exchanges the contents of AL and BL."""
+    fpga.reg_file.al.write(0x11112222)
+    fpga.reg_file.bl.write(0x33334444)
+    microcode = [
+        MicroInstruction(op=MicroOp.SWAP, dst=Reg.AL, src=Reg.BL),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 0x33334444
+    assert fpga.reg_file.bl.read_int() == 0x11112222
+
+
+def test_swap_ea_eb(fpga: FpgaModel):
+    """SWAP EA, EB exchanges 12-bit exponent registers."""
+    fpga.reg_file.ea.write(127)
+    fpga.reg_file.eb.write(140)
+    microcode = [
+        MicroInstruction(op=MicroOp.SWAP, dst=Reg.EA, src=Reg.EB),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.ea.read_int() == 140
+    assert fpga.reg_file.eb.read_int() == 127
+
+
+def test_swap_same_reg(fpga: FpgaModel):
+    """SWAP AL, AL is a no-op."""
+    fpga.reg_file.al.write(0x12345678)
+    microcode = [
+        MicroInstruction(op=MicroOp.SWAP, dst=Reg.AL, src=Reg.AL),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 0x12345678
+
+
+def test_swap_with_fl(fpga: FpgaModel):
+    """SWAP FL, BL uses DL as fallback intermediary."""
+    fpga.reg_file.fl.write(0xAAAAAAAA)
+    fpga.reg_file.bl.write(0xBBBBBBBB)
+    microcode = [
+        MicroInstruction(op=MicroOp.SWAP, dst=Reg.FL, src=Reg.BL),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.fl.read_int() == 0xBBBBBBBB
+    assert fpga.reg_file.bl.read_int() == 0xAAAAAAAA
+
+
+
 

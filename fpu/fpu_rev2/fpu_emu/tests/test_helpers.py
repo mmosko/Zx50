@@ -1,5 +1,6 @@
 """Test helpers for simulating user operations against the FPGA model."""
 
+import struct
 from fpu_emu.fpga_model import FpgaModel
 from fpu_emu.hardware.registers import Reg
 from fpu_emu.micro_instruction import MicroInstruction, IW
@@ -7,6 +8,27 @@ from fpu_emu.micro_opcodes import MicroOp
 
 MASK_32 = 0xFFFFFFFF
 MASK_64 = 0xFFFFFFFFFFFFFFFF
+
+
+def f32_to_bits(val: float) -> int:
+    """Converts a Python float to IEEE-754 32-bit integer bits."""
+    return struct.unpack(">I", struct.pack(">f", val))[0]
+
+
+def bits_to_f32(val: int) -> float:
+    """Converts IEEE-754 32-bit integer bits to a Python float."""
+    return struct.unpack(">f", struct.pack(">I", val & MASK_32))[0]
+
+
+def f64_to_bits(val: float) -> int:
+    """Converts a Python float to IEEE-754 64-bit integer bits."""
+    return struct.unpack(">Q", struct.pack(">d", val))[0]
+
+
+def bits_to_f64(val: int) -> float:
+    """Converts IEEE-754 64-bit integer bits to a Python float."""
+    return struct.unpack(">d", struct.pack(">Q", val & MASK_64))[0]
+
 
 
 def user_push32(fpga: FpgaModel, val: int) -> None:

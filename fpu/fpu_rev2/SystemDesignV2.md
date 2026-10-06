@@ -28,8 +28,8 @@ instructions). We denote these as BLK_1, BLK_2, ..., BLK_k. We need to minimize 
 
 There is an HA_BUS and HB_BUS (32-bit). Each is fed by a multiplexer.
 
-HA_BUS <- MUX {AL, AH, EA, EB, C, IMM}
-HB_BUS <= MUX {AL, AH, BL, BH, DL, DH, FL, FH, C, EA, EB, IMM}
+HA_BUS <- MUX {AL, AH, EA, EB, C, IMM, BL, BH}
+HB_BUS <= MUX {AL, AH, EA, EB, C, IMM, BL, BH, DL, DH, FL, FH}
 INSTR_BUS <= the 32-bit instruction from the dispatcher.
 IMM <= MUX { INSTR[9:0], HOST_IN }
 
@@ -132,15 +132,19 @@ next instruction fetch, or loop until ready.
 ## Machine Instruction (INSTR)
 
 ```text
- 31        26 25  24     21 20    17 16        14 13      10 9                      0
-+------------+---+---------+--------+------------+----------+-----------------------+
-|   OPCODE   | W |   DST   |  SRC   | FLAG_COND  | RESERVED |   IMMEDIATE / ADDR    |
-|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [3:0]   |         [9:0]         |
-+------------+---+---------+--------+------------+----------+-----------------------+
+ 31        26 25  24     21 20    17 16        14 13     11 10 9                      0
++------------+---+---------+--------+------------+---------+-+-----------------------+
+|   OPCODE   | W |   DST   | SRC2   | FLAG_COND  |  SRC1   | |   IMMEDIATE / ADDR    |
+|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [2:0]  | |         [9:0]         |
++------------+---+---------+--------+------------+---------+-+-----------------------+
 ```
 
 The immediate, address, offset values can be up to 10 bits, which is enough to address
 up to 1K PC locations (in 4-byte words) or immediate values 0 - 1023.
+
+If SRC1 is None (1111), then binary operands like "AND AL, BL" mean `AL <- AL & BL`.
+If SRC1 is a valid `HA_MUX` register, then binary operands have a distinct
+output register, e.g. "SUB DL, AL, BL" means `DL <- AL - BL`.
 
 Opcodes are a 3 bit block ID plus a 3 bit operation ID. This means we can group
 BLK by the first three bits for the purpose of activating the AND walls.
@@ -171,8 +175,8 @@ write-back routing decode the full 4 bits.
 |  `0b0011`  |        EB         |      Yes (`0b011`)      |   Yes (`0b0011`)    |         EB (12-bit)         |
 |  `0b0100`  |        IMM        |      Yes (`0b100`)      |   Yes (`0b0100`)    |     — (No write / CMP)      |
 |  `0b0101`  |         C         |      Yes (`0b101`)      |   Yes (`0b0101`)    |          C (8-bit)          |
-|  `0b0110`  |        BL         |            —            |   Yes (`0b0110`)    |      BL (or BX if W=1)      |
-|  `0b0111`  |        BH         |            —            |   Yes (`0b0111`)    |             BH              |
+|  `0b0110`  |        BL         |      Yes (`0b110`)      |   Yes (`0b0110`)    |      BL (or BX if W=1)      |
+|  `0b0111`  |        BH         |      Yes (`0b111`)      |   Yes (`0b0111`)    |             BH              |
 |  `0b1000`  |        DL         |            —            |   Yes (`0b1000`)    |      DL (or DX if W=1)      |
 |  `0b1001`  |        DH         |            —            |   Yes (`0b1001`)    |             DH              |
 |  `0b1010`  |        FL         |            —            |   Yes (`0b1010`)    |      FL (or FX if W=1)      |

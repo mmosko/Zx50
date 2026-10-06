@@ -37,6 +37,8 @@ class DatapathMuxes:
             BusPad(reg_file.eb, 32, signed=True),
             BusPad(reg_file.imm, 32),
             BusPad(reg_file.c, 32),
+            reg_file.bl,
+            reg_file.bh,
         ])
 
         self.hb_mux = Mux(name="hb", inputs=[

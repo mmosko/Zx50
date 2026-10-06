@@ -351,5 +351,46 @@ class MemoryBlock(FunctionalBlock):
             self._writeback()
 
     def _swap(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.SWAP)
-        raise NotImplementedError
+        """Exchanges the contents of two 32-bit registers using FL as an intermediary.
+
+        Execution sequence (3 clock cycles):
+          Cycle 1: Read src from HB_MUX, write to intermediary register (FL, or DL if FL is operand)
+          Cycle 2: Read dst from HB_MUX, write to src
+          Cycle 3: Read intermediary from HB_MUX, write to dst, assert exec_done
+        """
+        assert instr.op == MicroOp.SWAP
+        assert instr.src is not Reg.NONE
+        assert instr.dst is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+
+        if instr.dst == instr.src:
+            self._outputs.block_res_sel.set(Reg.NONE.value)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+            return
+
+        # Use FL as intermediary unless FL is an operand, in which case use DL
+        temp_reg = Reg.DL if Reg.FL in (instr.dst, instr.src) else Reg.FL
+
+        # Cycle 1: temp_reg <- src
+        self._inputs.hb_mux.select(instr.src.value)
+        self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+        self._outputs.block_res_sel.set(temp_reg.value)
+        self._outputs.exec_done.set(0)
+        self._writeback()
+
+        # Cycle 2: src <- dst
+        self._inputs.hb_mux.select(instr.dst.value)
+        self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+        self._outputs.block_res_sel.set(instr.src.value)
+        self._outputs.exec_done.set(0)
+        self._writeback()
+
+        # Cycle 3: dst <- temp_reg
+        self._inputs.hb_mux.select(temp_reg.value)
+        self._outputs.block_res.set(self._inputs.hb_mux.read_int())
+        self._outputs.block_res_sel.set(instr.dst.value)
+        self._outputs.exec_done.set(1)
+        self._writeback()

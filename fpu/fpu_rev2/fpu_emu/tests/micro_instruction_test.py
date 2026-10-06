@@ -8,7 +8,7 @@ from fpu_emu.micro_opcodes import MicroOp
 
 def test_micro_instruction_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=18, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode ADD AL, BL
@@ -20,12 +20,13 @@ def test_micro_instruction_round_trip():
     assert decoded.w == IW.W32
     assert decoded.dst == Reg.AL
     assert decoded.src == Reg.BL
+    assert decoded.src1 == Reg.NONE
     assert decoded.flag == None
 
 
 def test_micro_instruction_jump_with_flag():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=18, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode JNZ with StatusFlag.UNDERFLOW and imm=42
@@ -41,3 +42,20 @@ def test_micro_instruction_jump_with_flag():
     assert decoded.op == MicroOp.JNZ
     assert decoded.flag == StatusFlag.UNDERFLOW.value
     assert imm_reg.read_int() == 42
+
+
+def test_micro_instruction_three_address_round_trip():
+    clock = Clock()
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
+
+    # Encode EXP_SUB C, EA, EB (C <- EA - EB)
+    orig = MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.C, src1=Reg.EA, src=Reg.EB)
+    orig.to_register(instr_reg, imm_reg)
+
+    decoded = MicroInstruction.from_register(instr_reg)
+    assert decoded.op == MicroOp.EXP_SUB
+    assert decoded.dst == Reg.C
+    assert decoded.src1 == Reg.EA
+    assert decoded.src == Reg.EB
+

@@ -218,7 +218,8 @@ class LogicBlock(FunctionalBlock):
         assert instr.src is not Reg.NONE
         assert instr.dst is not Reg.NONE
 
-        self._ha_mux.select(instr.dst.value)
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else instr.dst
+        self._ha_mux.select(src1.value)
         self._hb_mux.select(instr.src.value)
         result = self._logic_core(op)
         self._outputs.block_res.set(result.res)

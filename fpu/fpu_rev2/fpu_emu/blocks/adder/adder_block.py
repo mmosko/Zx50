@@ -110,7 +110,8 @@ class AdderBlock(FunctionalBlock):
         assert (instr.dst is not Reg.NONE)
 
         # Combinatorial setup in current cycle
-        self._ha_mux.select(instr.dst.value)
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else instr.dst
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=cin, sub=sub)
 
@@ -167,7 +168,8 @@ class AdderBlock(FunctionalBlock):
         """CMP dst, src: 32-bit compare dst - src without modifying dst (1 cycle)."""
         assert (instr.src is not None)
         assert (instr.dst is not None)
-        self._ha_mux.select(instr.dst.value)
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else instr.dst
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=0, sub=True)
 
@@ -219,8 +221,9 @@ class AdderBlock(FunctionalBlock):
     def _exp_op(self, instr: MicroInstruction, sub: bool) -> None:
         assert instr.src is not Reg.NONE
         dst = instr.dst if instr.dst is not Reg.NONE else Reg.EA
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else dst
 
-        self._ha_mux.select(dst.value)
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         adder_result = self._combinatorial_add(cin=0, sub=sub)
 
