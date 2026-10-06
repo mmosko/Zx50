@@ -149,6 +149,175 @@ class MicroCode:
             MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ],
+        # DIV_I32:
+        # 0: POP BL (divisor b)
+        # 1: JNZ UNDERFLOW -> 7 (HALT)
+        # 2: POP AL (dividend a)
+        # 3: JNZ UNDERFLOW -> 7 (HALT)
+        # 4: DIV AL, BL
+        # 5: JNZ ERR -> 7 (HALT - don't push quotient if divide-by-zero error)
+        # 6: PUSH AL
+        # 7: HALT
+        UserOpcode.DIV_I32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=7),
+            MicroInstruction(op=MicroOp.DIV, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.ERR, imm=7),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # CHS_I32:
+        # 0: POP BL
+        # 1: JNZ UNDERFLOW -> 5 (HALT)
+        # 2: SUB AL, AL
+        # 3: SUB AL, BL
+        # 4: PUSH AL
+        # 5: HALT
+        UserOpcode.CHS_I32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=5),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # CHS_I64:
+        # 0: POP W64 BL
+        # 1: JNZ UNDERFLOW -> 5 (HALT)
+        # 2: SUB W64 AL, AL
+        # 3: SUB W64 AL, BL
+        # 4: PUSH W64 AL
+        # 5: HALT
+        UserOpcode.CHS_I64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.BL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=5),
+            MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # CHS_F32:
+        # 0: POP AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: FCHS AL
+        # 3: PUSH AL
+        # 4: HALT
+        UserOpcode.CHS_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.FCHS, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # CHS_F64:
+        # 0: POP W64 AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: FCHS W64 AL
+        # 3: PUSH W64 AL
+        # 4: HALT
+        UserOpcode.CHS_F64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.FCHS, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # ABS_I32:
+        # 0: POP AL
+        # 1: JNZ UNDERFLOW -> 8 (HALT)
+        # 2: OR AL, AL
+        # 3: JZ SIGN -> 7 (skip negate to PUSH AL)
+        # 4: MOV BL, AL
+        # 5: SUB AL, AL
+        # 6: SUB AL, BL
+        # 7: PUSH AL
+        # 8: HALT
+        UserOpcode.ABS_I32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=8),
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.SIGN, imm=7),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # ABS_I64:
+        # 0: POP W64 AL
+        # 1: JNZ UNDERFLOW -> 8 (HALT)
+        # 2: OR W64 AL, AL
+        # 3: JZ SIGN -> 7 (skip negate to PUSH W64 AL)
+        # 4: MOV W64 BL, AL
+        # 5: SUB W64 AL, AL
+        # 6: SUB W64 AL, BL
+        # 7: PUSH W64 AL
+        # 8: HALT
+        UserOpcode.ABS_I64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=8),
+            MicroInstruction(op=MicroOp.OR, w=IW.W64, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.SIGN, imm=7),
+            MicroInstruction(op=MicroOp.MOV, w=IW.W64, dst=Reg.BL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.AL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # ABS_F32:
+        # 0: POP AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: FABS AL
+        # 3: PUSH AL
+        # 4: HALT
+        UserOpcode.ABS_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.FABS, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # ABS_F64:
+        # 0: POP W64 AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: FABS W64 AL
+        # 3: PUSH W64 AL
+        # 4: HALT
+        UserOpcode.ABS_F64: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.FABS, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # DUP4:
+        # 0: POP AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: PUSH AL
+        # 3: PUSH AL
+        # 4: HALT
+        UserOpcode.DUP4: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # DUP8:
+        # 0: POP W64 AL
+        # 1: JNZ UNDERFLOW -> 4 (HALT)
+        # 2: PUSH W64 AL
+        # 3: PUSH W64 AL
+        # 4: HALT
+        UserOpcode.DUP8: [
+            MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=4),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
     }
 
     @classmethod
