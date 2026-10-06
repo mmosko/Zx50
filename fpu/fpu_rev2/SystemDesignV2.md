@@ -242,12 +242,15 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | POP dst           | 0b100_001 | 0/1   | dst     | n/a    | TOS    | `dst <- TOS`, sp <- sp - (W+1)     | sets UF, ERR (on stack underflow)     |
 | LDC dst, addr     | 0b100_010 | 0/1   | dst     | IMM    | n/a    | `dst <- CONST_ADDR + [addr]`       | none (flags unaffected)               |
 | LDI dst, imm      | 0b100_011 | 0/1   | dst     | IMM    | n/a    | `dst <- imm`                       | none (flags unaffected)               |
+| LDI flag, val     | 0b100_011 | 0     | NONE    | IMM    | n/a    | `status[flag] <- imm & 1`          | sets/clears selected flag (0 or 1)    |
 | LD  dst, addr     | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- SCR_ADDR + [addr]`         | none (flags unaffected)               |
 | STO  addr, src    | 0b100_101 | 0/1   | IMM     | n/a    | src    | `SCR_ADDR + [addr] <- src`         | none (flags unaffected)               |
-| LDU dst, addr     | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- USER_ADDR + [addr]`        | none (flags unaffected)               |
-| STU addr, src     | 0b101_001 | 0/1   | dst     | IMM    | n/a    | `USER_ADDR + [addr] <- src`        | none (flags unaffected)               |
 | MOV dst, src      | 0b100_110 | 0/1   | dst     | n/a    | src    | `dst <- src`                       | none (flags unaffected)               |
 | SWAP dst, src     | 0b100_111 | 0/1   | dst     | n/a    | src    | `F_ <- src, src <- dst, dst <- F_` | none (flags unaffected)               |
+| LDU dst, addr     | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- USER_ADDR + [addr]`        | none (flags unaffected)               |
+| STU addr, src     | 0b101_001 | 0/1   | dst     | IMM    | n/a    | `USER_ADDR + [addr] <- src`        | none (flags unaffected)               |
+| SSAV              | 0b101_110 | 0     | n/a     | n/a    | n/a    | STATUS save                        | Stashes STATUS reg to shadow          |
+| SRES              | 0b101_111 | 0     | n/a     | n/a    | n/a    | STATUS restore                     | Unstash STATUS from shadow            |
 | -----             | -----     | ----- | -----   | -----  | -----  | -----                              | -----                                 |
 | JMP addr          | 0b011_000 | 0     | UPC     | IMM    | n/a    | `upc <- addr`                      | none                                  |
 | JNZ \[src,\] addr | 0b011_001 | 0     | UPC     | IMM    | n/a    | `upc <- addr` if !ZF or `src != 0` | none                                  |

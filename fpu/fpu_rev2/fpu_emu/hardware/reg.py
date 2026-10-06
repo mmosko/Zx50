@@ -43,6 +43,9 @@ class Reg(IntEnum):
     RET = 24
     RET_SET = 25
 
+    # Stored in the Memory block
+    STATUS_SHADOW = 26
+
     # These are virtual registers only used in Assembly MicroInstructions.  The functional block needs to
     # resolve them down to the actual registers used in the HA and HB and RES muxes
     # AX = 30,

@@ -88,7 +88,10 @@ class MicroInstruction:
         dst = Reg(dst_val)
         src = Reg(src_val)
 
-        flag = StatusFlag(flag_val) if src is Reg.NONE else None
+        if op in (MicroOp.JZ, MicroOp.JNZ) or (op == MicroOp.LDI and dst is Reg.NONE):
+            flag = StatusFlag(flag_val)
+        else:
+            flag = None
 
         effective_dst = dst
         if effective_dst is Reg.NONE and op in (MicroOp.EXP_ADD, MicroOp.EXP_SUB):

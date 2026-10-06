@@ -231,10 +231,15 @@ DJNZ        L_LOOP              ; Decrement C and jump if C != 0
 CALL        .fn_normalize_f32   ; Call shared subroutine
 RET                             ; Return from subroutine
 
-; --- Stack and Memory ---
+; --- Stack, Memory, and Immediates ---
+LDI         C, 24               ; C <- 24 (10-bit immediate into register)
+LDI         ERR, 1              ; Assert ERR flag (DST=NONE, FLAG_COND=ERR, IMM=1)
+LDI         ZERO, 0             ; Clear ZF flag (DST=NONE, FLAG_COND=ZERO, IMM=0)
 POP         BL                  ; Pop 32-bit stack TOS into BL
 PUSH        AL                  ; Push 32-bit AL onto math stack
 SWAP        AL, BL              ; Exchange AL and BL (3 cycles)
+SSAV                            ; Save STATUS flags to 1-depth shadow register
+SRES                            ; Restore STATUS flags from shadow (mask 0x7D preserves ERR/BUSY)
 ```
 
 ---

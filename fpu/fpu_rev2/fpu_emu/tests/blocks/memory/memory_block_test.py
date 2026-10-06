@@ -445,5 +445,107 @@ def test_swap_with_fl(fpga: FpgaModel):
     assert fpga.reg_file.bl.read_int() == 0xAAAAAAAA
 
 
+def test_ssav_sres_basic(fpga: FpgaModel):
+    """SSAV saves status flags and SRES restores condition flags."""
+    # Set initial flags: ZERO, CARRY, SIGN
+    fpga.reg_file.status.set_bit(StatusFlag.ZERO, True)
+    fpga.reg_file.status.set_bit(StatusFlag.CARRY, True)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, True)
 
+    microcode = [
+        MicroInstruction(op=MicroOp.SSAV),
+    ]
+    fpga.dispatcher._run(microcode)
+
+    # Change flags in status register
+    fpga.reg_file.status.set_bit(StatusFlag.ZERO, False)
+    fpga.reg_file.status.set_bit(StatusFlag.CARRY, False)
+    fpga.reg_file.status.set_bit(StatusFlag.SIGN, False)
+    fpga.reg_file.status.set_bit(StatusFlag.OVERFLOW, True)
+
+    # SRES should restore ZERO, CARRY, SIGN, and clear OVERFLOW
+    fpga.reg_file.upc.write(0)
+    microcode = [
+        MicroInstruction(op=MicroOp.SRES),
+    ]
+    fpga.dispatcher._run(microcode)
+
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+
+
+def test_sres_preserves_err_and_busy(fpga: FpgaModel):
+    """SRES mask 0x7D does not overwrite ERR (bit 1) or BUSY (bit 7)."""
+    # Initially ERR is 0
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+    # SSAV with ERR = 0
+    microcode = [
+        MicroInstruction(op=MicroOp.SSAV),
+    ]
+    fpga.dispatcher._run(microcode)
+
+    # Simulate subroutine encountering an error (ERR set to 1)
+    fpga.reg_file.status.set_bit(StatusFlag.ERR, True)
+
+    # SRES should NOT clear ERR because mask 0x7D excludes bit 1
+    fpga.reg_file.upc.write(0)
+    microcode = [
+        MicroInstruction(op=MicroOp.SRES),
+    ]
+    fpga.dispatcher._run(microcode)
+
+    # ERR must still be set
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+
+
+def test_ldi_register_32(fpga: FpgaModel):
+    """LDI dst, imm loads a 10-bit immediate into a 32-bit register."""
+    microcode = [
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.AL, src=Reg.IMM, imm=0x2AB),
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=24),
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.EA, src=Reg.IMM, imm=127),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 0x2AB
+    assert fpga.reg_file.c.read_int() == 24
+    assert fpga.reg_file.ea.read_int() == 127
+
+
+def test_ldi_register_64(fpga: FpgaModel):
+    """LDI dst, imm with W64 loads imm into low half and 0 into high half."""
+    fpga.reg_file.ah.write(0xFFFFFFFF)
+    microcode = [
+        MicroInstruction(op=MicroOp.LDI, w=IW.W64, dst=Reg.AL, src=Reg.IMM, imm=42),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.al.read_int() == 42
+    assert fpga.reg_file.ah.read_int() == 0
+
+
+def test_ldi_flag_set_and_clear(fpga: FpgaModel):
+    """LDI flag, imm with dst=Reg.NONE sets or clears the specified status flag."""
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+    # Set ERR=1 and ZERO=1
+    microcode = [
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ERR, imm=1),
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ZERO, imm=1),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+
+    # Clear ERR=0 while leaving ZERO=1
+    fpga.reg_file.upc.write(0)
+    microcode = [
+        MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ERR, imm=0),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
 

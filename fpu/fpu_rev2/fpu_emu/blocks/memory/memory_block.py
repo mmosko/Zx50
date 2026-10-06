@@ -8,7 +8,7 @@ from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
-from fpu_emu.hardware.register import Register
+from fpu_emu.hardware.register import Register, StatusRegister
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
@@ -56,6 +56,7 @@ class MemoryBlock(FunctionalBlock):
 
         self._sp = sp_reg
         self._stack_adder = StackAdder(sp_reg)
+        self._status_shadow = StatusRegister(name=Reg.STATUS_SHADOW, size_in_bits=8, clock=clock)
 
     def execute(self):
         instr = MicroInstruction.from_register(self._inputs.instr)
@@ -80,6 +81,10 @@ class MemoryBlock(FunctionalBlock):
                 self._mov(instr)
             case MicroOp.SWAP:
                 self._swap(instr)
+            case MicroOp.SSAV:
+                self._ssav(instr)
+            case MicroOp.SRES:
+                self._sres(instr)
             case _:
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
@@ -234,8 +239,50 @@ class MemoryBlock(FunctionalBlock):
         raise NotImplementedError
 
     def _ldi(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.LDI)
-        raise NotImplementedError
+        """Loads 10-bit immediate into a register or modifies a single status flag.
+
+        If dst == Reg.NONE:
+            LDI <flag>, imm
+            Sets or clears the specified StatusFlag to (imm & 1) using status write mask.
+        If dst != Reg.NONE:
+            LDI <reg>, imm
+            Loads 10-bit unsigned immediate into register dst (zero-extended).
+        """
+        assert instr.op == MicroOp.LDI
+        self._inputs.hb_mux.select(Reg.IMM.value)
+        imm = self._inputs.hb_mux.read_int()
+
+        if instr.dst is Reg.NONE:
+            flag = instr.flag if instr.flag is not None else StatusFlag.ZERO
+            bit_val = imm & 1
+            mask = 1 << flag.value
+
+            self._outputs.block_res.set(0)
+            self._outputs.block_res_sel.set(Reg.NONE)
+            self._outputs.res_status.set(bit_val << flag.value)
+            self._outputs.status_wr_sel.set(mask)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        elif instr.is_w32():
+            self._outputs.block_res.set(imm)
+            self._outputs.block_res_sel.set(instr.dst.value)
+            self._outputs.res_status.set(0)
+            self._outputs.status_wr_sel.set(0)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.dst.is_lo_half()
+            self._outputs.block_res.set(imm)
+            self._outputs.block_res_sel.set(instr.dst.value)
+            self._outputs.res_status.set(0)
+            self._outputs.status_wr_sel.set(0)
+            self._writeback()
+
+            self._clock.tick()
+            self._outputs.block_res.set(0)
+            self._outputs.block_res_sel.set(instr.dst.value | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
 
     def _ld(self, instr: MicroInstruction) -> None:
         """Loads 32-bit or 64-bit from scratchpad RAM SCR[imm]."""
@@ -394,3 +441,25 @@ class MemoryBlock(FunctionalBlock):
         self._outputs.block_res_sel.set(instr.dst.value)
         self._outputs.exec_done.set(1)
         self._writeback()
+
+    def _ssav(self, instr: MicroInstruction) -> None:
+        assert (instr.op == MicroOp.SSAV)
+        status = self._inputs.status.read_int()
+        self._status_shadow.write(status)
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _sres(self, instr: MicroInstruction) -> None:
+        assert (instr.op == MicroOp.SRES)
+        status = self._status_shadow.read_int()
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE)
+        self._outputs.res_status.set(status)
+        # Does not write BUSY (bit 7) or ERR (bit 1)
+        self._outputs.status_wr_sel.set(0x7D)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+

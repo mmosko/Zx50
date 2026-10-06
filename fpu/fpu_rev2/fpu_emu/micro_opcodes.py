@@ -52,6 +52,8 @@ class MicroOp(Enum):
     SWAP = 0b100_111
     LDU = 0b101_000
     STU = 0b101_001
+    SSAV = 0b101_110
+    SRES = 0b101_111
     # ====================
     # CONTROL (prefix 0b011)
     JMP = 0b011_000

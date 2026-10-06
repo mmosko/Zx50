@@ -1379,37 +1379,68 @@ After execution of LDC AL, 0x02:
 
 ```
 ================================================================================
-LDI dst, imm — LOAD IMMEDIATE 10-BIT SIGN-EXTENDED VALUE
+LDI dst, imm — LOAD IMMEDIATE INTO REGISTER
+LDI flag, val — LOAD IMMEDIATE BIT INTO STATUS FLAG
 ================================================================================
 ```
 
 #### Status Flags Affected
+When loading into a register (`dst != NONE`):
 ```text
   BSY    Z     S     C     V     U    ERR    D
 +-----+-----+-----+-----+-----+-----+-----+-----+
 |  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **Flags**: None affected.
+* **Flags**: None affected when `dst != NONE`.
+
+When loading into a status flag (`dst == NONE`):
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  | mod | mod | mod | mod | mod | mod | mod |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **Flags**: Exactly the flag selected by `FLAG_COND` is modified to `val & 1` (`0` or `1`). All other flags are unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
-dst [31:0] <- sign_extend(INSTR[9:0])
-UPC        <- UPC + 1
+if dst != NONE:
+    dst [31:0]   <- zero_extend(INSTR[9:0])
+    STATUS       <- unaffected
+    UPC          <- UPC + 1
+else:
+    STATUS[flag] <- INSTR[0]
+    UPC          <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100011`. `W = 0` (1 cycle). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 100011`. `W = 0` (1 cycle).
+- **Register Form**: `RES_SEL = dst`, `HA_MUX = NONE`, `HB_MUX = IMM`, `IMM = imm[9:0]`.
+- **Flag Form**: `RES_SEL = NONE (0b1111)`, `HA_MUX = NONE`, `HB_MUX = IMM`, `FLAG_COND = flag[2:0]`, `IMM = val (0 or 1)`.
 
 #### Description
-Loads a 10-bit signed immediate constant (`INSTR[9:0]`) sign-extended to 32 bits into `dst`. Also used when `IMM` is multiplexed with `HOST_IN` during host write sequences.
+1. **Register Load (`LDI dst, imm`)**: Loads a 10-bit unsigned immediate constant (`INSTR[9:0]`) into `dst`. If `W=1` (64-bit), the immediate is loaded into the low-half register (`dst`) and zero is loaded into the high-half register (`dst | 1`).
+2. **Flag Load (`LDI flag, val`)**: When `dst` is `NONE`, the instruction operates as a universal flag manipulation operation. It routes `status_wr_sel = 1 << flag` and `res_status = (val & 1) << flag` through the datapath writeback multiplexer, setting or clearing the chosen flag in a single cycle without altering any other register or status flag. Commonly used to assert or clear `ERR`, `ZERO`, `CARRY`, etc.
 
-#### Concrete Numeric Example
+#### Concrete Numeric Examples
 ```text
-Suppose INSTR[9:0] = 0x3FF (-1).
-After execution of LDI BL, 0x3FF:
-  BL <- 0xFFFFFFFF (-1)
-  Flags are unaffected.
+Example 1: Loading register
+LDI EA, 127
+  EA <- 127
+  Flags unaffected.
+
+Example 2: Setting error flag
+LDI ERR, 1
+  Machine encoding: OPCODE=LDI, DST=NONE, SRC2=IMM, FLAG_COND=ERR (1), IMM=1
+  STATUS[ERR] <- 1
+  All other status flags unaffected.
+
+Example 3: Clearing zero flag
+LDI ZERO, 0
+  Machine encoding: OPCODE=LDI, DST=NONE, SRC2=IMM, FLAG_COND=ZERO (6), IMM=0
+  STATUS[ZERO] <- 0
+  All other status flags unaffected.
 ```
 
 ---

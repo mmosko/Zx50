@@ -59,3 +59,26 @@ def test_micro_instruction_three_address_round_trip():
     assert decoded.src1 == Reg.EA
     assert decoded.src == Reg.EB
 
+
+def test_micro_instruction_ldi_flag_round_trip():
+    clock = Clock()
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
+
+    # Encode LDI ERR, 1: dst=NONE, src=IMM, flag=ERR, imm=1
+    orig = MicroInstruction(
+        op=MicroOp.LDI,
+        dst=Reg.NONE,
+        src=Reg.IMM,
+        flag=StatusFlag.ERR,
+        imm=1,
+    )
+    orig.to_register(instr_reg, imm_reg)
+
+    decoded = MicroInstruction.from_register(instr_reg)
+    assert decoded.op == MicroOp.LDI
+    assert decoded.dst == Reg.NONE
+    assert decoded.flag == StatusFlag.ERR
+    assert imm_reg.read_int() == 1
+
+
