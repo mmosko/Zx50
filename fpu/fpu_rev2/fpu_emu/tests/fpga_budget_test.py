@@ -53,6 +53,21 @@ class TestFpgaBudget(unittest.TestCase):
             f"Baseline LUT4 utilization ({totals['luts']}) exceeds 1000 LUT budget",
         )
 
+    def test_microcode_instruction_budget(self):
+        """Verifies total microcode instructions do not exceed the 512 EBR ROM limit."""
+        from fpu_emu.micro_code import MicroCode
+
+        total = MicroCode.total_instructions()
+        remaining = MicroCode.remaining_capacity()
+
+        self.assertLessEqual(
+            total,
+            MicroCode.MAX_MICRO_INSTRUCTIONS,
+            f"Total microcode instructions ({total}) exceeds EBR 512-word capacity limit",
+        )
+        self.assertEqual(remaining, MicroCode.MAX_MICRO_INSTRUCTIONS - total)
+        self.assertGreaterEqual(remaining, 0)
+
     def test_budget_report_generation(self):
         """Verifies report markdown format."""
         report = FpgaResourceRegistry.generate_report()

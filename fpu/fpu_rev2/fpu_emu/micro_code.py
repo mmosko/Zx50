@@ -11,6 +11,8 @@ from fpu_emu.user_opcodes import UserOpcode
 class MicroCode:
     """Microcode ROM lookup table."""
 
+    MAX_MICRO_INSTRUCTIONS: int = 512
+
     _ucode: Dict[UserOpcode, List[MicroInstruction]] = {
         # ADD_I32:
         # 0: POP BL
@@ -320,6 +322,28 @@ class MicroCode:
         ],
     }
 
+    # Populate CP_MEM0_TOS..CP_MEM15_TOS (0xD0..0xDF) and CP_TOS_MEM0..CP_TOS_MEM15 (0xE0..0xEF)
+    for _slot in range(16):
+        _ucode[UserOpcode(0xD0 + _slot)] = [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=3),
+            MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=_slot),
+            MicroInstruction(op=MicroOp.HALT),
+        ]
+        _ucode[UserOpcode(0xE0 + _slot)] = [
+            MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=_slot),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ]
+
+    # ZERO_MEM (0xF0): Clear all 16 user storage memory slots to zero (17 cycles)
+    _ucode[UserOpcode.ZERO_MEM] = [
+        MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL),
+        *[MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=_slot) for _slot in range(16)],
+        MicroInstruction(op=MicroOp.HALT),
+    ]
+
+
     @classmethod
     @fpga_resource(
         approach="Paired Single-Port SysMEM EBR (EBR 5 & 6, 512x32) for runtime microcode execution store",
@@ -334,3 +358,32 @@ class MicroCode:
         if opcode not in cls._ucode:
             raise NotImplementedError(f"Microcode for opcode {opcode} not implemented")
         return cls._ucode[opcode]
+
+    @classmethod
+    def total_instructions(cls) -> int:
+        """Returns the total number of micro-instructions across all defined opcodes."""
+        return sum(len(seq) for seq in cls._ucode.values())
+
+    @classmethod
+    def remaining_capacity(cls) -> int:
+        """Returns the remaining micro-instruction slots available in the 512-word EBR store."""
+        return cls.MAX_MICRO_INSTRUCTIONS - cls.total_instructions()
+
+    @classmethod
+    def instruction_count(cls, opcode: UserOpcode) -> int:
+        """Returns the number of micro-instructions in a given user opcode's sequence."""
+        return len(cls.get(opcode))
+
+    @classmethod
+    def validate_budget(cls) -> None:
+        """Validates that total micro-instructions do not exceed the 512 EBR limit."""
+        total = cls.total_instructions()
+        if total > cls.MAX_MICRO_INSTRUCTIONS:
+            raise ValueError(
+                f"Total microcode instructions ({total}) exceeds EBR capacity limit of {cls.MAX_MICRO_INSTRUCTIONS}"
+            )
+
+
+# Enforce budget compliance at module import time
+MicroCode.validate_budget()
+
