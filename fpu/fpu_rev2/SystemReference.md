@@ -751,7 +751,7 @@ After execution of XOR AL, BL:
 
 ```
 ================================================================================
-ABS dst — FLOATING-POINT ABSOLUTE VALUE
+FABS dst — FLOATING-POINT ABSOLUTE VALUE
 ================================================================================
 ```
 
@@ -785,7 +785,7 @@ Clears the sign bit (bit 31 of `AL` for 32-bit, or bit 31 of `AH` for 64-bit), p
 #### Concrete Numeric Example
 ```text
 Suppose AL = 0xBF800000 (-1.0f).
-After execution of ABS AL:
+After execution of FABS AL:
   AL becomes 0x3F800000 (+1.0f)
   Sign cleared: sets SIGN (S) to 0
   Non-zero magnitude: sets ZERO (Z) to 0
@@ -795,7 +795,7 @@ After execution of ABS AL:
 
 ```
 ================================================================================
-CHS dst — FLOATING-POINT CHANGE SIGN (NEGATE)
+FCHS dst — FLOATING-POINT CHANGE SIGN (NEGATE)
 ================================================================================
 ```
 
@@ -830,7 +830,7 @@ Inverts the sign bit of a floating-point operand in place and updates the sign f
 #### Concrete Numeric Example
 ```text
 Suppose AL = 0x3F800000 (+1.0f).
-After execution of CHS AL:
+After execution of FCHS AL:
   AL becomes 0xBF800000 (-1.0f)
   Sign inverted: sets SIGN (S) to 1
 ```

@@ -26,8 +26,8 @@ class MicroOp(Enum):
     AND = 0b010_000
     OR = 0b010_001
     XOR = 0b010_010
-    ABS = 0b010_011
-    CHS = 0b010_100
+    FABS = 0b010_011
+    FCHS = 0b010_100
     NOT = 0b010_101
     # ====================
     # SHIFTER (prefix 0b110)

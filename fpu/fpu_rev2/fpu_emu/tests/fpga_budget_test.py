@@ -7,8 +7,10 @@ from fpu_emu.fpga_resource import FpgaResourceRegistry
 import fpu_emu.blocks.adder.adder_block  # noqa: F401
 import fpu_emu.blocks.adder.adder_core  # noqa: F401
 import fpu_emu.blocks.adder.booth_mul  # noqa: F401
+import fpu_emu.blocks.adder.div_core  # noqa: F401
 import fpu_emu.blocks.control.control_block  # noqa: F401
 import fpu_emu.blocks.control.count_adder  # noqa: F401
+import fpu_emu.blocks.logic.logic_block  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
 import fpu_emu.blocks.memory.stack_adder  # noqa: F401
 import fpu_emu.dispatcher  # noqa: F401
@@ -58,9 +60,11 @@ class TestFpgaBudget(unittest.TestCase):
         self.assertIn("register_file", report)
         self.assertIn("alu_adder32", report)
         self.assertIn("alu_booth_mul", report)
+        self.assertIn("alu_div_core", report)
         self.assertIn("adder_block", report)
         self.assertIn("control_block", report)
         self.assertIn("count_adder", report)
+        self.assertIn("logic_block", report)
         self.assertIn("memory_block", report)
         self.assertIn("stack_adder", report)
         self.assertIn("upc_adder", report)
