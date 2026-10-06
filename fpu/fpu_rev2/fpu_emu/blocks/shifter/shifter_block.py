@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
+from fpu_emu.blocks.shifter.barrel_shifter import BarrelShifter, ShiftResult
 from fpu_emu.blocks.shifter.priority_encoder import PriorityEncoder32
 from fpu_emu.blocks.shifter.shifter_adder import ShifterAdder
 from fpu_emu.fpga_resource import fpga_resource
@@ -26,9 +27,9 @@ class ShifterResult:
 
 
 @fpga_resource(
-    approach="Shifter controller and sequencer",
-    luts=4,
-    ffs=4,
+    approach="Shifter controller, sequencer, and pipeline registers",
+    luts=16,
+    ffs=42,
     delay_ns=2.4,
     cycles=1,
     shared_unit="shifter_block",
@@ -152,8 +153,99 @@ class ShifterBlock(FunctionalBlock):
             self._writeback()
 
     def _lsl(self, instr: MicroInstruction) -> None:
-        raise NotImplementedError("LSL is not yet implemented")
+        assert instr.op == MicroOp.LSL
+        if instr.is_w32():
+            self._shift_32(instr, BarrelShifter.lsl_32)
+        else:
+            self._shift_64(instr, BarrelShifter.lsl_64)
 
     def _lsr(self, instr: MicroInstruction) -> None:
-        raise NotImplementedError("LSR is not yet implemented")
+        assert instr.op == MicroOp.LSR
+        if instr.is_w32():
+            self._shift_32(instr, BarrelShifter.lsr_32)
+        else:
+            self._shift_64(instr, BarrelShifter.lsr_64)
+
+    def _shift_32(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShiftResult]) -> None:
+        assert instr.dst is not Reg.NONE, "Shift destination register must be specified"
+        src = instr.src if instr.src is not Reg.NONE else Reg.C
+        dst = instr.dst
+
+        # Read shift count from HA_MUX (src or C)
+        self._ha_mux.select(src.value)
+        count = self._inputs.ha_mux.read_int() & 0x3F
+
+        # Read operand from HB_MUX (dst)
+        self._hb_mux.select(dst.value)
+        val = self._inputs.hb_mux.read_int() & 0xFFFFFFFF
+
+        shift_res = shift_fn(val, count, self._sub_adder)
+
+        wr_mask = (
+            (1 << StatusFlag.ZERO.value)
+            | (1 << StatusFlag.SIGN.value)
+            | (1 << StatusFlag.CARRY.value)
+        )
+        status_val = (
+            (int(shift_res.zf) << StatusFlag.ZERO.value)
+            | (int(shift_res.sf) << StatusFlag.SIGN.value)
+            | (int(shift_res.cf) << StatusFlag.CARRY.value)
+        )
+
+        self._outputs.block_res.set(shift_res.res)
+        self._outputs.block_res_sel.set(dst.value)
+        self._outputs.res_status.set(status_val)
+        self._outputs.status_wr_sel.set(wr_mask)
+        self._outputs.exec_done.set(1)
+        self._writeback()
+
+    def _shift_64(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShiftResult]) -> None:
+        assert instr.dst is not Reg.NONE, "Shift destination register must be specified"
+        assert instr.dst.is_lo_half(), f"64-bit shift destination must be low-half register, got {instr.dst}"
+        src = instr.src if instr.src is not Reg.NONE else Reg.C
+        dst = instr.dst
+
+        # Cycle 1: Latch shift count from HA_MUX and low half from HB_MUX
+        self._ha_mux.select(src.value)
+        count = self._inputs.ha_mux.read_int() & 0x3F
+
+        self._hb_mux.select(dst.value)
+        val_lo = self._inputs.hb_mux.read_int() & 0xFFFFFFFF
+
+        self._outputs.block_res_sel.set(Reg.NONE.value)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.exec_done.set(0)
+        self._writeback()
+
+        # Cycle 2: Read high half from HB_MUX, compute 64-bit shift, write low half
+        self._hb_mux.select(dst.value | 1)
+        val_hi = self._inputs.hb_mux.read_int() & 0xFFFFFFFF
+
+        val_64 = (val_hi << 32) | val_lo
+        shift_res = shift_fn(val_64, count, self._sub_adder)
+
+        self._outputs.block_res.set(shift_res.res & 0xFFFFFFFF)
+        self._outputs.block_res_sel.set(dst.value)
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.exec_done.set(0)
+        self._writeback()
+
+        # Cycle 3: Write high half and commit status flags
+        wr_mask = (
+            (1 << StatusFlag.ZERO.value)
+            | (1 << StatusFlag.SIGN.value)
+            | (1 << StatusFlag.CARRY.value)
+        )
+        status_val = (
+            (int(shift_res.zf) << StatusFlag.ZERO.value)
+            | (int(shift_res.sf) << StatusFlag.SIGN.value)
+            | (int(shift_res.cf) << StatusFlag.CARRY.value)
+        )
+
+        self._outputs.block_res.set((shift_res.res >> 32) & 0xFFFFFFFF)
+        self._outputs.block_res_sel.set(dst.value | 1)
+        self._outputs.res_status.set(status_val)
+        self._outputs.status_wr_sel.set(wr_mask)
+        self._outputs.exec_done.set(1)
+        self._writeback()
 

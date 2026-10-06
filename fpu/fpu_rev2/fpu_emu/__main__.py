@@ -16,6 +16,7 @@ import fpu_emu.blocks.control.count_adder  # noqa: F401
 import fpu_emu.blocks.logic_block  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
 import fpu_emu.blocks.memory.stack_adder  # noqa: F401
+import fpu_emu.blocks.shifter.barrel_shifter  # noqa: F401
 import fpu_emu.blocks.shifter.priority_encoder  # noqa: F401
 import fpu_emu.blocks.shifter.shifter_adder  # noqa: F401
 import fpu_emu.blocks.shifter.shifter_block  # noqa: F401
