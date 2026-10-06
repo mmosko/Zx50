@@ -15,10 +15,10 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 @fpga_resource(
-    approach="Adder controller, 32/64-bit sequencer, and exponent bounds comparators",
-    luts=45,
-    ffs=8,
-    delay_ns=2.5,
+    approach="Adder controller, 32/64-bit sequencer, exponent bounds comparators, and IEEE-754 pack/unpack logic",
+    luts=75,
+    ffs=14,
+    delay_ns=2.6,
     cycles=1,
     shared_unit="adder_block",
 )

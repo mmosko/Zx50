@@ -3,8 +3,9 @@ from fpu_emu.blocks.adder.adder_block import AdderBlock
 from fpu_emu.blocks.control.control_block import ControlBlock
 from fpu_emu.blocks.empty_block import EmptyBlock
 from fpu_emu.blocks.functional_block import BlockInputs
-from fpu_emu.blocks.logic.logic_block import LogicBlock
+from fpu_emu.blocks.logic_block import LogicBlock
 from fpu_emu.blocks.memory.memory_block import MemoryBlock
+from fpu_emu.blocks.shifter.shifter_block import ShifterBlock
 from fpu_emu.dispatcher import Dispatcher
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus_pad import BusPad
@@ -54,6 +55,14 @@ class DatapathMuxes:
         ])
 
 
+@fpga_resource(
+    approach="HA_SEL_MUX (8:1 3b) and HB_SEL_MUX (8:1 4b) functional block select multiplexers and control registers",
+    luts=28,
+    ffs=8,
+    delay_ns=1.8,
+    cycles=1,
+    shared_unit="fpga_model_overhead",
+)
 class FpgaModel:
     """
     Complete FPGA system model combining Hardware, ALU, Sequencer, and Host Interface.
@@ -137,6 +146,14 @@ class FpgaModel:
             sp_reg=self.reg_file.sp,
         )
 
+        self.shifter_block = ShifterBlock(
+            name="shifter",
+            inputs=self.inputs,
+            memory=self.memory,
+            writeback=self._writeback,
+            clock=self.clock
+        )
+
         # Map of the opcode block (0..7) to functional blocks
         self.blocks = [
             self.adder,         # 0 (0b000): Arithmetic / Adder
@@ -145,7 +162,7 @@ class FpgaModel:
             self.control_block,   # 3 (0b011): Control
             self.memory_block,  # 4 (0b100): Memory / Stack
             self.memory_block,  # 5 (0b101): Memory / Storage
-            self.empty_block,   # 6 (0b110): Shifter / LZC
+            self.shifter_block,   # 6 (0b110): Shifter / LZC
             self.empty_block,   # 7 (0b111): Reserved / Empty
         ]
 

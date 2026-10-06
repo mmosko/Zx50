@@ -13,9 +13,12 @@ import fpu_emu.blocks.adder.booth_mul  # noqa: F401
 import fpu_emu.blocks.adder.div_core  # noqa: F401
 import fpu_emu.blocks.control.control_block  # noqa: F401
 import fpu_emu.blocks.control.count_adder  # noqa: F401
-import fpu_emu.blocks.logic.logic_block  # noqa: F401
+import fpu_emu.blocks.logic_block  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
 import fpu_emu.blocks.memory.stack_adder  # noqa: F401
+import fpu_emu.blocks.shifter.priority_encoder  # noqa: F401
+import fpu_emu.blocks.shifter.shifter_adder  # noqa: F401
+import fpu_emu.blocks.shifter.shifter_block  # noqa: F401
 import fpu_emu.dispatcher  # noqa: F401
 import fpu_emu.fpga_model  # noqa: F401
 import fpu_emu.hardware.memory  # noqa: F401

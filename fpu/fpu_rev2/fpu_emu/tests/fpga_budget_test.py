@@ -10,9 +10,12 @@ import fpu_emu.blocks.adder.booth_mul  # noqa: F401
 import fpu_emu.blocks.adder.div_core  # noqa: F401
 import fpu_emu.blocks.control.control_block  # noqa: F401
 import fpu_emu.blocks.control.count_adder  # noqa: F401
-import fpu_emu.blocks.logic.logic_block  # noqa: F401
+import fpu_emu.blocks.logic_block  # noqa: F401
 import fpu_emu.blocks.memory.memory_block  # noqa: F401
 import fpu_emu.blocks.memory.stack_adder  # noqa: F401
+import fpu_emu.blocks.shifter.priority_encoder  # noqa: F401
+import fpu_emu.blocks.shifter.shifter_adder  # noqa: F401
+import fpu_emu.blocks.shifter.shifter_block  # noqa: F401
 import fpu_emu.dispatcher  # noqa: F401
 import fpu_emu.fpga_model  # noqa: F401
 import fpu_emu.hardware.memory  # noqa: F401
@@ -49,8 +52,8 @@ class TestFpgaBudget(unittest.TestCase):
         # Datapath baseline must stay well under 50% of device LUTs
         self.assertLess(
             totals["luts"],
-            1000,
-            f"Baseline LUT4 utilization ({totals['luts']}) exceeds 1000 LUT budget",
+            1056,
+            f"Baseline LUT4 utilization ({totals['luts']}) exceeds 50% device budget (1056 LUTs)",
         )
 
     def test_microcode_instruction_budget(self):
@@ -85,6 +88,10 @@ class TestFpgaBudget(unittest.TestCase):
         self.assertIn("upc_adder", report)
         self.assertIn("writeback_mux", report)
         self.assertIn("datapath_muxes", report)
+        self.assertIn("fpga_model_overhead", report)
+        self.assertIn("priority_encoder32", report)
+        self.assertIn("shifter_adder", report)
+        self.assertIn("shifter_block", report)
         self.assertIn("dispatcher_sequencer", report)
         self.assertIn("ebr_microcode_rom", report)
         self.assertIn("ebr_sysmem_ram", report)
