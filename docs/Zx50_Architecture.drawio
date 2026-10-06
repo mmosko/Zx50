@@ -1,0 +1,287 @@
+<mxfile host="app.diagrams.net" agent="Antigravity AI">
+  <diagram id="zx50-system-architecture" name="Zx50 Architecture Overview">
+    <mxGraphModel dx="1973" dy="1361" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1150" background="#f8fafc" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" value="&lt;div align=&quot;center&quot;&gt;&lt;b&gt;&lt;font style=&quot;font-size: 20px; color: #0f172a;&quot;&gt;Zx50 System Architecture — Backplane Bus &amp;amp; Subsystem Cards&lt;/font&gt;&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 12px; color: #475569;&quot;&gt;Staggered 2-Row Topology • Primary Z80 Bus • High-Speed Shadow DMA Bus (Direct 40 MHz Burst Transfers) • AC Bus Termination&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="48" width="1600" x="50" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f5f3ff;strokeColor=#7c3aed;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#4c1d95;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 0: Front Panel Card&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="60" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7c3aed;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;RP2040 PICO Controller&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;PICO Display Firmware • USB Host • SPI / I2C Bus&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="75" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;20x4 LCD Display Interface&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;System Status • Memory / Register Viewer&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="75" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;Front Panel Switches &amp;amp; Rotary&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;RESET • SINGLE-STEP • RUN/HALT • PAGE SELECT&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="75" y="202" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;Discrete Bus Status LEDs&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;A[15:0] • D[7:0] • ~M1 • ~RD • ~WR • ~IORQ • ~MREQ&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="75" y="246" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;Bus Buffers &amp;amp; Address Decoder&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;74AHCT Transceivers • I/O Port 0x50&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="75" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ddd6fe;strokeColor=#7c3aed;fontSize=10;fontColor=#4c1d95;fontStyle=1;" value="&lt;b&gt;Bus Tap:&lt;/b&gt; A[15:0], D[7:0], C[14:0], GPIO[15:0], ZCLK" vertex="1">
+          <mxGeometry height="34" width="330" x="75" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#1e40af;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 1: Z80 CPU, Clock &amp;amp; FPU FPGA&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="460" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontSize=11;fontColor=#1e293b;" value="&lt;b&gt;Z80 CMOS CPU (Z84C0020PEC)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Core Processor • 8 MHz - 10 MHz Operation&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="330" x="475" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#3b82f6;fontSize=10;fontColor=#1e3a8a;strokeWidth=1;" value="&lt;b&gt;Clock Mezzanine (Rev C)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #1e3a8a;&quot;&gt;&lt;b&gt;ZCLK (8-10 MHz)&lt;/b&gt; &amp;nbsp;|&amp;nbsp; &lt;b&gt;MCLK = 4x ZCLK (32-40 MHz)&lt;/b&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="475" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;FPU Coprocessor FPGA (MachXO2/3)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;&lt;b&gt;FPGA Internal Clock: 3x - 4x MCLK (96 - 160 MHz)&lt;/b&gt;&lt;br/&gt;Am9511 APU Emulation • 32-bit Float &amp;amp; Int Math BRAM LUTs&lt;/font&gt;" vertex="1">
+          <mxGeometry height="52" width="330" x="475" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Bus Control &amp;amp; Drivers&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;74AHCT245/541 • ~WAIT Gen • Reset Supervisor&lt;/font&gt;" vertex="1">
+          <mxGeometry height="36" width="330" x="475" y="262" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bfdbfe;strokeColor=#2563eb;fontSize=10;fontColor=#1e3a8a;fontStyle=1;" value="&lt;b&gt;Bus Master Tap:&lt;/b&gt; Drives A, D, C, ZCLK (Out), MCLK (Out)" vertex="1">
+          <mxGeometry height="34" width="330" x="475" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f0fdfa;strokeColor=#0d9488;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#115e59;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 2: Timer + Serial (CTC + DART)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="860" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d9488;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Z80 CTC (Z84C30)&lt;/b&gt; &amp;nbsp;|&amp;nbsp; &lt;b&gt;Z80 DART (Z84C4010)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;4-Ch Counter/Timer • Dual-Ch Serial Controller (IM 2)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="875" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;7.3728 MHz Direct Baud Oscillator&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Direct-drive CTC clock (115,200 &amp;amp; 9,600 baud)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="875" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Port 0: USB (FTDI DB9-USB-D5)&lt;/b&gt;&lt;br/&gt;&lt;b&gt;Port 1: RS-232 (MAX232 ±10V + DB9)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 9px; color: #475569;&quot;&gt;Hardware Tx/Rx Activity LEDs (DART TxDA / TxDB)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="330" x="875" y="202" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Address Decoder (74AHCT138)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;I/O Ports 0x80-0x83 (CTC) • Ports 0x84-0x87 (DART)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="875" y="258" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0d9488;fontSize=10;fontColor=#115e59;fontStyle=1;" value="&lt;b&gt;Bus Tap:&lt;/b&gt; A[7:0], D[7:0], C[14:0] (IEI/IEO, ~INT), ZCLK" vertex="1">
+          <mxGeometry height="34" width="330" x="875" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#166534;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 3: Memory Card 0 (Boot / MMU)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="1260" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;ATF1508 CPLD (MMU / Arbiter)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Address Translation Latch (ATL) • 4KB Paging LUT&lt;br/&gt;Card ID 0 (Boot Default) • ROM Kill-Switch&lt;/font&gt;" vertex="1">
+          <mxGeometry height="48" width="330" x="1275" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;1MB Fast SRAM (12ns)&lt;/b&gt; &amp;nbsp;|&amp;nbsp; &lt;b&gt;512KB Flash ROM&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;256 Physical 4KB Pages • SST39SF040 Boot ROM&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="330" x="1275" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="25" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=10;fontColor=#92400e;strokeWidth=1;" value="&lt;b&gt;Shadow Bus DMA Interface&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #b45309;&quot;&gt;&lt;b&gt;Cycle-Stealing Burst Engine (40 MHz)&lt;/b&gt;&lt;br/&gt;~S_EN, SRW, ~SSTB, ~SINC, ~S_BUSY, ~S_DONE&lt;/font&gt;" vertex="1">
+          <mxGeometry height="48" width="330" x="1275" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;74AHCT Transceivers &amp;amp; Logic&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Dual-Bus Firewalls (Z80 Bus + Shadow DMA Bus)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="36" width="330" x="1275" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbf7d0;strokeColor=#16a34a;fontSize=9;fontColor=#14532d;fontStyle=1;" value="&lt;b&gt;Z80 Bus:&lt;/b&gt; A, D, C, ZCLK" vertex="1">
+          <mxGeometry height="34" width="160" x="1275" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="28" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fed7aa;strokeColor=#ea580c;fontSize=9;fontColor=#7c2d12;fontStyle=1;" value="&lt;b&gt;Shadow Tap:&lt;/b&gt; SD, SC, MCLK" vertex="1">
+          <mxGeometry height="34" width="160" x="1445" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=10;fontColor=#991b1b;align=center;" value="&lt;b&gt;AC&lt;br/&gt;Term&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;RC to&lt;br/&gt;GND&lt;/font&gt;" vertex="1">
+          <mxGeometry height="145" width="40" x="15" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=3;" value="" vertex="1">
+          <mxGeometry height="145" width="1560" x="60" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="31" parent="1" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" value="&lt;font style=&quot;font-size: 13px; color: #38bdf8;&quot;&gt;&lt;b&gt;Zx50 SYSTEM BACKPLANE BUS TRUNK (All Signal Lines AC Terminated at Both Ends)&lt;/b&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="22" width="750" x="75" y="431" as="geometry" />
+        </mxCell>
+        <mxCell id="32" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#38bdf8;strokeWidth=2;fontSize=10;fontColor=#f0f9ff;align=center;spacingLeft=10;" value="&lt;b&gt;Primary Z80 Bus&lt;/b&gt;" vertex="1">
+          <mxGeometry height="22" width="1530" x="75" y="461" as="geometry" />
+        </mxCell>
+        <mxCell id="33" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#818cf8;strokeWidth=2;fontSize=10;fontColor=#e0e7ff;align=center;spacingLeft=10;" value="&lt;b&gt;Clocks &amp;amp; GPIO:&lt;/b&gt;" vertex="1">
+          <mxGeometry height="26" width="1530" x="75" y="489" as="geometry" />
+        </mxCell>
+        <mxCell id="34" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#fb923c;strokeWidth=2.5;fontSize=10;fontColor=#ffedd5;align=center;spacingLeft=10;" value="&lt;b&gt;Shadow Bus (40 Mhz DMA)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="1530" x="75" y="521" as="geometry" />
+        </mxCell>
+        <mxCell id="35" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=10;fontColor=#991b1b;align=center;" value="&lt;b&gt;AC&lt;br/&gt;Term&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;RC to&lt;br/&gt;GND&lt;/font&gt;" vertex="1">
+          <mxGeometry height="145" width="40" x="1625" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="36" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#166534;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 4: Memory Card 1 (Secondary / NUMA)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="60" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="37" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbf7d0;strokeColor=#16a34a;fontSize=9;fontColor=#14532d;fontStyle=1;" value="&lt;b&gt;Z80 Bus:&lt;/b&gt; A, D, C, ZCLK" vertex="1">
+          <mxGeometry height="32" width="160" x="75" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="38" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fed7aa;strokeColor=#ea580c;fontSize=9;fontColor=#7c2d12;fontStyle=1;" value="&lt;b&gt;Shadow Tap:&lt;/b&gt; SD, SC, MCLK" vertex="1">
+          <mxGeometry height="32" width="160" x="245" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="39" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;ATF1508 / MachXO3 CPLD/FPGA (MMU)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Card ID 1 Config • 4KB Paging LUT Engine&lt;br/&gt;Snoops MMU page writes to auto-invalidate conflicts&lt;/font&gt;" vertex="1">
+          <mxGeometry height="48" width="330" x="75" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;1MB Fast SRAM (12ns)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;256 Physical 4KB Pages (Expands NUMA system to 2MB+)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="75" y="741" as="geometry" />
+        </mxCell>
+        <mxCell id="41" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=10;fontColor=#92400e;strokeWidth=1;" value="&lt;b&gt;Zero-Contention DMA / Shadow Bus Engine&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #b45309;&quot;&gt;&lt;b&gt;Peer-to-Peer 40 MHz Burst DMA&lt;/b&gt;&lt;br/&gt;Direct cycle-stealing memory transfers with Card 3 &amp;amp; Card 5&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="330" x="75" y="787" as="geometry" />
+        </mxCell>
+        <mxCell id="42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Bus Transceivers &amp;amp; Direction Control&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;74AHCT Firewalls • High-Z on inactive cycles&lt;/font&gt;" vertex="1">
+          <mxGeometry height="36" width="330" x="75" y="845" as="geometry" />
+        </mxCell>
+        <mxCell id="43" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#faf5ff;strokeColor=#9333ea;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#581c87;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 5: NetStorage (Future: Net + Storage)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="460" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d5ff;strokeColor=#9333ea;fontSize=9;fontColor=#581c87;fontStyle=1;" value="&lt;b&gt;Z80 Bus:&lt;/b&gt; A, D, C (Mem &amp;amp; I/O)" vertex="1">
+          <mxGeometry height="32" width="160" x="475" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="45" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fed7aa;strokeColor=#ea580c;fontSize=9;fontColor=#7c2d12;fontStyle=1;" value="&lt;b&gt;Shadow Tap:&lt;/b&gt; SD, SC, MCLK" vertex="1">
+          <mxGeometry height="32" width="160" x="645" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="46" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9333ea;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;WIZnet W5300 10/100 Ethernet&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Hardware TCP/IP Stack • 8 Sockets • 128KB SRAM&lt;br/&gt;&lt;b&gt;Memory-Mapped Window&lt;/b&gt; (Block LDIR / LDDR support)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="48" width="330" x="475" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;WCH CH376S USB Flash &amp;amp; SD Controller&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;FAT16 / FAT32 Hardware Filesystem Engine&lt;br/&gt;&lt;b&gt;I/O Mapped&lt;/b&gt; (Ports 0x40 Data / 0x41 Command)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="46" width="330" x="475" y="741" as="geometry" />
+        </mxCell>
+        <mxCell id="48" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=10;fontColor=#92400e;strokeWidth=1;" value="&lt;b&gt;Direct 40 MHz Shadow DMA Master&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #b45309;&quot;&gt;&lt;b&gt;Direct Packet &amp;amp; Disk Streaming to/from Memory Cards&lt;/b&gt;&lt;br/&gt;Transfers at 40 MHz without Z80 CPU intervention!&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="330" x="475" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="49" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Dual 74AHCT245 Bus Firewalls &amp;amp; Decoders&lt;/b&gt;" vertex="1">
+          <mxGeometry height="32" width="330" x="475" y="853" as="geometry" />
+        </mxCell>
+        <mxCell id="50" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;dashed=1;dashPattern=6 4;align=center;verticalAlign=top;spacingTop=6;fontColor=#334155;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 6: Expansion Slot (Future Coprocessor)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="860" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="51" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontSize=9;fontColor=#1e293b;fontStyle=1;" value="&lt;b&gt;Full Backplane Interface Tap:&lt;/b&gt; A, D, C, SD, SC, GPIO, Clocks" vertex="1">
+          <mxGeometry height="32" width="330" x="875" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="52" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Secondary Compute / Coprocessor Slot&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Target slot for 2nd Z80 / RISC-V Compute Tile&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="875" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="53" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;High-Speed LVDS RDMA Interconnect&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Multi-node distributed clustering (NUMA / PGAS)&lt;br/&gt;Custom 8b/10b physical framing &amp;amp; hardware replay&lt;/font&gt;" vertex="1">
+          <mxGeometry height="48" width="330" x="875" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="54" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Audio-Video / APU Acceleration Tile&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Optional graphic display / synthesizer coprocessor&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="875" y="791" as="geometry" />
+        </mxCell>
+        <mxCell id="55" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Shadow Bus Master / Target DMA Engine&lt;/b&gt;" vertex="1">
+          <mxGeometry height="34" width="330" x="875" y="841" as="geometry" />
+        </mxCell>
+        <mxCell id="56" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#ea580c;strokeWidth=2;align=center;verticalAlign=top;spacingTop=6;fontColor=#9a3412;fontSize=13;fontStyle=1;" value="&lt;b&gt;Card 7: Bus Probe (Rev B Profiler/Debugger)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="325" width="360" x="1260" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="57" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#ea580c;fontSize=9;fontColor=#9a3412;fontStyle=1;" value="&lt;b&gt;Non-Intrusive Snooping Tap:&lt;/b&gt; A, D, C, SD, SC, GPIO, Clocks" vertex="1">
+          <mxGeometry height="32" width="330" x="1275" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="58" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ea580c;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;CBT3251 High-Speed Multiplexers&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Non-intrusive high-impedance bus tap &amp;amp; muxing&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="1275" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ea580c;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Microchip PIC (PIC18F4620)&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Hardware bus interface • Pin toggler &amp;amp; fast cycle sampler&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="1275" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="60" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ea580c;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;RP2040 PICO Dual-Core ARM&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;USB CDC Console • WiFi Telemetry • Circular Trace Buffer&lt;/font&gt;" vertex="1">
+          <mxGeometry height="42" width="330" x="1275" y="785" as="geometry" />
+        </mxCell>
+        <mxCell id="61" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;fontSize=10;fontColor=#1e293b;" value="&lt;b&gt;Color Graphic LCD &amp;amp; Trigger Header&lt;/b&gt;&lt;br/&gt;&lt;font style=&quot;font-size: 10px; color: #475569;&quot;&gt;Real-time bus opcode disassembly &amp;amp; scope triggers&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="330" x="1275" y="835" as="geometry" />
+        </mxCell>
+        <mxCell id="62" edge="1" parent="1" source="9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;" target="32" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="440" />
+              <mxPoint x="240" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="63" edge="1" parent="1" source="15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=3;fontColor=#1d4ed8;fontSize=9;" target="32" value="Drive ZCLK, MCLK, A, D, C">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="440" />
+              <mxPoint x="640" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="64" edge="1" parent="1" source="21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;entryX=0.63;entryY=0.098;entryDx=0;entryDy=0;entryPerimeter=0;" target="32" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="65" edge="1" parent="1" source="27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;entryX=0.837;entryY=-0.157;entryDx=0;entryDy=0;entryPerimeter=0;" target="32" value="">
+          <mxGeometry relative="1" x="0.0695" as="geometry" />
+        </mxCell>
+        <mxCell id="66" edge="1" parent="1" source="28" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ea580c;strokeWidth=3;fontColor=#c2410c;fontSize=9;entryX=0.948;entryY=0.097;entryDx=0;entryDy=0;entryPerimeter=0;" target="34" value="40 MHz DMA">
+          <mxGeometry relative="1" x="-0.521" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="67" edge="1" parent="1" source="37" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;" target="32" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="155" y="530" />
+              <mxPoint x="155" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="68" edge="1" parent="1" source="38" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ea580c;strokeWidth=3;fontColor=#c2410c;fontSize=9;" target="34" value="40 MHz DMA">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="325" y="570" />
+              <mxPoint x="325" y="570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="69" edge="1" parent="1" source="44" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;" target="32" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="555" y="520" />
+              <mxPoint x="555" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="70" edge="1" parent="1" source="45" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ea580c;strokeWidth=3;fontColor=#c2410c;fontSize=9;" target="34" value="40MHz DMA">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="725" y="598" />
+              <mxPoint x="730" y="598" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="71" edge="1" parent="1" source="51" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2.5;" target="32" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="530" />
+              <mxPoint x="1040" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="72" edge="1" parent="1" source="57" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9333ea;strokeWidth=2;dashed=1;fontColor=#7e22ce;fontSize=9;" target="30" value="Non-intrusive Snooping">
+          <mxGeometry relative="1" x="0.4667" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1440" y="580" />
+              <mxPoint x="1440" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="73" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;fontSize=15;" value="" vertex="1">
+          <mxGeometry height="150" width="1560" x="60" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="74" parent="1" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontSize=15;" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px; color: rgb(15, 23, 42);&quot;&gt;System Clock Domain Architecture &amp;amp; Signal Bus Definitions&lt;/font&gt;&lt;/b&gt;" vertex="1">
+          <mxGeometry height="24" width="600" x="80" y="966" as="geometry" />
+        </mxCell>
+        <mxCell id="75" parent="1" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=15;fontColor=#334155;" value="&lt;b&gt;Clock Domains:&lt;/b&gt;&lt;br&gt;• &lt;b&gt;ZCLK (8 MHz - 10 MHz):&lt;/b&gt; Primary Z80 CPU clock.&lt;br&gt;• &lt;b&gt;MCLK (32 MHz - 40 MHz):&lt;/b&gt; 4x Master Clock for synchronous DMA.&lt;br&gt;• &lt;b&gt;FPGA Internal Clock (96 MHz - 160 MHz):&lt;/b&gt; 3x to 4x MCLK for FPU." vertex="1">
+          <mxGeometry height="105" width="480" x="80" y="995" as="geometry" />
+        </mxCell>
+        <mxCell id="76" parent="1" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=15;fontColor=#334155;" value="&lt;b&gt;Backplane Bus Widths &amp;amp; Signals:&lt;/b&gt;&lt;br&gt;• &lt;b&gt;A[15:0]:&lt;/b&gt; 16-bit Z80 Address Bus.&lt;br&gt;• &lt;b&gt;D[7:0]:&lt;/b&gt; 8-bit Bidirectional Z80 Data Bus.&lt;br&gt;• &lt;b&gt;C[14:0]:&lt;/b&gt; 15-bit Z80 Control Bus&amp;nbsp;&lt;br&gt;• &lt;b&gt;GPIO[15:0]:&lt;/b&gt; 16-bit general purpose fast interconnect." vertex="1">
+          <mxGeometry height="105" width="360" x="645" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="77" parent="1" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=15;fontColor=#334155;" value="&lt;b&gt;Shadow Bus DMA Protocol (SD[8:0], SC[5:0]):&lt;/b&gt;&lt;br&gt;• &lt;b&gt;SD[8:0]:&lt;/b&gt; 9-bit Shadow Data Bus (8-bit data + parity).&lt;br&gt;• &lt;b&gt;SC[5:0]:&lt;/b&gt; Shadow Control.&lt;br&gt;• &lt;b&gt;Transfers:&lt;/b&gt; Direct 40 MHz peer-to-peer burst DMA.&lt;br&gt;• &lt;b&gt;Bus Termination:&lt;/b&gt; All lines AC terminated to eliminate line reflections." vertex="1">
+          <mxGeometry height="105" width="455" x="1120" y="982.5" as="geometry" />
+        </mxCell>
+        <mxCell id="c53sBqwvQmkhpi7d2WZ8-80" edge="1" parent="1" source="31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;innerLoopWaypoints=1;" target="31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c53sBqwvQmkhpi7d2WZ8-81" edge="1" parent="1" source="31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;innerLoopWaypoints=1;" target="31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
