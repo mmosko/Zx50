@@ -13,7 +13,7 @@ all 32bit unless said othewise
 - SP (8 bit) stack pointer
 - OSP (5 bit) operation stack pointer for user BATCH mode (32-byte queue)
 - UPC (10 bit), microcode program counter
-- STATUS (8 bit), status register [7: BSY, 6: Z, 5: S, 4: C, 3: V, 2: U, 1: ERR, 0: D (DIFF_SIGN)]
+- STATUS (8 bit), status register [7: BSY, 6: D, 5: S, 4: C, 3: V, 2: U, 1: ERR, 0: Z]
 - RET: (10-bit), return address from CALL -- no nested calls
 - HOST_IN (32-bit), host input staging register (accumulates 4 bytes from Port 0x70 writes)
 - HOST_OUT (32-bit), host output staging register (stages 4 bytes for Port 0x70 reads)
@@ -132,17 +132,17 @@ next instruction fetch, or loop until ready.
 ## Machine Instruction (INSTR)
 
 ```text
- 31        26 25  24     21 20    17 16        14 13     11 10 9                      0
+ 31        26  25        21       17           14        10                        0
 +------------+---+---------+--------+------------+---------+-+-----------------------+
-|   OPCODE   | W |   DST   | SRC2   | FLAG_COND  |  SRC1   | |   IMMEDIATE / ADDR    |
-|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [2:0]  | |         [9:0]         |
+|   OPCODE   | W |   DST   | SRC2   | FLAG_COND  |  SRC1   |     IMMEDIATE / ADDR    |
+|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [3:0]  |           [9:0]         |
 +------------+---+---------+--------+------------+---------+-+-----------------------+
 ```
 
 The immediate, address, offset values can be up to 10 bits, which is enough to address
 up to 1K PC locations (in 4-byte words) or immediate values 0 - 1023.
 
-If SRC1 is None (1111), then binary operands like "AND AL, BL" mean `AL <- AL & BL`.
+If SRC1 is None (`0b1111`), then binary operands like "AND AL, BL" mean `AL <- AL & BL`.
 If SRC1 is a valid `HA_MUX` register, then binary operands have a distinct
 output register, e.g. "SUB DL, AL, BL" means `DL <- AL - BL`.
 
@@ -166,6 +166,8 @@ A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[
 To save FPGA logic and routing resources, the `HA_BUS` multiplexer physically supports only the first 6 sources
 (`0b0000`–`0b0101`), so its physical multiplexer only inspects the lower 3 bits (`[2:0]`). `HB_BUS` and `BLK_RES_SEL`
 write-back routing decode the full 4 bits.
+
+Note that HA_BUS (`src1`) is 4 bits in the machine word to allow encoding `NONE` for `src1`.  
 
 | 4-Bit Code | Register / Source | HA_BUS (Physical 3-Bit) | HB_BUS (Full 4-Bit) | RES_SEL Target (on EXEC_WB) |
 |:----------:|:-----------------:|:-----------------------:|:-------------------:|:---------------------------:|

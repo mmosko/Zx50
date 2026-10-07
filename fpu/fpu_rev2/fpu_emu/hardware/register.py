@@ -7,14 +7,14 @@ from fpu_emu.hardware.reg import Reg
 
 class StatusFlag(IntEnum):
     """Status register flag bit allocations (SystemDesign.md Section 2.1)."""
-
-    DIFF_SIGN = 0  # Bit 0: Effective subtraction / operand signs differ
+    NONE = 0 # Used to encode an unused value
+    ZERO = 0  # Bit 0: Zero flag (1 = Result is zero)
     ERR = 1  # Bit 1: Error flag (Division by zero, domain errors, stack traps)
     UNDERFLOW = 2  # Bit 2: Stack or floating-point underflow
     OVERFLOW = 3  # Bit 3: Stack, integer, or floating-point overflow
     CARRY = 4  # Bit 4: Arithmetic carry or borrow
     SIGN = 5  # Bit 5: Sign flag (1 = Negative)
-    ZERO = 6  # Bit 6: Zero flag (1 = Result is zero)
+    DIFF_SIGN = 6  # Bit 6: Effective subtraction / operand signs differ
     BUSY = 7  # Bit 7: Hardware execution busy flag
 
 

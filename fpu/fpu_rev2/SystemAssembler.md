@@ -63,12 +63,12 @@ To avoid adding pipeline flush multiplexers or synchronous clear logic into the 
 The assembler produces 32-bit machine words divided between the 21-bit control/instruction register (`reg_file.instr`) and the 10-bit immediate register (`reg_file.imm`), with 1 reserved bit.
 
 ```text
- 31        26 25  24     21 20    17 16        14 13     11 10 9                      0
-+------------+---+---------+--------+------------+---------+-+-----------------------+
-|   OPCODE   | W |   DST   |  SRC2  | FLAG_COND  |  SRC1   |R|   IMMEDIATE / ADDR    |
-|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [2:0]  | |         [9:0]         |
-+------------+---+---------+--------+------------+---------+-+-----------------------+
-|<----------------- INSTR [20:0] (21 bits) --------------->| |<- IMM [9:0] (10 bits)->|
+ 31        26 25  24     21 20    17 16        14 13     10 9                         0
++------------+---+---------+--------+------------+---------+--------------------------+
+|   OPCODE   | W |   DST   |  SRC2  | FLAG_COND  |  SRC1   |     IMMEDIATE / ADDR     |
+|   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [3:0]  |          [9:0]           |
++------------+---+---------+--------+------------+---------+--------------------------+
+|<----------------- INSTR [21:0] (22 bits) --------------->| |<-- IMM [9:0] (10 bits)->|
 ```
 
 ### 3.1 Field Definitions
@@ -80,16 +80,16 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 | **DST** | `[24:21]` | 4 | Destination writeback register (`0b0000` to `0b1111`). |
 | **SRC2** | `[20:17]` | 4 | Secondary source register selecting from `HB_MUX` (12 inputs). |
 | **FLAG_COND**| `[16:14]` | 3 | Status flag condition code for `JZ` / `JNZ` branches. |
-| **SRC1** | `[13:11]` | 3 | Primary source register selecting from `HA_MUX` (8 inputs). |
-| **RESERVED** | `[10]` | 1 | Reserved (set to `0`). |
+| **SRC1** | `[13:10]` | 4 | Primary source register (`0b0000`–`0b0111` for `HA_MUX`, `0b1111` for `NONE`). |
 | **IMM** | `[9:0]` | 10 | Unsigned immediate constant or 10-bit jump/call address (0–1023). |
 
 ### 3.2 Register Field Mapping
 
-#### `SRC1` Select (`HA_MUX` — 3 bits `[13:11]`)
+#### `SRC1` Select (4 bits `[13:10]`, `HA_MUX` uses bits `[2:0]`)
 ```text
-000: AL       010: EA       100: IMM      110: BL
-001: AH       011: EB       101: C        111: BH
+0000: AL      0010: EA      0100: IMM     0110: BL
+0001: AH      0011: EB      0101: C       0111: BH
+1111: NONE (No HA operand read / default)
 ```
 
 #### `SRC2` Select (`HB_MUX` — 4 bits `[20:17]`)

@@ -84,7 +84,7 @@ class Registers:
         self.upc = Register(name=Reg.UPC, size_in_bits=10, clock=clock)
 
         # The instruction registers (read from u_code memory)
-        self.instr = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+        self.instr = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
         self.imm = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
         # The dispatcher - functional block handshakes

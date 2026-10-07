@@ -8,11 +8,11 @@ from fpu_emu.micro_opcodes import MicroOp
 
 def test_micro_instruction_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode ADD AL, BL
-    orig = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL, flag=None, imm=0)
+    orig = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL, flag=StatusFlag.NONE, imm=0)
     orig.to_register(instr_reg, imm_reg)
 
     decoded = MicroInstruction.from_register(instr_reg)
@@ -21,12 +21,12 @@ def test_micro_instruction_round_trip():
     assert decoded.dst == Reg.AL
     assert decoded.src == Reg.BL
     assert decoded.src1 == Reg.NONE
-    assert decoded.flag == None
+    assert decoded.flag == StatusFlag.NONE
 
 
 def test_micro_instruction_jump_with_flag():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode JNZ with StatusFlag.UNDERFLOW and imm=42
@@ -46,7 +46,7 @@ def test_micro_instruction_jump_with_flag():
 
 def test_micro_instruction_three_address_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode EXP_SUB C, EA, EB (C <- EA - EB)
@@ -62,7 +62,7 @@ def test_micro_instruction_three_address_round_trip():
 
 def test_micro_instruction_ldi_flag_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode LDI ERR, 1: dst=NONE, src=IMM, flag=ERR, imm=1
@@ -84,7 +84,7 @@ def test_micro_instruction_ldi_flag_round_trip():
 
 def test_micro_instruction_ldc_immediate_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode LDC AL, CONST, PI_F32 (imm=0)
@@ -101,13 +101,13 @@ def test_micro_instruction_ldc_immediate_round_trip():
     assert decoded.op == MicroOp.LDC
     assert decoded.dst == Reg.AL
     assert decoded.src == FpuTable.CONST
-    assert decoded.src1 == Reg.IMM
+    assert decoded.src1 == Reg.NONE
     assert imm_reg.read_int() == FpuConst.PI_F32
 
 
 def test_micro_instruction_ldc_dynamic_reg_round_trip():
     clock = Clock()
-    instr_reg = Register(name=Reg.INSTR, size_in_bits=21, clock=clock)
+    instr_reg = Register(name=Reg.INSTR, size_in_bits=22, clock=clock)
     imm_reg = Register(name=Reg.IMM, size_in_bits=10, clock=clock)
 
     # Encode LDC AH, SQRT, C
@@ -128,13 +128,14 @@ def test_micro_instruction_ldc_dynamic_reg_round_trip():
 
 
 def test_micro_instruction_to_bytes_little_endian():
-    # ADD AL, BL (W=0, DST=AL(0), SRC=BL(6), SRC1=AL(0), IMM=0)
-    # Word: 0x000C0000
-    # Little-endian stores lowest byte at address 0: [0x00, 0x00, 0x0C, 0x00]
+    # ADD AL, BL (W=0, DST=AL(0), SRC=BL(6), SRC1=NONE(15), IMM=0)
+    # Word: (0 << 26) | (0 << 25) | (0 << 21) | (6 << 17) | (0 << 14) | (15 << 10) | 0
+    #     = 0x000C0000 | 0x00003C00 = 0x000C3C00
+    # Little-endian stores lowest byte at address 0: [0x00, 0x3C, 0x0C, 0x00]
     inst = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     raw = inst.to_bytes()
     assert len(raw) == 4
-    assert raw == bytes([0x00, 0x00, 0x0C, 0x00])
+    assert raw == bytes([0x00, 0x3C, 0x0C, 0x00])
 
 
 def test_micro_instruction_to_bytes_bit_fields():
@@ -145,19 +146,18 @@ def test_micro_instruction_to_bytes_bit_fields():
     # DST = Reg.NONE (15) -> 15 << 21 = 0x01E00000
     # SRC2 = Reg.NONE (15) -> 15 << 17 = 0x001E0000
     # FLAG_COND = UNDERFLOW (2) -> 2 << 14 = 0x00008000
-    # SRC1 = AL (0) -> 0 << 11 = 0
-    # RESERVED = 0 -> 0 << 10 = 0
+    # SRC1 = Reg.NONE (15) -> 15 << 10 = 0x00003C00
     # IMM = 42 -> 0x0000002A
-    # Sum = 0x65FE802A
-    # In little-endian: [0x2A, 0x80, 0xFE, 0x65]
+    # Sum = 0x65FEBC2A
+    # In little-endian: [0x2A, 0xBC, 0xFE, 0x65]
     inst = MicroInstruction(
         op=MicroOp.JNZ,
         w=IW.W32,
         flag=StatusFlag.UNDERFLOW,
         imm=42,
     )
-    assert inst.to_int() == 0x65FE802A
-    assert inst.to_bytes() == bytes([0x2A, 0x80, 0xFE, 0x65])
+    assert inst.to_int() == 0x65FEBC2A
+    assert inst.to_bytes() == bytes([0x2A, 0xBC, 0xFE, 0x65])
 
 
 def test_micro_instruction_to_bytes_three_operand_and_w64():
@@ -206,10 +206,7 @@ def test_micro_instruction_round_trip_bytes():
         assert decoded.w == orig.w
         assert decoded.dst == orig.dst
         assert decoded.src == orig.src
-        if orig.op == MicroOp.LDC and orig.src1 is Reg.NONE:
-            assert decoded.src1 == Reg.IMM
-        else:
-            assert decoded.src1 == orig.src1
+        assert decoded.src1 == orig.src1
         assert decoded.flag == orig.flag
         assert decoded.imm == (orig.imm & 0x3FF)
 

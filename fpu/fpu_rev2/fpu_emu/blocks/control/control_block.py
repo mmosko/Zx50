@@ -91,7 +91,7 @@ class ControlBlock(FunctionalBlock):
             JNZ branches if flag == 1 (flag is set / not zero).
             JZ branches if flag == 0 (flag is clear / zero).
         """
-        flag_to_test = instr.flag if instr.flag is not None else StatusFlag.ZERO
+        flag_to_test = instr.flag
         bit_is_set = self._inputs.status.is_bit_set(flag_to_test)
         if flag_to_test == StatusFlag.ZERO:
             return bit_is_set if instr.op == MicroOp.JZ else not bit_is_set

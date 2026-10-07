@@ -126,7 +126,7 @@ def test_registers_file():
     assert regs.c.size_in_bits == 6
     assert regs.status.size_in_bits == 8
     assert regs.upc.size_in_bits == 10
-    assert regs.instr.size_in_bits == 21
+    assert regs.instr.size_in_bits == 22
     assert regs.imm.size_in_bits == 10
 
 

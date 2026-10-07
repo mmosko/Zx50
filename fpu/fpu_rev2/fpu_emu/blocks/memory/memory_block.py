@@ -343,7 +343,7 @@ class MemoryBlock(FunctionalBlock):
         imm = self._inputs.hb_mux.read_int()
 
         if instr.dst is Reg.NONE:
-            flag = instr.flag if instr.flag is not None else StatusFlag.ZERO
+            flag = instr.flag
             bit_val = imm & 1
             mask = 1 << flag.value
 
