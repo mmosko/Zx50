@@ -375,40 +375,54 @@ Source (.fasm) + Opcode Table (.def)
 
 ### 8.1 CLI Invocation
 ```bash
-python -m fpu_asm microcode.fasm --opcodes user_opcodes.def -o fpu_rom.hex --bin fpu_rom.bin --sym fpu_rom.sym --map fpu_rom.map
+python -m fpu_asm -i microcode.fasm -o fpu_rom.bin -s fpu_rom.sym
+python -m fpu_asm -i microcode.fasm -o fpu_rom.py -s fpu_rom.sym
+python -m fpu_asm -i microcode.fasm -o fpu_rom.hex --pad 512
 ```
 
+CLI options:
+- `-i`, `--input`: Path to input microcode assembly file (.fasm or .asm).
+- `-o`, `--output`: Path to output file (.bin, .hex, or .py).
+- `-s`, `--sym`: Path to output symbol table report (.sym).
+- `-I`, `--include`: Additional include directories for `.include` directive resolution.
+- `--pad`: Pad output image with NOPs up to this number of 32-bit words (default: 512).
+- `--no-pad`: Do not pad with NOPs beyond highest assembled instruction address.
+- `--format`: Output format (`auto`, `bin`, `hex`, or `py`).
+
 ### 8.2 Generated Artifacts
-1. **`fpu_rom.hex`**: Verilog `$readmemh` ASCII hexadecimal file containing 512 (or 1024) 32-bit hex words for ModelSim, Icarus Verilog, and Lattice Diamond/Radiant EBR initialization.
-2. **`fpu_rom.bin`**: Raw binary file (4 bytes per word, little-endian).
-3. **`fpu_rom.sym`**: Combined symbol file containing all labels and the specialized opcode dispatch table.
-4. **`fpu_rom.map`**: Human-readable symbol map detailing:
-   - Base address and instruction count per `UserOpcode`.
-   - Shared subroutine entry points and sizes.
-   - Total EBR utilization percentage (e.g. `248 / 512 words (48.4%)`).
-5. **`fpu_rom.py`**: Python module exporting `MICROCODE_ROM = [0x..., ...]` for direct execution in `fpu_emu`.
+1. **`fpu_rom.bin`**: Raw binary file (4 bytes per word, little-endian).
+2. **`fpu_rom.hex`**: Verilog `$readmemh` ASCII hexadecimal file (one 8-digit hex word per line).
+3. **`fpu_rom.py`**: Python module exporting `fpu_ucode: List[MicroInstruction]` and `fpu_symbols: Dict[str, int]`:
+   ```python
+   fpu_ucode: List[MicroInstruction] = [
+       MicroInstruction(op=MicroOp.POP, dst=Reg.BL),
+       ...
+   ]
+
+   # Only needs to include the instruction line of the "User_" symbols, sort them when writing to the file.
+   fpu_symbols: Dict[str, int] = {
+       "User_ADD_I32": 43,
+       ...
+   }
+   ```
+4. **`fpu_rom.sym`**: Symbol table report separating `[USER_SYMBOLS]` and `[OTHER_SYMBOLS]`.
 
 ### 8.3 Symbol File (`.sym`) Format
-The `.sym` file contains a dedicated `[USER_OPCODES]` section specifically designed to initialize the EBR 7 dispatch memory, followed by all local and global labels:
+The `.sym` file groups all `User_*` symbols together in `[USER_SYMBOLS]` and other labels in `[OTHER_SYMBOLS]`, sorted within each section:
 
 ```ini
-[USER_OPCODES]
-; Opcode  Address  Name
-0x01      0x0010   User_Abs
-0x02      0x0014   User_Chs
-0x10      0x0040   User_AddF32
-0x11      0x008A   User_SubF32
+[USER_SYMBOLS]
+; Symbol                         Address  Line
+User_AddF32                      0x0000   0
+User_AddI32                      0x002B   43
+User_AddI64                      0x0034   52
+User_SubF32                      0x003F   63
 
-[SYMBOLS]
-; Address  Scope   Name
-0x0040     global  User_AddF32
-0x0052     local   .do_sub
-0x0054     local   .do_norm
-0x0060     local   .ret_a
-0x0064     local   .ret_b
-0x0070     global  .sub_align_f32
-0x0078     local   .swap_ops
-0x007E     local   .diff_exp
-0x0084     local   .shift_bl
+[OTHER_SYMBOLS]
+; Symbol                         Address  Line
+ADD_F32_16                       0x0010   16
+ADD_F32_19                       0x0013   19
+ADD_F32_RETURN_A                 0x002A   42
+NORMALIZE                        0x001D   29
 ```
 

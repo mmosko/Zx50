@@ -631,6 +631,7 @@ class Assembler:
         with open(grammar_path, "r") as f:
             self.parser = Lark(f.read(), parser="earley", propagate_positions=True)
         self.preprocessor = Preprocessor(include_paths=include_paths)
+        self.symbols: Dict[str, int] = {}
 
     def assemble_file(self, file_path: Union[str, Path]) -> List[Tuple[int, MicroInstruction]]:
         """Preprocesses and assembles a root .fasm file."""
@@ -669,6 +670,7 @@ class Assembler:
         # Pass 1: Collect symbols & addresses (top-down in source order)
         collector = Pass1SymbolCollector()
         collector.visit_topdown(tree)
+        self.symbols = dict(collector.symbols)
 
         # Pass 2: Encode instructions
         try:
