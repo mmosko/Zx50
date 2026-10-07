@@ -7,8 +7,8 @@ from fpu_emu.hardware.reg import Reg
 
 class StatusFlag(IntEnum):
     """Status register flag bit allocations (SystemDesign.md Section 2.1)."""
-    NONE = 0 # Used to encode an unused value
     ZERO = 0  # Bit 0: Zero flag (1 = Result is zero)
+    NONE = 0  # Used to encode an unused value / default flag
     ERR = 1  # Bit 1: Error flag (Division by zero, domain errors, stack traps)
     UNDERFLOW = 2  # Bit 2: Stack or floating-point underflow
     OVERFLOW = 3  # Bit 3: Stack, integer, or floating-point overflow

@@ -284,7 +284,7 @@ The FPU occupies host I/O base addresses `0x70` and `0x71` in the Z80 I/O map:
 | **`0x70`**   | Write     | `DATA_PUSH`   | Writes 1 byte to Top of Stack ($TOS$) on EBR Port A, auto-incrementing byte pointer $SP$.     |
 | **`0x70`**   | Read      | `DATA_POP`    | Reads 1 byte from Top of Stack ($TOS$) on EBR Port A, auto-decrementing byte pointer $SP$.    |
 | **`0x71`**   | Write     | `CMD_EXEC`    | Latches 8-bit user opcode to execution dispatcher, triggering the math core or batch queue.   |
-| **`0x71`**   | Read      | `STATUS`      | Returns 8-bit status flags (`BUSY`, `ZERO`, `SIGN`, `CARRY`, `OVERFLOW`, `UNDERFLOW`, `ERR`). |
+| **`0x71`**   | Read      | `STATUS`      | Returns 8-bit status flags (`BUSY`, `DIFF_SIGN`, `SIGN`, `CARRY`, `OVERFLOW`, `UNDERFLOW`, `ERR`, `ZERO`). |
 
 ### 5.1 Status Register Interface
 

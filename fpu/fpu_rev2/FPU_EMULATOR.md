@@ -86,7 +86,7 @@ All registers are encapsulated in a `RegisterFile` class:
 | `EA` | `bytearray(2)` | Working Exponent A (12-bit signed) |
 | `EB` | `bytearray(2)` | Working Exponent B (12-bit signed) |
 | `C`  | `bytearray(1)` | Loop / Shift Counter (6-bit, 0..63) |
-| `STATUS` | `bytearray(1)` | Status Register (`[BSY, Z, S, C, V, U, ERR, Res]`) |
+| `STATUS` | `bytearray(1)` | Status Register (`[BSY, D, S, C, V, U, ERR, Z]`) |
 | `SP` | `bytearray(1)` | Operand Stack Pointer (6-bit word address, 0..255 bytes) |
 | `OSP`| `bytearray(1)` | Operation Stack Pointer (5-bit command queue, 0..31 bytes) |
 | `UPC`| `bytearray(2)` | Microcode Program Counter (10-bit address, 0..1023) |

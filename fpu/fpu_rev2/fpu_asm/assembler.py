@@ -613,3 +613,7 @@ class Assembler:
 
         # Sort by line number (microcode address)
         return sorted(program_image, key=lambda item: item[0])
+
+    @classmethod
+    def strip(cls, input: List[Tuple[int, MicroInstruction]]) -> List[MicroInstruction]:
+        return [micro_inst for _, micro_inst in input]

@@ -39,11 +39,11 @@ The FPU coprocessor communicates with the Z80 host across standard Z80 I/O space
 The 8-bit `STATUS` register is the primary software interface for execution monitoring, branch testing, and error handling. It is returned on any I/O read of Port `0x71`:
 
 ```text
-+--------+--------+--------+--------+-----------+------------+-------+----------+
-| Bit 7  | Bit 6  | Bit 5  | Bit 4  | Bit 3     | Bit 2      | Bit 1 | Bit 0    |
-+--------+--------+--------+--------+-----------+------------+-------+----------+
-| BUSY   | ZERO   | SIGN   | CARRY  | OVERFLOW  | UNDERFLOW  | ERR   | Reserved |
-+--------+--------+--------+--------+-----------+------------+-------+----------+
++--------+--------+--------+--------+-----------+------------+-------+-------+
+| Bit 7  | Bit 6  | Bit 5  | Bit 4  | Bit 3     | Bit 2      | Bit 1 | Bit 0 |
++--------+--------+--------+--------+-----------+------------+-------+-------+
+| BUSY   | DIFF   | SIGN   | CARRY  | OVERFLOW  | UNDERFLOW  | ERR   | ZERO  |
++--------+--------+--------+--------+-----------+------------+-------+-------+
 ```
 
 ### Bit Definitions
@@ -52,8 +52,8 @@ The 8-bit `STATUS` register is the primary software interface for execution moni
   * `1`: Coprocessor is currently executing an operation (or processing a batch queue).
   * `0`: Coprocessor is idle and ready to accept new commands or data.
   * In non-blocking mode, the host polls this bit before issuing commands or reading results.
-* **`ZERO` (Bit 6, `ZF`):**
-  * Set to `1` if the result of the last arithmetic operation is zero ($R = 0$).
+* **`DIFF` (Bit 6, `DF` / `D`):**
+  * Set to `1` if operand signs differed during floating-point unpacking/comparison (`sign_A ^ sign_B`), indicating effective subtraction.
 * **`SIGN` (Bit 5, `SF`):**
   * Set to `1` if the result of the last operation is negative (MSB $= 1$).
 * **`CARRY` (Bit 4, `CF`):**
@@ -64,8 +64,8 @@ The 8-bit `STATUS` register is the primary software interface for execution moni
   * Set to `1` if floating-point math underflows to denormalized/zero, or a `POP` is attempted on an empty stack ($SP = 0$).
 * **`ERR` (Bit 1, `EF`):**
   * Master error flag. Set to `1` on illegal opcodes, division by zero, invalid floating-point domain errors (e.g. $\sqrt{-x}$ or $\ln(-x)$), or stack boundary violations.
-* **`Reserved` (Bit 0):**
-  * Always reads as `0`.
+* **`ZERO` (Bit 0, `ZF`):**
+  * Set to `1` if the result of the last arithmetic operation is zero ($R = 0$).
 
 ### Z80 Assembly Status Polling Pattern
 ```z80
@@ -241,13 +241,13 @@ After:  [ ... | (a + b)           ]  <-- SP (shrinks by 1 operand)
 ; Status register read from Port 0x71 returns:
 ;   STATUS = 0b0010_1000 (0x28)
 ;              |||| ||||
-;              |||| |||+--- Bit 0: Reserved (0)
+;              |||| |||+--- Bit 0: ZERO = 0 (Result non-zero)
 ;              |||| ||+---- Bit 1: ERR = 0 (No stack error)
 ;              |||| |+----- Bit 2: UNDERFLOW = 0
 ;              |||| +------ Bit 3: OVERFLOW = 1 (Signed int overflow)
 ;              |||+-------- Bit 4: CARRY = 0 (No unsigned carry out)
 ;              ||+--------- Bit 5: SIGN = 1 (Result bit 31 is 1)
-;              |+---------- Bit 6: ZERO = 0 (Result non-zero)
+;              |+---------- Bit 6: DIFF = 0
 ;              +----------- Bit 7: BUSY = 0 (Finished)
 ```
 
@@ -569,7 +569,7 @@ MANAGEMENT COMMANDS (RESET, MODES, BATCH EXECUTION)
 | **`CLEAR_STACK`**     | `0xC6` | `0b1100_0110` | Resets $SP \leftarrow 0$ and $OSP \leftarrow 0$, clears error flags |
 
 #### Status Flags & Side Effects
-* `RESET` and `CLEAR_STACK` force `STATUS` flags to `0b0100_0000` (`ZERO = 1`, all error flags cleared).
+* `RESET` and `CLEAR_STACK` force `STATUS` flags to `0b0000_0001` (`ZERO = 1`, all error flags cleared).
 * `EXEC_BATCH` asserts `BUSY = 1` and keeps it high continuously until the last operation in the batch executes `RET` (or until an error occurs), guaranteeing continuous wait-state generation in blocking mode.
 
 ---

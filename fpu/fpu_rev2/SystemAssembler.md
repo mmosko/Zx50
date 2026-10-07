@@ -110,13 +110,13 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 
 #### `FLAG_COND` Condition Select (3 bits `[16:14]`)
 ```text
-000: DIFF_SIGN    (DF == 1)
+000: ZERO         (ZF == 1 for JZ, ZF == 0 for JNZ)
 001: ERR          (EF == 1)
 010: UNDERFLOW    (UF == 1)
 011: OVERFLOW     (VF == 1)
 100: CARRY        (CF == 1)
 101: SIGN         (SF == 1)
-110: ZERO         (ZF == 1 for JZ, ZF == 0 for JNZ)
+110: DIFF_SIGN    (DF == 1)
 111: BUSY         (BF == 1)
 ```
 
