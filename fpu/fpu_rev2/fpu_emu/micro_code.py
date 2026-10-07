@@ -6,6 +6,7 @@ from fpu_emu.hardware.registers import Reg, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction, IW
 from fpu_emu.micro_opcodes import MicroOp
 from fpu_emu.rom.fpu_const_map import FpuCheb, FpuConst, FpuTable
+from fpu_emu.ucode import fpu_symbols, fpu_ucode
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -1166,6 +1167,14 @@ class MicroCode:
 
 
     @classmethod
+    def get_address(cls, opcode: UserOpcode) -> int:
+        """Returns the start UPC address for an opcode in the microcode ROM."""
+        sym = f"USER_{opcode.name}"
+        if sym in fpu_symbols:
+            return fpu_symbols[sym]
+        return 0
+
+    @classmethod
     @fpga_resource(
         approach="Paired Single-Port SysMEM EBR (EBR 5 & 6, 512x32) for runtime microcode execution store",
         luts=0,
@@ -1176,24 +1185,36 @@ class MicroCode:
         shared_unit="ebr_microcode_rom",
     )
     def get(cls, opcode: UserOpcode) -> List[MicroInstruction]:
+        sym = f"USER_{opcode.name}"
+        if sym in fpu_symbols:
+            return fpu_ucode
         if opcode not in cls._ucode:
             raise NotImplementedError(f"Microcode for opcode {opcode} not implemented")
         return cls._ucode[opcode]
 
     @classmethod
+    def instruction_count(cls, opcode: UserOpcode) -> int:
+        """Returns the number of micro-instructions in a given user opcode's sequence."""
+        sym = f"USER_{opcode.name}"
+        if sym in fpu_symbols:
+            sorted_addrs = sorted(fpu_symbols.values())
+            idx = sorted_addrs.index(fpu_symbols[sym])
+            if idx + 1 < len(sorted_addrs):
+                return sorted_addrs[idx + 1] - sorted_addrs[idx]
+            return len(fpu_ucode) - sorted_addrs[idx]
+        if opcode not in cls._ucode:
+            raise NotImplementedError(f"Microcode for opcode {opcode} not implemented")
+        return len(cls._ucode[opcode])
+
+    @classmethod
     def total_instructions(cls) -> int:
         """Returns the total number of micro-instructions across all defined opcodes."""
-        return sum(len(seq) for seq in cls._ucode.values())
+        return sum(cls.instruction_count(op) for op in cls._ucode.keys())
 
     @classmethod
     def remaining_capacity(cls) -> int:
         """Returns the remaining micro-instruction slots available in the 512-word EBR store."""
         return cls.MAX_MICRO_INSTRUCTIONS - cls.total_instructions()
-
-    @classmethod
-    def instruction_count(cls, opcode: UserOpcode) -> int:
-        """Returns the number of micro-instructions in a given user opcode's sequence."""
-        return len(cls.get(opcode))
 
     @classmethod
     def validate_budget(cls) -> None:

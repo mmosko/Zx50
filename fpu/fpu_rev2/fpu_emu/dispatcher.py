@@ -126,12 +126,9 @@ class Dispatcher:
         try:
             # TODO: We should burn the microcode into the EBR, but for now it is much easier to
             # be writing and reading micro instructions.
+            start_addr = MicroCode.get_address(user_opcode)
             ucode = MicroCode.get(user_opcode)
-
-            # In the FPGA, this needs to initialize the UPC to the full memory address of the microcode
-            # instruction.  For ease of use in Python, we use a small array per User opcode, so we always
-            # use 0
-            self._upc.write(0)
+            self._upc.write(start_addr)
             self._run(ucode)
         finally:
             if self._status.is_bit_set(StatusFlag.BUSY):
