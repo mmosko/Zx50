@@ -15,6 +15,7 @@ class MicroCode:
     # 512 is the true maximum, but we do not have an optimized assembly yet, so we have a relaxed max
     HARD_MAX_MICRO_INSTRUCTIONS: int = 1024
     SOFT_MAX_MICRO_INSTRUCTIONS: int = 512
+    MAX_MICRO_INSTRUCTIONS: int = HARD_MAX_MICRO_INSTRUCTIONS
 
     _ucode: Dict[UserOpcode, List[MicroInstruction]] = {
         # ADD_I32:

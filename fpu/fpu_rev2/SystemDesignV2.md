@@ -94,7 +94,7 @@ to figure out exactly what to do.
 - ADDER: various code for adder64 and the needed helpers to do 32 or 64-bit math
 - BOOTH_MUL: booth multiplier
 - LOGIC: and, or, xor, not, etc.
-- SHIFTER: ASR, ASL, LSL, LSR, etc.
+- SHIFTER: LSL, LSR, LZC
 - FLOAT: (if needed)
 - MEM: load, move, store, load constant
 - CONV: format conversion
@@ -152,15 +152,15 @@ BLK by the first three bits for the purpose of activating the AND walls.
 | Block              | Prefix | Notes                                                   |
 |--------------------|--------|---------------------------------------------------------|
 | Arithmetic / Adder | 0b000  | Shared AND wall with 0b001 (co-located fast math block) |
-| Math / Float / Div | 0b001  | Pack/Unpack, Hardware Divide/Mod, co-located with 0b000 |
-| Logic              | 0b010  | AND, OR, XOR, ABS, CHS, NOT                             |
+| Math / Float / Div | 0b001  | Pack/Unpack, Hardware Multiply/Divide, co-located 0b000  |
+| Logic              | 0b010  | AND, OR, XOR, FABS, FCHS, NOT                           |
 | Ctrl               | 0b011  | Branch, Call, Return, Trap, Halt                        |
 | Mem                | 0b100  | Stack PUSH/POP, Internal RAM load/store                 |
 | Mem (User)         | 0b101  | User storage load/store                                 |
-| Shifter            | 0b110  | LSL, LSR, ASL, ASR, RRC, RLC, LZC                       |
+| Shifter            | 0b110  | LSL, LSR, LZC                                           |
 | Reserved           | 0b111  | Reserved for expansion                                  |
 
-A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[20:17]` (`src`), `HB_BUS` MUX, and
+A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[20:17]` (`src2`), `HB_BUS` MUX, and
 `BLK_RES_SEL` write-back routing.
 
 To save FPGA logic and routing resources, the `HA_BUS` multiplexer physically supports only the first 6 sources
@@ -201,7 +201,7 @@ The exception are the EXP_ADD and EXP_SUB which use the EA and EB. But they stil
 Need to add columns for STATUS register effects too.
 
 A `DST`, `HA`, or `HB` specified as a specific register is fixed to only that register. It is encoded in the instruction
-as normal, but cannot vary. A value of `src` or `dst` can be any valid value (i.e. `HA` can only select a limited number
+as normal, but cannot vary. A value of `src1`, `src2`, or `dst` can be any valid value (i.e. `HA` can only select a limited number
 of sources).
 
 The W flag is impled by the assembly mnemonics, e.g. `ADD AX, BX` is implied 64-bit.
@@ -213,57 +213,56 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | ADD dst, src2           | 0b000_000 | 0/1   | dst     | dst    | src2   | `dst <- dst + src2`                     | sets ZF, SF, CF, VF                   |
 | ADD dst, src1, src2     | 0b000_000 | 0/1   | dst     | src1   | src2   | `dst <- src1 + src2`                    | sets ZF, SF, CF, VF                   |
 | ADC dst, src2           | 0b000_001 | 0/1   | dst     | dst    | src2   | `dst <- dst + src2 + CF`                | sets ZF, SF, CF, VF                   |
+| ADC dst, src1, src2     | 0b000_001 | 0/1   | dst     | src1   | src2   | `dst <- src1 + src2 + CF`               | sets ZF, SF, CF, VF                   |
 | SUB dst, src2           | 0b000_010 | 0/1   | dst     | dst    | src2   | `dst <- dst - src2`                     | sets ZF, SF, CF, VF                   |
+| SUB dst, src1, src2     | 0b000_010 | 0/1   | dst     | src1   | src2   | `dst <- src1 - src2`                    | sets ZF, SF, CF, VF                   |
 | SBB dst, src2           | 0b000_011 | 0/1   | dst     | dst    | src2   | `dst <- dst - src2 - CF`                | sets ZF, SF, CF, VF                   |
-| CMP dst, src2           | 0b000_100 | 0/1   | NONE    | dst    | src2   | `dst - src` (updates flags)             | sets ZF, SF, CF, VF                   |
-| CMP dst, src1, src2     | 0b000_100 | 0/1   | NONE    | src1   | src2   | `src1 - src2` (updates flags)           | sets ZF, SF, CF, VF                   |
-| EXP_ADD EA, src2        | 0b000_101 | 0     | EA      | EA     | src2   | `EA <- EA + EB` or immediate            | sets ZF, SF, VF (>1023), UF (<-1022)  |
-| EXP_ADD dst, src1, src2 | 0b000_101 | 0     | dst     | src1   | src2   | `EA <- EA + EB` or immediate            | sets ZF, SF, VF (>1023), UF (<-1022)  |
-| EXP_SUB EA, src2        | 0b000_110 | 0     | EA      | EA     | src    | `EA <- EA - src2` or immediate          | sets ZF, SF, VF (>1023), UF (<-1022)  |
+| SBB dst, src1, src2     | 0b000_011 | 0/1   | dst     | src1   | src2   | `dst <- src1 - src2 - CF`               | sets ZF, SF, CF, VF                   |
+| CMP src1, src2          | 0b000_100 | 0/1   | NONE    | src1   | src2   | `src1 - src2` (updates flags)           | sets ZF, SF, CF, VF                   |
+| EXP_ADD dst, src2       | 0b000_101 | 0     | dst     | dst    | src2   | `dst <- dst + src2` or immediate        | sets ZF, SF, VF (>1023), UF (<-1022)  |
+| EXP_ADD dst, src1, src2 | 0b000_101 | 0     | dst     | src1   | src2   | `dst <- src1 + src2` or immediate       | sets ZF, SF, VF (>1023), UF (<-1022)  |
+| EXP_SUB dst, src2       | 0b000_110 | 0     | dst     | dst    | src2   | `dst <- dst - src2` or immediate        | sets ZF, SF, VF (>1023), UF (<-1022)  |
 | EXP_SUB dst, src1, src2 | 0b000_110 | 0     | dst     | src1   | src2   | `dst <- src1 - src2` or immediate       | sets ZF, SF, VF (>1023), UF (<-1022)  |
-| MOD dst, src            | 0b000_111 | 0/1   | dst     | dst    | src    | `dst <- dst % src` (remainder)          | sets ZF, SF, VF, ERR (on div-by-zero) |
-| PACK dst, exp           | 0b001_000 | 0/1   | dst     | exp    | dst    | `dst <- dst & exp & sign`               | sets ZF, SF, VF, UF                   |
-| UNPACK dst, exp         | 0b001_001 | 0/1   | dst     | exp    | dst    | exp <- dst.exp, dst <- mantissa         | sets ZF, SF, DF (sign_A ^ sign_B)     |
-| MUL dst, src            | 0b001_010 | 0/1   | dst     | dst    | src    | `dst <- dst * src` (Booth mul)          | sets ZF, SF, VF                       |
-| DIV dst, src            | 0b001_011 | 0/1   | dst     | dst    | src    | `dst <- dst / src`, DL/DX <- rem        | sets ZF, SF, VF, ERR (on div-by-zero) |
+| PACK dst, src1          | 0b001_000 | 0/1   | dst     | src1   | dst    | `dst <- dst & src1 & sign`              | sets ZF, SF, VF, UF                   |
+| UNPACK dst, src1        | 0b001_001 | 0/1   | dst     | src1   | dst    | `src1 <- dst.exp, dst <- mantissa`      | sets ZF, SF, DF (sign_A ^ sign_B)     |
+| MUL dst, src2           | 0b001_010 | 0/1   | dst     | dst    | src2   | `dst <- dst * src2` (signed Booth mul)  | sets ZF, SF, VF                       |
+| DIV dst, src2           | 0b001_011 | 0/1   | dst     | dst    | src2   | `dst <- dst / src2`, DL/DX <- rem       | sets ZF, SF, VF, ERR (on div-by-zero) |
+| MULU dst, src2          | 0b001_110 | 0/1   | dst     | dst    | src2   | `dst <- dst * src2` (unsigned Booth mul)| sets ZF, SF, VF                       |
+| DIVU dst, src2          | 0b001_111 | 0/1   | dst     | dst    | src2   | `dst <- dst / src2`, DL/DX <- rem       | sets ZF, SF, VF, ERR (on div-by-zero) |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
-| AND dst, src2            | 0b010_000 | 0/1   | dst     | dst    | src2    | `dst <- dst & src2`                      | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| AND dst, src1, src2            | 0b010_000 | 0/1   | dst     | src1    | src2    | `dst <- src1 & src2`                      | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| OR dst, src2             | 0b010_001 | 0/1   | dst     | dst    | src2    | `dst <- dst \| src2`                     | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| OR dst, src1, src2             | 0b010_001 | 0/1   | dst     | src1    | src2    | `dst <- src1 \| src2`                     | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| XOR dst, src2            | 0b010_010 | 0/1   | dst     | dst    | src2    | `dst <- dst  ^ src2`                     | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| XOR dst, src1, src2            | 0b010_010 | 0/1   | dst     | src1    | src2    | `dst <- src1  ^ src2`                     | sets ZF, SF, clears CF <- 0, VF <- 0  |
-| ABS dst                 | 0b010_011 | 0/1   | dst     | n/a    | dst    | absolute value                          | sets ZF, clears SF <- 0               |
-| CHS dst                 | 0b010_100 | 0/1   | dst     | n/a    | dst    | change sign                             | sets SF <- ~SF                        |
+| AND dst, src2           | 0b010_000 | 0/1   | dst     | dst    | src2   | `dst <- dst & src2`                     | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| AND dst, src1, src2     | 0b010_000 | 0/1   | dst     | src1   | src2   | `dst <- src1 & src2`                    | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| OR dst, src2            | 0b010_001 | 0/1   | dst     | dst    | src2   | `dst <- dst \| src2`                    | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| OR dst, src1, src2      | 0b010_001 | 0/1   | dst     | src1   | src2   | `dst <- src1 \| src2`                    | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| XOR dst, src2           | 0b010_010 | 0/1   | dst     | dst    | src2   | `dst <- dst  ^ src2`                    | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| XOR dst, src1, src2     | 0b010_010 | 0/1   | dst     | src1   | src2   | `dst <- src1  ^ src2`                    | sets ZF, SF, clears CF <- 0, VF <- 0  |
+| FABS dst                | 0b010_011 | 0/1   | dst     | n/a    | dst    | absolute value                          | sets ZF, clears SF <- 0               |
+| FCHS dst                | 0b010_100 | 0/1   | dst     | n/a    | dst    | change sign                             | sets SF <- ~SF                        |
 | NOT dst                 | 0b010_101 | 0/1   | dst     | n/a    | dst    | bitwise complement                      | sets ZF, SF                           |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
-| LSL dst\[, src\]        | 0b110_000 | 0/1   | dst     | src    | dst    | `dst <- dst << src` (C implied)         | sets ZF, SF, CF                       |
-| LSR dst\[, src\]        | 0b110_001 | 0/1   | dst     | src    | dst    | `dst <- dst >> src` (C implied)         | sets ZF, clears SF <- 0, sets CF      |
-| ASL dst\[, src\]        | 0b110_010 | 0/1   | dst     | src    | dst    | `dst <- dst << src` (C implied)         | sets ZF, SF, CF, VF                   |
-| ASR dst\[, src\]        | 0b110_011 | 0/1   | dst     | src    | dst    | `dst <- dst >> src` (C implied)         | sets ZF, SF, CF                       |
-| RRC dst                 | 0b110_100 | 0/1   | dst     | n/a    | dst    | circular rotate right                   | sets ZF, SF, CF                       |
-| RLC dst                 | 0b110_101 | 0/1   | dst     | n/a    | dst    | circular rotate left                    | sets ZF, SF, CF                       |
-| LZC dst, src            | 0b110_110 | 0/1   | dst     | n/a    | src    | `dst <- leading zero count of src`      | sets ZF (if src == 0)                 |
+| LSL dst\[, src1\]       | 0b110_000 | 0/1   | dst     | src1   | dst    | `dst <- dst << src1` (C implied)        | sets ZF, SF, CF                       |
+| LSR dst\[, src1\]       | 0b110_001 | 0/1   | dst     | src1   | dst    | `dst <- dst >> src1` (C implied)        | sets ZF, clears SF <- 0, sets CF      |
+| LZC dst, src2           | 0b110_110 | 0/1   | dst     | n/a    | src2   | `dst <- leading zero count of src2`     | sets ZF (if src2 == 0)                |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
-| PUSH src                | 0b100_000 | 0/1   | TOS     | n/a    | src    | `TOS <- src`, sp <- sp + W + 1          | sets VF, ERR (on stack overflow)      |
+| PUSH src2               | 0b100_000 | 0/1   | TOS     | n/a    | src2   | `TOS <- src2`, sp <- sp + W + 1         | sets VF, ERR (on stack overflow)      |
 | POP dst                 | 0b100_001 | 0/1   | dst     | n/a    | TOS    | `dst <- TOS`, sp <- sp - (W+1)          | sets UF, ERR (on stack underflow)     |
-| LDC dst, tbl, addr      | 0b100_010 | 0/1   | dst     | IMM    | n/a    | `dst <- [TBL_ADDR] + [addr]`            | none (flags unaffected)               |
-| LDI dst, imm            | 0b100_011 | 0/1   | dst     | IMM    | n/a    | `dst <- imm`                            | none (flags unaffected)               |
-| LDI flag, val           | 0b100_011 | 0     | NONE    | IMM    | n/a    | `status[flag] <- imm & 1`               | sets/clears selected flag (0 or 1)    |
+| LDC dst, tbl, addr      | 0b100_010 | 0/1   | dst     | tbl    | n/a    | `dst <- [TBL_ADDR] + [addr]`            | none (flags unaffected)               |
+| LDI dst, imm            | 0b100_011 | 0/1   | dst     | NONE   | IMM    | `dst <- imm`                            | none (flags unaffected)               |
+| LDI flag, val           | 0b100_011 | 0     | NONE    | NONE   | IMM    | `status[flag] <- imm & 1`               | sets/clears selected flag (0 or 1)    |
 | LD  dst, addr           | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- SCR_ADDR + [addr]`              | none (flags unaffected)               |
-| STO  addr, src          | 0b100_101 | 0/1   | IMM     | n/a    | src    | `SCR_ADDR + [addr] <- src`              | none (flags unaffected)               |
-| MOV dst, src            | 0b100_110 | 0/1   | dst     | n/a    | src    | `dst <- src`                            | none (flags unaffected)               |
-| SWAP dst, src           | 0b100_111 | 0/1   | dst     | n/a    | src    | `F_ <- src, src <- dst, dst <- F_`      | none (flags unaffected)               |
+| STO addr, src2          | 0b100_101 | 0/1   | NONE    | IMM    | src2   | `SCR_ADDR + [addr] <- src2`             | none (flags unaffected)               |
+| MOV dst, src2           | 0b100_110 | 0/1   | dst     | n/a    | src2   | `dst <- src2`                           | none (flags unaffected)               |
+| SWAP dst, src2          | 0b100_111 | 0/1   | dst     | n/a    | src2   | `F_ <- src2, src2 <- dst, dst <- F_`     | none (flags unaffected)               |
 | LDU dst, addr           | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- USER_ADDR + [addr]`             | none (flags unaffected)               |
-| STU addr, src           | 0b101_001 | 0/1   | dst     | IMM    | n/a    | `USER_ADDR + [addr] <- src`             | none (flags unaffected)               |
-| SSAV                    | 0b101_110 | 0     | n/a     | n/a    | n/a    | STATUS save                             | Stashes STATUS reg to shadow          |
-| SRES                    | 0b101_111 | 0     | n/a     | n/a    | n/a    | STATUS restore                          | Unstash STATUS from shadow            |
+| STU addr, src2          | 0b101_001 | 0/1   | NONE    | IMM    | src2   | `USER_ADDR + [addr] <- src2`            | none (flags unaffected)               |
+| SSAV                    | 0b101_110 | 0     | NONE    | n/a    | n/a    | STATUS save                             | Stashes STATUS reg to shadow          |
+| SRES                    | 0b101_111 | 0     | NONE    | n/a    | n/a    | STATUS restore                          | Unstash STATUS from shadow            |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
-| JMP addr                | 0b011_000 | 0     | UPC     | IMM    | n/a    | `upc <- addr`                           | none                                  |
-| JNZ \[src,\] addr       | 0b011_001 | 0     | UPC     | IMM    | n/a    | `upc <- addr` if !ZF or `src != 0`      | none                                  |
-| JZ \[src,\] addr        | 0b011_010 | 0     | UPC     | IMM    | n/a    | `upc <- addr` if ZF  or `src == 0`      | none                                  |
-| DJNZ addr               | 0b011_011 | 0     | UPC     | IMM    | n/a    | `dec C, upc <- addr` if !ZF             | sets ZF (from dec C)                  |
-| CALL addr               | 0b011_100 | 0     | UPC     | IMM    | n/a    | `ret <- upc, upc <- addr`               | none                                  |
+| JMP addr                | 0b011_000 | 0     | UPC     | n/a    | IMM    | `upc <- addr`                           | none                                  |
+| JNZ \[flag,\] addr      | 0b011_001 | 0     | UPC     | n/a    | IMM    | `upc <- addr` if flag != 0 (def: !ZF)   | none                                  |
+| JZ \[flag,\] addr       | 0b011_010 | 0     | UPC     | n/a    | IMM    | `upc <- addr` if flag == 0 (def: ZF)    | none                                  |
+| DJNZ addr               | 0b011_011 | 0     | UPC     | n/a    | IMM    | `dec C, upc <- addr` if !ZF             | sets ZF (from dec C)                  |
+| CALL addr               | 0b011_100 | 0     | UPC     | UPC    | IMM    | `ret <- upc + 1, upc <- addr`           | none                                  |
 | RET                     | 0b011_101 | 0     | UPC     | n/a    | n/a    | `upc <- ret`                            | none                                  |
 | NOP                     | 0b011_110 | 0     | NONE    | n/a    | n/a    | No operation (pipeline bubble)          | none (flags unaffected)               |
 | HALT                    | 0b011_111 | 0     | UPC     | n/a    | n/a    | end execution normally, pulse EXEC_DONE | clears BSY <- 0                       |

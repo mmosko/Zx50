@@ -33,13 +33,7 @@ class MicroOp(Enum):
     # SHIFTER (prefix 0b110)
     LSL = 0b110_000
     LSR = 0b110_001
-    ASL = 0b110_010
-    ASR = 0b110_011
-    ROL = 0b110_100
-    ROR = 0b110_101
     LZC = 0b110_110
-    RRC = 0b001_100
-    RLC = 0b001_101
     # ====================
     # MEMORY (prefix 0b100, 0b101)
     PUSH = 0b100_000

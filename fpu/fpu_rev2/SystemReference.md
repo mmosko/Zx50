@@ -27,7 +27,8 @@ are sources: `src1` and `src2`.   `src1` can be any of AL, AH, BL, BH, C, and an
 
 ```
 ================================================================================
-ADD dst, src / ADD AX, src — ADD REGISTER TO ACCUMULATOR
+ADD dst, src2 / ADD AX, src2 — ADD REGISTER TO ACCUMULATOR
+ADD dst, src1, src2 — ADD REGISTER TO REGISTER
 ================================================================================
 ```
 
@@ -47,19 +48,19 @@ ADD dst, src / ADD AX, src — ADD REGISTER TO ACCUMULATOR
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] + src [31:0]
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] + src2 [31:0]
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] + src_L [31:0], latch Carry_out
-    Cycle 2: AH [31:0] <- AH [31:0] + src_H [31:0] + Carry_in
+    Cycle 1: dst_L [31:0] <- (src1_L or dst_L) [31:0] + src2_L [31:0], latch Carry_out
+    Cycle 2: dst_H [31:0] <- (src1_H or dst_H) [31:0] + src2_H [31:0] + Carry_in
     UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1` in 3-operand form), `HB_MUX = src2`.
 
 #### Description
-Adds the contents of `src` to accumulator `dst` (`AL` or `AX`) using `alu_adder32` with carry chain. When `W = 1`, the operation executes across two consecutive cycles, adding the low halves (`AL + src_L`) in cycle 1 and the high halves with carry (`AH + src_H + C`) in cycle 2.
+Adds the contents of `src2` to accumulator `dst` (`AL` or `AX`), or adds `src1` and `src2` writing to `dst` in ternary form (`ADD dst, src1, src2`), using `alu_adder32` with carry chain. When `W = 1`, the operation executes across two consecutive cycles, adding the low halves in cycle 1 and the high halves with carry in cycle 2.
 
 #### Concrete Numeric Example
 ```text
@@ -76,16 +77,8 @@ After execution of ADD AL, BL:
 
 ```
 ================================================================================
-ADD dst, src1, src2  — ADD REGISTER TO REGISTER
-================================================================================
-```
-
-
----
-
-```
-================================================================================
-ADC dst, src / ADC AX, src — ADD WITH CARRY TO ACCUMULATOR
+ADC dst, src2 / ADC AX, src2 — ADD WITH CARRY TO ACCUMULATOR
+ADC dst, src1, src2 — ADD WITH CARRY REGISTER TO REGISTER
 ================================================================================
 ```
 
@@ -105,19 +98,19 @@ ADC dst, src / ADC AX, src — ADD WITH CARRY TO ACCUMULATOR
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] + src [31:0] + STATUS.C
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] + src2 [31:0] + STATUS.C
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] + src_L [31:0] + STATUS.C, latch Carry_out
-    Cycle 2: AH [31:0] <- AH [31:0] + src_H [31:0] + Carry_in
+    Cycle 1: dst_L [31:0] <- (src1_L or dst_L) [31:0] + src2_L [31:0] + STATUS.C, latch Carry_out
+    Cycle 2: dst_H [31:0] <- (src1_H or dst_H) [31:0] + src2_H [31:0] + Carry_in
     UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Adds the contents of `src` and the carry flag `C` to accumulator `dst`. Used primarily for multi-word synthesis beyond 64 bits.
+Adds the contents of `src2` and the carry flag `C` to accumulator `dst`, or adds `src1 + src2 + C` writing to `dst` in ternary form. Used primarily for multi-word synthesis beyond 64 bits.
 
 #### Concrete Numeric Example
 ```text
@@ -134,7 +127,8 @@ After execution of ADC AL, BL:
 
 ```
 ================================================================================
-SUB dst, src / SUB AX, src — SUBTRACT REGISTER FROM ACCUMULATOR
+SUB dst, src2 / SUB AX, src2 — SUBTRACT REGISTER FROM ACCUMULATOR
+SUB dst, src1, src2 — SUBTRACT REGISTER FROM REGISTER
 ================================================================================
 ```
 
@@ -145,28 +139,28 @@ SUB dst, src / SUB AX, src — SUBTRACT REGISTER FROM ACCUMULATOR
 |  -  |  X  |  X  |  X  |  X  |  -  |  -  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **`Z`**: Set to 1 if result is zero ($dst == src$); reset to 0 otherwise.
+* **`Z`**: Set to 1 if result is zero; reset to 0 otherwise.
 * **`S`**: Set to 1 if MSB of result is 1; reset to 0 otherwise.
-* **`C`**: Set to 1 if borrow occurred ($dst < src$ unsigned); reset to 0 otherwise.
+* **`C`**: Set to 1 if borrow occurred ($dst < src2$ or $src1 < src2$ unsigned); reset to 0 otherwise.
 * **`V`**: Set to 1 if signed two's-complement overflow occurred; reset to 0 otherwise.
 * **`U`, `ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] - src [31:0]
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] - src2 [31:0]
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] - src_L [31:0], latch Borrow_out
-    Cycle 2: AH [31:0] <- AH [31:0] - src_H [31:0] - Borrow_in
+    Cycle 1: dst_L [31:0] <- (src1_L or dst_L) [31:0] - src2_L [31:0], latch Borrow_out
+    Cycle 2: dst_H [31:0] <- (src1_H or dst_H) [31:0] - src2_H [31:0] - Borrow_in
     UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Subtracts `src` from `dst`. Evaluated as $dst + \overline{src} + 1$ using `alu_adder32` with subtract control asserted. In 64-bit mode (`W = 1`), subtraction proceeds across 2 cycles ($AL - src_L$, then $AH - src_H - \text{Borrow}$).
+Subtracts `src2` from `dst` (or computes $src1 - src2$ into `dst` in ternary form). Evaluated as $(src1\text{ or }dst) + \overline{src2} + 1$ using `alu_adder32` with subtract control asserted. In 64-bit mode (`W = 1`), subtraction proceeds across 2 cycles.
 
 #### Concrete Numeric Example
 ```text
@@ -183,7 +177,8 @@ After execution of SUB AL, BL:
 
 ```
 ================================================================================
-SBB dst, src / SBB AX, src — SUBTRACT WITH BORROW FROM ACCUMULATOR
+SBB dst, src2 / SBB AX, src2 — SUBTRACT WITH BORROW FROM ACCUMULATOR
+SBB dst, src1, src2 — SUBTRACT WITH BORROW REGISTER FROM REGISTER
 ================================================================================
 ```
 
@@ -203,19 +198,19 @@ SBB dst, src / SBB AX, src — SUBTRACT WITH BORROW FROM ACCUMULATOR
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] - src [31:0] - STATUS.C
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] - src2 [31:0] - STATUS.C
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] - src_L [31:0] - STATUS.C, latch Borrow_out
-    Cycle 2: AH [31:0] <- AH [31:0] - src_H [31:0] - Borrow_in
+    Cycle 1: dst_L [31:0] <- (src1_L or dst_L) [31:0] - src2_L [31:0] - STATUS.C, latch Borrow_out
+    Cycle 2: dst_H [31:0] <- (src1_H or dst_H) [31:0] - src2_H [31:0] - Borrow_in
     UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000011`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000011`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Subtracts `src` and incoming borrow `C` from accumulator `dst`.
+Subtracts `src2` and incoming borrow `C` from accumulator `dst` (or computes $src1 - src2 - C$ into `dst` in ternary form).
 
 #### Concrete Numeric Example
 ```text
@@ -232,7 +227,7 @@ After execution of SBB AL, BL:
 
 ```
 ================================================================================
-CMP dst, src / CMP AX, src — COMPARE REGISTER WITH ACCUMULATOR
+CMP src1, src2 — COMPARE TWO REGISTERS
 ================================================================================
 ```
 
@@ -243,24 +238,24 @@ CMP dst, src / CMP AX, src — COMPARE REGISTER WITH ACCUMULATOR
 |  -  |  X  |  X  |  X  |  X  |  -  |  -  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **`Z`**: Set to 1 if $dst == src$; reset to 0 otherwise.
-* **`S`**: Set to 1 if MSB of $(dst - src)$ is 1; reset to 0 otherwise.
-* **`C`**: Set to 1 if borrow occurred ($dst < src$ unsigned); reset to 0 otherwise.
+* **`Z`**: Set to 1 if $src1 == src2$; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of $(src1 - src2)$ is 1; reset to 0 otherwise.
+* **`C`**: Set to 1 if borrow occurred ($src1 < src2$ unsigned); reset to 0 otherwise.
 * **`V`**: Set to 1 if signed two's-complement overflow occurred; reset to 0 otherwise.
 * **`U`, `ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
-Discard (dst - src) -> RES_SEL = NONE (no register write)
-Update STATUS flags [6:3] <- {Z, S, C, V}
+Discard (src1 - src2) -> RES_SEL = NONE (no register write)
+Update STATUS flags: sets ZF and SF (and CF, VF)
 UPC <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = 0b1111` (`NONE`), `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 000100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = 0b1111` (`NONE`), `HA_MUX = src1`, `HB_MUX = src2`.
 
 #### Description
-Compares `dst` with `src` by computing $dst - src$ on `alu_adder32` and updating status flags `Z, S, C, V`. No register is written (`EXEC_WB` pulses with `RES_SEL = NONE`).
+Compares `src1` with `src2` by computing $src1 - src2$ on `alu_adder32` and updating status flags `Z` and `S` (along with `C` and `V`). No register is written (`EXEC_WB` pulses with `RES_SEL = NONE`).
 
 #### Concrete Numeric Example
 ```text
@@ -278,8 +273,8 @@ After execution of CMP AL, BL:
 
 ```
 ================================================================================
-EXP_ADD EA, src — EXPONENT 12-BIT ADDITION
-EXP_ADD dst, src1, src2 -- EXPONENT 12-BIT ADDITION register to register/immediate
+EXP_ADD dst, src2 / EXP_ADD EA, src2 — EXPONENT 12-BIT ADDITION
+EXP_ADD dst, src1, src2 — EXPONENT 12-BIT ADDITION (REGISTER TO REGISTER/IMMEDIATE)
 ================================================================================
 ```
 
@@ -293,18 +288,18 @@ EXP_ADD dst, src1, src2 -- EXPONENT 12-BIT ADDITION register to register/immedia
 * **`Z`**: Set to 1 if 12-bit result is zero; reset to 0 otherwise.
 * **`S`**: Set to 1 if bit 11 (sign bit of 12-bit signed exponent) is 1; reset to 0 otherwise.
 * **`C`**: Unaffected.
-* **`V`**: Set to 1 if exponent overflow occurred ($EA + src > +1023$); reset to 0 otherwise.
-* **`U`**: Set to 1 if exponent underflow occurred ($EA + src < -1022$); reset to 0 otherwise.
+* **`V`**: Set to 1 if exponent overflow occurred ($EA + src2 > +1023$); reset to 0 otherwise.
+* **`U`**: Set to 1 if exponent underflow occurred ($EA + src2 < -1022$); reset to 0 otherwise.
 * **`ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
-EA [11:0] <- (EA [11:0] + src [11:0]) & 0x0FFF
-UPC       <- UPC + 1
+dst [11:0] <- ((src1 or dst) [11:0] + src2 [11:0]) & 0x0FFF
+UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000101`. `W = 0` (always 1 cycle). `RES_SEL = EA`, `HA_MUX = EA`, `HB_MUX = src` (`EB` or `IMM`).
+`OPCODE = 000101`. `W = 0` (always 1 cycle). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2` (`EB` or `IMM`).
 
 #### Description
 Performs 12-bit signed addition on the exponent registers using `alu_exp12`. Automatically checks IEEE exponent limits ($\pm 1023$ / $\pm 1022$), asserting `VF` on overflow and `UF` on underflow.
@@ -324,8 +319,8 @@ After execution of EXP_ADD EA, EB:
 
 ```
 ================================================================================
-EXP_SUB EA, src — EXPONENT 12-BIT SUBTRACTION
-EXP_SUB dst, src1, src2 -- EXPONENT 12-BIT SUBTRACTION register to register/immediate
+EXP_SUB dst, src2 / EXP_SUB EA, src2 — EXPONENT 12-BIT SUBTRACTION
+EXP_SUB dst, src1, src2 — EXPONENT 12-BIT SUBTRACTION (REGISTER TO REGISTER/IMMEDIATE)
 ================================================================================
 ```
 
@@ -339,18 +334,18 @@ EXP_SUB dst, src1, src2 -- EXPONENT 12-BIT SUBTRACTION register to register/imme
 * **`Z`**: Set to 1 if 12-bit result is zero; reset to 0 otherwise.
 * **`S`**: Set to 1 if bit 11 is 1; reset to 0 otherwise.
 * **`C`**: Unaffected.
-* **`V`**: Set to 1 if exponent overflow occurred ($EA - src > +1023$); reset to 0 otherwise.
-* **`U`**: Set to 1 if exponent underflow occurred ($EA - src < -1022$); reset to 0 otherwise.
+* **`V`**: Set to 1 if exponent overflow occurred ($EA - src2 > +1023$); reset to 0 otherwise.
+* **`U`**: Set to 1 if exponent underflow occurred ($EA - src2 < -1022$); reset to 0 otherwise.
 * **`ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
-EA [11:0] <- (EA [11:0] - src [11:0]) & 0x0FFF
-UPC       <- UPC + 1
+dst [11:0] <- ((src1 or dst) [11:0] - src2 [11:0]) & 0x0FFF
+UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 000110`. `W = 0` (always 1 cycle). `RES_SEL = EA`, `HA_MUX = EA`, `HB_MUX = src` (`EB` or `IMM`).
+`OPCODE = 000110`. `W = 0` (always 1 cycle). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2` (`EB` or `IMM`).
 
 #### Description
 Performs 12-bit signed subtraction on the exponent registers using `alu_exp12`. Asserts `VF` on overflow and `UF` on underflow.
@@ -367,72 +362,11 @@ After execution of EXP_SUB EA, EB:
 
 ---
 
-```
-================================================================================
-MUL dst, src / MUL AX, src — MULTIPLY (RADIX-4 BOOTH MULTIPLIER)
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  X  |  X  |  0  |  X  |  -  |  -  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`Z`**: Set to 1 if entire product is zero; reset to 0 otherwise.
-* **`S`**: Set to 1 if MSB of product is 1; reset to 0 otherwise.
-* **`C`**: Always cleared to 0.
-* **`V`**: Set to 1 if product exceeds single-word capacity ($AH \neq 0$ for 32-bit, or $DX \neq 0$ for 64-bit); reset to 0 otherwise.
-* **`U`, `ERR`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-# Hardware Booth Multiplier Core (W = 0, 16 cycles):
-{AH [31:0], AL [31:0]} <- AL [31:0] * src [31:0]
-UPC                    <- UPC + 1
-```
-
-#### Instruction Word Format
-`OPCODE = 000111` (`MUL` / `MULU`). `W = 0` (32-bit $\times$ 32-bit $\to$ 64-bit product, 16 cycles). `RES_SEL = dst` (must be `AL` on `HA_MUX`), `HB_MUX = src`.
-* `MicroOp.MUL`: Signed two's-complement multiplication.
-* `MicroOp.MULU`: Unsigned multiplication.
-
-#### Description
-Performs Radix-4 Booth multiplication using the shared multiplier core co-located with the adder block. The engine computes 2 bits per cycle over 16 clock cycles, placing the full 64-bit product into `{AH, AL}`.
-
-* **Flag Behavior:**
-  - `VF` is asserted if the product cannot be represented within 32 bits (for signed `MUL`, when `AH` is not a sign-extension of `AL`; for unsigned `MULU`, when `AH != 0`).
-  - `ZF` is asserted if the full 64-bit product is zero.
-  - `SF` reflects MSB (bit 63) of the product.
-  - `CF` is cleared to 0.
-
-* **User Opcode Stack Semantics & Result Widths:**
-  - **`MUL_I32` ($32 \times 32 \to 32 + \text{VF}$):** Consumes two 32-bit integers from the stack, runs `MicroOp.MUL`, and pushes the 32-bit low product (`AL`) back onto the stack. `VF` is retained in the status register.
-  - **`MUL_I64` ($64 \times 64 \to 64 + \text{VF}$):** Consumes two 64-bit integers from the stack and orchestrates partial cross-products ($A_L \times B_L$, $A_L \times B_H$, $A_H \times B_L$) via microcode over 32-bit multiplier cycles, pushing a 64-bit product to the stack and asserting `VF` if the mathematical product exceeds 64 bits.
-  - **Widening Multiplication ($32 \times 32 \to 64$):** If the programmer requires a wide 64-bit product without truncation risk, operands are converted before multiplying:
-    - *Signed:* Convert operands with `CONV_I32_I64`, then execute `MUL_I64`.
-    - *Unsigned:* Convert operands with `CONV_U32_U64`, then execute `MUL_I64`.
-
-#### Concrete Numeric Example
-```text
-Suppose AL = 0x00010000 (65536), BL = 0x00020000 (131072), W = 0.
-After execution of MUL AL, BL (16 cycles):
-  Product = 65536 * 131072 = 8,589,934,592 = 0x00000002_00000000
-  AH = 0x00000002, AL = 0x00000000
-  Upper half AH != 0: sets OVERFLOW (V) to 1
-  Full 64-bit product is non-zero: sets ZERO (Z) to 0
-  MSB of product (bit 63) = 0: sets SIGN (S) to 0
-  Carry flag: cleared to 0
-```
-
----
-
-### Block 1 (0b001): Math / Float / Divider Block
+### Block 1 (0b001): Hardware Multiply / Divide / Math Block
 
 ```
-================================================================================
-PACK dst, exp — PACK IEEE-754 FLOATING-POINT NUMBER
+===============================================================================
+PACK dst, src1 — PACK IEEE-754 FLOATING-POINT NUMBER
 ================================================================================
 ```
 
@@ -446,25 +380,25 @@ PACK dst, exp — PACK IEEE-754 FLOATING-POINT NUMBER
 * **`Z`**: Set to 1 if packed float is zero; reset to 0 otherwise.
 * **`S`**: Set to 1 if sign bit of packed float is 1; reset to 0 otherwise.
 * **`C`**: Unaffected.
-* **`V`**: Set to 1 if exponent overflowed to $\pm\infty$ ($exp \ge \text{MAX\_EXP}$); reset to 0 otherwise.
-* **`U`**: Set to 1 if exponent underflowed ($exp \le 0$); reset to 0 otherwise.
+* **`V`**: Set to 1 if exponent overflowed to $\pm\infty$ ($src1 \ge \text{MAX\_EXP}$); reset to 0 otherwise.
+* **`U`**: Set to 1 if exponent underflowed ($src1 \le 0$); reset to 0 otherwise.
 * **`ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:  # Float32
-    dst [31:0] <- { STATUS.S, exp [7:0], dst [22:0] }
+    dst [31:0] <- { STATUS.S, src1 [7:0], dst [22:0] }
     UPC        <- UPC + 1
 else:       # Float64
-    {dst_H [31:0], dst_L [31:0]} <- { STATUS.S, exp [10:0], dst_H [19:0], dst_L [31:0] }
+    {dst_H [31:0], dst_L [31:0]} <- { STATUS.S, src1 [10:0], dst_H [19:0], dst_L [31:0] }
     UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 001000`. `W = 0` (Float32, 1 cycle) or `W = 1` (Float64, 2 cycles). `RES_SEL = dst`, `HA_MUX = exp`, `HB_MUX = dst`.
+`OPCODE = 001000`. `W = 0` (Float32, 1 cycle) or `W = 1` (Float64, 2 cycles). `RES_SEL = dst`, `HA_MUX = src1` (exponent register `EA` or `EB`), `HB_MUX = dst`.
 
 #### Description
-Assembles an IEEE-754 floating-point value from its components: sign bit from `STATUS.S`, biased exponent from `exp` (`EA`), and normalized mantissa from `dst` (`AL` or `AX`), stripping the implicit hidden bit. Asserts `VF` on exponent overflow (saturating to infinity) or `UF` on exponent underflow (flushing to signed zero).
+Assembles an IEEE-754 floating-point value from its components: sign bit from `STATUS.S`, biased exponent from `src1` (`EA` or `EB`), and normalized mantissa from `dst` (`AL` or `AX`), stripping the implicit hidden bit. Asserts `VF` on exponent overflow (saturating to infinity) or `UF` on exponent underflow (flushing to signed zero).
 
 #### Concrete Numeric Example
 ```text
@@ -480,7 +414,7 @@ After execution of PACK AL, EA (W = 0):
 
 ```
 ================================================================================
-UNPACK dst, exp — UNPACK IEEE-754 FLOATING-POINT NUMBER
+UNPACK dst, src1 — UNPACK IEEE-754 FLOATING-POINT NUMBER
 ================================================================================
 ```
 
@@ -499,25 +433,25 @@ UNPACK dst, exp — UNPACK IEEE-754 FLOATING-POINT NUMBER
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:  # Float32
-    exp [11:0] <- zero_extend(dst [30:23])
-    dst [31:0] <- { 8'b0, 1'b1, dst [22:0] }  # restore hidden bit
-    STATUS.D   <- STATUS.S ^ dst [31]
-    STATUS.S   <- dst [31]
-    UPC        <- UPC + 1
+    src1 [11:0] <- zero_extend(dst [30:23])
+    dst [31:0]  <- { 8'b0, 1'b1, dst [22:0] }  # restore hidden bit
+    STATUS.D    <- STATUS.S ^ dst [31]
+    STATUS.S    <- dst [31]
+    UPC         <- UPC + 1
 else:       # Float64
-    exp [11:0] <- zero_extend(dst_H [30:20])
+    src1 [11:0]  <- zero_extend(dst_H [30:20])
     dst_H [31:0] <- { 11'b0, 1'b1, dst_H [19:0] }
     # dst_L remains unchanged
-    STATUS.D   <- STATUS.S ^ dst_H [31]
-    STATUS.S   <- dst_H [31]
-    UPC        <- UPC + 1
+    STATUS.D     <- STATUS.S ^ dst_H [31]
+    STATUS.S     <- dst_H [31]
+    UPC          <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 001001`. `W = 0` (Float32) or `W = 1` (Float64). `RES_SEL = dst`, `HA_MUX = exp`, `HB_MUX = dst`.
+`OPCODE = 001001`. `W = 0` (Float32) or `W = 1` (Float64). `RES_SEL = dst`, `HA_MUX = src1` (exponent register `EA` or `EB`), `HB_MUX = dst`.
 
 #### Description
-Splits an IEEE-754 floating-point number into its constituent fields: extracts biased exponent into `exp` (`EA` or `EB`), inserts the hidden bit into `dst` mantissa, updates `STATUS.S` with operand sign, and calculates `DIFF_SIGN` (`STATUS.D = sign_A ^ sign_B`) to steer downstream addition/subtraction.
+Splits an IEEE-754 floating-point number into its constituent fields: extracts biased exponent into `src1` (`EA` or `EB`), inserts the hidden bit into `dst` mantissa, updates `STATUS.S` with operand sign, and calculates `DIFF_SIGN` (`STATUS.D = sign_A ^ sign_B`) to steer downstream addition/subtraction.
 
 #### Concrete Numeric Example
 ```text
@@ -534,7 +468,55 @@ After execution of UNPACK AL, EA (W = 0):
 
 ```
 ================================================================================
-DIV dst, src / DIV AX, src — INTEGER DIVISION
+MUL dst, src2 / MUL AX, src2 — SIGNED MULTIPLY (RADIX-4 BOOTH MULTIPLIER)
+================================================================================
+```
+
+#### Status Flags Affected
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  X  |  X  |  0  |  X  |  -  |  -  |  -  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **`Z`**: Set to 1 if entire product is zero; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of product is 1; reset to 0 otherwise.
+* **`C`**: Always cleared to 0.
+* **`V`**: Set to 1 if product exceeds single-word capacity ($AH \neq 0$ for 32-bit, or when high half is not sign extension of low half); reset to 0 otherwise.
+* **`U`, `ERR`, `D`**: Unaffected.
+
+#### Register Transfer & Datapath Flow
+```text
+# Hardware Booth Multiplier Core (W = 0, 16 cycles):
+{AH [31:0], AL [31:0]} <- AL [31:0] * src2 [31:0]  (signed)
+UPC                    <- UPC + 1
+```
+
+#### Instruction Word Format
+`OPCODE = 001010`. `W = 0` (32-bit $\times$ 32-bit $\to$ 64-bit product, 16 cycles). `RES_SEL = dst` (must be `AL`), `HA_MUX = dst`, `HB_MUX = src2`.
+
+#### Description
+Performs signed Radix-4 Booth multiplication using the shared multiplier core co-located with the arithmetic block. The engine computes 2 bits per cycle over 16 clock cycles, placing the full 64-bit product into `{AH, AL}`.
+- Cycle 15: Writes low word to `AL`.
+- Cycle 16: Writes high word to `AH` and commits status flags `Z, S, C=0, V`.
+
+#### Concrete Numeric Example
+```text
+Suppose AL = 0x00010000 (65536), BL = 0x00020000 (131072), W = 0.
+After execution of MUL AL, BL (16 cycles):
+  Product = 65536 * 131072 = 8,589,934,592 = 0x00000002_00000000
+  AH = 0x00000002, AL = 0x00000000
+  Upper half AH != 0: sets OVERFLOW (V) to 1
+  Full 64-bit product is non-zero: sets ZERO (Z) to 0
+  MSB of product (bit 63) = 0: sets SIGN (S) to 0
+  Carry flag: cleared to 0
+```
+
+---
+
+```
+================================================================================
+DIV dst, src2 / DIV AX, src2 — SIGNED INTEGER DIVISION
 ================================================================================
 ```
 
@@ -549,29 +531,31 @@ DIV dst, src / DIV AX, src — INTEGER DIVISION
 * **`S`**: Set to 1 if MSB of quotient is 1; reset to 0 otherwise.
 * **`C`, `U`, `D`**: Unaffected.
 * **`V`**: Set to 1 on divide-by-zero or signed overflow (`0x80000000 / -1`); reset to 0 otherwise.
-* **`ERR`**: Set to 1 on divide-by-zero ($src == 0$); reset to 0 otherwise.
+* **`ERR`**: Set to 1 on divide-by-zero ($src2 == 0$); reset to 0 otherwise.
 
 #### Register Transfer & Datapath Flow
 ```text
-if src == 0:
+if src2 == 0:
     STATUS.ERR <- 1
     STATUS.V   <- 1
     UPC        <- UPC + 1
 elif W == 0:  # 32-bit divide (32 cycles)
-    AL [31:0] <- AL [31:0] / src [31:0]  (quotient)
-    DL [31:0] <- AL [31:0] % src [31:0]  (remainder)
+    AL [31:0] <- AL [31:0] / src2 [31:0]  (signed quotient)
+    DL [31:0] <- AL [31:0] % src2 [31:0]  (remainder)
     UPC       <- UPC + 1
-else:         # 64-bit divide (64 cycles)
-    AX [63:0] <- AX [63:0] / src [63:0]  (quotient)
-    DX [63:0] <- AX [63:0] % src [63:0]  (remainder)
+else:         # 64-bit divide (64 cycles via microcode)
+    AX [63:0] <- AX [63:0] / src2 [63:0]  (signed quotient)
+    DX [63:0] <- AX [63:0] % src2 [63:0]  (remainder)
     UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 001010`. `W = 0` (32-bit, 32 cycles) or `W = 1` (64-bit, 64 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 001011`. `W = 0` (32-bit, 32 cycles) or `W = 1` (64-bit). `RES_SEL = dst` (must be `AL`), `HA_MUX = dst`, `HB_MUX = src2`.
 
 #### Description
-Performs integer division of `dst` by `src` using a multi-cycle non-restoring divider engine co-located in the arithmetic block. Produces both quotient (written back to `dst`) and remainder (latched into `DL` or `DX`). If `src == 0`, the operation aborts without modifying `dst` or `DL`, asserting `ERR = 1` and `V = 1`.
+Performs signed integer division of `dst` by `src2` using a multi-cycle non-restoring divider engine co-located in the arithmetic block. Produces both signed quotient (written to `dst`, `AL`) and signed remainder (latched into `DL`). If `src2 == 0`, the operation aborts without modifying `dst` or `DL`, asserting `ERR = 1` and `V = 1`.
+- Cycle 31: Writes quotient to `AL`.
+- Cycle 32: Writes remainder to `DL` and commits status flags.
 
 #### Concrete Numeric Example
 ```text
@@ -588,7 +572,53 @@ After execution of DIV AL, BL (32 cycles):
 
 ```
 ================================================================================
-MOD dst, src / MOD AX, src — INTEGER MODULO / REMAINDER
+MULU dst, src2 / MULU AX, src2 — UNSIGNED MULTIPLY (RADIX-4 BOOTH MULTIPLIER)
+================================================================================
+```
+
+#### Status Flags Affected
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  X  |  X  |  0  |  X  |  -  |  -  |  -  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **`Z`**: Set to 1 if entire 64-bit product is zero; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of product (bit 63) is 1; reset to 0 otherwise.
+* **`C`**: Always cleared to 0.
+* **`V`**: Set to 1 if product exceeds single-word capacity ($AH \neq 0$); reset to 0 otherwise.
+* **`U`, `ERR`, `D`**: Unaffected.
+
+#### Register Transfer & Datapath Flow
+```text
+# Hardware Booth Multiplier Core (W = 0, 16 cycles):
+{AH [31:0], AL [31:0]} <- AL [31:0] * src2 [31:0]  (unsigned)
+UPC                    <- UPC + 1
+```
+
+#### Instruction Word Format
+`OPCODE = 001110`. `W = 0` (32-bit $\times$ 32-bit $\to$ 64-bit product, 16 cycles). `RES_SEL = dst` (must be `AL`), `HA_MUX = dst`, `HB_MUX = src2`.
+
+#### Description
+Performs unsigned Radix-4 Booth multiplication using the shared multiplier core. Operates across 16 cycles, writing low word product to `AL` in cycle 15, high word to `AH` in cycle 16, and committing status flags. `VF` is asserted if `AH != 0`.
+
+#### Concrete Numeric Example
+```text
+Suppose AL = 0x80000000, BL = 0x00000002, W = 0.
+After execution of MULU AL, BL (16 cycles):
+  Product = 0x80000000 * 2 = 0x00000001_00000000
+  AH = 0x00000001, AL = 0x00000000
+  Upper half AH != 0: sets OVERFLOW (V) to 1
+  Full 64-bit product non-zero: sets ZERO (Z) to 0
+  MSB (bit 63) = 0: sets SIGN (S) to 0
+  Carry flag: cleared to 0
+```
+
+---
+
+```
+================================================================================
+DIVU dst, src2 / DIVU AX, src2 — UNSIGNED INTEGER DIVISION
 ================================================================================
 ```
 
@@ -599,39 +629,44 @@ MOD dst, src / MOD AX, src — INTEGER MODULO / REMAINDER
 |  -  |  X  |  X  |  -  |  X  |  -  |  X  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **`Z`**: Set to 1 if remainder is zero; reset to 0 otherwise.
-* **`S`**: Set to 1 if MSB of remainder is 1; reset to 0 otherwise.
+* **`Z`**: Set to 1 if quotient is zero; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of quotient is 1; reset to 0 otherwise.
 * **`C`, `U`, `D`**: Unaffected.
 * **`V`**: Set to 1 on divide-by-zero; reset to 0 otherwise.
-* **`ERR`**: Set to 1 on divide-by-zero ($src == 0$); reset to 0 otherwise.
+* **`ERR`**: Set to 1 on divide-by-zero ($src2 == 0$); reset to 0 otherwise.
 
 #### Register Transfer & Datapath Flow
 ```text
-if src == 0:
+if src2 == 0:
     STATUS.ERR <- 1
     STATUS.V   <- 1
     UPC        <- UPC + 1
-elif W == 0:  # 32-bit modulo (32 cycles)
-    dst [31:0] <- dst [31:0] % src [31:0]
-    UPC        <- UPC + 1
-else:         # 64-bit modulo (64 cycles)
-    dst [63:0] <- dst [63:0] % src [63:0]
-    UPC        <- UPC + 1
+elif W == 0:  # 32-bit divide (32 cycles)
+    AL [31:0] <- AL [31:0] / src2 [31:0]  (unsigned quotient)
+    DL [31:0] <- AL [31:0] % src2 [31:0]  (unsigned remainder)
+    UPC       <- UPC + 1
+else:         # 64-bit divide (64 cycles via microcode)
+    AX [63:0] <- AX [63:0] / src2 [63:0]  (unsigned quotient)
+    DX [63:0] <- AX [63:0] % src2 [63:0]  (unsigned remainder)
+    UPC       <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 001011`. `W = 0` (32-bit, 32 cycles) or `W = 1` (64-bit, 64 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 001111`. `W = 0` (32-bit, 32 cycles) or `W = 1` (64-bit). `RES_SEL = dst` (must be `AL`), `HA_MUX = dst`, `HB_MUX = src2`.
 
 #### Description
-Returns the remainder of dividing `dst` by `src`, writing the remainder directly to `dst`. If `src == 0`, asserts `ERR = 1` and `V = 1`.
+Performs unsigned integer division of `dst` by `src2` using the non-restoring divider engine. Produces unsigned quotient in `dst` (`AL`) and unsigned remainder in `DL`. If `src2 == 0`, aborts without modifying `AL` or `DL`, setting `ERR = 1` and `V = 1`.
+- Cycle 31: Writes quotient to `AL`.
+- Cycle 32: Writes remainder to `DL` and commits status flags.
 
 #### Concrete Numeric Example
 ```text
 Suppose AL = 0x00000017 (23), BL = 0x00000005 (5), W = 0.
-After execution of MOD AL, BL:
-  AL <- 23 % 5 = 3 = 0x00000003
-  Non-zero remainder: sets ZERO (Z) to 0
-  Positive remainder: sets SIGN (S) to 0
+After execution of DIVU AL, BL (32 cycles):
+  Quotient: 23 / 5 = 4 -> AL = 0x00000004
+  Remainder: 23 % 5 = 3 -> DL = 0x00000003
+  Non-zero quotient: sets ZERO (Z) to 0
+  Positive quotient: sets SIGN (S) to 0
   Valid division: sets OVERFLOW (V) to 0, ERR to 0
 ```
 
@@ -641,7 +676,7 @@ After execution of MOD AL, BL:
 
 ```
 ================================================================================
-AND dst, src / AND AX, src — BITWISE LOGICAL AND
+AND dst, src2 / AND AX, src2 — BITWISE LOGICAL AND
 AND dst, src1, src2  — BITWISE LOGICAL AND (dst <- src1 & src2)
 ================================================================================
 ```
@@ -662,19 +697,19 @@ AND dst, src1, src2  — BITWISE LOGICAL AND (dst <- src1 & src2)
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] & src [31:0]
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] & src2 [31:0]
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] & src_L [31:0]
-    Cycle 2: AH [31:0] <- AH [31:0] & src_H [31:0]
-    UPC       <- UPC + 1
+    Cycle 1: dst_L [31:0] <- (src1 or dst)_L [31:0] & src2_L [31:0]
+    Cycle 2: dst_H [31:0] <- (src1 or dst)_H [31:0] & src2_H [31:0]
+    UPC                   <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 010000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 010000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Performs bitwise logical AND between `dst` and `src`. Always resets `C` and `V` to 0.
+Performs bitwise logical AND between `(src1 or dst)` and `src2`. Always resets `C` and `V` to 0.
 
 #### Concrete Numeric Example
 ```text
@@ -690,7 +725,7 @@ After execution of AND AL, BL:
 
 ```
 ================================================================================
-OR dst, src / OR AX, src — BITWISE LOGICAL OR
+OR dst, src2 / OR AX, src2 — BITWISE LOGICAL OR
 OR dst, src1, src2  — BITWISE LOGICAL OR (dst <- src1 | src2)
 ================================================================================
 ```
@@ -711,19 +746,19 @@ OR dst, src1, src2  — BITWISE LOGICAL OR (dst <- src1 | src2)
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] | src [31:0]
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] | src2 [31:0]
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] | src_L [31:0]
-    Cycle 2: AH [31:0] <- AH [31:0] | src_H [31:0]
-    UPC       <- UPC + 1
+    Cycle 1: dst_L [31:0] <- (src1 or dst)_L [31:0] | src2_L [31:0]
+    Cycle 2: dst_H [31:0] <- (src1 or dst)_H [31:0] | src2_H [31:0]
+    UPC                   <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 010001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 010001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Performs bitwise logical OR between `dst` and `src`. Resets `C` and `V` to 0.
+Performs bitwise logical OR between `(src1 or dst)` and `src2`. Resets `C` and `V` to 0.
 
 #### Concrete Numeric Example
 ```text
@@ -739,7 +774,7 @@ After execution of OR AL, BL:
 
 ```
 ================================================================================
-XOR dst, src / XOR AX, src — BITWISE LOGICAL EXCLUSIVE OR
+XOR dst, src2 / XOR AX, src2 — BITWISE LOGICAL EXCLUSIVE OR
 XOR dst, src1, src2  — BITWISE LOGICAL XOR (dst <- src1 ^ src2)
 ================================================================================
 ```
@@ -760,19 +795,19 @@ XOR dst, src1, src2  — BITWISE LOGICAL XOR (dst <- src1 ^ src2)
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    AL [31:0] <- AL [31:0] ^ src [31:0]
-    UPC       <- UPC + 1
+    dst [31:0] <- (src1 or dst) [31:0] ^ src2 [31:0]
+    UPC        <- UPC + 1
 else:
-    Cycle 1: AL [31:0] <- AL [31:0] ^ src_L [31:0]
-    Cycle 2: AH [31:0] <- AH [31:0] ^ src_H [31:0]
-    UPC       <- UPC + 1
+    Cycle 1: dst_L [31:0] <- (src1 or dst)_L [31:0] ^ src2_L [31:0]
+    Cycle 2: dst_H [31:0] <- (src1 or dst)_H [31:0] ^ src2_H [31:0]
+    UPC                   <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 010010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src`.
+`OPCODE = 010010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = dst` (or `src1`), `HB_MUX = src2`.
 
 #### Description
-Performs bitwise logical XOR between `dst` and `src`. Clearing a register (`XOR AL, AL`) produces zero and asserts `ZF = 1`. Resets `C` and `V` to 0.
+Performs bitwise logical XOR between `(src1 or dst)` and `src2`. Clearing a register (`XOR AL, AL`) produces zero and asserts `ZF = 1`. Resets `C` and `V` to 0.
 
 #### Concrete Numeric Example
 ```text
@@ -923,7 +958,7 @@ After execution of NOT AL:
 
 ```
 ================================================================================
-LSL dst[, src] / LSL AX[, src] — LOGICAL SHIFT LEFT
+LSL dst[, src1] / LSL AX[, src1] — LOGICAL SHIFT LEFT
 ================================================================================
 ```
 
@@ -941,11 +976,11 @@ LSL dst[, src] / LSL AX[, src] — LOGICAL SHIFT LEFT
 
 #### Register Transfer & Datapath Flow
 ```text
-count = src[5:0] if src provided else C[5:0]
+count = src1[5:0] if src1 provided else C[5:0]
 if W == 0:
-    STATUS.C  <- (count > 0) ? AL [32 - count] : STATUS.C
-    AL [31:0] <- AL [31:0] << count
-    UPC       <- UPC + 1
+    STATUS.C   <- (count > 0) ? AL [32 - count] : STATUS.C
+    dst [31:0] <- dst [31:0] << count
+    UPC        <- UPC + 1
 else:
     STATUS.C  <- (count > 0) ? AH [64 - count - 32] : STATUS.C
     AX [63:0] <- AX [63:0] << count
@@ -953,7 +988,7 @@ else:
 ```
 
 #### Instruction Word Format
-`OPCODE = 110000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle barrel shifter). `RES_SEL = dst`, `HA_MUX = src` (or `C`), `HB_MUX = dst`.
+`OPCODE = 110000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle barrel shifter). `RES_SEL = dst`, `HA_MUX = src1` (or `C`), `HB_MUX = dst`.
 
 #### Description
 Performs logical shift left by the specified count using a single-cycle barrel shifter. Zeros are shifted into the least significant bit positions. The carry flag captures the last bit shifted out.
@@ -972,7 +1007,7 @@ After execution of LSL AL:
 
 ```
 ================================================================================
-LSR dst[, src] / LSR AX[, src] — LOGICAL SHIFT RIGHT
+LSR dst[, src1] / LSR AX[, src1] — LOGICAL SHIFT RIGHT
 ================================================================================
 ```
 
@@ -990,11 +1025,11 @@ LSR dst[, src] / LSR AX[, src] — LOGICAL SHIFT RIGHT
 
 #### Register Transfer & Datapath Flow
 ```text
-count = src[5:0] if src provided else C[5:0]
+count = src1[5:0] if src1 provided else C[5:0]
 if W == 0:
-    STATUS.C  <- (count > 0) ? AL [count - 1] : STATUS.C
-    AL [31:0] <- AL [31:0] >> count  (zero-fill MSB)
-    UPC       <- UPC + 1
+    STATUS.C   <- (count > 0) ? AL [count - 1] : STATUS.C
+    dst [31:0] <- dst [31:0] >> count  (zero-fill MSB)
+    UPC        <- UPC + 1
 else:
     STATUS.C  <- (count > 0) ? AX [count - 1] : STATUS.C
     AX [63:0] <- AX [63:0] >> count
@@ -1002,7 +1037,7 @@ else:
 ```
 
 #### Instruction Word Format
-`OPCODE = 110001`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src` (or `C`), `HB_MUX = dst`.
+`OPCODE = 110001`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src1` (or `C`), `HB_MUX = dst`.
 
 #### Description
 Performs logical shift right by the specified count using the barrel shifter, inserting zeros into the most significant bits. The carry flag captures the last bit shifted out.
@@ -1021,202 +1056,7 @@ After execution of LSR AL:
 
 ```
 ================================================================================
-ASL dst[, src] / ASL AX[, src] — ARITHMETIC SHIFT LEFT
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  X  |  X  |  X  |  X  |  -  |  -  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`Z`**: Set to 1 if result is zero; reset to 0 otherwise.
-* **`S`**: Set to 1 if MSB of result is 1; reset to 0 otherwise.
-* **`C`**: Set to the last bit shifted out.
-* **`V`**: Set to 1 if the sign bit changed at any point during the shift; reset to 0 otherwise.
-* **`U`, `ERR`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-count = src[5:0] if src provided else C[5:0]
-AL [31:0] <- AL [31:0] << count
-STATUS.V  <- 1 if sign changed during shift else 0
-UPC       <- UPC + 1
-```
-
-#### Instruction Word Format
-`OPCODE = 110010`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src` (or `C`), `HB_MUX = dst`.
-
-#### Description
-Performs arithmetic shift left. Identical to logical shift left, with the addition of tracking signed overflow (`VF = 1` if sign bit ever differs from original).
-
-#### Concrete Numeric Example
-```text
-Suppose AL = 0x40000000, C = 1 (count = 1).
-After execution of ASL AL:
-  AL <- 0x80000000
-  Sign changed from 0 to 1: sets OVERFLOW (V) to 1
-  Bit 31 = 1: sets SIGN (S) to 1
-  Bit 30 shifted out (0): sets CARRY (C) to 0
-  Non-zero result: sets ZERO (Z) to 0
-```
-
----
-
-```
-================================================================================
-ASR dst[, src] / ASR AX[, src] — ARITHMETIC SHIFT RIGHT
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  X  |  X  |  X  |  -  |  -  |  -  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`Z`**: Set to 1 if result is zero; reset to 0 otherwise.
-* **`S`**: Preserves operand sign bit.
-* **`C`**: Set to the last bit shifted out (LSB).
-* **`V`, `U`, `ERR`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-count = src[5:0] if src provided else C[5:0]
-if W == 0:
-    STATUS.C  <- (count > 0) ? AL [count - 1] : STATUS.C
-    AL [31:0] <- AL [31:0] >> count  (sign-extended)
-    UPC       <- UPC + 1
-else:
-    STATUS.C  <- (count > 0) ? AX [count - 1] : STATUS.C
-    AX [63:0] <- AX [63:0] >> count  (sign-extended)
-    UPC       <- UPC + 1
-```
-
-#### Instruction Word Format
-`OPCODE = 110011`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src` (or `C`), `HB_MUX = dst`.
-
-#### Description
-Performs arithmetic shift right by replicating the sign bit into the vacated high-order bit positions.
-
-#### Concrete Numeric Example
-```text
-Suppose AL = 0xFFFFFFF8 (-8), C = 1 (count = 1).
-After execution of ASR AL:
-  AL <- 0xFFFFFFFC (-4)
-  Bit 0 shifted out (0): sets CARRY (C) to 0
-  Sign bit is 1: sets SIGN (S) to 1
-  Non-zero result: sets ZERO (Z) to 0
-```
-
----
-
-```
-================================================================================
-RRC dst / RRC AX — ROTATE RIGHT THROUGH CARRY
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  X  |  X  |  X  |  -  |  -  |  -  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`Z`**: Set to 1 if rotated result is zero; reset to 0 otherwise.
-* **`S`**: Set to 1 if new MSB is 1; reset to 0 otherwise.
-* **`C`**: Set to the old LSB shifted out.
-* **`V`, `U`, `ERR`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-if W == 0:  # 33-bit rotation
-    old_c     = STATUS.C
-    STATUS.C  <- AL [0]
-    AL [31:0] <- { old_c, AL [31:1] }
-    UPC       <- UPC + 1
-else:       # 65-bit rotation
-    old_c     = STATUS.C
-    STATUS.C  <- AX [0]
-    AX [63:0] <- { old_c, AX [63:1] }
-    UPC       <- UPC + 1
-```
-
-#### Instruction Word Format
-`OPCODE = 110100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle). `RES_SEL = dst`, `HA_MUX = n/a`, `HB_MUX = dst`.
-
-#### Description
-Rotates `dst` right through the carry flag by 1 bit: `STATUS.C` enters MSB (bit 31 or 63), and LSB (bit 0) enters `STATUS.C`.
-
-#### Concrete Numeric Example
-```text
-Suppose AL = 0x00000001, STATUS.C = 1.
-After execution of RRC AL:
-  AL <- 0x80000000
-  Bit 0 enters carry: sets CARRY (C) to 1
-  Bit 31 is 1: sets SIGN (S) to 1
-  Non-zero result: sets ZERO (Z) to 0
-```
-
----
-
-```
-================================================================================
-RLC dst / RLC AX — ROTATE LEFT THROUGH CARRY
-================================================================================
-```
-
-#### Status Flags Affected
-```text
-  BSY    Z     S     C     V     U    ERR    D
-+-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  X  |  X  |  X  |  -  |  -  |  -  |  -  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-```
-* **`Z`**: Set to 1 if rotated result is zero; reset to 0 otherwise.
-* **`S`**: Set to 1 if new MSB is 1; reset to 0 otherwise.
-* **`C`**: Set to the old MSB shifted out.
-* **`V`, `U`, `ERR`, `D`**: Unaffected.
-
-#### Register Transfer & Datapath Flow
-```text
-if W == 0:  # 33-bit rotation
-    old_c     = STATUS.C
-    STATUS.C  <- AL [31]
-    AL [31:0] <- { AL [30:0], old_c }
-    UPC       <- UPC + 1
-else:       # 65-bit rotation
-    old_c     = STATUS.C
-    STATUS.C  <- AX [63]
-    AX [63:0] <- { AX [62:0], old_c }
-    UPC       <- UPC + 1
-```
-
-#### Instruction Word Format
-`OPCODE = 110101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle). `RES_SEL = dst`, `HA_MUX = n/a`, `HB_MUX = dst`.
-
-#### Description
-Rotates `dst` left through the carry flag by 1 bit: `STATUS.C` enters LSB (bit 0), and MSB enters `STATUS.C`.
-
-#### Concrete Numeric Example
-```text
-Suppose AL = 0x80000000, STATUS.C = 0.
-After execution of RLC AL:
-  AL <- 0x00000000
-  Bit 31 enters carry: sets CARRY (C) to 1
-  Bit 31 is 0: sets SIGN (S) to 0
-  Result is zero: sets ZERO (Z) to 1
-```
-
----
-
-```
-================================================================================
-LZC dst, src / LZC AX, src — LEADING ZERO COUNT
+LZC dst, src2 / LZC AX, src2 — LEADING ZERO COUNT
 ================================================================================
 ```
 
@@ -1227,26 +1067,26 @@ LZC dst, src / LZC AX, src — LEADING ZERO COUNT
 |  -  |  X  |  -  |  -  |  -  |  -  |  -  |  -  |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **`Z`**: Set to 1 if `src == 0` (all leading zeros: count is 32 or 64); reset to 0 otherwise.
+* **`Z`**: Set to 1 if `src2 == 0` (all leading zeros: count is 32 or 64); reset to 0 otherwise.
 * **`S`, `C`, `V`, `U`, `ERR`, `D`**: Unaffected.
 
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    dst [31:0] <- count_leading_zeros(src [31:0])  # 0 to 32
-    STATUS.Z   <- (src [31:0] == 0)
+    dst [31:0] <- count_leading_zeros(src2 [31:0])  # 0 to 32
+    STATUS.Z   <- (src2 [31:0] == 0)
     UPC        <- UPC + 1
 else:
-    dst [63:0] <- count_leading_zeros(src [63:0])  # 0 to 64
-    STATUS.Z   <- (src [63:0] == 0)
+    dst [63:0] <- count_leading_zeros(src2 [63:0])  # 0 to 64
+    STATUS.Z   <- (src2 [63:0] == 0)
     UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 110110`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst` (typically `C` register), `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 110110`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst` (typically `C` register), `HA_MUX = n/a`, `HB_MUX = src2`.
 
 #### Description
-Counts the number of consecutive leading zero bits starting from the most significant bit of `src` using dedicated LUT tree logic. Typically written directly to counter `C` for floating-point normalization shifts.
+Counts the number of consecutive leading zero bits starting from the most significant bit of `src2` using dedicated LUT tree logic. Typically written directly to counter `C` for floating-point normalization shifts.
 
 #### Concrete Numeric Example
 ```text
@@ -1258,11 +1098,11 @@ After execution of LZC C, AL:
 
 ---
 
-### Block 4 & 5 (0b100 / 0b101): Memory & Storage Block
+### Block 4 (0b100): Memory Stack & Scratchpad Block
 
 ```
 ================================================================================
-PUSH src / PUSH AX — PUSH REGISTER ONTO OPERAND STACK
+PUSH src2 / PUSH AX — PUSH REGISTER ONTO OPERAND STACK
 ================================================================================
 ```
 
@@ -1284,26 +1124,26 @@ if W == 0:  # 32-bit push (4 bytes)
         STATUS.V   <- 1
         STATUS.ERR <- 1
     else:
-        STACK_RAM [OSP .. OSP+3] <- src [31:0]
+        STACK_RAM [OSP .. OSP+3] <- src2 [31:0]
         OSP                      <- OSP + 4
-        TOS                      <- src [31:0]
+        TOS                      <- src2 [31:0]
     UPC <- UPC + 1
 else:       # 64-bit push (8 bytes)
     if OSP + 8 > 32:
         STATUS.V   <- 1
         STATUS.ERR <- 1
     else:
-        STACK_RAM [OSP .. OSP+7] <- { src_H [31:0], src_L [31:0] }
+        STACK_RAM [OSP .. OSP+7] <- { src2_H [31:0], src2_L [31:0] }
         OSP                      <- OSP + 8
-        TOS                      <- src_L [31:0]
+        TOS                      <- src2_L [31:0]
     UPC <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = TOS`, `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 100000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`, `HA_MUX = NONE`, `HB_MUX = src2`.
 
 #### Description
-Pushes register `src` onto the 32-byte operand stack, updates `TOS` cache register, and advances `OSP[4:0]`. If pushing exceeds the 32-byte physical depth, `VF` and `ERR` flags are raised.
+Pushes register `src2` onto the 32-byte operand stack, updates internal `TOS` cache register, and advances `OSP[4:0]`. No general-purpose register is written (`RES_SEL = NONE`). If pushing exceeds the 32-byte physical depth, `VF` and `ERR` flags are raised.
 
 #### Concrete Numeric Example
 ```text
@@ -1357,7 +1197,7 @@ else:       # 64-bit pop
 ```
 
 #### Instruction Word Format
-`OPCODE = 100001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = n/a`, `HB_MUX = TOS`.
+`OPCODE = 100001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = NONE`, `HB_MUX = TOS`.
 
 #### Description
 Pops the top value from the operand stack into `dst` and decrements `OSP`. If popping from an empty stack ($OSP < 4$), `UF` and `ERR` flags are raised.
@@ -1416,21 +1256,16 @@ UPC <- UPC + 1
 #### Instruction Word Format
 `OPCODE = 100010`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles).
 - `RES_SEL = dst` (4 bits): Destination register (`AL`, `AH`, `BL`, etc.).
-- `src = tbl` (4 bits): Table selector (`RECIP=0b000`, `SQRT=0b001`, `TRIG=0b100`, `CHEB=0b101`, `CONST=0b110`).
+- `tbl`: Table selector translated by assembler (`RECIP=0b000`, `SQRT=0b001`, `TRIG=0b100`, `CHEB=0b101`, `CONST=0b110`).
 - `HA_MUX = addr` (3 bits via `src1`): Selects address source:
-  - `HA_MUX = IMM (4)`: Address is supplied as an immediate constant in `INSTR[9:0]`.
-  - `HA_MUX = C (5)` or `AL (0)` / `BL (6)`: Address is supplied dynamically from a register at runtime.
-- `HB_MUX = n/a`.
+  - `HA_MUX = IMM (4)`: Address supplied as immediate constant in `INSTR[9:0]`.
+  - `HA_MUX = C (5)` or `AL (0)` / `BL (6)`: Address supplied dynamically from register at runtime.
+- `HB_MUX = NONE`.
 
 #### Description
 Loads a constant or lookup table entry from on-chip Embedded Block RAM (EBR) into destination register `dst`.
 - **EBR 4 (Single 512 x 16-bit ROM)**: Contains the 256-word Reciprocal / Division Seed LUT at offset `0x000` and the 256-word Square Root Seed LUT at offset `0x100`. Loaded 16-bit values are zero-extended into `dst[31:0]`.
 - **EBR 2 & 3 (Paired 512 x 32-bit ROM)**: Contains Trigonometric & CORDIC angles at `0x000`, Chebyshev coefficients at `0x080`, and IEEE-754 mathematical constants ($\pi, e, \ln 2, 1.0, \dots$) at `0x100`.
-- **Zero-Cost Addressing (2-LUT Prefix MUX)**:
-  Address derivation uses zero adders:
-  - `ADDR[8] = tbl[2] ? tbl[1] : tbl[0]`
-  - `ADDR[7] = tbl[2] ? tbl[0] : offset[7]`
-  - `ADDR[6:0] = offset[6:0]`
 - **Dynamic Register Addressing**: In addition to static immediate table offsets, `addr` can be routed from any `HA_MUX` register (such as counter `C`), enabling single-cycle dynamic seed table indexing during `SQRT` and `DIV` execution.
 
 #### Concrete Numeric Examples
@@ -1496,7 +1331,7 @@ else:
 - **Flag Form**: `RES_SEL = NONE (0b1111)`, `HA_MUX = NONE`, `HB_MUX = IMM`, `FLAG_COND = flag[2:0]`, `IMM = val (0 or 1)`.
 
 #### Description
-1. **Register Load (`LDI dst, imm`)**: Loads a 10-bit unsigned immediate constant (`INSTR[9:0]`) into `dst`. If `W=1` (64-bit), the immediate is loaded into the low-half register (`dst`) and zero is loaded into the high-half register (`dst | 1`).
+1. **Register Load (`LDI dst, imm`)**: Loads a 10-bit unsigned immediate constant (`INSTR[9:0]`) into `dst` via `HB_MUX = IMM`. If `W=1` (64-bit), the immediate is loaded into the low-half register (`dst`) and zero is loaded into the high-half register (`dst | 1`).
 2. **Flag Load (`LDI flag, val`)**: When `dst` is `NONE`, the instruction operates as a universal flag manipulation operation. It routes `status_wr_sel = 1 << flag` and `res_status = (val & 1) << flag` through the datapath writeback multiplexer, setting or clearing the chosen flag in a single cycle without altering any other register or status flag. Commonly used to assert or clear `ERR`, `ZERO`, `CARRY`, etc.
 
 #### Concrete Numeric Examples
@@ -1508,13 +1343,13 @@ LDI EA, 127
 
 Example 2: Setting error flag
 LDI ERR, 1
-  Machine encoding: OPCODE=LDI, DST=NONE, SRC2=IMM, FLAG_COND=ERR (1), IMM=1
+  Machine encoding: OPCODE=LDI, DST=NONE, HB_MUX=IMM, FLAG_COND=ERR (1), IMM=1
   STATUS[ERR] <- 1
   All other status flags unaffected.
 
 Example 3: Clearing zero flag
 LDI ZERO, 0
-  Machine encoding: OPCODE=LDI, DST=NONE, SRC2=IMM, FLAG_COND=ZERO (6), IMM=0
+  Machine encoding: OPCODE=LDI, DST=NONE, HB_MUX=IMM, FLAG_COND=ZERO (6), IMM=0
   STATUS[ZERO] <- 0
   All other status flags unaffected.
 ```
@@ -1549,7 +1384,7 @@ else:
 ```
 
 #### Instruction Word Format
-`OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = NONE`.
 
 #### Description
 Loads 32 or 64 bits from the internal scratchpad memory (used by microcode routines for temporaries) into `dst`. For 64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `dst_L` is loaded from `addr` and `dst_H` from `addr | 1`.
@@ -1566,7 +1401,7 @@ After execution of LD AL, 0x04:
 
 ```
 ================================================================================
-STO addr, src — STORE TO SCRATCHPAD MEMORY
+STO addr, src2 — STORE TO SCRATCHPAD MEMORY
 ================================================================================
 ```
 
@@ -1582,20 +1417,20 @@ STO addr, src — STORE TO SCRATCHPAD MEMORY
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    SCRATCHPAD [addr [5:0]] <- src [31:0]
+    SCRATCHPAD [addr [5:0]] <- src2 [31:0]
     UPC                     <- UPC + 1
 else:
     // 64-bit store requires an even base memory address (addr % 2 == 0)
-    SCRATCHPAD [addr [5:0]]       <- src_L [31:0]
-    SCRATCHPAD [(addr [5:0]) | 1] <- src_H [31:0]
+    SCRATCHPAD [addr [5:0]]       <- src2_L [31:0]
+    SCRATCHPAD [(addr [5:0]) | 1] <- src2_H [31:0]
     UPC                           <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = IMM`, `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`, `HA_MUX = IMM`, `HB_MUX = src2`.
 
 #### Description
-Stores 32 or 64 bits from register `src` into internal scratchpad memory at `addr`. For 64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `src_L` is stored into `addr` and `src_H` into `addr | 1`.
+Stores 32 or 64 bits from register `src2` into internal scratchpad memory at `addr`. Does not write to any general-purpose register (`RES_SEL = NONE`). For 64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `src2_L` is stored into `addr` and `src2_H` into `addr | 1`.
 
 #### Concrete Numeric Example
 ```text
@@ -1606,6 +1441,89 @@ After execution of STO 0x08, AL:
 ```
 
 ---
+
+```
+================================================================================
+MOV dst, src2 / MOV AX, src2 — REGISTER-TO-REGISTER MOVE
+================================================================================
+```
+
+#### Status Flags Affected
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **Flags**: None affected.
+
+#### Register Transfer & Datapath Flow
+```text
+if W == 0:
+    dst [31:0] <- src2 [31:0]
+    UPC        <- UPC + 1
+else:
+    dst [63:0] <- src2 [63:0]
+    UPC        <- UPC + 1
+```
+
+#### Instruction Word Format
+`OPCODE = 100110`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle via dual writeback). `RES_SEL = dst`, `HA_MUX = NONE`, `HB_MUX = src2`.
+
+#### Description
+Transfers data directly from `src2` to `dst` across the internal data bus without changing any status flags.
+
+#### Concrete Numeric Example
+```text
+Suppose BL = 0x11223344.
+After execution of MOV AL, BL:
+  AL <- 0x11223344
+  Flags are unaffected.
+```
+
+---
+
+```
+================================================================================
+SWAP dst, src2 / SWAP AX, src2 — REGISTER EXCHANGE
+================================================================================
+```
+
+#### Status Flags Affected
+```text
+  BSY    Z     S     C     V     U    ERR    D
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+* **Flags**: None affected.
+
+#### Register Transfer & Datapath Flow
+```text
+temp       <- dst
+dst [31:0] <- src2 [31:0]
+src2 [31:0] <- temp
+UPC        <- UPC + 1
+```
+
+#### Instruction Word Format
+`OPCODE = 100111`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle). `RES_SEL = dst`, `HA_MUX = dst`, `HB_MUX = src2`.
+
+#### Description
+Exchanges the contents of registers `dst` and `src2` using the internal staging register in a single cycle.
+
+#### Concrete Numeric Example
+```text
+Suppose AL = 0xAAAAAAAA, BL = 0x55555555.
+After execution of SWAP AL, BL:
+  AL <- 0x55555555
+  BL <- 0xAAAAAAAA
+  Flags are unaffected.
+```
+
+---
+
+### Block 5 (0b101): Memory User Buffer & Status Shadow Block
 
 ```
 ================================================================================
@@ -1633,7 +1551,7 @@ else:
 ```
 
 #### Instruction Word Format
-`OPCODE = 101000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 101000`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`, `HB_MUX = NONE`.
 
 #### Description
 Loads a word from the host-accessible user buffer into `dst`.
@@ -1650,7 +1568,7 @@ After execution of LDU AL, 0x00:
 
 ```
 ================================================================================
-STU addr, src — STORE TO HOST USER BUFFER
+STU addr, src2 — STORE TO HOST USER BUFFER
 ================================================================================
 ```
 
@@ -1666,18 +1584,18 @@ STU addr, src — STORE TO HOST USER BUFFER
 #### Register Transfer & Datapath Flow
 ```text
 if W == 0:
-    USER_BUFFER [addr [5:0]] <- src [31:0]
+    USER_BUFFER [addr [5:0]] <- src2 [31:0]
     UPC                      <- UPC + 1
 else:
-    { USER_BUFFER [addr+1], USER_BUFFER [addr] } <- { src_H [31:0], src_L [31:0] }
+    { USER_BUFFER [addr+1], USER_BUFFER [addr] } <- { src2_H [31:0], src2_L [31:0] }
     UPC                      <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 101001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = IMM`, `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 101001`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`, `HA_MUX = IMM`, `HB_MUX = src2`.
 
 #### Description
-Stores `src` into the host-accessible user buffer at `addr`.
+Stores `src2` into the host-accessible user buffer at `addr`. Does not write to any general-purpose register (`RES_SEL = NONE`).
 
 #### Concrete Numeric Example
 ```text
@@ -1691,7 +1609,7 @@ After execution of STU 0x00, AL:
 
 ```
 ================================================================================
-MOV dst, src / MOV AX, src — REGISTER-TO-REGISTER MOVE
+SSAV — SAVE STATUS REGISTER TO SHADOW
 ================================================================================
 ```
 
@@ -1706,33 +1624,29 @@ MOV dst, src / MOV AX, src — REGISTER-TO-REGISTER MOVE
 
 #### Register Transfer & Datapath Flow
 ```text
-if W == 0:
-    dst [31:0] <- src [31:0]
-    UPC        <- UPC + 1
-else:
-    dst [63:0] <- src [63:0]
-    UPC        <- UPC + 1
+STATUS_SHADOW [7:0] <- STATUS [7:0]
+UPC                 <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100110`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle via dual writeback). `RES_SEL = dst`, `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 101110`. `W = 0` (1 cycle). `RES_SEL = NONE (0b1111)`, `HA_MUX = NONE`, `HB_MUX = NONE`.
 
 #### Description
-Transfers data directly from `src` to `dst` across the internal data bus without changing any status flags.
+Saves the current 8-bit STATUS register into an internal shadow register (`status_shadow`). This allows microcode subroutines to preserve status flags before executing helper operations and restore them later with `SRES`. Does not alter any register or status flag (`RES_SEL = NONE`).
 
 #### Concrete Numeric Example
 ```text
-Suppose BL = 0x11223344.
-After execution of MOV AL, BL:
-  AL <- 0x11223344
-  Flags are unaffected.
+Suppose STATUS = 0x48 (ZERO=1, CARRY=1).
+After execution of SSAV:
+  STATUS_SHADOW <- 0x48
+  STATUS remains 0x48 unchanged.
 ```
 
 ---
 
 ```
 ================================================================================
-SWAP dst, src / SWAP AX, src — REGISTER EXCHANGE
+SRES — RESTORE STATUS REGISTER FROM SHADOW
 ================================================================================
 ```
 
@@ -1740,32 +1654,31 @@ SWAP dst, src / SWAP AX, src — REGISTER EXCHANGE
 ```text
   BSY    Z     S     C     V     U    ERR    D
 +-----+-----+-----+-----+-----+-----+-----+-----+
-|  -  |  -  |  -  |  -  |  -  |  -  |  -  |  -  |
+|  -  | mod | mod | mod | mod | mod |  -  | mod |
 +-----+-----+-----+-----+-----+-----+-----+-----+
 ```
-* **Flags**: None affected.
+* **`Z, S, C, V, U, D`**: Restored from `STATUS_SHADOW`.
+* **`BSY` (bit 7), `ERR` (bit 1)**: Protected / Unaffected (mask `0x7D` prevents overwriting operational engine flags).
 
 #### Register Transfer & Datapath Flow
 ```text
-temp       <- dst
-dst [31:0] <- src [31:0]
-src [31:0] <- temp
-UPC        <- UPC + 1
+STATUS <- (STATUS & ~0x7D) | (STATUS_SHADOW & 0x7D)
+UPC    <- UPC + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 100111`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 1 cycle). `RES_SEL = dst`, `HA_MUX = n/a`, `HB_MUX = src`.
+`OPCODE = 101111`. `W = 0` (1 cycle). `RES_SEL = NONE (0b1111)`, `HA_MUX = NONE`, `HB_MUX = NONE`.
 
 #### Description
-Exchanges the contents of registers `dst` and `src` using the internal staging register in a single cycle.
+Restores status flags from the internal shadow register using write mask `0x7D` (`0b0111_1101`). Flags `ZERO`, `SIGN`, `CARRY`, `OVERFLOW`, `UNDERFLOW`, and `DIFF_SIGN` are restored to their shadowed states. Host interface flags `BUSY` (bit 7) and `ERR` (bit 1) are masked out to prevent corrupted engine state. No register is written (`RES_SEL = NONE`).
 
 #### Concrete Numeric Example
 ```text
-Suppose AL = 0xAAAAAAAA, BL = 0x55555555.
-After execution of SWAP AL, BL:
-  AL <- 0x55555555
-  BL <- 0xAAAAAAAA
-  Flags are unaffected.
+Suppose STATUS_SHADOW = 0x48 (ZERO=1, CARRY=1), current STATUS = 0x82 (BUSY=1, ERR=1).
+After execution of SRES:
+  Restored with mask 0x7D:
+  STATUS <- (0x82 & ~0x7D) | (0x48 & 0x7D) = 0x82 | 0x48 = 0xCA (BUSY=1, ZERO=1, CARRY=1, ERR=1)
+  BUSY and ERR remain unchanged.
 ```
 
 ---
@@ -1810,7 +1723,7 @@ After execution of JMP 0x040:
 
 ```
 ================================================================================
-JNZ [src,] addr — JUMP IF NOT ZERO
+JNZ [flag,] addr — JUMP IF FLAG NOT SET (DEFAULT: ZERO FLAG)
 ================================================================================
 ```
 
@@ -1823,22 +1736,22 @@ JNZ [src,] addr — JUMP IF NOT ZERO
 ```
 * **Flags**: None affected.
 
-If `src` is omitted, the source is the `ZF` flag.  Otherwise, `src` may be any other flag.
+The condition operand `flag` is always a status flag (`ZF`, `SF`, `CF`, `VF`, `UF`, `ERR`, `D`, `BSY`). If omitted, `ZF` is implied.
 
 #### Register Transfer & Datapath Flow
 ```text
-if src == 0:
+cond = flag if flag provided else STATUS.Z
+if cond == 0:
     UPC [9:0] <- INSTR [9:0]  (addr)
 else:
     UPC [9:0] <- UPC [9:0] + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 011001`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 011001`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = IMM`, `HB_MUX = NONE`, `FLAG_COND = flag`.
 
 #### Description
-Branches to `addr` if the zero flag (`STATUS.Z`) is 0. If `STATUS.Z` is 1, execution falls through to `UPC + 1`.
-If `src` is specified, it is used instead of `STATUS.Z`.  It may be any other status flag.
+Branches to `addr` if the selected status `flag` is 0. If `flag` is not specified, `STATUS.Z` is tested. If the flag is 1, execution falls through to `UPC + 1`.
 
 #### Concrete Numeric Example
 ```text
@@ -1850,18 +1763,18 @@ After execution of JNZ 0x030:
 
 #### Examples:
 ```text
-JNZ 0x32 ; uses STATUS.Z
-JNZ VF, 0x10; uses OVERLOW
+JNZ 0x32        ; tests STATUS.Z (default)
+JNZ VF, 0x10    ; tests STATUS.V (OVERFLOW)
+JNZ ERR, error  ; tests STATUS.ERR
 ```
+
 ---
 
 ```
 ================================================================================
-JZ [src,] addr — JUMP IF ZERO
+JZ [flag,] addr — JUMP IF FLAG SET (DEFAULT: ZERO FLAG)
 ================================================================================
 ```
-
-As with `JNZ`, the optional `src` may be any status flag.  If not present, the `ZF` is used.
 
 #### Status Flags Affected
 ```text
@@ -1872,19 +1785,22 @@ As with `JNZ`, the optional `src` may be any status flag.  If not present, the `
 ```
 * **Flags**: None affected.
 
+The condition operand `flag` is always a status flag (`ZF`, `SF`, `CF`, `VF`, `UF`, `ERR`, `D`, `BSY`). If omitted, `ZF` is implied.
+
 #### Register Transfer & Datapath Flow
 ```text
-if STATUS.Z == 1:
+cond = flag if flag provided else STATUS.Z
+if cond == 1:
     UPC [9:0] <- INSTR [9:0]  (addr)
 else:
     UPC [9:0] <- UPC [9:0] + 1
 ```
 
 #### Instruction Word Format
-`OPCODE = 011010`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = IMM`, `HB_MUX = n/a`.
+`OPCODE = 011010`. `W = 0` (1 cycle). `RES_SEL = UPC`, `HA_MUX = IMM`, `HB_MUX = NONE`, `FLAG_COND = flag`.
 
 #### Description
-Branches to `addr` if the zero flag (`STATUS.Z`) is 1. If `STATUS.Z` is 0, execution falls through to `UPC + 1`.
+Branches to `addr` if the selected status `flag` is 1. If `flag` is not specified, `STATUS.Z` is tested. If the flag is 0, execution falls through to `UPC + 1`.
 
 #### Concrete Numeric Example
 ```text
@@ -1892,6 +1808,13 @@ Suppose STATUS.Z = 1, current UPC = 0x010, INSTR[9:0] = 0x050.
 After execution of JZ 0x050:
   Branch taken: UPC <- 0x050
   Flags are unaffected.
+```
+
+#### Examples:
+```text
+JZ 0x50         ; tests STATUS.Z (default)
+JZ CF, carry_set ; tests STATUS.C (CARRY)
+JZ SF, negative  ; tests STATUS.S (SIGN)
 ```
 
 ---
