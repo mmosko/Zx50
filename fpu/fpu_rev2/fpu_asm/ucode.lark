@@ -1,0 +1,111 @@
+// =============================================================================
+// FPU Microcode Assembly Grammar (ucode.lark)
+// Based on Zx50 FPU Rev 2 Low-Level System Design & Reference Manual
+// =============================================================================
+
+start: line*
+
+// Single clean rule; comments & inline whitespace ignored automatically
+line: [label] [statement] NEWLINE
+
+label: CNAME ":"
+
+statement: directive | instruction
+
+directive: dir_org | dir_equ
+dir_org: ".org"i imm_operand
+dir_equ: ".equ"i CNAME ","? imm_operand
+
+// -----------------------------------------------------------------------------
+// Instructions by Block / Signature
+// -----------------------------------------------------------------------------
+
+instruction: inst_arith
+           | inst_cmp
+           | inst_math
+           | inst_logic
+           | inst_shift
+           | inst_stack
+           | inst_mem
+           | inst_ctrl
+
+// Block 0: Arithmetic / Adder Block
+inst_arith: ARITH_OP reg "," [reg_or_imm ","] reg_or_imm
+ARITH_OP: "ADD"i | "ADC"i | "SUB"i | "SBB"i | "EXP_ADD"i | "EXP_SUB"i
+
+inst_cmp: "CMP"i reg_or_imm "," reg_or_imm
+
+// Block 1: Hardware Multiply / Divide / Float Math Block
+inst_math: "PACK"i reg "," reg_or_imm
+         | "UNPACK"i reg "," reg_or_imm
+         | MUL_DIV_OP reg "," reg_or_imm
+
+MUL_DIV_OP: "MULU"i | "DIVU"i | "MUL"i | "DIV"i
+
+// Block 2: Logic Block
+inst_logic: LOGIC_BIN_OP reg "," [reg_or_imm ","] reg_or_imm
+          | LOGIC_UNARY_OP reg
+
+LOGIC_BIN_OP: "AND"i | "OR"i | "XOR"i
+LOGIC_UNARY_OP: "FABS"i | "FCHS"i | "NOT"i
+
+// Block 6: Shifter / LZC Block
+inst_shift: SHIFT_OP reg ["," reg_or_imm]
+          | "LZC"i reg "," reg_or_imm
+
+SHIFT_OP: "LSL"i | "LSR"i
+
+// Block 4 & 5: Memory Stack & Scratchpad Block
+inst_stack: "PUSH"i reg_or_imm
+          | "POP"i reg
+
+inst_mem: "LDC"i reg "," TABLE "," reg_or_imm
+        | "LDI"i reg "," imm_operand
+        | "LDI"i FLAG "," imm_operand
+        | "LD"i reg "," imm_operand
+        | "STO"i imm_operand "," reg_or_imm
+        | "MOV"i reg "," reg_or_imm
+        | "SWAP"i reg "," reg
+        | "LDU"i reg "," imm_operand
+        | "STU"i imm_operand "," reg_or_imm
+        | "SSAV"i
+        | "SRES"i
+
+// Block 3: Control Block
+inst_ctrl: "JMP"i imm_operand
+         | "JNZ"i [FLAG ","] imm_operand
+         | "JZ"i [FLAG ","] imm_operand
+         | "DJNZ"i imm_operand
+         | "CALL"i imm_operand
+         | "RET"i
+         | "NOP"i
+         | "HALT"i
+
+// -----------------------------------------------------------------------------
+// Operands, Registers, Flags & Terminals
+// -----------------------------------------------------------------------------
+
+reg_or_imm: reg | imm_operand
+
+reg: REG_32 | REG_64
+
+REG_32: "AL"i | "AH"i | "BL"i | "BH"i | "DL"i | "DH"i | "FL"i | "FH"i | "EA"i | "EB"i | "C"i
+REG_64: "AX"i | "BX"i | "DX"i | "FX"i
+
+FLAG: "BSY"i | "ZF"i | "Z"i | "SF"i | "S"i | "CF"i | "C"i | "VF"i | "V"i | "UF"i | "U"i | "ERR"i | "DIFF_SIGN"i | "D"i
+
+TABLE: "RECIP"i | "SQRT"i | "TRIG"i | "CHEB"i | "CONST"i
+
+imm_operand: HEX_INT | BIN_INT | INT | CNAME
+
+
+HEX_INT: /0x[0-9a-fA-F]+/
+BIN_INT: /0b[01]+/
+INT: /[0-9]+/
+
+%import common.CNAME
+%import common.WS_INLINE
+%ignore WS_INLINE
+%ignore /;.*/
+
+NEWLINE: ( "\r"? "\n" )+

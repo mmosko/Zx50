@@ -46,12 +46,12 @@ class Reg(IntEnum):
     # Stored in the Memory block
     STATUS_SHADOW = 26
 
-    # These are virtual registers only used in Assembly MicroInstructions.  The functional block needs to
-    # resolve them down to the actual registers used in the HA and HB and RES muxes
-    # AX = 30,
-    # BX = 31,
-    # DX = 32,
-    # FX = 33,
+    # These are virtual registers only used in Assembly MicroInstructions.  These names are used
+    # only by the assembler
+    AX = 30
+    BX = 31
+    DX = 32
+    FX = 33
 
     def is_lo_half(self) -> bool:
         return self in [Reg.AL, Reg.BL, Reg.DL, Reg.FL]
