@@ -30,13 +30,13 @@ class UserOpcode(Enum):
     POW_F32 = 0x29
     POW_F64 = 0x2B
 
-    # Natural Logarithm
-    LN_F32 = 0x31
-    LN_F64 = 0x33
+    # Base-2 Logarithm (log2(x))
+    LOG2_F32 = 0x31
+    LOG2_F64 = 0x33
 
-    # Exponential (e^x)
-    EXP_F32 = 0x39
-    EXP_F64 = 0x3B
+    # Base-2 Exponential (2^x)
+    EXP2_F32 = 0x39
+    EXP2_F64 = 0x3B
 
     # Change Sign (Negate)
     CHS_I32 = 0x50

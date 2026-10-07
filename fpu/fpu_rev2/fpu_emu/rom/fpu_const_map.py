@@ -17,10 +17,11 @@ class FpuTables(IntEnum):
     TAN = 0x1000  # Tangent Table (512 bytes)
     LN = 0x1200  # Natural Log Table (512 bytes)
     LOG10 = 0x1400  # Base-10 Log Table (512 bytes)
-    CONST = 0x1600  # Mathematical Constants Table (128 bytes)
+    CONST = 0x1600  # Mathematical Constants Table (256 bytes)
     CORDIC_ATAN32 = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes)
     CORDIC_ATAN64 = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes)
     TRIG_CONST = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes)
+    CHEB = 0x1C00  # Chebyshev & Polynomial Coefficients Table (512 bytes)
 
 
 class FpuTable(IntEnum):
@@ -38,6 +39,23 @@ class FpuTable(IntEnum):
     TRIG = 0b100   # 4: EBR 2 & 3 (paired 32-bit), base 0x000 (words 0..127)
     CHEB = 0b101   # 5: EBR 2 & 3 (paired 32-bit), base 0x080 (words 128..255)
     CONST = 0b110  # 6: EBR 2 & 3 (paired 32-bit), base 0x100 (words 256..319)
+
+
+class FpuCheb(IntEnum):
+    """Chebyshev / Polynomial Coefficients Word Slot Map for EBR CHEB ROM.
+    Each slot represents a 32-bit word offset from CHEB table base (EBR 2/3 offset 0x080).
+    """
+    LOG2_C0 = 0  # log2 minimax c0 (2.88539008 in Q3.29)
+    LOG2_C1 = 1  # log2 minimax c1 (0.96179840 in Q3.29)
+    LOG2_C2 = 2  # log2 minimax c2 (0.57676343 in Q3.29)
+    LOG2_C3 = 3  # log2 minimax c3 (0.43044988 in Q3.29)
+    EXP2_C1 = 4  # exp2 Taylor c1 (ln(2) in Q1.31)
+    EXP2_C2 = 5  # exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)
+    EXP2_C3 = 6  # exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)
+    EXP2_C4 = 7  # exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)
+    EXP2_C5 = 8  # exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)
+    EXP2_C6 = 9  # exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)
+    SQRT2_MANT = 10  # sqrt(2) mantissa threshold (bit 23 implicit 1)
 
 
 class FpuConst(IntEnum):
@@ -77,4 +95,7 @@ class FpuConst(IntEnum):
     CW_C3_F64 = 53  # Cody-Waite C3 in IEEE-754 double precision
     CORDIC_INV_K_32 = 55  # CORDIC 1/K scale factor in Q2.30
     CORDIC_INV_K_64 = 56  # CORDIC 1/K scale factor in Q2.62
+    LN10_F32 = 58  # ln(10) in IEEE-754 single precision
+    LN10_F64 = 60  # ln(10) in IEEE-754 double precision
+
 

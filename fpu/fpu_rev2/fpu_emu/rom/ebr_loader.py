@@ -54,16 +54,28 @@ def load_ebr_rom_buffers(rom_path: Optional[Path] = None) -> List[Optional[List[
             for i, w in enumerate(sqrt_words):
                 ebr4[256 + i] = w
 
-        # 3. EBR 2 & 3: Mathematical Constants (32 x 32-bit at FLASH_CONST_BASE = 0x1600)
-        # Stored at EBR 2/3 base 0x100 (words 256..287)
-        const_bytes = data[FpuTables.CONST : FpuTables.CONST + 128]
-        if len(const_bytes) == 128:
-            const_words = struct.unpack("<32I", const_bytes)
+        # 3. EBR 2 & 3: Mathematical Constants (64 x 32-bit at FLASH_CONST_BASE = 0x1600)
+        # Stored at EBR 2/3 base 0x100 (words 256..319)
+        const_bytes = data[FpuTables.CONST : FpuTables.CONST + 256]
+        if len(const_bytes) == 256:
+            const_words = struct.unpack("<64I", const_bytes)
             for i, val in enumerate(const_words):
                 ebr2[256 + i] = val & 0xFFFF
                 ebr3[256 + i] = (val >> 16) & 0xFFFF
 
-        # 4. EBR 2 & 3: CORDIC ATAN32 (32 x 32-bit at FLASH_CORDIC_ATAN32_BASE = 0x1800)
+        # 4. EBR 2 & 3: Chebyshev & Polynomial Coefficients (128 x 32-bit at FLASH_CHEB_BASE = 0x1C00)
+        # Stored at EBR 2/3 base 0x080 (words 128..255)
+        cheb_bytes = data[FpuTables.CHEB : FpuTables.CHEB + 512]
+        if len(cheb_bytes) == 512:
+            cheb_words = struct.unpack("<128I", cheb_bytes)
+            for i, val in enumerate(cheb_words):
+                ebr2[128 + i] = val & 0xFFFF
+                ebr3[128 + i] = (val >> 16) & 0xFFFF
+            if ebr2[128 + 10] == 0 and ebr3[128 + 10] == 0:
+                ebr2[128 + 10] = 0x04F3
+                ebr3[128 + 10] = 0x00B5
+
+        # 5. EBR 2 & 3: CORDIC ATAN32 (32 x 32-bit at FLASH_CORDIC_ATAN32_BASE = 0x1800)
         # Stored at EBR 2/3 base 0x000 (words 0..31)
         cordic_bytes = data[FpuTables.CORDIC_ATAN32 : FpuTables.CORDIC_ATAN32 + 128]
         if len(cordic_bytes) == 128:

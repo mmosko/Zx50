@@ -5,14 +5,16 @@ from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.registers import Reg, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction, IW
 from fpu_emu.micro_opcodes import MicroOp
-from fpu_emu.rom.fpu_const_map import FpuTable
+from fpu_emu.rom.fpu_const_map import FpuCheb, FpuConst, FpuTable
 from fpu_emu.user_opcodes import UserOpcode
 
 
 class MicroCode:
     """Microcode ROM lookup table."""
 
-    MAX_MICRO_INSTRUCTIONS: int = 512
+    # 512 is the true maximum, but we do not have an optimized assembly yet, so we have a relaxed max
+    HARD_MAX_MICRO_INSTRUCTIONS: int = 1024
+    SOFT_MAX_MICRO_INSTRUCTIONS: int = 512
 
     _ucode: Dict[UserOpcode, List[MicroInstruction]] = {
         # ADD_I32:
@@ -652,6 +654,260 @@ class MicroCode:
             MicroInstruction(op=MicroOp.HALT),
             MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ERR, imm=1),
             MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.LOG2_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),  # 0: START
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=116),  # 1
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BH, src=Reg.AL),  # 2
+            MicroInstruction(op=MicroOp.UNPACK, dst=Reg.EA, src=Reg.AL),  # 3
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=114),  # 4
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.SIGN, imm=114),  # 5
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 6
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=255),  # 7
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=112),  # 8
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CONST, imm=FpuConst.ONE_F32),  # 9
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.BH, imm=0),  # 10
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=109),  # 11
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.SQRT2_MANT),  # 12
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.AL, imm=0),  # 13
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=16),  # 14
+            MicroInstruction(op=MicroOp.JMP, imm=18),  # 15
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AL, src=Reg.IMM, imm=1),  # 16: REDUCE_M
+            MicroInstruction(op=MicroOp.EXP_ADD, dst=Reg.EA, src=Reg.IMM, imm=1),  # 17
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=1),  # 18: PREPARE_DIV
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BH, src=Reg.IMM, imm=23),  # 19
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AL),  # 20
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.BL, src=Reg.BH, imm=0),  # 21
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.BH, imm=0),  # 22
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=0),  # 23
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.SIGN, imm=26),  # 24
+            MicroInstruction(op=MicroOp.JMP, imm=29),  # 25
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=1),  # 26: NEG_NUM
+            MicroInstruction(op=MicroOp.NOT, dst=Reg.AL, src=Reg.AL),  # 27
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.IMM, imm=1),  # 28
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=7),  # 29: DIV_START
+            MicroInstruction(op=MicroOp.DIVU, dst=Reg.AL, src=Reg.BL),  # 30
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AH, src=Reg.AL),  # 31
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.DL),  # 32
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=7),  # 33
+            MicroInstruction(op=MicroOp.DIVU, dst=Reg.AL, src=Reg.BL),  # 34
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=7),  # 35
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AL),  # 36
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.DL),  # 37
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=7),  # 38
+            MicroInstruction(op=MicroOp.DIVU, dst=Reg.AL, src=Reg.BL),  # 39
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=7),  # 40
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AL),  # 41
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.DL),  # 42
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=7),  # 43
+            MicroInstruction(op=MicroOp.DIVU, dst=Reg.AL, src=Reg.BL),  # 44
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=7),  # 45
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AL),  # 46
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.DL),  # 47
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=3),  # 48
+            MicroInstruction(op=MicroOp.DIVU, dst=Reg.AL, src=Reg.BL),  # 49
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=3),  # 50
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AL),  # 51
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DH, src=Reg.AH),  # 52
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 53
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.AH),  # 54
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 55
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DL, src=Reg.AH),  # 56
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.AL, src=FpuTable.CHEB, imm=FpuCheb.LOG2_C3),  # 57
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DL),  # 58
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 59
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.LOG2_C2),  # 60
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 61
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 62
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DL),  # 63
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 64
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.LOG2_C1),  # 65
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 66
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 67
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DL),  # 68
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 69
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.LOG2_C0),  # 70
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 71
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 72
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DH),  # 73
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 74
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AH, src=Reg.IMM, imm=6),  # 75
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.C),  # 76
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 77
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=81),  # 78
+            MicroInstruction(op=MicroOp.NOT, dst=Reg.AH, src=Reg.AH),  # 79
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.IMM, imm=1),  # 80
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.EA, src=Reg.IMM, imm=127),  # 81: CHECK_EXP
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=98),  # 82
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=90),  # 83
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=0),  # 84: EXP_POS
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.EA, src=Reg.IMM, imm=127),  # 85
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 86
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BL, src=Reg.IMM, imm=23),  # 87
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 88
+            MicroInstruction(op=MicroOp.JMP, imm=117),  # 89
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=1),  # 90: EXP_NEG
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BH, src=Reg.IMM, imm=31),  # 91
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BL, src=Reg.IMM, imm=127),  # 92
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.BL, src=Reg.EA, imm=0),  # 93
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BL, src=Reg.IMM, imm=23),  # 94
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.BL, src=Reg.AH, imm=0),  # 95
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AH, src=Reg.BL),  # 96
+            MicroInstruction(op=MicroOp.JMP, imm=117),  # 97
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=0),  # 98: EXP_ZERO
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AH),  # 99
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 100
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=109),  # 101
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.BL, src=Reg.IMM, imm=31),  # 102
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 103
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=117),  # 104
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=1),  # 105
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BH, src=Reg.IMM, imm=31),  # 106
+            MicroInstruction(op=MicroOp.NOT, dst=Reg.AH, src=Reg.AH),  # 107
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.IMM, imm=1),  # 108
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL, imm=0),  # 109: RET_ZERO
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 110
+            MicroInstruction(op=MicroOp.HALT),  # 111
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.BH),  # 112: RET_INPUT
+            MicroInstruction(op=MicroOp.HALT),  # 113
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ERR, imm=1),  # 114: DOMAIN_ERR
+            MicroInstruction(op=MicroOp.HALT),  # 115
+            MicroInstruction(op=MicroOp.HALT),  # 116: TRAP_UNDERFLOW
+            MicroInstruction(op=MicroOp.LZC, dst=Reg.BL, src=Reg.AH),  # 117: NORMALIZE
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.EA, src=Reg.IMM, imm=135),  # 118
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.EA, src=Reg.BL, imm=0),  # 119
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=8),  # 120
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.C, src=Reg.BL, imm=0),  # 121
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.SIGN, imm=125),  # 122
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AH, src=Reg.C, imm=0),  # 123
+            MicroInstruction(op=MicroOp.JMP, imm=128),  # 124
+            MicroInstruction(op=MicroOp.NOT, dst=Reg.C, src=Reg.C),  # 125: SHIFT_LEFT
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.C, src=Reg.IMM, imm=1),  # 126
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.C, imm=0),  # 127
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 128: DO_PACK
+            MicroInstruction(op=MicroOp.OR, dst=Reg.BH, src=Reg.BH),  # 129
+            MicroInstruction(op=MicroOp.PACK, dst=Reg.AL, src=Reg.EA),  # 130
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 131
+            MicroInstruction(op=MicroOp.HALT),  # 132
+        ],
+        UserOpcode.EXP2_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),  # 0: START
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=116),  # 1
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BH, src=Reg.AL),  # 2
+            MicroInstruction(op=MicroOp.UNPACK, dst=Reg.EA, src=Reg.AL),  # 3
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=101),  # 4
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=0),  # 5
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.SIGN, imm=8),  # 6
+            MicroInstruction(op=MicroOp.JMP, imm=9),  # 7
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=1),  # 8: SAVE_NEG
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 9: CHECK_SPECIAL
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=255),  # 10
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=114),  # 11
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.EA, src=Reg.IMM, imm=127),  # 12: CHECK_EXP
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=26),  # 13
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.EA, src=Reg.IMM, imm=127),  # 14: EXP_GE
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 15
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=7),  # 16
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.CARRY, imm=23),  # 17
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=23),  # 18
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.C),  # 19
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 20
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=107),  # 21
+            MicroInstruction(op=MicroOp.JMP, imm=104),  # 22
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 23: IN_RANGE_GE
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.BL, imm=0),  # 24
+            MicroInstruction(op=MicroOp.JMP, imm=29),  # 25
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BL, src=Reg.IMM, imm=127),  # 26: EXP_LESS
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.BL, src=Reg.EA, imm=0),  # 27
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AL, src=Reg.BL, imm=0),  # 28
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AL),  # 29: EXTRACT_K_R
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=1),  # 30
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BH, src=Reg.IMM, imm=22),  # 31
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BH, imm=0),  # 32
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AL, src=Reg.IMM, imm=23),  # 33
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.EA, src=Reg.AL),  # 34
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AL, src=Reg.IMM, imm=23),  # 35
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.BL, src=Reg.AL, imm=0),  # 36
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BL, src=Reg.IMM, imm=8),  # 37
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BH, src=Reg.C),  # 38
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BH, src=Reg.IMM, imm=0),  # 39
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=43),  # 40
+            MicroInstruction(op=MicroOp.NOT, dst=Reg.BL, src=Reg.BL),  # 41
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.BL, src=Reg.IMM, imm=1),  # 42
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DH, src=Reg.BL),  # 43: EVAL_POLY
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.AL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C6),  # 44
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 45
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 46
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C5),  # 47
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 48
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 49
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 50
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 51
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C4),  # 52
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 53
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 54
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 55
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 56
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C3),  # 57
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 58
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 59
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 60
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 61
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C2),  # 62
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 63
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 64
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 65
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 66
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.BL, src=FpuTable.CHEB, imm=FpuCheb.EXP2_C1),  # 67
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 68
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 69
+            MicroInstruction(op=MicroOp.MUL, dst=Reg.AL, src=Reg.DH),  # 70
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 71
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BL, src=Reg.IMM, imm=1),  # 72
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.BL, src=Reg.IMM, imm=31),  # 73
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.BL, imm=0),  # 74
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AH),  # 75
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.BL, src=Reg.IMM, imm=31),  # 76
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 77
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=82),  # 78
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.EB, src=Reg.IMM, imm=127),  # 79
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AH, src=Reg.IMM, imm=8),  # 80
+            MicroInstruction(op=MicroOp.JMP, imm=85),  # 81
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.EB, src=Reg.IMM, imm=126),  # 82: MANT_LESS_ONE
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),  # 83
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AH, src=Reg.IMM, imm=8),  # 84
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.C),  # 85: CALC_FINAL_EXP
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=0),  # 86
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=92),  # 87
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 88
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.EA, src=Reg.EB),  # 89
+            MicroInstruction(op=MicroOp.EXP_SUB, dst=Reg.EA, src=Reg.BL, imm=0),  # 90
+            MicroInstruction(op=MicroOp.JMP, imm=95),  # 91
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),  # 92: POS_EXP_SUM
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.EA, src=Reg.EB),  # 93
+            MicroInstruction(op=MicroOp.EXP_ADD, dst=Reg.EA, src=Reg.BL, imm=0),  # 94
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),  # 95: DO_PACK
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=0),  # 96
+            MicroInstruction(op=MicroOp.OR, dst=Reg.BH, src=Reg.BH),  # 97
+            MicroInstruction(op=MicroOp.PACK, dst=Reg.AL, src=Reg.EA),  # 98
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 99
+            MicroInstruction(op=MicroOp.HALT),  # 100
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.AL, src=FpuTable.CONST, imm=FpuConst.ONE_F32),  # 101: RET_ONE
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 102
+            MicroInstruction(op=MicroOp.HALT),  # 103
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL, imm=0),  # 104: RET_ZERO
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 105
+            MicroInstruction(op=MicroOp.HALT),  # 106
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.EA, src=Reg.IMM, imm=255),  # 107: RET_INF
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.AL, src=Reg.IMM, imm=0),  # 108
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.BH, src=Reg.IMM, imm=0),  # 109
+            MicroInstruction(op=MicroOp.OR, dst=Reg.BH, src=Reg.BH),  # 110
+            MicroInstruction(op=MicroOp.PACK, dst=Reg.AL, src=Reg.EA),  # 111
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),  # 112
+            MicroInstruction(op=MicroOp.HALT),  # 113
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.BH),  # 114: RET_INPUT
+            MicroInstruction(op=MicroOp.HALT),  # 115
+            MicroInstruction(op=MicroOp.HALT),  # 116: TRAP_UNDERFLOW
         ],
         # CHS_I32:
         # 0: POP BL

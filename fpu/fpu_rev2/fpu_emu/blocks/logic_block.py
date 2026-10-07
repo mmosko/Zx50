@@ -233,10 +233,12 @@ class LogicBlock(FunctionalBlock):
         assert instr.src is not Reg.NONE
         assert instr.dst is not Reg.NONE
         assert instr.src.is_lo_half()
+        assert instr.src1 is Reg.NONE or instr.src1.is_lo_half()
         assert instr.dst.is_lo_half()
 
         # Cycle 1: low word
-        self._ha_mux.select(instr.dst.value)
+        src1 = instr.dst if instr.src1 is Reg.NONE else instr.src1
+        self._ha_mux.select(src1.value)
         self._hb_mux.select(instr.src.value)
         result_lo = self._logic_core(op)
         self._outputs.block_res.set(result_lo.res)
@@ -244,7 +246,7 @@ class LogicBlock(FunctionalBlock):
         self._writeback()
 
         # Cycle 2: high word
-        self._ha_mux.select(instr.dst.value | 1)
+        self._ha_mux.select(src1.value | 1)
         self._hb_mux.select(instr.src.value | 1)
         result_hi = self._logic_core(op)
         result_hi.zf &= result_lo.zf

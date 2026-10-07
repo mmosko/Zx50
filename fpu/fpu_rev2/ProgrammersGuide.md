@@ -145,8 +145,8 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b0001_1fff` | `0x18`–`0x1B` | `DIV_fff` | `( a b -- quot )` | $-4$ / $-8$ | 8 / 16 B | 16–32 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Div-by-Zero ($ERR=1, V=1$), Float Underflow ($U=1$) |
 | `0b0010_00x1` | `0x21`, `0x23` | `SQRT_F32/F64`| `( x -- root )` | $0$ | 4 / 8 B | 16–32 | X | X | 0 | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Negative Operand ($ERR=1$) |
 | `0b0010_10x1` | `0x29`, `0x2B` | `POW_F32/F64` | `( base exp -- res )` | $-4$ / $-8$ | 8 / 16 B | ~120 | X | X | X | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow/Underflow |
-| `0b0011_00x1` | `0x31`, `0x33` | `LN_F32/F64`  | `( x -- ln_x )` | $0$ | 4 / 8 B | ~60 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Non-positive Operand $x \le 0$ ($ERR=1$) |
-| `0b0011_10x1` | `0x39`, `0x3B` | `EXP_F32/F64` | `( x -- e_x )` | $0$ | 4 / 8 B | ~60 | X | X | 0 | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow ($V=1$), Underflow ($U=1$) |
+| `0b0011_00x1` | `0x31`, `0x33` | `LOG2_F32/F64`| `( x -- log2_x )`| $0$ | 4 / 8 B | ~60 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Non-positive Operand $x \le 0$ ($ERR=1$) |
+| `0b0011_10x1` | `0x39`, `0x3B` | `EXP2_F32/F64`| `( x -- 2_x )`   | $0$ | 4 / 8 B | ~60 | X | X | 0 | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow ($V=1$), Underflow ($U=1$) |
 | `0b0101_0fff` | `0x50`–`0x53` | `CHS_fff` | `( x -- -x )` | $0$ | 4 / 8 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int Negate Overflow ($V=1$) |
 | `0b0101_1fff` | `0x58`–`0x5B` | `ABS_fff` | `( x -- \|x\| )` | $0$ | 4 / 8 B | 1–2 | X | X | 0 | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Int MaxNeg Overflow ($V=1$) |
 | `0b0110_00x1` | `0x61`, `0x63` | `FLOOR_F32/F64`| `( x -- floor )` | $0$ | 4 / 8 B | ~10 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$) |

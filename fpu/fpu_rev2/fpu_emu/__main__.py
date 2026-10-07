@@ -32,11 +32,11 @@ import fpu_emu.writeback_mux  # noqa: F401
 def generate_microcode_report() -> str:
     """Generates the microcode capacity and utilization summary."""
     total = MicroCode.total_instructions()
-    max_cap = MicroCode.MAX_MICRO_INSTRUCTIONS
+    max_cap = MicroCode.HARD_MAX_MICRO_INSTRUCTIONS
     remaining = MicroCode.remaining_capacity()
     pct = (total / max_cap) * 100
     return (
-        "**Microcode ROM Capacity (EBR 5 & 6, 512x32):**\n"
+        f"**Microcode ROM Capacity (EBR 5 & 6, {max_cap}x32):**\n"
         f"- **Utilized Instructions:** {total} / {max_cap} ({pct:.1f}%)\n"
         f"- **Remaining Capacity:** {remaining} instructions"
     )

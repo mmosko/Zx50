@@ -1,5 +1,28 @@
 # Microcode Instruction Reference Manual
 
+Instructions are of these forms:
+
+- Nullary, e.g. `RET`
+- Unary, e.g. `POP AL` such that `AL <- TOS`
+- Binary, e.g. `ADD AL, BL` such that `AL <- AL + BL`
+- Ternary, e.g. `ADD AL, BL, DL` such that `AL <- BL + DL`
+
+The physical registers are 32-bits each (unless stated otherwise):
+
+- AL and AH 
+- BL and BH
+- DL and DH
+- FL and FH
+- EA (12-bit)
+- EB (12-bit)
+- C (6-bit)
+
+In the assembly, pseudo-registers AX, BX, DX, and FX denote 64-bit operations, e.g `ADD AX, BX`.
+
+When resolving an instruction, the destination (`dst`) can be any of the physical registers.  The other two
+are sources: `src1` and `src2`.   `src1` can be any of AL, AH, BL, BH, C, and an immediate value (IMM).
+`src2` can be any of the physical registers, or an immediate value (IMM).
+
 ### Block 0 (0b000): Arithmetic / Adder Block
 
 ```
@@ -48,6 +71,15 @@ After execution of ADD AL, BL:
   Non-zero result: sets ZERO (Z) to 0
   Positive + Positive = Negative: sets OVERFLOW (V) to 1
 ```
+
+---
+
+```
+================================================================================
+ADD dst, src1, src2  — ADD REGISTER TO REGISTER
+================================================================================
+```
+
 
 ---
 
@@ -247,6 +279,7 @@ After execution of CMP AL, BL:
 ```
 ================================================================================
 EXP_ADD EA, src — EXPONENT 12-BIT ADDITION
+EXP_ADD dst, src1, src2 -- EXPONENT 12-BIT ADDITION register to register/immediate
 ================================================================================
 ```
 
@@ -292,6 +325,7 @@ After execution of EXP_ADD EA, EB:
 ```
 ================================================================================
 EXP_SUB EA, src — EXPONENT 12-BIT SUBTRACTION
+EXP_SUB dst, src1, src2 -- EXPONENT 12-BIT SUBTRACTION register to register/immediate
 ================================================================================
 ```
 
@@ -608,6 +642,7 @@ After execution of MOD AL, BL:
 ```
 ================================================================================
 AND dst, src / AND AX, src — BITWISE LOGICAL AND
+AND dst, src1, src2  — BITWISE LOGICAL AND (dst <- src1 & src2)
 ================================================================================
 ```
 
@@ -656,6 +691,7 @@ After execution of AND AL, BL:
 ```
 ================================================================================
 OR dst, src / OR AX, src — BITWISE LOGICAL OR
+OR dst, src1, src2  — BITWISE LOGICAL OR (dst <- src1 | src2)
 ================================================================================
 ```
 
@@ -704,6 +740,7 @@ After execution of OR AL, BL:
 ```
 ================================================================================
 XOR dst, src / XOR AX, src — BITWISE LOGICAL EXCLUSIVE OR
+XOR dst, src1, src2  — BITWISE LOGICAL XOR (dst <- src1 ^ src2)
 ================================================================================
 ```
 

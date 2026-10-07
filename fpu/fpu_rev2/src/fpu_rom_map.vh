@@ -20,6 +20,7 @@
   `define FLASH_CORDIC_ATAN32_BASE 15'h1800
   `define FLASH_CORDIC_ATAN64_BASE 15'h1900
   `define FLASH_TRIG_CONST_BASE    15'h1B00
+  `define FLASH_CHEB_BASE          15'h1C00
 
   // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)
   `define CONST_SLOT_PI_F32             6'd0
@@ -55,5 +56,19 @@
   `define CONST_SLOT_CW_C3_F64          6'd53
   `define CONST_SLOT_CORDIC_INV_K_32    6'd55
   `define CONST_SLOT_CORDIC_INV_K_64    6'd56
+  `define CONST_SLOT_LN10_F32           6'd58
+  `define CONST_SLOT_LN10_F64           6'd60
+
+  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from FLASH_CHEB_BASE)
+  `define CHEB_SLOT_LOG2_C0            6'd0
+  `define CHEB_SLOT_LOG2_C1            6'd1
+  `define CHEB_SLOT_LOG2_C2            6'd2
+  `define CHEB_SLOT_LOG2_C3            6'd3
+  `define CHEB_SLOT_EXP2_C1            6'd4
+  `define CHEB_SLOT_EXP2_C2            6'd5
+  `define CHEB_SLOT_EXP2_C3            6'd6
+  `define CHEB_SLOT_EXP2_C4            6'd7
+  `define CHEB_SLOT_EXP2_C5            6'd8
+  `define CHEB_SLOT_EXP2_C6            6'd9
 
 `endif // FPU_ROM_MAP_VH

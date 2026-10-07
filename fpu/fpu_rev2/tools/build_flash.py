@@ -35,10 +35,11 @@ FLASH_COS_BASE = 0x0E00  # Cosine Table (512 bytes)
 FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
 FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
 FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
-FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (128 bytes)
+FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (256 bytes)
 FLASH_CORDIC_ATAN32_BASE = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes: 32 x 4 bytes)
 FLASH_CORDIC_ATAN64_BASE = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes: 64 x 8 bytes)
 FLASH_TRIG_CONST_BASE = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes: 16 x 8 bytes)
+FLASH_CHEB_BASE = 0x1C00  # Chebyshev & Polynomial Coefficients (512 bytes: 128 x 4 bytes)
 
 TABLES_DEF = [
     ("RECIP", FLASH_RECIP_BASE, "Reciprocal Table (512 bytes)"),
@@ -50,10 +51,11 @@ TABLES_DEF = [
     ("TAN", FLASH_TAN_BASE, "Tangent Table (512 bytes)"),
     ("LN", FLASH_LN_BASE, "Natural Log Table (512 bytes)"),
     ("LOG10", FLASH_LOG10_BASE, "Base-10 Log Table (512 bytes)"),
-    ("CONST", FLASH_CONST_BASE, "Mathematical Constants Table (128 bytes)"),
+    ("CONST", FLASH_CONST_BASE, "Mathematical Constants Table (256 bytes)"),
     ("CORDIC_ATAN32", FLASH_CORDIC_ATAN32_BASE, "CORDIC Arctangent 32-bit Table (128 bytes)"),
     ("CORDIC_ATAN64", FLASH_CORDIC_ATAN64_BASE, "CORDIC Arctangent 64-bit Table (512 bytes)"),
     ("TRIG_CONST", FLASH_TRIG_CONST_BASE, "Trigonometric & CORDIC Constants (128 bytes)"),
+    ("CHEB", FLASH_CHEB_BASE, "Chebyshev & Polynomial Coefficients Table (512 bytes)"),
 ]
 
 HEADER_FILE = "src/fpu_rom_map.vh"
@@ -217,6 +219,25 @@ CONSTANTS_DEF = [
     # CORDIC Constants
     ("CORDIC_INV_K_32", 55, 0x26DD3B6A, 4, "CORDIC 1/K scale factor in Q2.30"),
     ("CORDIC_INV_K_64", 56, 0x26DD3B6A10D7969A, 8, "CORDIC 1/K scale factor in Q2.62"),
+
+    # Natural Log of 10 Constants
+    ("LN10_F32", 58, 0x40135D8E, 4, "ln(10) in IEEE-754 single precision"),
+    ("LN10_F64", 60, 0x40026BB1BBB55516, 8, "ln(10) in IEEE-754 double precision"),
+]
+
+CHEB_DEF = [
+    # (enum_name, slot, hex_val, description)
+    ("LOG2_C0", 0, 0x5C551D94, "log2 minimax c0 (2.88539008 in Q3.29)"),
+    ("LOG2_C1", 1, 0x1EC70D70, "log2 minimax c1 (0.96179840 in Q3.29)"),
+    ("LOG2_C2", 2, 0x1274D895, "log2 minimax c2 (0.57676343 in Q3.29)"),
+    ("LOG2_C3", 3, 0x0DC63ED4, "log2 minimax c3 (0.43044988 in Q3.29)"),
+    ("EXP2_C1", 4, 0x58B90C26, "exp2 Taylor c1 (ln(2) in Q1.31)"),
+    ("EXP2_C2", 5, 0x1EBFBE08, "exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)"),
+    ("EXP2_C3", 6, 0x071ABC52, "exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)"),
+    ("EXP2_C4", 7, 0x013B29F7, "exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)"),
+    ("EXP2_C5", 8, 0x002BE4C7, "exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)"),
+    ("EXP2_C6", 9, 0x00051153, "exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)"),
+    ("SQRT2_MANT", 10, 0x00B504F3, "sqrt(2) mantissa threshold (bit 23 implicit 1)"),
 ]
 
 
@@ -227,6 +248,15 @@ def generate_constants_table() -> bytearray:
         offset = slot * 4
         raw = hex_val.to_bytes(nbytes, byteorder="little")
         data[offset : offset + nbytes] = raw
+    return data
+
+
+def generate_cheb_table() -> bytearray:
+    """Table 15: Chebyshev & Polynomial Coefficients (512 bytes / 128 words)."""
+    data = bytearray(128 * 4)
+    for _, slot, hex_val, _ in CHEB_DEF:
+        offset = slot * 4
+        data[offset : offset + 4] = hex_val.to_bytes(4, byteorder="little")
     return data
 
 
@@ -361,6 +391,7 @@ def populate_flash_memory(flash_mem: bytearray) -> bytearray:
     cordic_atan32 = generate_cordic_atan32_table()
     cordic_atan64 = generate_cordic_atan64_table()
     trig_consts = generate_trig_constants_table()
+    cheb = generate_cheb_table()
 
     flash_mem[FLASH_RECIP_BASE : FLASH_RECIP_BASE + len(recip)] = recip
     flash_mem[FLASH_SQRT_BASE : FLASH_SQRT_BASE + len(sqrt)] = sqrt
@@ -375,6 +406,7 @@ def populate_flash_memory(flash_mem: bytearray) -> bytearray:
     flash_mem[FLASH_CORDIC_ATAN32_BASE : FLASH_CORDIC_ATAN32_BASE + len(cordic_atan32)] = cordic_atan32
     flash_mem[FLASH_CORDIC_ATAN64_BASE : FLASH_CORDIC_ATAN64_BASE + len(cordic_atan64)] = cordic_atan64
     flash_mem[FLASH_TRIG_CONST_BASE : FLASH_TRIG_CONST_BASE + len(trig_consts)] = trig_consts
+    flash_mem[FLASH_CHEB_BASE : FLASH_CHEB_BASE + len(cheb)] = cheb
 
     return flash_mem
 
@@ -409,10 +441,15 @@ def write_verilog_header(header_path: str):
         f.write(f"  `define FLASH_CONST_BASE         15'h{FLASH_CONST_BASE:04X}\n")
         f.write(f"  `define FLASH_CORDIC_ATAN32_BASE 15'h{FLASH_CORDIC_ATAN32_BASE:04X}\n")
         f.write(f"  `define FLASH_CORDIC_ATAN64_BASE 15'h{FLASH_CORDIC_ATAN64_BASE:04X}\n")
-        f.write(f"  `define FLASH_TRIG_CONST_BASE    15'h{FLASH_TRIG_CONST_BASE:04X}\n\n")
+        f.write(f"  `define FLASH_TRIG_CONST_BASE    15'h{FLASH_TRIG_CONST_BASE:04X}\n")
+        f.write(f"  `define FLASH_CHEB_BASE          15'h{FLASH_CHEB_BASE:04X}\n\n")
         f.write("  // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)\n")
         for name, slot, _, _, _ in CONSTANTS_DEF:
             f.write(f"  `define CONST_SLOT_{name:<18} 6'd{slot}\n")
+        f.write("\n")
+        f.write("  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from FLASH_CHEB_BASE)\n")
+        for name, slot, _, _ in CHEB_DEF:
+            f.write(f"  `define CHEB_SLOT_{name:<18} 6'd{slot}\n")
         f.write("\n")
         f.write("`endif // FPU_ROM_MAP_VH\n")
 
@@ -443,12 +480,20 @@ def write_python_constants(py_path: str):
         f.write("    TRIG = 0b100   # 4: EBR 2 & 3 (paired 32-bit), base 0x000 (words 0..127)\n")
         f.write("    CHEB = 0b101   # 5: EBR 2 & 3 (paired 32-bit), base 0x080 (words 128..255)\n")
         f.write("    CONST = 0b110  # 6: EBR 2 & 3 (paired 32-bit), base 0x100 (words 256..319)\n\n\n")
+        f.write("class FpuCheb(IntEnum):\n")
+        f.write('    """Chebyshev / Polynomial Coefficients Word Slot Map for EBR CHEB ROM.\n')
+        f.write("    Each slot represents a 32-bit word offset from CHEB table base (EBR 2/3 offset 0x080).\n")
+        f.write('    """\n')
+        for name, slot, _, desc in CHEB_DEF:
+            f.write(f"    {name} = {slot}  # {desc}\n")
+        f.write("\n\n")
         f.write("class FpuConst(IntEnum):\n")
         f.write('    """FPU Constants Word Slot Map for EBR Constants ROM.\n')
         f.write("    Each slot represents a 32-bit word offset from CONST table base (EBR 2/3 offset 0x100).\n")
         f.write('    """\n')
         for name, slot, _, _, desc in CONSTANTS_DEF:
             f.write(f"    {name} = {slot}  # {desc}\n")
+        f.write("\n")
         f.write("\n")
 
 
