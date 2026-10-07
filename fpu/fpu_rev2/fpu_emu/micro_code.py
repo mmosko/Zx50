@@ -5,6 +5,7 @@ from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.registers import Reg, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction, IW
 from fpu_emu.micro_opcodes import MicroOp
+from fpu_emu.rom.fpu_const_map import FpuTable
 from fpu_emu.user_opcodes import UserOpcode
 
 
@@ -517,6 +518,139 @@ class MicroCode:
             MicroInstruction(op=MicroOp.OR, dst=Reg.BH, src=Reg.BH),
             MicroInstruction(op=MicroOp.PACK, dst=Reg.AL, src=Reg.EA),
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        # SQRT_F32:
+        #  0: POP AL                      # Pop input float32 X into AL
+        #  1: JNZ UNDERFLOW -> 54         # Underflow trap
+        #  2: MOV BH, AL                  # Save raw input in BH (for zero/NaN preservation)
+        #  3: UNPACK EA, AL               # AL <- mantissa (bit 23 set), EA <- biased exponent
+        #  4: JZ ZERO -> 55               # If X == 0: push original input (BH) and return
+        #  5: JNZ SIGN -> 57              # If X < 0: domain error (assert ERR and abort)
+        #  6: MOV BL, EA                  # BL <- biased exponent
+        #  7: CMP BL, IMM=255             # Check for Inf / NaN
+        #  8: JZ ZERO -> 55               # If Inf or NaN: push original input (BH) and return
+        #  9: AND BL, IMM=1               # Check exponent parity (BL & 1)
+        # 10: JZ ZERO -> 18               # If even exponent: jump to EVEN_EXP (line 18)
+        # --- ODD_EXP (E unbiased is even: e = 2k => E is odd) ---
+        # 11: MOV DL, AL                  # DL <- mantissa (Q0.24)
+        # 12: LSL DL, IMM=7               # DL <- S in Q2.30 (range [1.0, 2.0))
+        # 13: MOV BL, AL                  # BL <- mantissa
+        # 14: LSR BL, IMM=16              # Shift out low bits
+        # 15: AND BL, IMM=0x7F            # BL <- fraction index bits [22:16], bit 7 = 0
+        # 16: EXP_ADD EA, IMM=127         # EA <- (E + 127)
+        # 17: JMP 25                      # Jump to REJOIN
+        # --- EVEN_EXP (E unbiased is odd: e = 2k+1 => E is even) ---
+        # 18: MOV DL, AL                  # DL <- mantissa (Q0.24)
+        # 19: LSL DL, IMM=8               # DL <- 2*M = S in Q2.30 (range [2.0, 4.0))
+        # 20: MOV BL, AL                  # BL <- mantissa
+        # 21: LSR BL, IMM=16              # Shift out low bits
+        # 22: AND BL, IMM=0x7F            # Fraction index bits [22:16]
+        # 23: OR BL, IMM=0x80             # Set bit 7 = 1 (selects table range [2.0, 4.0))
+        # 24: EXP_ADD EA, IMM=126         # EA <- (E + 126)
+        # --- REJOIN (line 25) ---
+        # 25: MOV FL, EA                  # FL <- EA
+        # 26: LSR FL, IMM=1               # FL <- EA >> 1 (unbiased exponent divided by 2 + 127)
+        # 27: MOV EA, FL                  # EA <- final biased exponent
+        # 28: LDC AH, SQRT, BL            # AH <- 16-bit seed y0 from EBR 4 (SQRT table)
+        # 29: LSL AH, IMM=16              # AH <- y0 in Q0.32
+        # 30: MOV BL, AH                  # BL <- y0 (initial reciprocal square root seed)
+        # 31: LDI DH, IMM=3               # Constant 3 in DH
+        # 32: LSL DH, IMM=30              # DH <- 3.0 in Q2.30 (0xC0000000)
+        # 33: LDI C, IMM=2                # Counter C <- 2 iterations of Newton-Raphson
+        # --- LOOP_NR (line 34..46) ---
+        # 34: MOV AL, BL                  # AL <- y
+        # 35: MULU AL, BL                 # {AH, AL} <- y^2 (high 32 bits in AH is Q2.30)
+        # 36: MOV AL, AH                  # AL <- y^2
+        # 37: MULU AL, DL                 # {AH, AL} <- S * y^2 (high 32 bits in AH is Q2.30)
+        # 38: MOV BH, DH                  # BH <- 3.0 (from DH)
+        # 39: SUB BH, AH                  # BH <- 3.0 - S * y^2 (valid on ha_mux!)
+        # 40: MOV AL, BL                  # AL <- y
+        # 41: MULU AL, BH                 # {AH, AL} <- y * (3.0 - S * y^2) (Q2.62)
+        # 42: LSL AH, IMM=1               # High word shift: AH << 1 (divide by 2 in Q0.32)
+        # 43: LSR AL, IMM=31              # Carry bit from AL: AL >> 31
+        # 44: OR AH, AL                   # AH <- (AH << 1) | (AL >> 31)
+        # 45: MOV BL, AH                  # BL <- updated y
+        # 46: DJNZ 34                     # Loop 2 iterations
+        # --- RESULT FORMATION (line 47..53) ---
+        # 47: MOV AL, BL                  # AL <- final reciprocal square root y
+        # 48: MULU AL, DL                 # {AH, AL} <- S * y = sqrt(S) in Q2.30
+        # 49: ADD AH, IMM=0x40            # Half-ULP rounding bias
+        # 50: LSR AH, IMM=7               # Align mantissa: bit 23 implicit 1 is at bit 23
+        # 51: PACK AH, EA                 # Pack float32: mantissa AH, exponent EA, sign=0
+        # 52: PUSH AH                     # Push result to stack
+        # 53: HALT                        # Done
+        # --- SPECIAL & ERROR HANDLERS (line 54..58) ---
+        # 54: HALT                        # Stack underflow trap
+        # 55: PUSH BH                     # RET_INPUT: push original input (for 0.0, -0.0, +Inf, NaN)
+        # 56: HALT
+        # 57: LDI Reg.NONE, IMM=1, ERR    # DOMAIN_ERR: assert ERR flag (X < 0)
+        # 58: HALT
+        UserOpcode.SQRT_F32: [
+            MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=54),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.UNPACK, dst=Reg.EA, src=Reg.AL),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=55),
+            MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.SIGN, imm=57),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.EA),
+            MicroInstruction(op=MicroOp.CMP, dst=Reg.BL, src=Reg.IMM, imm=255),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=55),
+            MicroInstruction(op=MicroOp.AND, dst=Reg.BL, src=Reg.IMM, imm=1),
+            MicroInstruction(op=MicroOp.JZ, flag=StatusFlag.ZERO, imm=18),
+            # ODD_EXP (11..17)
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.DL, src=Reg.IMM, imm=7),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.BL, src=Reg.IMM, imm=16),
+            MicroInstruction(op=MicroOp.AND, dst=Reg.BL, src=Reg.IMM, imm=0x7F),
+            MicroInstruction(op=MicroOp.EXP_ADD, dst=Reg.EA, src=Reg.IMM, imm=127),
+            MicroInstruction(op=MicroOp.JMP, imm=25),
+            # EVEN_EXP (18..24)
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.DL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.DL, src=Reg.IMM, imm=8),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AL),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.BL, src=Reg.IMM, imm=16),
+            MicroInstruction(op=MicroOp.AND, dst=Reg.BL, src=Reg.IMM, imm=0x7F),
+            MicroInstruction(op=MicroOp.OR, dst=Reg.BL, src=Reg.IMM, imm=0x80),
+            MicroInstruction(op=MicroOp.EXP_ADD, dst=Reg.EA, src=Reg.IMM, imm=126),
+            # REJOIN (25..33)
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.FL, src=Reg.EA),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.FL, src=Reg.IMM, imm=1),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.EA, src=Reg.FL),
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.AH, src=FpuTable.SQRT, src1=Reg.BL),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=16),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AH),
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.DH, src=Reg.IMM, imm=3),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.DH, src=Reg.IMM, imm=30),
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.C, src=Reg.IMM, imm=2),
+            # LOOP_NR (34..46)
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.AH),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DL),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BH, src=Reg.DH),
+            MicroInstruction(op=MicroOp.SUB, dst=Reg.BH, src=Reg.AH),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.BH),
+            MicroInstruction(op=MicroOp.LSL, dst=Reg.AH, src=Reg.IMM, imm=1),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AL, src=Reg.IMM, imm=31),
+            MicroInstruction(op=MicroOp.OR, dst=Reg.AH, src=Reg.AL),
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.BL, src=Reg.AH),
+            MicroInstruction(op=MicroOp.DJNZ, imm=34),
+            # RESULT (47..53)
+            MicroInstruction(op=MicroOp.MOV, dst=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.MULU, dst=Reg.AL, src=Reg.DL),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AH, src=Reg.IMM, imm=0x40),
+            MicroInstruction(op=MicroOp.LSR, dst=Reg.AH, src=Reg.IMM, imm=7),
+            MicroInstruction(op=MicroOp.PACK, dst=Reg.AH, src=Reg.EA),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.AH),
+            MicroInstruction(op=MicroOp.HALT),
+            # SPECIAL / ERROR (54..58)
+            MicroInstruction(op=MicroOp.HALT),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.BH),
+            MicroInstruction(op=MicroOp.HALT),
+            MicroInstruction(op=MicroOp.LDI, dst=Reg.NONE, src=Reg.IMM, flag=StatusFlag.ERR, imm=1),
             MicroInstruction(op=MicroOp.HALT),
         ],
         # CHS_I32:
