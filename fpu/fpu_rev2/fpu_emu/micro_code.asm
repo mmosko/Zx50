@@ -2,7 +2,7 @@
 ; =========================
 ; ADD_I32
 
-ADD_I32:
+USER_ADD_I32:
     POP BL
     JNZ UF, ADD_I32_HALT
     POP AL
@@ -11,11 +11,50 @@ ADD_I32:
     PUSH AL
 ADD_I32_HALT:
     HALT
-    
+
+; =========================
+; ADD_I64
+
+USER_ADD_I64:
+    POP BX
+    JNZ UF, ADD_I64_HALT
+    POP AX
+    JNZ UF, ADD_I64_HALT
+    ADD AX, BX
+    PUSH AX
+ADD_I64_HALT:
+    HALT
+
+; =========================
+; SUB_I32
+
+USER_SUB_I32:
+    POP BL
+    JNZ UF, SUB_I32_HALT
+    POP AL
+    JNZ UF, SUB_I32_HALT
+    SUB AL, BL
+    PUSH AL
+SUB_I32_HALT:
+    HALT
+
+; =========================
+; SUB_I64
+
+USER_SUB_I64:
+    POP BX
+    JNZ UF, SUB_I64_HALT
+    POP AX
+    JNZ UF, SUB_I64_HALT
+    SUB AX, BX
+    PUSH AX
+SUB_I64_HALT:
+    HALT
 ; =========================
 ; ADD_F32
-ADD_F32:
-    POP BL (pop operand B)
+
+USER_ADD_F32:
+    POP BL                      ; (pop operand B)
     JNZ UNDERFLOW, ADD_F32_HALT
     MOV DL, BL                  ; stash packed B into DL
     POP AL
@@ -39,8 +78,8 @@ ADD_F32_19:
     EXP_SUB C, EA, EB           ; (C <- EA - EB; EA preserved!)
     CMP C, 32
     JNZ CARRY, ADD_F32_24       ; (DO_SHIFT: diff < 32)
-    MOV BL, IMM=0               ; (diff >= 32: smaller mantissa shifts to 0)
-    JMP ADD_F32_24              ; (DO_ARITH)
+    MOV BL, 0                   ; (diff >= 32: smaller mantissa shifts to 0)
+    JMP ADD_F32_25              ; (DO_ARITH)
 ADD_F32_24:
     LSR BL, C                   ; (shift BL right by C)
 ADD_F32_25:
@@ -51,10 +90,10 @@ ADD_F32_28:
     SUB AL, BL
 NORMALIZE:
     LZC AL                              ; (leading zero count into C)
-    JZ ZERO, ADD_F32_46               ; (PACK_ZERO: exact cancellation)
+    JZ ZERO, ADD_F32_46                 ; (PACK_ZERO: exact cancellation)
     CMP C, 8
     JNZ CARRY, ADD_F32_OVERFLOW_RIGHT   ; (OVERFLOW_RIGHT: C < 8)
-    JZ ZERO -> ADD_F32_DONE_NORM        ; (DONE_NORM: C == 8)
+    JZ ZERO, ADD_F32_DONE_NORM          ; (DONE_NORM: C == 8)
     SUB C, 8                            ; (C <- C - 8)
     LSL AL, C                           ; (AL <- AL << C)
     EXP_SUB EA, C                       ; (EA <- EA - C)
@@ -69,7 +108,7 @@ ADD_F32_RETURN_A:
     PUSH AL
     HALT
 ADD_F32_RETURN_B:
-    PUSH DL ; RETURN_B
+    PUSH DL                 ; RETURN_B
     HALT
 ADD_F32_46:
     SUB AL, AL               ; (PACK_ZERO: AL <- 0)

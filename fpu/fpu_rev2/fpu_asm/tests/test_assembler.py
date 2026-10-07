@@ -33,7 +33,7 @@ def test_assemble_sample_program():
     assert u0.w == IW.W32
     assert u0.dst == Reg.AL
     assert u0.src == Reg.BL
-    assert u0.src1 == Reg.AL
+    assert u0.src1 == Reg.NONE
     assert u0.imm == 0
 
     # [1] ADD AX, BX, DL (64-bit)

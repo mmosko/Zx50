@@ -25,7 +25,7 @@ def test_add_i32():
             MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
             MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
             MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=6),
-            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src1=Reg.AL, src=Reg.BL),
+            MicroInstruction(op=MicroOp.ADD, dst=Reg.AL, src=Reg.BL),
             MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ]
@@ -59,8 +59,8 @@ def test_add_f32():
             EXP_SUB C, EA, EB           ; (C <- EA - EB; EA preserved!)
             CMP C, 32
             JNZ CARRY, ADD_F32_24       ; (DO_SHIFT: diff < 32)
-            MOV BL, IMM=0               ; (diff >= 32: smaller mantissa shifts to 0)
-            JMP ADD_F32_24              ; (DO_ARITH)
+            MOV BL, 0                   ; (diff >= 32: smaller mantissa shifts to 0)
+            JMP ADD_F32_25              ; (DO_ARITH)
         ADD_F32_24:
             LSR BL, C                   ; (shift BL right by C)
         ADD_F32_25:
@@ -95,7 +95,8 @@ def test_add_f32():
             SUB AL, AL               ; (PACK_ZERO: AL <- 0)
             JMP ADD_F32_RETURN_A     ; (PUSH AL, HALT)
         ADD_F32_HALT:
-            HALT"""
+            HALT
+    """
 
     expected = [
             MicroInstruction(op=MicroOp.POP, dst=Reg.BL),

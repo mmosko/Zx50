@@ -238,8 +238,8 @@ class Pass2Encoder(Transformer):
             src1, is_64_s1 = self._normalize_reg(children[idx])
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx + 1])
         else:
-            src1 = dst
-            is_64_s1 = is_64_dst
+            src1 = Reg.NONE
+            is_64_s1 = False
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx])
 
         w = IW.W64 if (forced_w64 or is_64_dst or is_64_s1 or is_64_s2) else IW.W32
@@ -269,8 +269,7 @@ class Pass2Encoder(Transformer):
         return MicroInstruction(
             op=MicroOp.CMP,
             w=w,
-            dst=Reg.NONE,
-            src1=src1,
+            dst=src1,
             src=src2,
             imm=imm,
         )
@@ -283,10 +282,19 @@ class Pass2Encoder(Transformer):
             if children[idx] == ".64":
                 forced_w64 = True
             idx += 1
-        dst, is_64_dst = self._normalize_reg(children[idx])
-        src1, is_64_s1 = self._normalize_reg(children[idx + 1])
-        w = IW.W64 if (forced_w64 or is_64_dst or is_64_s1) else IW.W32
-        return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src1=src1, src=dst)
+        r1, is_64_r1 = self._normalize_reg(children[idx])
+        r2, is_64_r2 = self._normalize_reg(children[idx + 1])
+        w = IW.W64 if (forced_w64 or is_64_r1 or is_64_r2) else IW.W32
+
+        if op_str == "UNPACK":
+            if r2 in (Reg.EA, Reg.EB):
+                dst, src = r2, r1
+            else:
+                dst, src = r1, r2
+        else:
+            dst, src = r1, r2
+
+        return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src=src)
 
     def inst_math_alu(self, children):
         op_str = str(children[0].value).upper()
@@ -305,8 +313,8 @@ class Pass2Encoder(Transformer):
             src1, is_64_s1 = self._normalize_reg(children[idx])
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx + 1])
         else:
-            src1 = dst
-            is_64_s1 = is_64_dst
+            src1 = Reg.NONE
+            is_64_s1 = False
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx])
 
         w = IW.W64 if (forced_w64 or is_64_dst or is_64_s1 or is_64_s2) else IW.W32
@@ -337,8 +345,8 @@ class Pass2Encoder(Transformer):
             src1, is_64_s1 = self._normalize_reg(children[idx])
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx + 1])
         else:
-            src1 = dst
-            is_64_s1 = is_64_dst
+            src1 = Reg.NONE
+            is_64_s1 = False
             src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx])
 
         w = IW.W64 if (forced_w64 or is_64_dst or is_64_s1 or is_64_s2) else IW.W32
@@ -362,7 +370,7 @@ class Pass2Encoder(Transformer):
             idx += 1
         dst, is_64_dst = self._normalize_reg(children[idx])
         w = IW.W64 if (forced_w64 or is_64_dst) else IW.W32
-        return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src1=Reg.NONE, src=dst)
+        return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src1=Reg.NONE, src=Reg.NONE)
 
     def inst_shift(self, children):
         op_str = str(children[0].value).upper()
@@ -388,18 +396,11 @@ class Pass2Encoder(Transformer):
             dst, is_64_dst = self._normalize_reg(children[idx])
             idx += 1
             if idx < len(children):
-                count_raw = children[idx]
-                if isinstance(count_raw, Reg):
-                    src1, _ = self._normalize_reg(count_raw)
-                    imm = 0
-                else:
-                    src1 = Reg.NONE
-                    imm = int(count_raw)
+                src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx])
             else:
-                src1 = Reg.C
-                imm = 0
-            w = IW.W64 if (forced_w64 or is_64_dst) else IW.W32
-            return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src1=src1, src=dst, imm=imm)
+                src2, imm, is_64_s2 = Reg.C, 0, False
+            w = IW.W64 if (forced_w64 or is_64_dst or is_64_s2) else IW.W32
+            return MicroInstruction(op=MicroOp.parse(op_str), w=w, dst=dst, src=src2, imm=imm)
 
     def inst_push(self, children):
         idx = 0
@@ -600,6 +601,8 @@ class Assembler:
             self.parser = Lark(f.read(), parser="earley")
 
     def assemble(self, source_code: str) -> List[Tuple[int, MicroInstruction]]:
+        if not source_code.endswith("\n"):
+            source_code += "\n"
         # Parse into Lark AST
         tree = self.parser.parse(source_code)
 
