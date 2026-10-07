@@ -192,8 +192,12 @@ User_SubF32       = 0x11
 ## 5. Assembly Language Syntax (`fasm`)
 
 ### 5.1 General Rules
+- **Line Structure**: Each line follows the grammar rule:
+  ```text
+  line: [label] [statement] [comment] NEWLINE
+  ```
 - **Case-Insensitive**: Opcodes and registers are case-insensitive (`add al, bl` == `ADD AL, BL`).
-- **Comments**: Start with `;` or `#` and continue to end of line.
+- **Comments**: A semicolon (`;`) denotes a code comment. It may start anywhere on a line and all remaining text to the NEWLINE is a comment.
 - **Labels**: Defined with a trailing colon (e.g. `L_ALIGN:` or `.normalize:`).
 
 ### 5.2 Directives

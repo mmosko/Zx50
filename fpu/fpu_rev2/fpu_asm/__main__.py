@@ -16,7 +16,7 @@ def main():
     program = assembler.assemble(sample_program)
 
     print(f"--- Assembled {len(program)} Micro-Instructions ---\n")
-    for addr, uinst in program.items():
+    for addr, uinst in program:
         print(f"  [0x{addr:03X}] {uinst}")
 
 

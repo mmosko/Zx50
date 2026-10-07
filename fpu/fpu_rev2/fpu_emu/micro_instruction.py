@@ -32,6 +32,27 @@ class MicroInstruction:
     def is_w64(self) -> bool:
         return self.w == IW.W64
 
+    def to_bytes(self) -> bytes:
+        """
+        Machine word format:
+        ```text
+             31        26 25  24     21 20    17 16        14 13     11 10 9                      0
+            +------------+---+---------+--------+------------+---------+-+-----------------------+
+            |   OPCODE   | W |   DST   | SRC2   | FLAG_COND  |  SRC1   | |   IMMEDIATE / ADDR    |
+            |   [5:0]    |   |  [3:0]  | [3:0]  |   [2:0]    |  [2:0]  | |         [9:0]         |
+            +------------+---+---------+--------+------------+---------+-+-----------------------+
+        ```
+        :return:
+        """
+        value = (int(self.op.value) & 0x3F) << 26
+        value |= int(self.w.value) << 25
+        value |= int(self.dst.value & 0x0F) << 21
+        value |= int(self.src.value & 0x0F) << 17
+        value |= (int(self.flag & 0x07) if self.flag is not None else 0) <<14
+        value |= int(self.src1.value & 0x0F) << 11
+        value |= self.imm & 0x3FF
+        return value.to_bytes(byteorder="big", signed=False)
+
     def to_register(self, instr_reg: Register, imm_reg: Register) -> None:
         """Encodes bits [31:11] (21 bits) into a 21-bit Register instance."""
         op_val = int(self.op.value) & 0x3F
