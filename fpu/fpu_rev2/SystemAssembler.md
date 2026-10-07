@@ -8,7 +8,7 @@ The assembler's primary responsibilities are:
 1. **Contiguous ROM Layout**: Assembles all user opcode implementations and shared routines into a single continuous 512-word (expandable to 1024-word) microcode address space.
 2. **Label Resolution**: Converts symbolic labels (forward and backward references) into absolute 10-bit microcode word addresses.
 3. **UserOpcode to Microcode Lookup Table**:
-   - Detects special opcode entry labels of the form `User.<Name>` (e.g. `User.Abs`, `User.AddF32`).
+   - Detects special opcode entry labels of the form `User_<Name>` (e.g. `User_Abs`, `User_AddF32`).
    - Opcode numbers are decoupled from microcode and defined in an external opcode definition table (e.g. `user_opcodes.def`).
    - The assembler merges the opcode definitions and resolved label addresses to generate an opcode dispatch table (`0xZZ -> 0xYYY`) loaded into a dedicated EBR (e.g. EBR 7) or ROM block.
    - Exports all symbols into a `.sym` symbol file with a dedicated section for the opcode lookup table.
@@ -110,13 +110,13 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 
 #### `FLAG_COND` Condition Select (3 bits `[16:14]`)
 ```text
-000: ZERO         (ZF == 1 for JZ, ZF == 0 for JNZ)
-001: SIGN         (SF == 1)
-010: CARRY        (CF == 1)
+000: DIFF_SIGN    (DF == 1)
+001: ERR          (EF == 1)
+010: UNDERFLOW    (UF == 1)
 011: OVERFLOW     (VF == 1)
-100: UNDERFLOW    (UF == 1)
-101: ERR          (EF == 1)
-110: DIFF_SIGN    (DF == 1)
+100: CARRY        (CF == 1)
+101: SIGN         (SF == 1)
+110: ZERO         (ZF == 1 for JZ, ZF == 0 for JNZ)
 111: BUSY         (BF == 1)
 ```
 
@@ -133,7 +133,7 @@ The microcode address space is packed contiguously with user opcode handlers and
 |  USER OPCODE ROUTINES |
 |  - Integer routines   | Packed sequential handler routines.
 |  - Conversion routines| Each routine begins with a label
-|  - FP arithmetic      | of the form: User.<Name>
+|  - FP arithmetic      | of the form: User_<Name>
 +-----------------------+
 |  SHARED SUBROUTINES   | Common reusable blocks
 |  - _align_f32         | Invoked via CALL, returns via RET
@@ -153,14 +153,14 @@ Instead of hardcoding numeric opcode values into the assembler or microcode sour
   3. EBR 7 outputs the 10-bit target microcode address: `target_upc = EBR7[UserOpcode]`.
   4. Hardware loads `UPC <= target_upc` in a single clock cycle, starting microcode execution immediately.
 
-#### Symbolic Label Convention: `User.<Name>`
+#### Symbolic Label Convention: `User_<Name>`
 Microcode labels entry points using purely symbolic names:
 ```fasm
-User.AddF32:
+User_AddF32:
     POP     BL
     ...
 ```
-- `User.`: Prefix identifying the label as a user opcode entry point.
+- `User_`: Prefix identifying the label as a user opcode entry point.
 - `<Name>`: Human-readable symbolic name (e.g. `AddF32`, `SubF32`, `Abs`).
 
 #### Opcode Definition Table (`user_opcodes.def`)
@@ -168,16 +168,16 @@ Numerical opcode assignments are defined in an external mapping table passed to 
 ```ini
 ; user_opcodes.def
 ; Symbolic Name     Opcode
-User.Abs          = 0x01
-User.Chs          = 0x02
-User.AddF32       = 0x10
-User.SubF32       = 0x11
+User_Abs          = 0x01
+User_Chs          = 0x02
+User_AddF32       = 0x10
+User_SubF32       = 0x11
 ```
 - **Clean Separation of Concerns**: Opcode numbers can be renumbered or reorganized without modifying a single line of microcode assembly.
 - **Validation**:
-  - The assembler checks that every entry in `user_opcodes.def` maps to an existing `User.<Name>` label in microcode.
-  - Any unused table entries in EBR 7 are initialized to point to a common `User.Trap` routine.
-  - Unmapped `User.<Name>` labels in microcode trigger an assembler warning or error.
+  - The assembler checks that every entry in `user_opcodes.def` maps to an existing `User_<Name>` label in microcode.
+  - Any unused table entries in EBR 7 are initialized to point to a common `User_Trap` routine.
+  - Unmapped `User_<Name>` labels in microcode trigger an assembler warning or error.
 
 ### 4.3 Subroutine Mechanism (`CALL` / `RET`)
 - **Hardware Support**: ControlBlock includes a 1-deep microcode return register (`reg_file.ret`) and a validity latch (`reg_file.ret_set`).
@@ -205,6 +205,10 @@ User.SubF32       = 0x11
 | `.org <address>` | Sets the current microcode assembly address counter. |
 | `.align <n>` | Pads microcode with `NOP`s until the address is a multiple of `n`. |
 | `.global <label>` | Exports a label across multiple source modules. |
+
+
+Note that the microcode program counter (UPC) is measured in 32-bit words, which is the fixed instruction length.
+So `.org 0x000` means word 0, or `.org 100` means word (instruction) 100.
 
 ### 5.3 Instruction Forms
 
@@ -253,7 +257,7 @@ SRES                            ; Restore STATUS flags from shadow (mask 0x7D pr
 ; USER OPCODE ENTRY POINTS
 ; ======================================================================
 
-User.AddF32:
+User_AddF32:
     POP     BL
     JNZ     UNDERFLOW, .trap_underflow
     MOV     DL, BL              ; Stash packed B
@@ -349,7 +353,7 @@ Source (.fasm) + Opcode Table (.def)
       │
       ▼
 [ Pass 2: Layout ]     --> Resolves label word addresses (0x000 - 0x3FF)
-                       --> Matches User.<Name> against user_opcodes.def to build EBR 7 table
+                       --> Matches User_<Name> against user_opcodes.def to build EBR 7 table
       │
       ▼
 [ Pass 3: Emission ]   --> Generates 32-bit machine binary words
@@ -385,14 +389,14 @@ The `.sym` file contains a dedicated `[USER_OPCODES]` section specifically desig
 ```ini
 [USER_OPCODES]
 ; Opcode  Address  Name
-0x01      0x0010   User.Abs
-0x02      0x0014   User.Chs
-0x10      0x0040   User.AddF32
-0x11      0x008A   User.SubF32
+0x01      0x0010   User_Abs
+0x02      0x0014   User_Chs
+0x10      0x0040   User_AddF32
+0x11      0x008A   User_SubF32
 
 [SYMBOLS]
 ; Address  Scope   Name
-0x0040     global  User.AddF32
+0x0040     global  User_AddF32
 0x0052     local   .do_sub
 0x0054     local   .do_norm
 0x0060     local   .ret_a

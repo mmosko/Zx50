@@ -1060,6 +1060,87 @@ class MicroCode:
             MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
             MicroInstruction(op=MicroOp.HALT),
         ],
+        # Mathematical Constants (0xA0..0xAF) - Using scratch register FL/FH
+        UserOpcode.PUSH_PI_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.PI_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_PI_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.PI_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_E_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.E_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_E_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.E_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LN2_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LN2_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LN2_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LN2_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG2E_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG2E_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG2E_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG2E_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG2_10_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG2_10_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG2_10_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG2_10_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG10_2_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG10_2_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_LOG10_2_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.LOG10_2_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_SQRT2_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.SQRT2_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_SQRT2_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.SQRT2_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_INV_SQRT2_32: [
+            MicroInstruction(op=MicroOp.LDC, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.INV_SQRT2_F32),
+            MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
+        UserOpcode.PUSH_INV_SQRT2_64: [
+            MicroInstruction(op=MicroOp.LDC, w=IW.W64, dst=Reg.FL, src=FpuTable.CONST, imm=FpuConst.INV_SQRT2_F64),
+            MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+            MicroInstruction(op=MicroOp.HALT),
+        ],
     }
 
     # Populate CP_MEM0_TOS..CP_MEM15_TOS (0xD0..0xDF) and CP_TOS_MEM0..CP_TOS_MEM15 (0xE0..0xEF)
