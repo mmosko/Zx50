@@ -103,7 +103,18 @@ def emit_python(
         "fpu_ucode: List[MicroInstruction] = [",
     ]
 
-    for inst in instructions:
+    user_symbols_by_addr: Dict[int, List[str]] = {}
+    if symbols:
+        for name, addr in symbols.items():
+            if name.upper().startswith("USER_"):
+                user_symbols_by_addr.setdefault(addr, []).append(name)
+
+    for idx, inst in enumerate(instructions):
+        if idx in user_symbols_by_addr:
+            if idx > 0:
+                lines.append("")
+            for sym_name in sorted(user_symbols_by_addr[idx]):
+                lines.append(f"    # {sym_name}")
         lines.append(f"    {format_micro_instruction(inst)},")
     lines.append("]\n")
 

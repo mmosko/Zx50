@@ -84,11 +84,14 @@ def test_emit_python():
     ]
     syms = {
         "User_ADD_I32": 0,
-        "User_SUB_I32": 10,
-        "LOOP_START": 2,
+        "User_SUB_I32": 2,
+        "LOOP_START": 1,
     }
 
     py_str = emit_python(insts, symbols=syms)
+    assert "# User_ADD_I32" in py_str
+    assert "# User_SUB_I32" in py_str
+
     # Ensure it's valid executable Python
     namespace = {}
     exec(py_str, namespace)
@@ -103,7 +106,7 @@ def test_emit_python():
     symbols_dict = namespace["fpu_symbols"]
     assert list(symbols_dict.keys()) == ["User_ADD_I32", "User_SUB_I32"]
     assert symbols_dict["User_ADD_I32"] == 0
-    assert symbols_dict["User_SUB_I32"] == 10
+    assert symbols_dict["User_SUB_I32"] == 2
     assert "LOOP_START" not in symbols_dict
 
 

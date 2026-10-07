@@ -21,7 +21,7 @@ We are switching to per-UserOpcode source in fpu_emu/asm and they are included i
 The microcode is compiled with this, to emit Python code for easy integration into the emulator.
 
 ```bash
-   python3 -m fpu_asm -i fpu_emu/ucode.asm -o fpu_emu/ucode.py
+   python3 -m fpu_asm -i fpu_emu/ucode.asm -o fpu_emu/ucode.py --no-pad
 ```
 
 ### Code Checking Protocol
