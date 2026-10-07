@@ -646,17 +646,17 @@ fpu_ucode: List[MicroInstruction] = [
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_DUP4
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=596),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_DUP8
-    MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, w=IW.W64, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=601),
-    MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
-    MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.AL),
+    MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
+    MicroInstruction(op=MicroOp.PUSH, w=IW.W64, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_PUSH_PI_32
@@ -740,183 +740,183 @@ fpu_ucode: List[MicroInstruction] = [
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM0_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=653),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM1_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=657),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=1),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=1),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM2_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=661),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=2),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=2),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM3_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=665),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=3),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=3),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM4_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=669),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=4),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=4),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM5_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=673),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=5),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=5),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM6_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=677),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=6),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=6),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM7_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=681),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=7),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=7),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM8_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=685),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=8),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=8),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM9_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=689),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=9),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=9),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM10_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=693),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=10),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=10),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM11_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=697),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=11),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=11),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM12_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=701),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=12),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=12),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM13_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=705),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=13),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=13),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM14_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=709),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=14),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=14),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_MEM15_TOS
-    MicroInstruction(op=MicroOp.POP, dst=Reg.AL),
+    MicroInstruction(op=MicroOp.POP, dst=Reg.FL),
     MicroInstruction(op=MicroOp.JNZ, flag=StatusFlag.UNDERFLOW, imm=713),
-    MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=15),
+    MicroInstruction(op=MicroOp.STO, src=Reg.FL, imm=15),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM0
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM1
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=1),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=1),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM2
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=2),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=2),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM3
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=3),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=3),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM4
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=4),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=4),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM5
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=5),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=5),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM6
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=6),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=6),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM7
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=7),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=7),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM8
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=8),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=8),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM9
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=9),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=9),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM10
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=10),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=10),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM11
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=11),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=11),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM12
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=12),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=12),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM13
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=13),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=13),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM14
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=14),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=14),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_CP_TOS_MEM15
-    MicroInstruction(op=MicroOp.LD, dst=Reg.AL, imm=15),
-    MicroInstruction(op=MicroOp.PUSH, src=Reg.AL),
+    MicroInstruction(op=MicroOp.LD, dst=Reg.FL, imm=15),
+    MicroInstruction(op=MicroOp.PUSH, src=Reg.FL),
     MicroInstruction(op=MicroOp.HALT),
 
     # USER_ZERO_MEM
-    MicroInstruction(op=MicroOp.SUB, dst=Reg.AL, src=Reg.AL),
+    MicroInstruction(op=MicroOp.XOR, dst=Reg.AL, src=Reg.AL),
     MicroInstruction(op=MicroOp.STO, src=Reg.AL),
     MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=1),
     MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=2),

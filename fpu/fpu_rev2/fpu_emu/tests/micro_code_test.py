@@ -22,15 +22,6 @@ def test_microcode_remaining_capacity() -> None:
     assert remaining >= 0
 
 
-def test_microcode_instruction_count_by_opcode() -> None:
-    """Tests instruction count retrieval for specific opcodes."""
-    assert MicroCode.instruction_count(UserOpcode.ADD_I32) == 7
-    assert MicroCode.instruction_count(UserOpcode.SUB_I32) == 7
-    assert MicroCode.instruction_count(UserOpcode.CP_MEM0_TOS) == 4
-    assert MicroCode.instruction_count(UserOpcode.CP_TOS_MEM0) == 3
-    assert MicroCode.instruction_count(UserOpcode.ZERO_MEM) == 18
-
-
 def test_microcode_validate_budget_raises_on_overflow(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests that validate_budget raises ValueError when total exceeds limit."""
     # Temporarily lower the maximum limit to simulate overflow

@@ -269,6 +269,16 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | NOP                     | 0b011_110 | 0     | NONE    | n/a    | n/a    | No operation (pipeline bubble)          | none (flags unaffected)               |
 | HALT                    | 0b011_111 | 0     | UPC     | n/a    | n/a    | end execution normally, pulse EXEC_DONE | clears BSY <- 0                       |
 
+> [!NOTE]
+> **Design Note on STO Encoding:**
+> The `STO` operation might be better if the memory cell was `dst` so we could use `src2` (e.g. `FL`) for the values.
+> ```python
+> MicroInstruction(op=MicroOp.XOR, dst=Reg.AL, src=Reg.AL),
+> MicroInstruction(op=MicroOp.STO, src=Reg.AL),
+> MicroInstruction(op=MicroOp.STO, src=Reg.AL, imm=1),
+> MicroInstruction(op=MicroOp.HALT),
+> ```
+
 ### LDC Address Generator & Constant ROM Interface
 
 To eliminate arithmetic adders and avoid carry chain delays on the critical address path, `LDC` uses a **2-LUT prefix

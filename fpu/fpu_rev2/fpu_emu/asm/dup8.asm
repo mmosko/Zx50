@@ -2,9 +2,9 @@
 ; DUP8
 
 USER_DUP8:
-    POP AX
+    POP FX
     JNZ UF, DUP8_HALT
-    PUSH AX
-    PUSH AX
+    PUSH FX
+    PUSH FX
 DUP8_HALT:
     HALT

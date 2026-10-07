@@ -2,9 +2,9 @@
 ; DUP4
 
 USER_DUP4:
-    POP AL
+    POP FL
     JNZ UF, DUP4_HALT
-    PUSH AL
-    PUSH AL
+    PUSH FL
+    PUSH FL
 DUP4_HALT:
     HALT
