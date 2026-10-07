@@ -204,6 +204,7 @@ User_SubF32       = 0x11
 
 | Directive | Description |
 |:---|:---|
+| `.include <path>` | Includes another assembly file. Supports quoted (`"..."`, `'...'`) or unquoted paths, resolved relative to the including file. |
 | `.entry <UserOpcode>` | Binds the following block or routine to a specific UserOpcode in the dispatch table. |
 | `.subroutine <name>` | Declares a callable shared subroutine. Validates that no nested `CALL` occurs within it. |
 | `.org <address>` | Sets the current microcode assembly address counter. |

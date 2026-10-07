@@ -1,7 +1,18 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from lark import Lark, Visitor, Transformer, Token, Tree
+from lark.exceptions import LarkError, VisitError
 
+from fpu_asm.preprocessor import (
+    AssemblerError,
+    AssemblySyntaxError,
+    IncludeError,
+    CircularIncludeError,
+    UndefinedSymbolError,
+    Preprocessor,
+    PreprocessedSource,
+    SourceLocation,
+)
 from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.register import StatusFlag
 from fpu_emu.micro_opcodes import MicroOp
@@ -85,9 +96,14 @@ class Pass1SymbolCollector(Visitor):
 class Pass2Encoder(Transformer):
     """Pass 2: Converts AST nodes into (address, MicroInstruction) tuples."""
 
-    def __init__(self, symbol_table: Dict[str, int]):
+    def __init__(
+        self,
+        symbol_table: Dict[str, int],
+        preprocessed: Optional[PreprocessedSource] = None,
+    ):
         super().__init__()
         self.symbols = symbol_table
+        self.preprocessed = preprocessed
         self.current_address = 0
 
     def HEX_INT(self, token: Union[str | Tree]):
@@ -111,7 +127,18 @@ class Pass2Encoder(Transformer):
             return getattr(FpuConst, name).value
         if hasattr(FpuCheb, name):
             return getattr(FpuCheb, name).value
-        raise KeyError(f"Undefined symbol: '{name}'")
+
+        line = getattr(token, "line", None)
+        col = getattr(token, "column", None)
+        if self.preprocessed and line is not None:
+            loc = self.preprocessed.get_location(line)
+            raise UndefinedSymbolError(
+                f"Undefined symbol: '{name}'",
+                file_path=loc.file_path,
+                line=loc.line_number,
+                column=col,
+            )
+        raise UndefinedSymbolError(f"Undefined symbol: '{name}'")
 
     def FLAG(self, token):
         return FLAG_MAP.get(str(token.value).upper(), 0)
@@ -591,28 +618,66 @@ class Pass2Encoder(Transformer):
 
 
 class Assembler:
-    """Facade for loading ucode.lark and driving Pass 1 + Pass 2 assembly."""
+    """Facade for loading ucode.lark and driving preprocessor + Pass 1 + Pass 2 assembly."""
 
-    def __init__(self, grammar_path: Optional[Path] = None):
+    def __init__(
+        self,
+        grammar_path: Optional[Path] = None,
+        include_paths: Optional[List[Union[str, Path]]] = None,
+    ):
         if grammar_path is None:
             grammar_path = Path(__file__).parent / "ucode.lark"
 
         with open(grammar_path, "r") as f:
-            self.parser = Lark(f.read(), parser="earley")
+            self.parser = Lark(f.read(), parser="earley", propagate_positions=True)
+        self.preprocessor = Preprocessor(include_paths=include_paths)
 
-    def assemble(self, source_code: str) -> List[Tuple[int, MicroInstruction]]:
-        if not source_code.endswith("\n"):
-            source_code += "\n"
+    def assemble_file(self, file_path: Union[str, Path]) -> List[Tuple[int, MicroInstruction]]:
+        """Preprocesses and assembles a root .fasm file."""
+        preprocessed = self.preprocessor.process_file(file_path)
+        return self._assemble_preprocessed(preprocessed)
+
+    def assemble(
+        self,
+        source_code: str,
+        base_dir: Optional[Union[str, Path]] = None,
+    ) -> List[Tuple[int, MicroInstruction]]:
+        """Preprocesses and assembles a microcode source string."""
+        preprocessed = self.preprocessor.process_string(source_code, base_dir=base_dir)
+        return self._assemble_preprocessed(preprocessed)
+
+    def _assemble_preprocessed(
+        self, preprocessed: PreprocessedSource
+    ) -> List[Tuple[int, MicroInstruction]]:
         # Parse into Lark AST
-        tree = self.parser.parse(source_code)
+        try:
+            tree = self.parser.parse(preprocessed.text)
+        except LarkError as e:
+            line = getattr(e, "line", None)
+            col = getattr(e, "column", None)
+            if line is not None:
+                loc = preprocessed.get_location(line)
+                err_msg = str(e).splitlines()[0] if str(e) else "Syntax error"
+                raise AssemblySyntaxError(
+                    err_msg,
+                    file_path=loc.file_path,
+                    line=loc.line_number,
+                    column=col,
+                ) from e
+            raise AssemblySyntaxError(str(e)) from e
 
         # Pass 1: Collect symbols & addresses (top-down in source order)
         collector = Pass1SymbolCollector()
         collector.visit_topdown(tree)
 
         # Pass 2: Encode instructions
-        encoder = Pass2Encoder(collector.symbols)
-        program_image = encoder.transform(tree)
+        try:
+            encoder = Pass2Encoder(collector.symbols, preprocessed=preprocessed)
+            program_image = encoder.transform(tree)
+        except VisitError as e:
+            if e.orig_exc is not None and isinstance(e.orig_exc, AssemblerError):
+                raise e.orig_exc from None
+            raise
 
         # Sort by line number (microcode address)
         return sorted(program_image, key=lambda item: item[0])
