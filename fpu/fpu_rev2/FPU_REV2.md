@@ -13,7 +13,7 @@ for the FPGA-based Floating-Point and Stack Coprocessor on the **Zx50 CPU Card (
 
 ---
 
-## 1. System Overview & Hardware Architecture
+## System Overview & Hardware Architecture
 
 The Zx50 FPU Rev 2 is an FPGA-based math accelerator and stack processor tightly coupled to the host Zilog Z80 CPU.
 
@@ -59,7 +59,7 @@ QSPI <-->| F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N|BootLdr
 
 ![FPGA Data Path Layout](fpu_alu.svg)
 
-### 1.1 Key Hardware Specifications
+### Key Hardware Specifications
 
 * **Host CPU:** Zilog Z80C @ 10 MHz (`CLK` / `BZCLK`).
 * **Target FPGA:** **Lattice MachXO2-2000HC** (`LCMXO2-2000HC-4TG100I` / `U17`):
@@ -87,25 +87,25 @@ QSPI <-->| F_CE_N, F_SCK, F_SI, F_SO, F_WP_N, F_HOLD_N|BootLdr
 
 ---
 
-## 2. Operating Modes & Boot Flow
+## Operating Modes & Boot Flow
 
 The FPGA supports two distinct operational modes determined at power-on reset:
 
-### 2.1 Mode 1: Backplane Coprocessor (NUMA Cluster Mode)
+### Mode 1: Backplane Coprocessor (NUMA Cluster Mode)
 
 * Default Zx50 distributed cluster operation (`LOCAL_RAM_EN = 0`).
 * All Z80 memory cycles (`MREQ_N`) pass to the backplane to access NUMA cluster memory.
 * The MachXO2 acts purely as the math coprocessor, decoding I/O ports `0x70` and `0x71` (and optional MMIO).
 * On-board external SRAM is disabled (`M_CS_N = 1`).
 
-### 2.2 Mode 2: Standalone Single-Board Computer (SBC Mode)
+### Mode 2: Standalone Single-Board Computer (SBC Mode)
 
 * Activated via jumper or debug setting (`LOCAL_RAM_EN = 1` via `DBG3` sampled low at reset).
 * The CPU card functions as an autonomous, self-contained single-board computer without external backplane memory cards.
 * The FPGA acts as the system memory controller, intercepting `BMREQ_N` and driving `M_CS_N`, `M_OE_N`, and `M_WE_N` to
   provide zero-wait-state memory access to the on-board 128 KB SRAM across `CA[16:0]` and `CD[7:0]`.
 
-### 2.3 Flash Organization & Boot Configuration
+### Flash Organization & Boot Configuration
 
 The 1 MB external QSPI Flash is partitioned into 64 KB blocks:
 
@@ -119,7 +119,7 @@ Boot mode and image selection are controlled at reset by sampling the debug line
 * **`DBG_N` & `DBG[2:0]`:** Select which microcode/table block and Z80 firmware block to load.
 * **`DBG3`:** If sampled LOW on reset, enables on-board Z80 SRAM memory decoding (SBC mode).
 
-### 2.4 Sub-Millisecond Power-On Shadowing
+### Sub-Millisecond Power-On Shadowing
 
 At power-up reset:
 
@@ -134,7 +134,7 @@ At power-up reset:
 
 ---
 
-## 3. Internal Memory Subsystem (SysMEM EBR)
+## Internal Memory Subsystem (SysMEM EBR)
 
 The MachXO2-2000 provides **8 independent physical SysMEM EBR blocks** (9 Kbits / 1,152 bytes each, 9,216 bytes total
 capacity).
@@ -145,13 +145,13 @@ Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
   True Dual-Port mode (`1,024 × 9`).
 * To provide native **32-bit single-cycle word access** for the datapath without multi-cycle serialization, **two EBR
   blocks are paired in parallel** (`512 × 32` bits = 2,048 bytes per pair).
-* High-speed host command queuing (the 32-byte **Command Stack / Operation Stack**) is implemented directly in
-  **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), completely isolating host command writes from the
-  primary memory blocks.
+* High-speed host opcode queuing (the 32-byte **Operation Stack**) is implemented directly in
+  **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), indexed by the **Operation Stack Pointer (OSP)**,
+  completely isolating host opcode writes from the primary memory blocks.
 * Z80 host data I/O on Port `0x70` uses dedicated 32-bit staging registers (**`HOST_IN`** on `HB_BUS` and **`HOST_OUT`**
   on `RES_BUS`), enabling standard Single-Port RAM mode for the stack and eliminating complex dual-port arbitration.
 
-### 3.1 Physical SysMEM EBR Allocation Map (8 Blocks Total)
+### Physical SysMEM EBR Allocation Map (8 Blocks Total)
 
 ```text
 +---------------+-------------------+-----------------------------------------------+------------+
@@ -176,13 +176,13 @@ Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
 | EBR 7         | Unallocated       | • Free Headroom / Expansion Buffer            | 1,152 Bytes|
 |               | (1 Block Free)    |   (Available for FIR filter taps / vectors)   |            |
 +---------------+-------------------+-----------------------------------------------+------------+
-| Distributed   | PFU Distributed   | • Command Stack / Batch Queue (OSP[4:0])      | 32 Bytes   |
+| Distributed   | PFU Distributed   | • Operation Stack (OSP[4:0])                  | 32 Bytes   |
 | LUT-RAM       | RAM (32 x 8-bit)  |   (Zero EBR blocks consumed)                  |            |
 +---------------+-------------------+-----------------------------------------------+------------+
 Total EBR Utilization:  7 of 8 blocks (87.5% used, 1 block / 12.5% free margin)
 ```
 
-### 3.1 Zero-Cost Addressing for ROM Lookup Tables (`LDC`)
+### Zero-Cost Addressing for ROM Lookup Tables (`LDC`)
 
 To eliminate arithmetic adders and carry-chain delay on the memory address path, the constant and seed ROM tables in EBR 2/3 and EBR 4 utilize a **2-LUT prefix address generator**:
 
@@ -207,7 +207,7 @@ assign ebr_addr[6:0] = offset[6:0];
 
 Total FPGA hardware cost: **2 LUTs** for 9-bit address generation, 0 adders, 0 carry chains.
 
-### 3.2 User Memory Allocation (Intermediate Storage)
+### User Memory Allocation (Intermediate Storage)
 
 A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and
 constant storage:
@@ -220,21 +220,21 @@ constant storage:
 * **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing
   that user storage words remain untouched and preserved across all arithmetic opcode executions.
 
-### 3.3 Command Stack & Batch Execution Queue (`0x0340`–`0x035F`)
+### Operation Stack & Batch Execution Queue
 
-A 32-byte circular buffer in SysMEM EBR stores up to 32 queued opcodes:
+A 32-byte circular buffer in Distributed LUT-RAM stores up to 32 queued opcodes:
 
 * **Indexed By:** Dedicated 5-bit register `OSP[4:0]` (Operation Stack Pointer, range 0..31).
 * **Operating Modes:**
-    * **Immediate Mode (`SET_IMMEDIATE`):** Arriving opcodes written to Port 0x71 are pushed to the command queue at
+    * **Immediate Mode (`SET_IMMEDIATE`):** Arriving opcodes written to Port 0x71 are pushed to the operation stack at
       `[OSP]`, executed immediately by the micro-engine, and popped upon retirement.
     * **Batch Mode (`SET_BATCH`):** Arriving opcodes (except management commands) are queued sequentially into the
-      command stack without executing (`[OSP] <- opcode; OSP <- OSP + 1`).
-    * **Batch Execution (`EXEC_BATCH`):** Micro-engine consumes and executes all queued opcodes back-to-back at 80 MHz,
-      resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of opcodes via `OTIR`
-      without slow status polling between individual instructions.
+      operation stack without executing (`[OSP] <- opcode; OSP <- OSP + 1`).
+    * **Batch Execution (`EXEC_BATCH`):** Micro-engine consumes and executes all queued opcodes from the operation stack
+      back-to-back at 80 MHz, resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of
+      opcodes via `OTIR` without slow status polling between individual instructions.
 
-### 3.3 True Dual-Port Concurrency
+### True Dual-Port Concurrency
 
 The dual-port architecture completely separates host I/O from math execution:
 
@@ -245,7 +245,7 @@ The dual-port architecture completely separates host I/O from math execution:
 
 ---
 
-## 4. Complete 100-Pin Package Budget & Signal Allocation
+## Complete 100-Pin Package Budget & Signal Allocation
 
 On the **Zx50 CPU Card (Rev C4)**, the MachXO2-2000HC in TQFP-100 (`U17`) has 100% of its pins assigned with **0
 remaining pins**:
@@ -275,7 +275,7 @@ remaining pins**:
 
 ---
 
-## 5. Register & I/O Interface Protocol
+## Register & I/O Interface Protocol
 
 The FPU occupies host I/O base addresses `0x70` and `0x71` in the Z80 I/O map:
 
@@ -283,10 +283,10 @@ The FPU occupies host I/O base addresses `0x70` and `0x71` in the Z80 I/O map:
 |--------------|-----------|---------------|-----------------------------------------------------------------------------------------------|
 | **`0x70`**   | Write     | `DATA_PUSH`   | Writes 1 byte to Top of Stack ($TOS$) on EBR Port A, auto-incrementing byte pointer $SP$.     |
 | **`0x70`**   | Read      | `DATA_POP`    | Reads 1 byte from Top of Stack ($TOS$) on EBR Port A, auto-decrementing byte pointer $SP$.    |
-| **`0x71`**   | Write     | `CMD_EXEC`    | Latches 8-bit user opcode to execution dispatcher, triggering the math core or batch queue.   |
+| **`0x71`**   | Write     | `CMD_EXEC`    | Latches 8-bit user opcode to execution dispatcher, triggering the math core or operation stack. |
 | **`0x71`**   | Read      | `STATUS`      | Returns 8-bit status flags (`BUSY`, `DIFF_SIGN`, `SIGN`, `CARRY`, `OVERFLOW`, `UNDERFLOW`, `ERR`, `ZERO`). |
 
-### 5.1 Status Register Interface
+### Status Register Interface
 
 The 8-bit `STATUS` register provides runtime core state and arithmetic flag feedback. It is readable on Port `0x71` with
 zero wait states.
@@ -297,7 +297,7 @@ in [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/Prog
 The internal FPGA signal generation and trigger circuits are defined
 in [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md#24-status-register-status70).
 
-### 5.2 Wait State & Handshake Circuitry
+### Wait State & Handshake Circuitry
 
 The CPU Card (Rev C4) incorporates dedicated hardware handshaking between the FPGA and the Z80 host:
 
@@ -316,7 +316,7 @@ The CPU Card (Rev C4) incorporates dedicated hardware handshaking between the FP
     * Configured via management command. The FPGA accepts opcodes and asserts `BUSY = 1`, but leaves `BWAIT_N = 0`.
     * The Z80 is free to perform parallel background tasks, querying Port `0x71` to poll the `BUSY` flag.
 
-### 5.3 High-Throughput Memory-Mapped I/O Window (Optional MMIO)
+### High-Throughput Memory-Mapped I/O Window (Optional MMIO)
 
 In addition to Port I/O, the FPGA can optionally monitor an upper memory range (e.g. `0xFE00`–`0xFE7F`) to support
 accelerated Z80 block transfers (`LDIR` / `LDDR`):
@@ -328,12 +328,12 @@ accelerated Z80 block transfers (`LDIR` / `LDDR`):
 
 ---
 
-## 6. Stack Memory Architecture & Supported Data Types
+## Stack Memory Architecture & Supported Data Types
 
 The math stack is physically organized in internal SysMEM EBR as 64 words of up to 64 bits (8 bytes) each (located at
 `0x0000`–`0x01FF`).
 
-### 6.1 Stack Architecture
+### Stack Architecture
 
 * **`SP` (Stack Pointer):** 8-bit pointer addressing byte offsets within the 256-byte stack EBR block.
 * **`TOS` (Top of Stack):** Operand at the current top of the stack (`[SP]`).
@@ -341,7 +341,7 @@ The math stack is physically organized in internal SysMEM EBR as 64 words of up 
 * **Operand Discipline:** All stack reads are explicit `POP` operations ($SP \leftarrow SP - \text{bytes}$). All stack
   writes are explicit `PUSH` operations ($SP \leftarrow SP + \text{bytes}$).
 
-### 6.2 Supported Data Types
+### Supported Data Types
 
 The stack memory stores raw byte streams in **Little-Endian** format. Interpretation is determined by the executed
 opcode:
@@ -357,11 +357,11 @@ see [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/Pro
 
 ---
 
-## 7. Instruction Set Architecture & Software Conventions
+## Instruction Set Architecture & Software Conventions
 
 The user instruction set consists of 8-bit macro-opcodes written to Port `0x71`.
 
-### 7.1 Instruction Categories
+### Instruction Categories
 
 * **Arithmetic & Transcendental Operations:** Complete 60-operation arithmetic matrix covering addition, subtraction,
   multiplication, division, powers, roots, logs, exponentials, and trigonometric functions ($\sin, \cos, \tan$) across
@@ -372,8 +372,8 @@ The user instruction set consists of 8-bit macro-opcodes written to Port `0x71`.
   internal SysMEM EBR slots (`CP [xxxx], TOS`, `CP TOS, [xxxx]`, `ZERO_MEM`).
 * **Mathematical Constants:** High-speed single-instruction injection of fundamental mathematical constants
   ($\pi, e, \ln (2), \log_2 (e), \sqrt{2}, 1/\sqrt{2}$) in `f32` and `f64` directly from internal ROM onto the stack.
-* **Operating Mode & Queue Management:** Dynamic configuration of blocking mode (`SET_BLOCKING` / `SET_NONBLOCKING`),
-  immediate mode (`SET_IMMEDIATE`), batch queuing (`SET_BATCH`), and batch execution (`EXEC_BATCH`).
+* **Operating Mode & Operation Stack Management:** Dynamic configuration of blocking mode (`SET_BLOCKING` / `SET_NONBLOCKING`),
+  immediate mode (`SET_IMMEDIATE`), batch queuing into the operation stack (`SET_BATCH`), and batch execution (`EXEC_BATCH`).
 
 > [!IMPORTANT]
 > **Definitive Instruction Reference & Programming Guide:**
@@ -383,11 +383,11 @@ in [ProgrammersGuide.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/Prog
 
 ---
 
-## 8. Execution Philosophy & Micro-Engine Overview
+## Execution Philosophy & Micro-Engine Overview
 
 The Lattice MachXO2 implementation follows a deterministic hardware execution strategy:
 
-### 8.1 Dedicated Hardware ALU Primitives
+### Dedicated Hardware ALU Primitives
 
 Arithmetic operations are executed using single-cycle dedicated datapath blocks:
 
@@ -398,7 +398,7 @@ Arithmetic operations are executed using single-cycle dedicated datapath blocks:
   32-bit, 27 cycles for 53-bit double mantissa), natively supporting 2's complement with 0 EBR usage.
 * **Leading-Zero Counter (LZC):** Single-cycle normalizer priority encoder.
 
-### 8.2 Micro-Sequencer Architecture
+### Micro-Sequencer Architecture
 
 * Multi-cycle operations (division, square roots, transcendental functions, 64-bit expansions) are coordinated by an
   internal horizontal micro-sequencer fetching micro-instructions ($\mu$-ops) from runtime microcode RAM.
@@ -411,7 +411,7 @@ Arithmetic operations are executed using single-cycle dedicated datapath blocks:
 user opcode, and FPGA gate budget calculations, refer
 to [SystemDesign.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemDesign.md).
 
-### 8.3 ALU Block Isolation
+### ALU Block Isolation
 
 **Synplify Pro Automatic Operand Isolation**:  Synplify Pro includes built-in compiler directives to infer operand
 isolation automatically during synthesis:
@@ -423,7 +423,7 @@ ALUs) to prevent unneeded switching activity.
 
 ---
 
-## 9. Simulation & Verification Architecture
+## Simulation & Verification Architecture
 
 The FPU verification suite validates the FPGA design against host Z80 bus transactions, QSPI Flash shadowing, and
 arithmetic accuracy:
@@ -442,7 +442,7 @@ tb_zx50_fpu (Testbench Top)
       └── zx50_alu_core    (32-bit Parallel ALU Primitives)
 ```
 
-### 9.1 Verification Suites (`sim/`)
+### Verification Suites (`sim/`)
 
 All testbenches follow pattern-based execution via `make`:
 
