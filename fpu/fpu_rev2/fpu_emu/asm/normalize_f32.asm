@@ -4,12 +4,20 @@
 ; Inputs:
 ;   AL : Unnormalized mantissa
 ;   EA : Exponent
-;   AH : Packed float of larger operand (AH[31] holds sign)
+;   AH : Packed float or sign carrier (AH[31] holds sign)
 ;
 ; Outputs:
 ;   AL : Normalized, packed IEEE-754 float32
 ;   Status flags:
 ;     Updated by PACK AL, EA (or ZF=1 on exact cancellation)
+;
+; Register Allocation:
+;   AL : Mantissa / packed output
+;   AH : Sign carrier (AH[31])
+;   EA : Exponent adjusted by shift count
+;   BL : Scratch shift count for right shift (NORMALIZE_F32_RIGHT)
+;   C  : Leading zero count (LZC)
+;   D, F : Preserved / untouched
 ;
 ; Returns via RET.
 ; ==============================================================================
