@@ -35,3 +35,9 @@
 
 .include "asm/push_const.asm"
 .include "asm/cp_mem.asm"
+
+; --- Shared Subroutines ---
+.include "asm/pop_two_32.asm"
+.include "asm/pop_two_64.asm"
+.include "asm/align_f32.asm"
+.include "asm/normalize_f32.asm"

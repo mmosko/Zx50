@@ -184,4 +184,5 @@ class ControlBlock(FunctionalBlock):
         self._outputs.block_res.set(0x3FF)
         self._outputs.block_res_sel.set(Reg.UPC.value)
         self._outputs.exec_done.set(1)
+        self._ret_set.write(0)
         self._writeback()

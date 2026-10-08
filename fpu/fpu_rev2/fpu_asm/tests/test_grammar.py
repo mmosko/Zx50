@@ -18,8 +18,6 @@ def test_directives(parser: Lark) -> None:
         ".org 100\n",
         ".equ COUNT, 16\n",
         ".equ OFFSET 0x20\n",
-        ".subroutine .sub_align_f32\n",
-        ".subroutine my_sub\n",
         ".align 4\n",
         ".align 8\n",
         ".entry User_AddF32\n",
@@ -276,7 +274,6 @@ def test_full_sample_program(parser: Lark) -> None:
     .trap_underflow:
         HALT
 
-    .subroutine .sub_align_f32
     .sub_align_f32:
         CMP     EA, EB
         JNZ     CF, .swap_ops

@@ -21,14 +21,12 @@ statement: directive | instruction
 
 directive: dir_org
          | dir_equ
-         | dir_subroutine
          | dir_align
          | dir_entry
          | dir_global
 
 dir_org: ".org"i imm_operand
 dir_equ: ".equ"i SYMBOL [","] imm_operand
-dir_subroutine: ".subroutine"i SYMBOL
 dir_align: ".align"i imm_operand
 dir_entry: ".entry"i (SYMBOL | imm_operand)
 dir_global: ".global"i SYMBOL

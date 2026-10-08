@@ -1,13 +1,9 @@
 ; =========================
 ; SUB_I32
+; =========================
 
 USER_SUB_I32:
-    POP BL
-    JNZ UF, SUB_I32_HALT
-    POP AL
-    JNZ UF, SUB_I32_HALT
+    CALL POP_TWO_32
     SUB AL, BL
     PUSH AL
-SUB_I32_HALT:
     HALT
-

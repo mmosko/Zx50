@@ -1,10 +1,9 @@
 ; =========================
 ; DUP4
+; =========================
 
 USER_DUP4:
-    POP FL
-    JNZ UF, DUP4_HALT
-    PUSH FL
-    PUSH FL
-DUP4_HALT:
+    CALL POP_ONE_32
+    PUSH AL
+    PUSH AL
     HALT

@@ -1,12 +1,10 @@
 ; =========================
 ; MUL_I64
+; =========================
 
 USER_MUL_I64:
-    POP BX
-    JNZ UF, MUL_I64_HALT
+    CALL POP_TWO_64
     STO 0, BX
-    POP AX
-    JNZ UF, MUL_I64_HALT
     STO 2, AX
     LD BL, 1
     MULU AL, BL
@@ -23,5 +21,4 @@ USER_MUL_I64:
     LD BL, 4
     ADD AH, BL
     PUSH AX
-MUL_I64_HALT:
     HALT

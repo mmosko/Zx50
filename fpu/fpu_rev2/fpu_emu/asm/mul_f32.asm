@@ -1,11 +1,9 @@
 ; =========================
 ; MUL_F32
+; =========================
 
 USER_MUL_F32:
-    POP BL                          ; pop operand B
-    JNZ UF, MUL_F32_HALT            ; TRAP on underflow
-    POP AL                          ; pop operand A
-    JNZ UF, MUL_F32_HALT            ; TRAP on underflow
+    CALL POP_TWO_32
     MOV BH, AL                      ; stash A into BH
     XOR BH, BL                      ; BH[31] = s_A ^ s_B, preserved across MULU and shifts
     UNPACK BL, EB                   ; unpack B: EB <- exp_B, BL <- mant_B
@@ -29,7 +27,5 @@ MUL_F32_20:
     PUSH AL
     HALT
 MUL_F32_24:
-    SUB AL, AL                      ; RETURN_ZERO: AL <- 0
+    XOR AL, AL                      ; RETURN_ZERO: AL <- 0
     JMP MUL_F32_20                  ; DONE_NORM -> OR BH, BH -> PACK -> PUSH -> HALT
-MUL_F32_HALT:
-    HALT                            ; TRAP

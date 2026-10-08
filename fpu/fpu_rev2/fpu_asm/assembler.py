@@ -177,9 +177,6 @@ class Pass2Encoder(Transformer):
     def dir_equ(self, _children):
         return None
 
-    def dir_subroutine(self, _children):
-        return None
-
     def dir_align(self, children):
         n = children[0]
         if n > 0 and self.current_address % n != 0:

@@ -10,8 +10,7 @@
 .equ EXP2_C1, 4
 
 USER_EXP2_F32:
-    POP AL                          ; 0: START
-    JNZ UF, EXP2_F32_116            ; 1
+    CALL POP_ONE_32                 ; 0: START
     MOV BH, AL                      ; 2
     UNPACK EA, AL                   ; 3
     JZ ZERO, EXP2_F32_101           ; 4
@@ -126,7 +125,7 @@ EXP2_F32_101:
     PUSH AL                         ; 102
     HALT                            ; 103
 EXP2_F32_104:
-    SUB AL, AL                      ; 104: RET_ZERO
+    XOR AL, AL                      ; 104: RET_ZERO
     PUSH AL                         ; 105
     HALT                            ; 106
 EXP2_F32_107:
@@ -140,5 +139,3 @@ EXP2_F32_107:
 EXP2_F32_114:
     PUSH BH                         ; 114: RET_INPUT
     HALT                            ; 115
-EXP2_F32_116:
-    HALT                            ; 116: TRAP_UNDERFLOW

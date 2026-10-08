@@ -1,10 +1,9 @@
 ; =========================
 ; CHS_F64
+; =========================
 
 USER_CHS_F64:
-    POP AX
-    JNZ UF, CHS_F64_HALT
+    CALL POP_ONE_64
     FCHS AX
     PUSH AX
-CHS_F64_HALT:
     HALT

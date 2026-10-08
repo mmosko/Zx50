@@ -1,12 +1,9 @@
 ; =========================
 ; SUB_I64
+; =========================
 
 USER_SUB_I64:
-    POP BX
-    JNZ UF, SUB_I64_HALT
-    POP AX
-    JNZ UF, SUB_I64_HALT
+    CALL POP_TWO_64
     SUB AX, BX
     PUSH AX
-SUB_I64_HALT:
     HALT

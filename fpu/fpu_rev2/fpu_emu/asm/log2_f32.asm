@@ -9,8 +9,7 @@
 .equ LOG2_C0, 0
 
 USER_LOG2_F32:
-    POP AL                          ; 0: START
-    JNZ UF, LOG2_F32_116            ; 1
+    CALL POP_ONE_32                 ; 0: START
     MOV BH, AL                      ; 2
     UNPACK EA, AL                   ; 3
     JZ ZERO, LOG2_F32_114           ; 4
@@ -126,7 +125,7 @@ LOG2_F32_98:
     NOT AH                          ; 107
     ADD AH, 1                       ; 108
 LOG2_F32_109:
-    SUB AL, AL                      ; 109: RET_ZERO
+    XOR AL, AL                      ; 109: RET_ZERO
     PUSH AL                         ; 110
     HALT                            ; 111
 LOG2_F32_112:
@@ -135,8 +134,6 @@ LOG2_F32_112:
 LOG2_F32_114:
     LDI ERR, 1                      ; 114: DOMAIN_ERR
     HALT                            ; 115
-LOG2_F32_116:
-    HALT                            ; 116: TRAP_UNDERFLOW
 LOG2_F32_117:
     LZC BL, AH                      ; 117: NORMALIZE
     LDI EA, 135                     ; 118

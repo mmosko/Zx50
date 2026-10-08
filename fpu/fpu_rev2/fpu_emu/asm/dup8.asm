@@ -1,10 +1,9 @@
 ; =========================
 ; DUP8
+; =========================
 
 USER_DUP8:
-    POP FX
-    JNZ UF, DUP8_HALT
-    PUSH FX
-    PUSH FX
-DUP8_HALT:
+    CALL POP_ONE_64
+    PUSH AX
+    PUSH AX
     HALT

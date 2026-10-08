@@ -2,8 +2,7 @@
 ; SQRT_F32
 
 USER_SQRT_F32:
-    POP AL                          ; Pop input float32 X into AL
-    JNZ UF, SQRT_F32_54             ; Underflow trap
+    CALL POP_ONE_32
     MOV BH, AL                      ; Save raw input in BH (for zero/NaN preservation)
     UNPACK EA, AL                   ; AL <- mantissa (bit 23 set), EA <- biased exponent
     JZ ZERO, SQRT_F32_55            ; If X == 0: push original input (BH) and return
@@ -65,8 +64,6 @@ SQRT_F32_34:
     PUSH AH                         ; Push result to stack
     HALT                            ; Done
     ; --- SPECIAL & ERROR HANDLERS (line 54..58) ---
-SQRT_F32_54:
-    HALT                            ; Stack underflow trap
 SQRT_F32_55:
     PUSH BH                         ; RET_INPUT: push original input (for 0.0, -0.0, +Inf, NaN)
     HALT
