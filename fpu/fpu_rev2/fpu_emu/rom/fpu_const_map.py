@@ -45,17 +45,17 @@ class FpuCheb(IntEnum):
     """Chebyshev / Polynomial Coefficients Word Slot Map for EBR CHEB ROM.
     Each slot represents a 32-bit word offset from CHEB table base (EBR 2/3 offset 0x080).
     """
-    LOG2_C0 = 0  # log2 minimax c0 (2.88539008 in Q3.29)
-    LOG2_C1 = 1  # log2 minimax c1 (0.96179840 in Q3.29)
-    LOG2_C2 = 2  # log2 minimax c2 (0.57676343 in Q3.29)
-    LOG2_C3 = 3  # log2 minimax c3 (0.43044988 in Q3.29)
-    EXP2_C1 = 4  # exp2 Taylor c1 (ln(2) in Q1.31)
-    EXP2_C2 = 5  # exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)
-    EXP2_C3 = 6  # exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)
-    EXP2_C4 = 7  # exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)
-    EXP2_C5 = 8  # exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)
-    EXP2_C6 = 9  # exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)
-    SQRT2_MANT = 10  # sqrt(2) mantissa threshold (bit 23 implicit 1)
+    EXP2_C1 = 1  # exp2 Taylor c1 (ln(2) in Q1.31)
+    EXP2_C2 = 2  # exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)
+    EXP2_C3 = 3  # exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)
+    EXP2_C4 = 4  # exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)
+    EXP2_C5 = 5  # exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)
+    EXP2_C6 = 6  # exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)
+    LOG2_C0 = 7  # log2 minimax c0 (2.88539008 in Q3.29)
+    LOG2_C1 = 8  # log2 minimax c1 (0.96179840 in Q3.29)
+    LOG2_C2 = 9  # log2 minimax c2 (0.57676343 in Q3.29)
+    LOG2_C3 = 10  # log2 minimax c3 (0.43044988 in Q3.29)
+    SQRT2_MANT = 11  # sqrt(2) mantissa threshold (bit 23 implicit 1)
 
 
 class FpuConst(IntEnum):

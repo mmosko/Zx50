@@ -227,17 +227,17 @@ CONSTANTS_DEF = [
 
 CHEB_DEF = [
     # (enum_name, slot, hex_val, description)
-    ("LOG2_C0", 0, 0x5C551D94, "log2 minimax c0 (2.88539008 in Q3.29)"),
-    ("LOG2_C1", 1, 0x1EC70D70, "log2 minimax c1 (0.96179840 in Q3.29)"),
-    ("LOG2_C2", 2, 0x1274D895, "log2 minimax c2 (0.57676343 in Q3.29)"),
-    ("LOG2_C3", 3, 0x0DC63ED4, "log2 minimax c3 (0.43044988 in Q3.29)"),
-    ("EXP2_C1", 4, 0x58B90C26, "exp2 Taylor c1 (ln(2) in Q1.31)"),
-    ("EXP2_C2", 5, 0x1EBFBE08, "exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)"),
-    ("EXP2_C3", 6, 0x071ABC52, "exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)"),
-    ("EXP2_C4", 7, 0x013B29F7, "exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)"),
-    ("EXP2_C5", 8, 0x002BE4C7, "exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)"),
-    ("EXP2_C6", 9, 0x00051153, "exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)"),
-    ("SQRT2_MANT", 10, 0x00B504F3, "sqrt(2) mantissa threshold (bit 23 implicit 1)"),
+    ("EXP2_C1", 1, 0x58B90C26, "exp2 Taylor c1 (ln(2) in Q1.31)"),
+    ("EXP2_C2", 2, 0x1EBFBE08, "exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)"),
+    ("EXP2_C3", 3, 0x071ABC52, "exp2 Taylor c3 (ln(2)^3 / 6 in Q1.31)"),
+    ("EXP2_C4", 4, 0x013B29F7, "exp2 Taylor c4 (ln(2)^4 / 24 in Q1.31)"),
+    ("EXP2_C5", 5, 0x002BE4C7, "exp2 Taylor c5 (ln(2)^5 / 120 in Q1.31)"),
+    ("EXP2_C6", 6, 0x00051153, "exp2 Taylor c6 (ln(2)^6 / 720 in Q1.31)"),
+    ("LOG2_C0", 7, 0x5C551D94, "log2 minimax c0 (2.88539008 in Q3.29)"),
+    ("LOG2_C1", 8, 0x1EC70D70, "log2 minimax c1 (0.96179840 in Q3.29)"),
+    ("LOG2_C2", 9, 0x1274D895, "log2 minimax c2 (0.57676343 in Q3.29)"),
+    ("LOG2_C3", 10, 0x0DC63ED4, "log2 minimax c3 (0.43044988 in Q3.29)"),
+    ("SQRT2_MANT", 11, 0x00B504F3, "sqrt(2) mantissa threshold (bit 23 implicit 1)"),
 ]
 
 

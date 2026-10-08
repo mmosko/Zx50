@@ -84,100 +84,79 @@ USER_CP_MEM15_TOS:
 
 USER_CP_TOS_MEM0:
     LD FL, 0
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM1:
     LD FL, 1
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM2:
     LD FL, 2
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM3:
     LD FL, 3
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM4:
     LD FL, 4
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM5:
     LD FL, 5
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM6:
     LD FL, 6
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM7:
     LD FL, 7
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM8:
     LD FL, 8
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM9:
     LD FL, 9
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM10:
     LD FL, 10
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM11:
     LD FL, 11
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM12:
     LD FL, 12
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM13:
     LD FL, 13
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM14:
     LD FL, 14
-    PUSH FL
-    HALT
+    JMP CP_TOS_HALT
 
 USER_CP_TOS_MEM15:
     LD FL, 15
+CP_TOS_HALT:
     PUSH FL
     HALT
 
 USER_ZERO_MEM:
     XOR AL, AL
-    STO 0, AL
-    STO 1, AL
-    STO 2, AL
-    STO 3, AL
-    STO 4, AL
-    STO 5, AL
-    STO 6, AL
-    STO 7, AL
-    STO 8, AL
-    STO 9, AL
-    STO 10, AL
-    STO 11, AL
-    STO 12, AL
-    STO 13, AL
-    STO 14, AL
-    STO 15, AL
+    XOR AH, AH
+    STO.64 0, AL
+    STO.64 2, AL
+    STO.64 4, AL
+    STO.64 6, AL
+    STO.64 8, AL
+    STO.64 10, AL
+    STO.64 12, AL
+    STO.64 14, AL
     HALT

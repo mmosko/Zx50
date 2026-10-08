@@ -71,9 +71,9 @@ def load_ebr_rom_buffers(rom_path: Optional[Path] = None) -> List[Optional[List[
             for i, val in enumerate(cheb_words):
                 ebr2[128 + i] = val & 0xFFFF
                 ebr3[128 + i] = (val >> 16) & 0xFFFF
-            if ebr2[128 + 10] == 0 and ebr3[128 + 10] == 0:
-                ebr2[128 + 10] = 0x04F3
-                ebr3[128 + 10] = 0x00B5
+            if ebr2[128 + 11] == 0 and ebr3[128 + 11] == 0:
+                ebr2[128 + 11] = 0x04F3
+                ebr3[128 + 11] = 0x00B5
 
         # 5. EBR 2 & 3: CORDIC ATAN32 (32 x 32-bit at FLASH_CORDIC_ATAN32_BASE = 0x1800)
         # Stored at EBR 2/3 base 0x000 (words 0..31)
