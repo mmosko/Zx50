@@ -26,7 +26,12 @@ from fpu_emu.writeback_mux import WritebackMux
     shared_unit="dispatcher_sequencer",
 )
 class Dispatcher:
-    """Dispatches user opcodes and executes microcode instruction streams."""
+    """
+    Dispatches user opcodes and executes microcode instruction streams.
+
+    NOTE: Does not use Memory for microcode.  Currently, micro_code.py directly loads the
+    MicroInstructions from a generated file output by `fpu_asm`.
+    """
 
     def __init__(self,
                  blocks: List[FunctionalBlock],

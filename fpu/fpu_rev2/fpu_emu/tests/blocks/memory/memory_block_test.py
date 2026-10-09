@@ -34,9 +34,8 @@ def test_push_basic(fpga: FpgaModel):
     # SP should now be 1
     assert fpga.reg_file.sp.read_int() == 1
 
-    # EBR 0 has lower 16 bits, EBR 1 has upper 16 bits
-    assert fpga.memory.read(0, 0) == 0x5678
-    assert fpga.memory.read(1, 0) == 0x1234
+    # EBR 0 has 32-bit word
+    assert fpga.memory.read(0, 0) == 0x12345678
 
     # Status flags VF and ERR should be clear
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
@@ -59,16 +58,13 @@ def test_push_multiple(fpga: FpgaModel):
 
     assert fpga.reg_file.sp.read_int() == 3
 
-    assert fpga.memory.read(0, 0) == 0xAAAA
-    assert fpga.memory.read(1, 0) == 0xAAAA
+    assert fpga.memory.read(0, 0) == 0xAAAAAAAA
 
     fpga.clock.tick(1)
-    assert fpga.memory.read(0, 1) == 0xBBBB
-    assert fpga.memory.read(1, 1) == 0xBBBB
+    assert fpga.memory.read(0, 1) == 0xBBBBBBBB
 
     fpga.clock.tick(1)
-    assert fpga.memory.read(0, 2) == 0xCCCC
-    assert fpga.memory.read(1, 2) == 0xCCCC
+    assert fpga.memory.read(0, 2) == 0xCCCCCCCC
 
 
 def test_push_overflow(fpga: FpgaModel):
@@ -88,7 +84,6 @@ def test_push_overflow(fpga: FpgaModel):
 
     # Memory at address 127 should NOT have been written
     assert fpga.memory.read(0, 127) == 0
-    assert fpga.memory.read(1, 127) == 0
 
     # Status flags should indicate overflow and error
     assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
@@ -247,7 +242,6 @@ def test_push64_overflow_at_127(fpga: FpgaModel):
 
     assert fpga.reg_file.sp.read_int() == 127
     assert fpga.memory.read(0, 127) == 0
-    assert fpga.memory.read(1, 127) == 0
     assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
     assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
 
@@ -265,8 +259,7 @@ def test_push64_overflow_at_126(fpga: FpgaModel):
     fpga.dispatcher._run(microcode)
 
     assert fpga.reg_file.sp.read_int() == 127  # Incremented once by low word
-    assert fpga.memory.read(0, 126) == 0x5678  # Low word was written
-    assert fpga.memory.read(1, 126) == 0x1234
+    assert fpga.memory.read(0, 126) == 0x12345678  # Low word was written
     assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
     assert fpga.reg_file.status.is_bit_set(StatusFlag.ERR)
 
@@ -603,7 +596,7 @@ def test_ldc_dynamic_reg_sqrt_c(fpga: FpgaModel):
         ),
     ]
     fpga.dispatcher._run(microcode)
-    expected_seed = fpga.memory.read(4, 0x125)
+    expected_seed = (fpga.memory.read(0, 0x300 | 0x25) >> 16) & 0xFFFF
     assert fpga.reg_file.ah.read_int() == expected_seed
     assert fpga.reg_file.ah.read_int() & 0xFFFF0000 == 0
 
@@ -623,13 +616,13 @@ def test_ldc_dynamic_reg_sqrt_bl(fpga: FpgaModel):
         ),
     ]
     fpga.dispatcher._run(microcode)
-    expected_seed = fpga.memory.read(4, 0x195)
+    expected_seed = (fpga.memory.read(0, 0x300 | 0x95) >> 16) & 0xFFFF
     assert fpga.reg_file.ah.read_int() == expected_seed
     assert fpga.reg_file.ah.read_int() & 0xFFFF0000 == 0
 
 
 def test_ldc_dynamic_reg_recip(fpga: FpgaModel):
-    """LDC BL, RECIP, AL loads zero-extended 16-bit seed from EBR 4 at offset 0x000 + AL."""
+    """LDC BL, RECIP, AL loads zero-extended 16-bit seed from DATA_RAM at offset 0x300 + AL."""
     from fpu_emu.rom.fpu_const_map import FpuTable
 
     # Test 8-bit index AL = 0x85
@@ -643,13 +636,13 @@ def test_ldc_dynamic_reg_recip(fpga: FpgaModel):
         ),
     ]
     fpga.dispatcher._run(microcode)
-    expected_seed = fpga.memory.read(4, 0x085)
+    expected_seed = fpga.memory.read(0, 0x300 | 0x85) & 0xFFFF
     assert fpga.reg_file.bl.read_int() == expected_seed
     assert fpga.reg_file.bl.read_int() & 0xFFFF0000 == 0
 
 
 def test_ldc_immediate_trig_cordic(fpga: FpgaModel):
-    """LDC DL, TRIG, imm=0 loads 32-bit CORDIC atan constant from EBR 2/3 at offset 0x000."""
+    """LDC DL, TRIG, imm=0 loads 32-bit CORDIC atan constant from DATA_RAM at offset 0x200."""
     from fpu_emu.rom.fpu_const_map import FpuTable
 
     microcode = [
@@ -661,8 +654,54 @@ def test_ldc_immediate_trig_cordic(fpga: FpgaModel):
         ),
     ]
     fpga.dispatcher._run(microcode)
-    lo = fpga.memory.read(2, 0x000)
-    hi = fpga.memory.read(3, 0x000)
-    assert fpga.reg_file.dl.read_int() == ((hi << 16) | lo)
+    expected_val = fpga.memory.read(0, 0x200 | 0x000)
+    assert fpga.reg_file.dl.read_int() == expected_val
+
+
+def test_user_ldu_stu_32(fpga: FpgaModel):
+    """STU writes 32-bit word to user memory USR[imm] and LDU reads it back."""
+    fpga.reg_file.al.write(0x12345678)
+    microcode = [
+        MicroInstruction(op=MicroOp.STU, src=Reg.AL, imm=2),
+        MicroInstruction(op=MicroOp.LDU, dst=Reg.BL, imm=2),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.bl.read_int() == 0x12345678
+    assert fpga.memory.read(0, 0x0C0 | 2) == 0x12345678
+
+
+def test_user_ldu_stu_64(fpga: FpgaModel):
+    """STU writes 64-bit pair to user memory USR[imm] and LDU reads it back."""
+    fpga.reg_file.al.write(0xAABBCCDD)
+    fpga.reg_file.ah.write(0x11223344)
+    microcode = [
+        MicroInstruction(op=MicroOp.STU, src=Reg.AL, imm=4, w=IW.W64),
+        MicroInstruction(op=MicroOp.LDU, dst=Reg.BL, imm=4, w=IW.W64),
+    ]
+    fpga.dispatcher._run(microcode)
+    assert fpga.reg_file.bl.read_int() == 0xAABBCCDD
+    assert fpga.reg_file.bh.read_int() == 0x11223344
+    assert fpga.memory.read(0, 0x0C0 | 4) == 0xAABBCCDD
+    fpga.clock.tick(1)
+    assert fpga.memory.read(0, 0x0C0 | 5) == 0x11223344
+
+
+def test_user_ldu_64_odd_base_raises(fpga: FpgaModel):
+    """64-bit LDU with odd base address must raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.LDU, dst=Reg.BL, imm=3, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError, match="64-bit LDU must use even base"):
+        fpga.dispatcher._run(microcode)
+
+
+def test_user_stu_64_odd_base_raises(fpga: FpgaModel):
+    """64-bit STU with odd base address must raise AssertionError."""
+    microcode = [
+        MicroInstruction(op=MicroOp.STU, src=Reg.AL, imm=5, w=IW.W64),
+    ]
+    with pytest.raises(AssertionError, match="64-bit STU must use even base"):
+        fpga.dispatcher._run(microcode)
+
 
 

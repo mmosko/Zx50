@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.blocks.memory.stack_adder import StackAdder
@@ -12,10 +12,11 @@ from fpu_emu.hardware.register import Register, StatusRegister
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
+from fpu_emu.rom.fpu_const_map import FpuTable
 
 
 @fpga_resource(
-    approach="Memory controller, stack sequencer, scratch/user RAM, and LDC 2-LUT prefix ROM interface",
+    approach="Memory controller, stack sequencer, scratch/user RAM, and unified LDC table ROM interface",
     luts=60,
     ffs=8,
     delay_ns=2.8,
@@ -26,39 +27,31 @@ class MemoryBlock(FunctionalBlock):
     """
     Manipulates the math Stack, scratch memory, user memory, and constant ROMs.
 
-    FPGA Resource Breakdown:
-      - Baseline memory controller, stack push/pop sequencer, scratch/user RAM: 40 LUTs, 8 FFs
-      - LDC Zero-Cost Prefix Address Generator:
-          ADDR[8]   = tbl_src[2] ? tbl_src[1] : tbl_src[0]  (1 LUT)
-          ADDR[7]   = tbl_src[2] ? tbl_src[0] : offset[7]   (1 LUT)
-          ADDR[6:0] = offset[6:0]                           (0 LUTs, direct wire pass-through)
-      - LDC EBR Chip Enables:
-          EBR4_CEN  = is_ldc && !tbl_src[2]                 (1 LUT)
-          EBR23_CEN = is_ldc &&  tbl_src[2]                 (1 LUT)
-      - LDC Output Data Multiplexer (EBR 4 zero-extended vs paired EBR 2/3): 16 LUTs
-      Total MemoryBlock LUTs: 40 + 2 + 2 + 16 = 60 LUTs.
-
     Physical EBR Allocation:
-      EBR 0 & 1 (paired 512 words x 36 bits):
-        - Hardware Math Stack (128 words x 32-bit)
-        - Scratchpad RAM SCR[0..63] (64 x 32-bit)
-        - User Word Storage (16 words x 32-bit)
-        - Reserved / Working Headroom (304 words)
-      EBR 2 & 3 (paired 512 words x 36 bits ROM):
-        - Trigonometric & CORDIC Angles (128 words x 32-bit)
-        - Chebyshev Polynomial Coefficients (128 words x 32-bit)
-        - IEEE-754 Math Constants (64 words x 32-bit)
-      EBR 4 (single 512 words x 18 bits ROM):
-        - Reciprocal / Division Seed LUT (256 words x 16-bit)
-        - Square Root Seed LUT (256 words x 16-bit)
+      DATA_RAM: EBR 0 (cascaded 1024 words x 32 bits):
+        - Lower 256 words (0x000..0x0FF): RAM Space
+          * Math Stack: words 0..127 (128 words x 32-bit)
+          * Scratchpad RAM SCR[0..63]: words 128..191 (64 words x 32-bit)
+          * User Word Storage USR[0..15]: words 192..207 (16 words x 32-bit)
+          * Working Headroom: words 208..255 (48 words x 32-bit)
+        - Upper 768 words (0x100..0x3FF): ROM Space
+          * IEEE-754 Constants: words 256..319 (64 words x 32-bit)
+          * Reserved Headroom: words 320..511 (192 words x 32-bit)
+          * Trig & CORDIC Angles: words 512..639 (128 words x 32-bit)
+          * Chebyshev Coefficients: words 640..767 (128 words x 32-bit)
+          * Interleaved RECIP (low 16b) and SQRT (high 16b) seeds: words 768..1023 (256 words x 32-bit)
     """
 
-    # TODO: For these to be pure prefixes (not adds), we need the prefix to align at 7 bits, so
-    # we get 2 prefix bits
-    MTH_BASE = 0b0_0000_0000
-    SCR_BASE = 0b0_1000_0000
-    USR_BASE = 0b1_0000_0000
-    EXT_BASE = 0b1_1000_0000
+    # DATA_RAM (EBR 0, 1024 words x 32-bit) Memory Map Bases
+    MTH_BASE = 0x000  # Stack: words 0..127
+    SCR_BASE = 0x080  # Scratchpad: words 128..191
+    USR_BASE = 0x0C0  # User storage: words 192..207
+    EXT_BASE = 0x0D0  # Free RAM headroom: words 208..255
+
+    CNS_BASE = 0x100  # IEEE-754 Constants: words 256..319
+    TRIG_BASE = 0x200  # Trig & CORDIC Angles: words 512..639
+    CHEB_BASE = 0x280  # Chebyshev Coefficients: words 640..767
+    SEEDS_BASE = 0x300  # Combined Seeds: words 768..1023
 
     def __init__(self,
                  name: str,
@@ -167,9 +160,8 @@ class MemoryBlock(FunctionalBlock):
         self._outputs.res_status.set(0)
 
         # 1 cycle to present address and data
-        addr = self.MTH_BASE | self._sp.read_int()
-        self._memory.write(0, addr, value & 0xFFFF)
-        self._memory.write(1, addr, (value >> 16) & 0xFFFF)
+        addr = self.MTH_BASE | (self._sp.read_int() & 0x7F)
+        self._memory.write(0, addr, value & 0xFFFFFFFF)
         self._clock.tick()
 
         # Writeback the updated SP
@@ -243,36 +235,30 @@ class MemoryBlock(FunctionalBlock):
         self._clock.tick()
 
         # 1 cycle to present address and data
-        addr = self.MTH_BASE | new_sp
-        val_lo = self._memory.read(0, addr)
-        val_hi = self._memory.read(1, addr)
+        addr = self.MTH_BASE | (new_sp & 0x7F)
+        val = self._memory.read(0, addr)
 
         # Writeback the updated SP
         self._sp.write(self._stack_adder.read())
 
         # writeback the destination register
-        self._outputs.block_res.set(val_hi << 16 | val_lo)
+        self._outputs.block_res.set(val)
 
 
     def _ldc(self, instr: MicroInstruction) -> None:
-        """Loads from constant/seed EBR tables using zero-cost 2-LUT prefix address generator.
+        """Loads from constant/seed tables in DATA_RAM (EBR 0) using zero-cost bitwise OR addressing.
 
         Instruction format: LDC dst, tbl, addr
           - dst: Destination register (e.g. AL, AH, or even register AX for 64-bit W=1)
-          - tbl (src): 3-bit table selector:
-              * RECIP: 0b000 (EBR 4, base 0x000, 256 words x 16-bit)
-              * SQRT:  0b001 (EBR 4, base 0x100, 256 words x 16-bit)
-              * TRIG:  0b100 (EBR 2/3, base 0x000, 128 words x 32-bit)
-              * CHEB:  0b101 (EBR 2/3, base 0x080, 128 words x 32-bit)
-              * CONST: 0b110 (EBR 2/3, base 0x100, 128 words x 32-bit)
+          - tbl (src): Table selector:
+              * CONST: 0 (DATA_RAM, base 0x100, 64 words x 32-bit)
+              * TRIG:  1 (DATA_RAM, base 0x200, 128 words x 32-bit)
+              * CHEB:  2 (DATA_RAM, base 0x280, 128 words x 32-bit)
+              * RECIP: 3 (DATA_RAM, base 0x300, 256 words x 16-bit low slice [15:0])
+              * SQRT:  4 (DATA_RAM, base 0x300, 256 words x 16-bit high slice [31:16])
           - addr (src1 / imm):
               * If src1 is Reg.IMM or Reg.NONE: offset from HA_MUX(Reg.IMM)
               * Else: offset dynamically from HA_MUX(src1) (e.g. Reg.C, Reg.AL)
-
-        Hardware 2-LUT zero-cost address derivation:
-          ADDR[8] = tbl[2] ? tbl[1] : tbl[0]
-          ADDR[7] = tbl[2] ? tbl[0] : offset[7]
-          ADDR[6:0] = offset[6:0]
         """
         assert instr.op == MicroOp.LDC
         assert instr.dst is not Reg.NONE
@@ -287,11 +273,11 @@ class MemoryBlock(FunctionalBlock):
             self._ha_mux.select(Reg.IMM.value)
         offset = self._ha_mux.read_int()
 
-        # 2. Extract 3-bit table code
-        tbl_val = int(instr.src.value if hasattr(instr.src, "value") else instr.src) & 0x07
+        # 2. Extract table selector
+        tbl = instr.src
 
         if instr.is_w32():
-            self._ldc_core(dst=instr.dst.value, tbl_val=tbl_val, offset=offset)
+            self._ldc_core(dst=instr.dst.value, tbl=tbl, offset=offset)
             self._outputs.exec_done.set(1)
             self._writeback()
         else:
@@ -299,30 +285,33 @@ class MemoryBlock(FunctionalBlock):
             assert offset % 2 == 0, "64-bit LDC offset must be even"
 
             # 1. Read LO word from offset
-            self._ldc_core(dst=instr.dst.value, tbl_val=tbl_val, offset=offset)
+            self._ldc_core(dst=instr.dst.value, tbl=tbl, offset=offset)
             self._writeback()
 
             # 2. Read HI word from offset + 1
-            self._ldc_core(dst=instr.dst.value | 1, tbl_val=tbl_val, offset=offset + 1)
+            self._ldc_core(dst=instr.dst.value | 1, tbl=tbl, offset=offset + 1)
             self._outputs.exec_done.set(1)
             self._writeback()
 
-    def _ldc_core(self, dst: int, tbl_val: int, offset: int) -> None:
-        """Evaluates 2-LUT prefix address and reads from EBR 4 or paired EBR 2 & 3."""
-        # 2-LUT Prefix Address Generation (ADDR[8:0])
-        bit8 = (tbl_val >> 1) & 1 if (tbl_val & 4) else (tbl_val & 1)
-        bit7 = (tbl_val & 1) if (tbl_val & 4) else ((offset >> 7) & 1)
-        ebr_addr = (bit8 << 8) | (bit7 << 7) | (offset & 0x7F)
-
-        # EBR Bank Select:
-        # If tbl_val[2] == 0: EBR 4 (16-bit single ROM, zero-extended to 32 bits)
-        # If tbl_val[2] == 1: EBR 2 & 3 (paired 32-bit ROM)
-        if not (tbl_val & 4):
-            val = self._memory.read(4, ebr_addr) & 0xFFFF
+    def _ldc_core(self, dst: int, tbl: Union[FpuTable, int], offset: int) -> None:
+        """Reads from DATA_RAM (EBR 0) constant/LUT tables using zero-cost bitwise OR addressing."""
+        if tbl == FpuTable.CONST or tbl == 0:
+            addr = self.CNS_BASE | (offset & 0x3F)
+            val = self._memory.read(0, addr)
+        elif tbl == FpuTable.TRIG or tbl == 1:
+            addr = self.TRIG_BASE | (offset & 0x7F)
+            val = self._memory.read(0, addr)
+        elif tbl == FpuTable.CHEB or tbl == 2:
+            addr = self.CHEB_BASE | (offset & 0x7F)
+            val = self._memory.read(0, addr)
+        elif tbl == FpuTable.RECIP or tbl == 3:
+            addr = self.SEEDS_BASE | (offset & 0xFF)
+            val = self._memory.read(0, addr) & 0xFFFF
+        elif tbl == FpuTable.SQRT or tbl == 4:
+            addr = self.SEEDS_BASE | (offset & 0xFF)
+            val = (self._memory.read(0, addr) >> 16) & 0xFFFF
         else:
-            val_lo = self._memory.read(2, ebr_addr)
-            val_hi = self._memory.read(3, ebr_addr)
-            val = ((val_hi << 16) | val_lo) & 0xFFFFFFFF
+            raise HardwareBusError(f"Invalid LDC table selector: {tbl}")
 
         self._clock.tick()
         self._outputs.block_res.set(val)
@@ -403,10 +392,8 @@ class MemoryBlock(FunctionalBlock):
             self._writeback()
 
     def _ld_core(self, dst: int, addr: int):
-        addr = self.SCR_BASE | (addr & 0x3F)
-        val_lo = self._memory.read(0, addr)
-        val_hi = self._memory.read(1, addr)
-        val = (val_hi << 16) | val_lo
+        ram_addr = self.SCR_BASE | (addr & 0x3F)
+        val = self._memory.read(0, ram_addr)
         self._clock.tick()
         self._outputs.block_res.set(val)
         self._outputs.block_res_sel.set(dst)
@@ -444,18 +431,81 @@ class MemoryBlock(FunctionalBlock):
     def _sto_core(self, src: int, addr: int):
         self._inputs.hb_mux.select(src)
         val = self._inputs.hb_mux.read_int()
-        addr = self.SCR_BASE | (addr & 0x3F)
-        self._memory.write(0, addr, val & 0xFFFF)
-        self._memory.write(1, addr, (val >> 16) & 0xFFFF)
+        ram_addr = self.SCR_BASE | (addr & 0x3F)
+        self._memory.write(0, ram_addr, val & 0xFFFFFFFF)
         self._clock.tick()
 
     def _ldu(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.LDU)
-        raise NotImplementedError
+        """Loads 32-bit or 64-bit from user buffer USR[imm] in DATA_RAM."""
+        assert instr.op == MicroOp.LDU
+        assert instr.dst is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+
+        self._ha_mux.select(Reg.IMM.value)
+        imm = self._ha_mux.read_int()
+
+        if instr.is_w32():
+            self._ldu_core(dst=instr.dst.value, addr=imm)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.dst.is_lo_half()
+            assert imm % 2 == 0, "64-bit LDU must use even base"
+
+            # 1. Read LO word from addr
+            self._ldu_core(dst=instr.dst.value, addr=imm)
+            self._writeback()
+
+            # 2. Read HI word from addr + 1
+            self._ldu_core(dst=instr.dst.value | 1, addr=imm | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+
+    def _ldu_core(self, dst: int, addr: int):
+        ram_addr = self.USR_BASE | (addr & 0x0F)
+        val = self._memory.read(0, ram_addr)
+        self._clock.tick()
+        self._outputs.block_res.set(val)
+        self._outputs.block_res_sel.set(dst)
 
     def _stu(self, instr: MicroInstruction) -> None:
-        assert (instr.op == MicroOp.STU)
-        raise NotImplementedError
+        """Stores 32-bit or 64-bit from register src into user buffer USR[imm] in DATA_RAM."""
+        assert instr.op == MicroOp.STU
+        assert instr.src is not Reg.NONE
+
+        self._outputs.status_wr_sel.set(0)
+        self._outputs.res_status.set(0)
+        self._outputs.block_res.set(0)
+        self._outputs.block_res_sel.set(Reg.NONE.value)
+
+        self._ha_mux.select(Reg.IMM.value)
+        imm = self._ha_mux.read_int()
+
+        if instr.is_w32():
+            self._stu_core(src=instr.src.value, addr=imm)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+        else:
+            assert instr.src.is_lo_half()
+            assert imm % 2 == 0, "64-bit STU must use even base"
+
+            # 1. Write LO word to addr
+            self._stu_core(src=instr.src.value, addr=imm)
+            self._writeback()
+
+            # 2. Write HI word to addr + 1
+            self._stu_core(src=instr.src.value | 1, addr=imm | 1)
+            self._outputs.exec_done.set(1)
+            self._writeback()
+
+    def _stu_core(self, src: int, addr: int):
+        self._inputs.hb_mux.select(src)
+        val = self._inputs.hb_mux.read_int()
+        ram_addr = self.USR_BASE | (addr & 0x0F)
+        self._memory.write(0, ram_addr, val & 0xFFFFFFFF)
+        self._clock.tick()
 
     def _mov(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.MOV)

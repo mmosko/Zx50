@@ -25,20 +25,20 @@ class FpuTables(IntEnum):
 
 
 class FpuTable(IntEnum):
-    """4-bit Table Identifier for LDC instruction (MicroOp.LDC).
+    """Table Identifier for LDC instruction (MicroOp.LDC).
 
-    Mapped to physical EBR and base offset in memory controller:
-      - RECIP: EBR 4 (16-bit), base 0x000 (words 0..255)
-      - SQRT:  EBR 4 (16-bit), base 0x100 (words 256..511)
-      - TRIG:  EBR 2 & 3 (paired 32-bit), base 0x000 (words 0..127)
-      - CHEB:  EBR 2 & 3 (paired 32-bit), base 0x080 (words 128..255)
-      - CONST: EBR 2 & 3 (paired 32-bit), base 0x100 (words 256..319)
+    Mapped to base offsets in unified DATA_RAM (1024x32, EBR 0):
+      - CONST: Base 0x100 (words 256..319, 32-bit)
+      - TRIG:  Base 0x200 (words 512..639, 32-bit)
+      - CHEB:  Base 0x280 (words 640..767, 32-bit)
+      - RECIP: Base 0x300 (words 768..1023, low 16-bit slice)
+      - SQRT:  Base 0x300 (words 768..1023, high 16-bit slice)
     """
-    RECIP = 0b000  # 0: EBR 4 (16-bit), base 0x000 (words 0..255)
-    SQRT = 0b001   # 1: EBR 4 (16-bit), base 0x100 (words 256..511)
-    TRIG = 0b100   # 4: EBR 2 & 3 (paired 32-bit), base 0x000 (words 0..127)
-    CHEB = 0b101   # 5: EBR 2 & 3 (paired 32-bit), base 0x080 (words 128..255)
-    CONST = 0b110  # 6: EBR 2 & 3 (paired 32-bit), base 0x100 (words 256..319)
+    CONST = 0
+    TRIG = 1
+    CHEB = 2
+    RECIP = 3
+    SQRT = 4
 
 
 class FpuCheb(IntEnum):

@@ -11,9 +11,9 @@ from fpu_emu.user_opcodes import UserOpcode
 class MicroCode:
     """Microcode ROM lookup table."""
 
-    # 512 is the true maximum, but we do not have an optimized assembly yet, so we have a relaxed max
+    # 1024 words (EBR 4-7) for runtime microcode execution store
     HARD_MAX_MICRO_INSTRUCTIONS: int = 1024
-    SOFT_MAX_MICRO_INSTRUCTIONS: int = 512
+    SOFT_MAX_MICRO_INSTRUCTIONS: int = 1024
     MAX_MICRO_INSTRUCTIONS: int = HARD_MAX_MICRO_INSTRUCTIONS
 
     @classmethod
@@ -26,10 +26,10 @@ class MicroCode:
 
     @classmethod
     @fpga_resource(
-        approach="Paired Single-Port SysMEM EBR (EBR 5 & 6, 512x32) for runtime microcode execution store",
+        approach="Cascaded Single-Port SysMEM EBR (EBR 4-7, 1024x32) for runtime microcode execution store",
         luts=0,
         ffs=0,
-        ebr=2,
+        ebr=4,
         delay_ns=3.2,
         cycles=1,
         shared_unit="ebr_microcode_rom",
