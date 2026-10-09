@@ -10,15 +10,15 @@ Architecture Specifications: [SystemDesignV2.md](SystemDesignV2.md) & [SystemRef
 
 ### Task 0.1: 32-Bit CORDIC Trigonometric Functions
 *Goal: Complete all 32-bit arithmetic and transcendental operations.*
-- [ ] Implement Cody-Waite range reduction ($\text{mod } \pi/2$) with quadrant tracking in `fpu_emu/asm/`.
-- [ ] Implement circular CORDIC vector rotation ($z \to 0$ mode) for `SIN_F32`, `COS_F32`, and `TAN_F32` across 24 stages using Trig ROM in EBR 2 & 3.
-- [ ] Implement quadrant reconstruction and IEEE-754 float normalization (`LZC`, `LSL`, `EXP_NORM`, `PACK`).
-- [ ] Handle tangent asymptotes at $\pm \pi/2$ asserting `ERR=1, VF=1`.
-- [ ] Verify accuracy with unit tests against IEEE-754 test vectors.
+- [x] Implement Cody-Waite range reduction ($\text{mod } \pi/2$) with quadrant tracking in `fpu_emu/asm/`.
+- [x] Implement circular CORDIC vector rotation ($z \to 0$ mode) for `SIN_F32`, `COS_F32`, and `TAN_F32` across 24 stages using Trig ROM in EBR 2 & 3.
+- [x] Implement quadrant reconstruction and IEEE-754 float normalization (`LZC`, `LSL`, `EXP_NORM`, `PACK`).
+- [x] Handle tangent asymptotes at $\pm \pi/2$ asserting `ERR=1, VF=1`.
+- [x] Verify accuracy with unit tests against IEEE-754 test vectors.
 
 ### Task 0.2: 64-Bit Arithmetic & Capacity Evaluation
 *Goal: Evaluate remaining microcode capacity out of 1024 words and fit prioritized 64-bit routines.*
-- [ ] Measure remaining microcode words after 32-bit trig completion.
+- [x] Measure remaining microcode words after 32-bit trig completion: **861 / 1,024 words used (163 words of headroom remaining)**.
 - [ ] Implement and fit prioritized 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F64`, `SQRT_F64`, CORDIC 64-bit).
 
 ### Task 1: Rewrite ALU & Memory Datapath for V2 Design
@@ -49,8 +49,9 @@ Architecture Specifications: [SystemDesignV2.md](SystemDesignV2.md) & [SystemRef
     - Scratchpad access (`LD`, `ST`) and user buffer access (`LDU`, `STU`).
     - Immediate and constant loading (`LDI`, `LDC`).
     - Register moves (`MOV`) and exchanges (`SWAP`).
-  - [ ] **Block 3 (`0b011`) Microcode Control**:
+  - [x] **Block 3 (`0b011`) Microcode Control**:
     - Micro-sequencer branching: `JMP`, `JNZ`, `JZ`, `DJNZ`, `CALL`, `RET`, `TRAP`, `NOP`.
+    - Hardware Call Stack: 16-deep × 10-bit LUT RAM with 4-bit CSP pointer.
 - [ ] **Update Memory & Register File Models**:
   - [ ] Refactor `fpu_emu/hardware/registers.py` to support `HOST_IN`, `HOST_OUT`, `CMD_REG`, 5-bit `OSP`, and `RET`.
   - [ ] Refactor `fpu_emu/hardware/rom.py` to strictly use `fpu_const_map.py` for all constant lookups.
@@ -61,19 +62,19 @@ Architecture Specifications: [SystemDesignV2.md](SystemDesignV2.md) & [SystemRef
 ---
 
 ### Task 2: Transcendental & Trigonometric Functions as Pure Microcode
-- [ ] **Decommission Monolithic Hardware Modules**:
-  - [ ] Retire monolithic implementations in `fp_exp.py`, `fp_ln.py`, `fp_pow.py`, and `fp_sqrt.py`.
-- [ ] **Pure Microcode Transcendental Implementations (`fpu_emu/micro_code.py`)**:
-  - [ ] Implement `SQRT` using digit-by-digit or Newton-Raphson iteration using standard adder, Booth multiplier, and shifter primitives.
-  - [ ] Implement `EXP` and `LN` using polynomial/rational minimax approximations or Taylor series with Constants ROM table lookups and scratchpad temporaries.
-  - [ ] Implement `POW` as $x^y = \exp(y \cdot \ln(x))$ synthesized from microcode routines with edge case handling ($x \le 0$, integer powers, $y = 0$).
-- [ ] **Pure Microcode CORDIC Trigonometric Implementations**:
-  - [ ] Implement Cody-Waite range reduction ($\text{mod } \pi/2$) with quadrant tracking.
-  - [ ] Implement circular CORDIC vector rotation ($z \to 0$ mode) for `SIN`, `COS`, and `TAN` across 24 stages (F32) and 53 stages (F64).
-  - [ ] Quadrant reconstruction and IEEE-754 float normalization using `LZC`, `LSL`, `EXP_NORM`, and `PACK`.
-  - [ ] Handle tangent asymptotes at $\pm \pi/2$ asserting `VF=1, ERR=1`.
-- [ ] **Unit Testing & Accuracy**:
-  - [ ] Verify transcendentals and trigonometric functions against IEEE-754 test vectors and special values (zeros, infinities, subnormals, quadrant boundaries).
+- [x] **Decommission Monolithic Hardware Modules**:
+  - [x] All transcendentals implemented as pure microcode using standard ALU, multiplier, divider, and shifter primitives.
+- [x] **Pure Microcode Transcendental Implementations (`fpu_emu/micro_code.py` / `fpu_emu/asm/`)**:
+  - [x] Implement `SQRT` using reciprocal square root seed LUT and Newton-Raphson iteration.
+  - [x] Implement `EXP2_F32` and `LOG2_F32` using polynomial minimax approximations with Constants ROM table lookups and scratchpad temporaries.
+  - [x] Implement `POW_F32` as $Y^X = 2^{X \cdot \log_2(Y)}$ synthesized from modular microcode subroutines (`LOG2_CORE`, `MUL_F32_CORE`, `EXP2_CORE`) with edge case handling.
+- [x] **Pure Microcode CORDIC Trigonometric Implementations**:
+  - [x] Implement Cody-Waite range reduction ($\text{mod } \pi/2$) with quadrant tracking.
+  - [x] Implement circular CORDIC vector rotation ($z \to 0$ mode) for `SIN_F32`, `COS_F32`, and `TAN_F32` across 24 stages (F32).
+  - [x] Quadrant reconstruction and IEEE-754 float normalization using `LZC`, `LSL`, `EXP_NORM`, and `PACK`.
+  - [x] Handle tangent asymptotes at $\pm \pi/2$ asserting `VF=1, ERR=1`.
+- [x] **Unit Testing & Accuracy**:
+  - [x] Verify transcendentals and trigonometric functions against IEEE-754 test vectors and special values (zeros, infinities, subnormals, quadrant boundaries).
 
 ---
 

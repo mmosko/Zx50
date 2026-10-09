@@ -118,6 +118,29 @@ in one FPU cycle.
 - CMD_REG: Latches the 8-bit user opcode written to Port 0x71 to trigger microcode dispatch or enqueue into the batch
   queue.
 - DEC_C (C-1), decrement the counter
+- CALL_STACK & CSP: 16-entry × 10-bit LUT RAM with 4-bit Call Stack Pointer (`CSP[3:0]`). On `CALL addr`, pushes `UPC + 1`
+  to `CALL_STACK[CSP]`, increments `CSP`, and branches to `addr`. On `RET`, decrements `CSP` and restores `UPC` from
+  `CALL_STACK[CSP]`.
+
+### Hardware Call Stack & Subroutine Modularity
+
+To enable composable mathematical algorithms (e.g., `POW_F32` synthesized as $2^{X \cdot \log_2(Y)}$, `TAN_F32` utilizing
+`DIV_F32_CORE`, and floating-point addition/subtraction sharing `ADD_F32_CORE`), the control block incorporates a hardware
+return-address call stack:
+
+* **Capacity & Implementation:** 16 words × 10 bits implemented in distributed LUT RAM (`RAM16X1S` / `RAM16X1D` primitives
+  in MachXO2/MachXO3 PFU Slices). Consumes 10 LUT4s and 0 EBR blocks.
+* **Call Stack Pointer (CSP):** A 4-bit synchronous up/down pointer register (`CSP[3:0]`, range 0..15).
+* **Nesting Depth:** Supports up to 16 levels of subroutine calls, easily accommodating nested execution hierarchies
+  (e.g., `USER_POW_F32` $\to$ `LOG2_CORE` $\to$ `NORMALIZE_F32`).
+* **Reusable Mathematical Cores:**
+  - `ADD_F32_CORE` / `SUB_F32_CORE`: Takes float operands in `AL` and `BL`, returns sum/difference in `AL`.
+  - `MUL_F32_CORE`: Multiplies `AL` and `BL`, returns float product in `AL`.
+  - `DIV_F32_CORE`: Divides `AL` by `BL`, returns float quotient in `AL`.
+  - `SQRT_F32_CORE`: Evaluates reciprocal square root polynomial/NR and returns $\sqrt{\text{AL}}$ in `AL`.
+  - `LOG2_CORE`: Computes $\log_2(\text{AL})$, returns float result in `AL`.
+  - `EXP2_CORE`: Computes $2^{\text{AL}}$, returns float result in `AL`.
+  - `NORMALIZE_F32`: Normalizes mantissa in `AL` with exponent in `EA` and sign in `AH[31]`, returning packed IEEE-754 float in `AL`.
 
 ## Timing
 

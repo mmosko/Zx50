@@ -388,25 +388,9 @@ TAN_FINISH_SIGN:
     LD AL, 7                    ; AL <- float32(Numerator)
 
     ; 7. Perform float division: AL / BL
-    UNPACK BL, EB               ; EB <- exp_B, BL <- mant_B
-    UNPACK AL, EA               ; EA <- exp_A, AL <- mant_A
-    EXP_SUB EA, EB              ; EA <- exp_A - exp_B
-    EXP_ADD EA, 126             ; EA <- exp_A - exp_B + 126 (re-bias for 24-bit quotient)
-    LSL AL, 8                   ; Initial dividend shift: AL << 8
-    DIVU AL, BL                 ; AL <- q0, DL <- r0
-    MOV AH, AL                  ; AH <- q0
-    LDI C, 2                    ; 2 more iterations of 8-bit quotient generation
-TAN_DIV_LOOP:
-    MOV AL, DL                  ; AL <- remainder from DIVU
-    LSL AL, 8                   ; AL <- r << 8
-    DIVU AL, BL                 ; AL <- q_i, DL <- r_i
-    LSL AH, 8                   ; Shift accumulated quotient: AH << 8
-    OR AH, AL                   ; AH <- (q << 8) | q_i
-    DJNZ TAN_DIV_LOOP           ; Repeat for 24-bit total quotient
-
-    MOV AL, AH                  ; AL <- 24-bit quotient mantissa
     LD AH, 6                    ; AH[31] <- result sign from SCR[6]
-    CALL NORMALIZE_F32          ; Normalize mantissa in AL, exponent in EA, sign in AH[31]
+    OR AL, AH                   ; Attach sign to numerator
+    CALL DIV_F32_CORE           ; AL <- AL / BL
     PUSH AL                     ; Push result
     HALT
 
