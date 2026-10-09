@@ -24,9 +24,20 @@ The physical registers are 32-bits each (unless stated otherwise):
 
 In the assembly, pseudo-registers AX, BX, DX, and FX denote 64-bit operations, e.g `ADD AX, BX`.
 
-When resolving an instruction, the destination (`dst`) can be any of the physical registers. The other two
-are sources: `src1` and `src2`. `src1` can be any of AL, AH, BL, BH, C, and an immediate value (IMM).
-`src2` can be any of the physical registers, or an immediate value (IMM).
+The operation arguments may be any of these.  We use `IMM` to mean the immediate value in an
+instruction, which we treat like its own register (it actually -- the machine word is broken into
+the instruction register and the immediate register).
+
+- the destination (`dst`) can be any of: 
+  - AL, AH, BL, BH, DL, DH, FL, FH, EA, EB, or C. 
+- The `src1` corresponds to the `HA_MUX`, which is an 8-input mux
+  - AL, AH, BL, BH, EA, EB, C, IMM
+  - When used with `LDC`, `src1` uses the mnemonic for a source constant table.  See `LDC` below.
+- The `src2` argument corresponds to the `HB_MUX`:
+  - AL, AH, BL, BH, DL, DH, FL, FH, EA, EB, C, or IMM.
+
+The normal convention is an instruction like `ADD AL, BL` will have `dst=AL`, `src2=BL`, with an implied
+`src1=AL`, but see the specific instruction documentation.
 
 ### Block 0 (0b000): Arithmetic / Adder Block
 

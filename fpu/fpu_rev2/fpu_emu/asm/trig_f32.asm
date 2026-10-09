@@ -284,127 +284,146 @@ RECONSTRUCT_COS:
     JZ ZERO, COS_Q1
     CMP AL, 2
     JZ ZERO, COS_Q2
-    ; q == 3:
-    MOV AL, BL                  ; AL <- Y
-    XOR AH, AH                  ; Sign = +1
+    ; q == 3: res = +Y
+    MOV AL, BL                  ; AL <- Y (signed)
+    XOR AH, AH                  ; Target sign = 0 (positive)
     JMP COS_HANDLE_Y_SIGN
+
 COS_Q0:
+    ; res = +X
     MOV AL, FL                  ; AL <- +X
-    XOR AH, AH                  ; Sign = +1
+    XOR AH, AH                  ; Sign = 0 (positive)
     JMP TRIG_PACK_FLOAT
+
 COS_Q1:
-    MOV AL, BL                  ; AL <- Y
-    LDI AH, 0x80000000          ; Sign = -1
+    ; res = -Y
+    MOV AL, BL                  ; AL <- Y (signed)
+    LDI BL, 1
+    LSL BL, 31
+    MOV AH, BL                  ; Target sign = 0x80000000 (negative)
     JMP COS_HANDLE_Y_SIGN
+
 COS_Q2:
+    ; res = -X
     MOV AL, FL                  ; AL <- +X
-    LDI AH, 0x80000000          ; Sign = -1
+    LDI BL, 1
+    LSL BL, 31
+    MOV AH, BL                  ; Sign = 0x80000000 (negative)
     JMP TRIG_PACK_FLOAT
+
 COS_HANDLE_Y_SIGN:
     OR AL, AL
-    JZ SIGN, TRIG_PACK_FLOAT
-    FCHS AL                     ; AL <- -AL
-    LDI EB, 0x80000000
-    XOR AH, EB                  ; Flip sign
+    JZ SIGN, COS_Y_IS_POS       ; If bit 31 is 0 (AL >= 0): already positive magnitude
+    XOR BL, BL
+    SUB BL, AL
+    MOV AL, BL                  ; AL <- -AL (positive magnitude)
+    LDI BL, 1
+    LSL BL, 31
+    XOR AH, BL                  ; Flip sign bit AH[31]
+COS_Y_IS_POS:
     JMP TRIG_PACK_FLOAT
 
     ; --- Tangent Reconstruction ---
 RECONSTRUCT_TAN:
-    ; Determine numerator (AL) and denominator (BL) based on quadrant q:
-    ; q = 0: N = Y, D = X
-    ; q = 1: N = -X, D = Y
-    ; q = 2: N = Y, D = X
-    ; q = 3: N = -X, D = Y
-    LD AL, 2                    ; Load quadrant q
+    ; 1. Determine sign of Y and make Y positive:
+    XOR AH, AH                  ; AH <- 0 (initial sign)
+    OR BL, BL                   ; Test sign of Y
+    JZ SIGN, TAN_Y_IS_POS       ; If Y >= 0: keep sign as 0
+    ; Y is negative: BL <- -BL, AH <- 0x80000000
+    XOR AL, AL
+    SUB AL, BL
+    MOV BL, AL                  ; BL <- |Y|
+    LDI AL, 1
+    LSL AL, 31
+    MOV AH, AL                  ; AH <- 0x80000000
+TAN_Y_IS_POS:
+
+    ; 2. Determine numerator (AL) and denominator (BL) based on quadrant q:
+    ; Even quadrant (q = 0, 2): N = |Y|, D = X, keep sign
+    ; Odd quadrant  (q = 1, 3): N = X, D = |Y|, flip sign
+    LD AL, 2                    ; Load quadrant q from SCR[2]
     AND AL, 1
     JZ ZERO, TAN_EVEN_Q
-    ; Odd quadrant (q = 1, 3): N = X (FL), D = Y (BL), flip sign
+    ; Odd quadrant (q = 1, 3):
     MOV AL, FL                  ; AL <- Numerator X
-    ; BL already holds Denominator Y
-    LDI AH, 0x80000000          ; Inverted sign
-    JMP TAN_CHECK_ASYMPTOTE
+    ; BL is already Denominator |Y|
+    LDI BH, 1
+    LSL BH, 31
+    XOR AH, BH                  ; Flip sign
+    JMP TAN_FINISH_SIGN
+
 TAN_EVEN_Q:
-    ; Even quadrant (q = 0, 2): N = Y (BL), D = X (FL), positive sign
-    MOV AL, BL                  ; AL <- Numerator Y
+    ; Even quadrant (q = 0, 2):
+    MOV AL, BL                  ; AL <- Numerator |Y|
     MOV BL, FL                  ; BL <- Denominator X
-    XOR AH, AH                  ; Positive sign
-TAN_CHECK_ASYMPTOTE:
-    ; Ensure numerator is positive:
-    OR AL, AL
-    JZ SIGN, TAN_NUM_POS
-    FCHS AL
-    LDI EB, 0x80000000
-    XOR AH, EB
-TAN_NUM_POS:
-    ; Ensure denominator is positive:
-    OR BL, BL
-    JZ SIGN, TAN_DENOM_POS
-    FCHS BL
-    LDI EB, 0x80000000
-    XOR AH, EB
-TAN_DENOM_POS:
+
+TAN_FINISH_SIGN:
     ; Combine with original theta sign: tan(-theta) = -tan(theta)
-    LD EB, 3
-    XOR AH, EB                  ; AH[31] holds final sign
+    LD BH, 3                    ; Load theta sign mask from SCR[3]
+    XOR AH, BH                  ; AH[31] holds final sign
+    STO 6, AH                   ; Save final sign in SCR[6]
 
-    ; Check for tangent asymptote: denominator BL == 0
+    ; 3. Check for zero denominator (asymptote at +/- pi/2):
     OR BL, BL
-    JNZ ZERO, TAN_DO_DIV
-    ; Denominator is zero: Assert ERR=1, VF=1 and return signed infinity
-    LDC AL, CONST, 38           ; POS_INF_F32 (0x7F800000)
-    OR AL, AH                   ; Attach computed sign
-    PUSH AL
-    LDI ERR, 1
-    LDI VF, 1
-    HALT
+    JZ ZERO, TAN_DIV_ZERO
 
-TAN_DO_DIV:
-    ; Check for zero numerator: tan(0) = 0
+    ; 4. Check for zero numerator (tan(0) = 0, tan(pi) = 0):
     OR AL, AL
-    JNZ ZERO, TAN_NON_ZERO
-    XOR AL, AL
-    OR AL, AH                   ; Attach sign to zero
-    PUSH AL
-    HALT
+    JZ ZERO, TAN_ZERO
 
-TAN_NON_ZERO:
-    ; Perform fixed-point / mantissa division:
-    ; Normalize numerator:
-    LZC C, AL                   ; C <- leading zeros of AL
-    SUB C, 8
-    LSL AL, C
+    ; 5. Convert numerator AL (in Q2.30) to float32:
+    LSR AL, 7
     LDI EA, 127
-    EXP_SUB EA, C
+    XOR AH, AH
+    CALL NORMALIZE_F32          ; AL <- float32(Numerator)
+    STO 7, AL                   ; Save float32(Numerator) in SCR[7]
 
-    ; Normalize denominator:
-    MOV DH, AL                  ; Stash normalized numerator mantissa in DH
+    ; 6. Convert denominator BL (in Q2.30) to float32:
     MOV AL, BL
-    LZC C, AL                   ; C <- leading zeros of denominator
-    SUB C, 8
-    LSL AL, C
-    MOV BL, AL                  ; BL <- normalized denominator mantissa
-    LDI EB, 127
-    EXP_SUB EB, C
+    LSR AL, 7
+    LDI EA, 127
+    XOR AH, AH
+    CALL NORMALIZE_F32          ; AL <- float32(Denominator)
+    MOV BL, AL                  ; BL <- float32(Denominator)
+    LD AL, 7                    ; AL <- float32(Numerator)
 
-    ; Divide numerator DH by denominator BL:
-    MOV AL, DH                  ; AL <- dividend
+    ; 7. Perform float division: AL / BL
+    UNPACK BL, EB               ; EB <- exp_B, BL <- mant_B
+    UNPACK AL, EA               ; EA <- exp_A, AL <- mant_A
     EXP_SUB EA, EB              ; EA <- exp_A - exp_B
     EXP_ADD EA, 126             ; EA <- exp_A - exp_B + 126 (re-bias for 24-bit quotient)
     LSL AL, 8                   ; Initial dividend shift: AL << 8
     DIVU AL, BL                 ; AL <- q0, DL <- r0
-    MOV DH, AL                  ; DH <- q0
+    MOV AH, AL                  ; AH <- q0
     LDI C, 2                    ; 2 more iterations of 8-bit quotient generation
 TAN_DIV_LOOP:
     MOV AL, DL                  ; AL <- remainder from DIVU
     LSL AL, 8                   ; AL <- r << 8
     DIVU AL, BL                 ; AL <- q_i, DL <- r_i
-    LSL DH, 8                   ; DH << 8
-    OR DH, AL                   ; DH <- (q << 8) | q_i
-    DJNZ TAN_DIV_LOOP
+    LSL AH, 8                   ; Shift accumulated quotient: AH << 8
+    OR AH, AL                   ; AH <- (q << 8) | q_i
+    DJNZ TAN_DIV_LOOP           ; Repeat for 24-bit total quotient
 
-    MOV AL, DH                  ; AL <- 24-bit quotient mantissa
-    ; Sign is in AH[31]
+    MOV AL, AH                  ; AL <- 24-bit quotient mantissa
+    LD AH, 6                    ; AH[31] <- result sign from SCR[6]
+    CALL NORMALIZE_F32          ; Normalize mantissa in AL, exponent in EA, sign in AH[31]
+    PUSH AL                     ; Push result
+    HALT
+
+TAN_ZERO:
+    XOR AL, AL                  ; Return zero mantissa
+    LD AH, 6                    ; Preserve computed sign
     CALL NORMALIZE_F32
+    PUSH AL
+    HALT
+
+TAN_DIV_ZERO:
+    ; Force hardware divide-by-zero error
+    XOR BL, BL
+    DIVU AL, BL                 ; Asserts ERR=1, VF=1 in hardware
+    LDC AL, CONST, 38           ; POS_INF_F32 (0x7F800000)
+    LD BH, 6
+    OR AL, BH                   ; Attach computed sign
     PUSH AL
     HALT
 
