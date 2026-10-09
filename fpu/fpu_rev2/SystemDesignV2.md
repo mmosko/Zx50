@@ -14,7 +14,7 @@ all 32bit unless said othewise
 - OSP (5 bit) operation stack pointer for user BATCH mode (32-byte queue)
 - UPC (10 bit), microcode program counter (addresses 1,024 words x 32-bit in CODE_ROM)
 - STATUS (8 bit), status register [7: BSY, 6: D, 5: S, 4: C, 3: V, 2: U, 1: ERR, 0: Z]
-- RET (10 bit), return address from CALL (stores 10-bit UPC+1) -- no nested calls
+- CALL_STACK (16 words x 10 bit), return address stack in distributed LUT RAM with 4-bit CSP pointer (supports up to 16 nested CALL levels)
 - HOST_IN (32-bit), host input staging register (accumulates 4 bytes from Port 0x70 writes)
 - HOST_OUT (32-bit), host output staging register (stages 4 bytes for Port 0x70 reads)
 - CMD_REG (8-bit), command latch for Port 0x71 user opcodes
@@ -264,8 +264,8 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | JNZ \[flag,\] addr      | 0b011_001 | 0     | UPC     | n/a    | IMM    | `upc <- addr` if flag != 0 (def: !ZF)   | none                                  |
 | JZ \[flag,\] addr       | 0b011_010 | 0     | UPC     | n/a    | IMM    | `upc <- addr` if flag == 0 (def: ZF)    | none                                  |
 | DJNZ addr               | 0b011_011 | 0     | UPC     | n/a    | IMM    | `dec C, upc <- addr` if !ZF             | sets ZF (from dec C)                  |
-| CALL addr               | 0b011_100 | 0     | UPC     | UPC    | IMM    | `ret <- upc + 1, upc <- addr`           | none                                  |
-| RET                     | 0b011_101 | 0     | UPC     | n/a    | n/a    | `upc <- ret`                            | none                                  |
+| CALL addr               | 0b011_100 | 0     | UPC     | UPC    | IMM    | `call_stack[csp] <- upc + 1, csp <- csp + 1, upc <- addr` | none                                  |
+| RET                     | 0b011_101 | 0     | UPC     | n/a    | n/a    | `csp <- csp - 1, upc <- call_stack[csp]` | none                                  |
 | NOP                     | 0b011_110 | 0     | NONE    | n/a    | n/a    | No operation (pipeline bubble)          | none (flags unaffected)               |
 | HALT                    | 0b011_111 | 0     | UPC     | n/a    | n/a    | end execution normally, pulse EXEC_DONE | clears BSY <- 0                       |
 

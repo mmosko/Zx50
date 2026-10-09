@@ -240,18 +240,8 @@ def test_control_halt(fpga: FpgaModel):
 
 
 def test_control_nested_call_asserts(fpga: FpgaModel):
-    """Nested CALL without RET should fail assertion."""
-    microcode = [
-        MicroInstruction(op=MicroOp.CALL, imm=1),
-        MicroInstruction(op=MicroOp.CALL, imm=2),
-        MicroInstruction(op=MicroOp.CALL, imm=3),
-        MicroInstruction(op=MicroOp.CALL, imm=4),
-        MicroInstruction(op=MicroOp.CALL, imm=5),
-        MicroInstruction(op=MicroOp.CALL, imm=6),
-        MicroInstruction(op=MicroOp.CALL, imm=7),
-        MicroInstruction(op=MicroOp.CALL, imm=8),
-        MicroInstruction(op=MicroOp.CALL, imm=9),
-    ]
+    """Nested CALL without RET beyond 16 levels should fail assertion."""
+    microcode = [MicroInstruction(op=MicroOp.CALL, imm=i) for i in range(1, 18)]
     with pytest.raises(AssertionError, match="Call stack out of range"):
         fpga.dispatcher._run(microcode)
 

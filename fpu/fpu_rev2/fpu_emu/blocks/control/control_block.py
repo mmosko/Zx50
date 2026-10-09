@@ -16,9 +16,9 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 @fpga_resource(
-    approach="Branch condition evaluator, jump routing, loop control, and 8x10-bit LUT RAM call stack with 3-bit CSP adder/sequencer",
+    approach="Branch condition evaluator, jump routing, loop control, and 16x10-bit LUT RAM call stack with 4-bit CSP adder/sequencer",
     luts=55,
-    ffs=7,
+    ffs=8,
     delay_ns=2.5,
     cycles=1,
     shared_unit="control_block",
@@ -37,9 +37,9 @@ class ControlBlock(FunctionalBlock):
         self._none_bus.set(Reg.NONE.value)
         self._upc_bus.set(Reg.UPC.value)
 
-        # Distributed LUT memory, 8x 10 bits
-        self._call_stack = LutRam(name="call_stack", size=8, width=10, clock=clock)
-        self._csp = Register(name=Reg.RET_SET, size_in_bits=3, clock=clock)
+        # Distributed LUT memory, 16x 10 bits
+        self._call_stack = LutRam(name="call_stack", size=16, width=10, clock=clock)
+        self._csp = Register(name=Reg.RET_SET, size_in_bits=4, clock=clock)
         self._csp.write(0)
 
         self._c_reg = c_reg
@@ -161,7 +161,7 @@ class ControlBlock(FunctionalBlock):
         self._call_stack.write(csp, upc)
         self._clock.tick()
 
-        # Need a 3-bit adder or state machine to calculate next _csp
+        # Need a 4-bit adder or state machine to calculate next _csp
         self._csp.write(next_csp)
         # If the csp is 0, we wrapped around
         assert self._csp.read_int() != 0, f"Call stack out of range: {csp}"
@@ -170,7 +170,7 @@ class ControlBlock(FunctionalBlock):
 
     def _ret(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.RET)
-        # small adder or state machine for 3-bit CSP
+        # small adder or state machine for 4-bit CSP
         csp = self._csp.read_int() - 1
         assert 0 <= csp < self._call_stack.size, f"Call stack out of range: {csp}"
 

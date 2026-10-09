@@ -19,7 +19,7 @@ The physical registers are 32-bits each (unless stated otherwise):
 - SP (8-bit hardware math stack pointer)
 - OSP (5-bit batch operation stack pointer)
 - UPC (10-bit microcode program counter, addressing 1,024 words in CODE_ROM)
-- RET (10-bit return address register)
+- CALL_STACK (16 words x 10 bit, return address stack in distributed LUT RAM with 4-bit CSP pointer)
 - STATUS (8-bit status flags register)
 
 In the assembly, pseudo-registers AX, BX, DX, and FX denote 64-bit operations, e.g `ADD AX, BX`.
@@ -2222,8 +2222,9 @@ CALL addr — SUBROUTINE CALL
 #### Register Transfer & Datapath Flow
 
 ```text
-RETURN_REG [9:0] <- UPC [9:0] + 1
-UPC [9:0]        <- INSTR [9:0]  (addr)
+CALL_STACK[CSP] [9:0] <- UPC [9:0] + 1
+CSP [3:0]             <- CSP [3:0] + 1
+UPC [9:0]             <- INSTR [9:0]  (addr)
 ```
 
 #### Instruction Word Format
@@ -2232,15 +2233,16 @@ UPC [9:0]        <- INSTR [9:0]  (addr)
 
 #### Description
 
-Saves the address of the next sequential instruction (`UPC + 1`) into the dedicated micro-return register and jumps to
-subroutine `addr`.
+Pushes the address of the next sequential instruction (`UPC + 1`) onto the 16-entry call stack, increments `CSP`, and
+jumps to subroutine `addr`. Supports up to 16 nested call levels.
 
 #### Concrete Numeric Example
 
 ```text
-Suppose current UPC = 0x025, INSTR[9:0] = 0x080.
+Suppose current UPC = 0x025, CSP = 0, INSTR[9:0] = 0x080.
 After execution of CALL 0x080:
-  RETURN_REG <- 0x026
+  CALL_STACK[0] <- 0x026
+  CSP <- 1
   UPC <- 0x080
   Flags are unaffected.
 ```
@@ -2267,7 +2269,8 @@ RET — SUBROUTINE RETURN
 #### Register Transfer & Datapath Flow
 
 ```text
-UPC [9:0] <- RETURN_REG [9:0]
+CSP [3:0] <- CSP [3:0] - 1
+UPC [9:0] <- CALL_STACK[CSP] [9:0]
 ```
 
 #### Instruction Word Format
@@ -2276,13 +2279,14 @@ UPC [9:0] <- RETURN_REG [9:0]
 
 #### Description
 
-Restores microprogram execution flow to the return address latched during the preceding `CALL`.
+Decrements `CSP` and restores microprogram execution flow to the return address popped from the call stack.
 
 #### Concrete Numeric Example
 
 ```text
-Suppose RETURN_REG = 0x026.
+Suppose CSP = 1, CALL_STACK[0] = 0x026.
 After execution of RET:
+  CSP <- 0
   UPC <- 0x026
   Flags are unaffected.
 ```
