@@ -7,22 +7,17 @@
 `ifndef FPU_ROM_MAP_VH
 `define FPU_ROM_MAP_VH
 
-  `define FLASH_RECIP_BASE         15'h0400
-  `define FLASH_SQRT_BASE          15'h0600
-  `define FLASH_EXP2_BASE          15'h0800
-  `define FLASH_LOG2_BASE          15'h0A00
-  `define FLASH_SIN_BASE           15'h0C00
-  `define FLASH_COS_BASE           15'h0E00
-  `define FLASH_TAN_BASE           15'h1000
-  `define FLASH_LN_BASE            15'h1200
-  `define FLASH_LOG10_BASE         15'h1400
-  `define FLASH_CONST_BASE         15'h1600
-  `define FLASH_CORDIC_ATAN32_BASE 15'h1800
-  `define FLASH_CORDIC_ATAN64_BASE 15'h1900
-  `define FLASH_TRIG_CONST_BASE    15'h1B00
-  `define FLASH_CHEB_BASE          15'h1C00
+  // Flash Image 32-bit Word Base Offsets (8 KB total / 2048 words)
+  `define FLASH_DATA_RAM_BASE      13'h0000 // Words 0..1023 (4096 bytes)
+  `define FLASH_CODE_ROM_BASE      13'h1000 // Words 1024..2047 (4096 bytes)
 
-  // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)
+  // DATA_RAM Sub-table Word Offsets (EBR 0)
+  `define DATA_RAM_CONST_BASE      10'h100 // Words 256..319
+  `define DATA_RAM_TRIG_BASE       10'h200 // Words 512..639
+  `define DATA_RAM_CHEB_BASE       10'h280 // Words 640..767
+  `define DATA_RAM_SEEDS_BASE      10'h300 // Words 768..1023
+
+  // FPU Constants Word Slot Map (32-bit words from DATA_RAM_CONST_BASE)
   `define CONST_SLOT_PI_F32             6'd0
   `define CONST_SLOT_PI_F64             6'd2
   `define CONST_SLOT_E_F32              6'd4
@@ -59,7 +54,7 @@
   `define CONST_SLOT_LN10_F32           6'd58
   `define CONST_SLOT_LN10_F64           6'd60
 
-  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from FLASH_CHEB_BASE)
+  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from DATA_RAM_CHEB_BASE)
   `define CHEB_SLOT_EXP2_C1            6'd1
   `define CHEB_SLOT_EXP2_C2            6'd2
   `define CHEB_SLOT_EXP2_C3            6'd3

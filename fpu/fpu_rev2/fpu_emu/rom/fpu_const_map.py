@@ -7,21 +7,9 @@ from enum import IntEnum
 
 
 class FpuTables(IntEnum):
-    """Flash ROM Table Base Byte Addresses."""
-    RECIP = 0x0400  # Reciprocal Table (512 bytes)
-    SQRT = 0x0600  # Square Root Seed Table (512 bytes)
-    EXP2 = 0x0800  # Exp2 Table (512 bytes)
-    LOG2 = 0x0A00  # Log2 Table (512 bytes)
-    SIN = 0x0C00  # Sine Table (512 bytes)
-    COS = 0x0E00  # Cosine Table (512 bytes)
-    TAN = 0x1000  # Tangent Table (512 bytes)
-    LN = 0x1200  # Natural Log Table (512 bytes)
-    LOG10 = 0x1400  # Base-10 Log Table (512 bytes)
-    CONST = 0x1600  # Mathematical Constants Table (256 bytes)
-    CORDIC_ATAN32 = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes)
-    CORDIC_ATAN64 = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes)
-    TRIG_CONST = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes)
-    CHEB = 0x1C00  # Chebyshev & Polynomial Coefficients Table (512 bytes)
+    """Flash ROM Image Base Byte Addresses."""
+    DATA_RAM = 0x0000  # DATA_RAM Image (4096 bytes, Words 0..1023)
+    CODE_ROM = 0x1000  # CODE_ROM Image (4096 bytes, Words 1024..2047)
 
 
 class FpuTable(IntEnum):
@@ -43,7 +31,7 @@ class FpuTable(IntEnum):
 
 class FpuCheb(IntEnum):
     """Chebyshev / Polynomial Coefficients Word Slot Map for EBR CHEB ROM.
-    Each slot represents a 32-bit word offset from CHEB table base (EBR 2/3 offset 0x080).
+    Each slot represents a 32-bit word offset from CHEB table base (0x280).
     """
     EXP2_C1 = 1  # exp2 Taylor c1 (ln(2) in Q1.31)
     EXP2_C2 = 2  # exp2 Taylor c2 (ln(2)^2 / 2 in Q1.31)
@@ -60,7 +48,7 @@ class FpuCheb(IntEnum):
 
 class FpuConst(IntEnum):
     """FPU Constants Word Slot Map for EBR Constants ROM.
-    Each slot represents a 32-bit word offset from CONST table base (EBR 2/3 offset 0x100).
+    Each slot represents a 32-bit word offset from CONST table base (0x100).
     """
     PI_F32 = 0  # pi in IEEE-754 single precision
     PI_F64 = 2  # pi in IEEE-754 double precision

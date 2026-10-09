@@ -23,39 +23,31 @@ Serializes all tables into:
 from decimal import Decimal, getcontext
 import math
 import os
+import struct
 
-# ROM Parameters & Base Addresses
-FLASH_SIZE = 32768  # 32 KB active region for CA[14:0]
-FLASH_RECIP_BASE = 0x0400  # Reciprocal Table (512 bytes)
-FLASH_SQRT_BASE = 0x0600  # Square Root Seed Table (512 bytes)
-FLASH_EXP2_BASE = 0x0800  # Exp2 Table (512 bytes)
-FLASH_LOG2_BASE = 0x0A00  # Log2 Table (512 bytes)
-FLASH_SIN_BASE = 0x0C00  # Sine Table (512 bytes)
-FLASH_COS_BASE = 0x0E00  # Cosine Table (512 bytes)
-FLASH_TAN_BASE = 0x1000  # Tangent Table (512 bytes)
-FLASH_LN_BASE = 0x1200  # Natural Log Table (512 bytes)
-FLASH_LOG10_BASE = 0x1400  # Base-10 Log Table (512 bytes)
-FLASH_CONST_BASE = 0x1600  # Mathematical Constants Table (256 bytes)
-FLASH_CORDIC_ATAN32_BASE = 0x1800  # CORDIC Arctangent 32-bit Table (128 bytes: 32 x 4 bytes)
-FLASH_CORDIC_ATAN64_BASE = 0x1900  # CORDIC Arctangent 64-bit Table (512 bytes: 64 x 8 bytes)
-FLASH_TRIG_CONST_BASE = 0x1B00  # Trigonometric & CORDIC Constants (128 bytes: 16 x 8 bytes)
-FLASH_CHEB_BASE = 0x1C00  # Chebyshev & Polynomial Coefficients (512 bytes: 128 x 4 bytes)
+# ROM Parameters & Base Addresses (8 KB Single Flash ROM: 2048 words x 32-bit)
+FLASH_SIZE = 8192  # 8 KB active region for CA[12:0]
+TOTAL_WORDS = 2048
+DATA_RAM_WORDS = 1024
+CODE_ROM_WORDS = 1024
+
+# Base Word Offsets
+DATA_RAM_BASE_WORD = 0       # 0x000 (Bytes 0x0000..0x0FFF)
+CODE_ROM_BASE_WORD = 1024    # 0x400 (Bytes 0x1000..0x1FFF)
+
+# DATA_RAM Word Offsets (EBR 0)
+DATA_RAM_MTH_WORD = 0x000    # Words 0..127 (Stack RAM)
+DATA_RAM_SCR_WORD = 0x080    # Words 128..191 (Scratchpad RAM)
+DATA_RAM_USR_WORD = 0x0C0    # Words 192..207 (User Word Storage)
+DATA_RAM_EXT_WORD = 0x0D0    # Words 208..255 (RAM Headroom)
+DATA_RAM_CNS_WORD = 0x100    # Words 256..319 (Math Constants, 64 words)
+DATA_RAM_TRIG_WORD = 0x200   # Words 512..639 (Trig & CORDIC Angles, 128 words)
+DATA_RAM_CHEB_WORD = 0x280   # Words 640..767 (Chebyshev Coefficients, 128 words)
+DATA_RAM_SEEDS_WORD = 0x300  # Words 768..1023 (Combined Seeds, 256 words)
 
 TABLES_DEF = [
-    ("RECIP", FLASH_RECIP_BASE, "Reciprocal Table (512 bytes)"),
-    ("SQRT", FLASH_SQRT_BASE, "Square Root Seed Table (512 bytes)"),
-    ("EXP2", FLASH_EXP2_BASE, "Exp2 Table (512 bytes)"),
-    ("LOG2", FLASH_LOG2_BASE, "Log2 Table (512 bytes)"),
-    ("SIN", FLASH_SIN_BASE, "Sine Table (512 bytes)"),
-    ("COS", FLASH_COS_BASE, "Cosine Table (512 bytes)"),
-    ("TAN", FLASH_TAN_BASE, "Tangent Table (512 bytes)"),
-    ("LN", FLASH_LN_BASE, "Natural Log Table (512 bytes)"),
-    ("LOG10", FLASH_LOG10_BASE, "Base-10 Log Table (512 bytes)"),
-    ("CONST", FLASH_CONST_BASE, "Mathematical Constants Table (256 bytes)"),
-    ("CORDIC_ATAN32", FLASH_CORDIC_ATAN32_BASE, "CORDIC Arctangent 32-bit Table (128 bytes)"),
-    ("CORDIC_ATAN64", FLASH_CORDIC_ATAN64_BASE, "CORDIC Arctangent 64-bit Table (512 bytes)"),
-    ("TRIG_CONST", FLASH_TRIG_CONST_BASE, "Trigonometric & CORDIC Constants (128 bytes)"),
-    ("CHEB", FLASH_CHEB_BASE, "Chebyshev & Polynomial Coefficients Table (512 bytes)"),
+    ("DATA_RAM", 0x0000, "DATA_RAM Image (4096 bytes, Words 0..1023)"),
+    ("CODE_ROM", 0x1000, "CODE_ROM Image (4096 bytes, Words 1024..2047)"),
 ]
 
 HEADER_FILE = "src/fpu_rom_map.vh"
@@ -376,45 +368,64 @@ def generate_trig_constants_table() -> bytearray:
 # =============================================================================
 # In-Memory Flash Population Helper (Used by fpu_sim.py)
 # =============================================================================
-def populate_flash_memory(flash_mem: bytearray) -> bytearray:
-    """Populate an existing 32KB bytearray with all Flash LUTs at their base addresses."""
+# =============================================================================
+# In-Memory Flash Population & 8KB Image Generation
+# =============================================================================
+def generate_flash_words() -> list[int]:
+    """Generates the 2048 32-bit words representing DATA_RAM (0..1023) and CODE_ROM (1024..2047)."""
+    words = [0] * TOTAL_WORDS
+
+    # 1. Mathematical Constants at words 256..319 (DATA_RAM offset 0x100)
+    for _, slot, hex_val, nbytes, _ in CONSTANTS_DEF:
+        if nbytes == 4:
+            words[DATA_RAM_CNS_WORD + slot] = hex_val & 0xFFFFFFFF
+        elif nbytes == 8:
+            # 64-bit constant: slot is LO word, slot+1 is HI word
+            words[DATA_RAM_CNS_WORD + slot] = hex_val & 0xFFFFFFFF
+            words[DATA_RAM_CNS_WORD + slot + 1] = (hex_val >> 32) & 0xFFFFFFFF
+
+    # 2. CORDIC ATAN32 Table at words 512..543 (DATA_RAM offset 0x200)
+    cordic_atan32 = generate_cordic_atan32_table()
+    for i in range(32):
+        words[DATA_RAM_TRIG_WORD + i] = int.from_bytes(cordic_atan32[i * 4 : i * 4 + 4], byteorder="little")
+
+    # 3. Chebyshev Polynomial Coefficients at words 640..767 (DATA_RAM offset 0x280)
+    for _, slot, hex_val, _ in CHEB_DEF:
+        words[DATA_RAM_CHEB_WORD + slot] = hex_val & 0xFFFFFFFF
+
+    # 4. Combined 16-bit Seed Tables at words 768..1023 (DATA_RAM offset 0x300)
+    # Bit [31:16]: SQRT seed, Bit [15:0]: RECIP seed
     recip = generate_recip_table()
     sqrt = generate_sqrt_table()
-    exp2 = generate_exp2_table()
-    log2 = generate_log2_table()
-    sin = generate_sin_table()
-    cos = generate_cos_table()
-    tan = generate_tan_table()
-    ln = generate_ln_table()
-    log10 = generate_log10_table()
-    consts = generate_constants_table()
-    cordic_atan32 = generate_cordic_atan32_table()
-    cordic_atan64 = generate_cordic_atan64_table()
-    trig_consts = generate_trig_constants_table()
-    cheb = generate_cheb_table()
+    for k in range(256):
+        r_val = recip[k * 2] | (recip[k * 2 + 1] << 8)
+        s_val = sqrt[k * 2] | (sqrt[k * 2 + 1] << 8)
+        words[DATA_RAM_SEEDS_WORD + k] = ((s_val & 0xFFFF) << 16) | (r_val & 0xFFFF)
 
-    flash_mem[FLASH_RECIP_BASE : FLASH_RECIP_BASE + len(recip)] = recip
-    flash_mem[FLASH_SQRT_BASE : FLASH_SQRT_BASE + len(sqrt)] = sqrt
-    flash_mem[FLASH_EXP2_BASE : FLASH_EXP2_BASE + len(exp2)] = exp2
-    flash_mem[FLASH_LOG2_BASE : FLASH_LOG2_BASE + len(log2)] = log2
-    flash_mem[FLASH_SIN_BASE : FLASH_SIN_BASE + len(sin)] = sin
-    flash_mem[FLASH_COS_BASE : FLASH_COS_BASE + len(cos)] = cos
-    flash_mem[FLASH_TAN_BASE : FLASH_TAN_BASE + len(tan)] = tan
-    flash_mem[FLASH_LN_BASE : FLASH_LN_BASE + len(ln)] = ln
-    flash_mem[FLASH_LOG10_BASE : FLASH_LOG10_BASE + len(log10)] = log10
-    flash_mem[FLASH_CONST_BASE : FLASH_CONST_BASE + len(consts)] = consts
-    flash_mem[FLASH_CORDIC_ATAN32_BASE : FLASH_CORDIC_ATAN32_BASE + len(cordic_atan32)] = cordic_atan32
-    flash_mem[FLASH_CORDIC_ATAN64_BASE : FLASH_CORDIC_ATAN64_BASE + len(cordic_atan64)] = cordic_atan64
-    flash_mem[FLASH_TRIG_CONST_BASE : FLASH_TRIG_CONST_BASE + len(trig_consts)] = trig_consts
-    flash_mem[FLASH_CHEB_BASE : FLASH_CHEB_BASE + len(cheb)] = cheb
+    # 5. Microcode Store (CODE_ROM) at words 1024..2047
+    try:
+        from fpu_emu.ucode import fpu_ucode
+        for i, inst in enumerate(fpu_ucode):
+            if i < CODE_ROM_WORDS:
+                words[CODE_ROM_BASE_WORD + i] = inst.to_int()
+    except ImportError:
+        pass
 
+    return words
+
+
+def populate_flash_memory(flash_mem: bytearray) -> bytearray:
+    """Populate an existing bytearray with the 8KB Flash ROM image."""
+    words = generate_flash_words()
+    packed = struct.pack(f">{len(words)}I", *words)
+    flash_mem[:len(packed)] = packed
     return flash_mem
 
 
 def generate_flash_image() -> bytearray:
-    """Generate a 32KB Flash ROM binary image pre-filled with 0xFF."""
-    image = bytearray([0xFF] * FLASH_SIZE)
-    return populate_flash_memory(image)
+    """Generate an 8KB Flash ROM binary image in big-endian byte order."""
+    words = generate_flash_words()
+    return bytearray(struct.pack(f">{len(words)}I", *words))
 
 
 # =============================================================================
@@ -429,25 +440,19 @@ def write_verilog_header(header_path: str):
         f.write(" * DO NOT EDIT MANUALLY - Generated by tools/build_flash.py\n")
         f.write(" ***************************************************************************************/\n\n")
         f.write("`ifndef FPU_ROM_MAP_VH\n`define FPU_ROM_MAP_VH\n\n")
-        f.write(f"  `define FLASH_RECIP_BASE         15'h{FLASH_RECIP_BASE:04X}\n")
-        f.write(f"  `define FLASH_SQRT_BASE          15'h{FLASH_SQRT_BASE:04X}\n")
-        f.write(f"  `define FLASH_EXP2_BASE          15'h{FLASH_EXP2_BASE:04X}\n")
-        f.write(f"  `define FLASH_LOG2_BASE          15'h{FLASH_LOG2_BASE:04X}\n")
-        f.write(f"  `define FLASH_SIN_BASE           15'h{FLASH_SIN_BASE:04X}\n")
-        f.write(f"  `define FLASH_COS_BASE           15'h{FLASH_COS_BASE:04X}\n")
-        f.write(f"  `define FLASH_TAN_BASE           15'h{FLASH_TAN_BASE:04X}\n")
-        f.write(f"  `define FLASH_LN_BASE            15'h{FLASH_LN_BASE:04X}\n")
-        f.write(f"  `define FLASH_LOG10_BASE         15'h{FLASH_LOG10_BASE:04X}\n")
-        f.write(f"  `define FLASH_CONST_BASE         15'h{FLASH_CONST_BASE:04X}\n")
-        f.write(f"  `define FLASH_CORDIC_ATAN32_BASE 15'h{FLASH_CORDIC_ATAN32_BASE:04X}\n")
-        f.write(f"  `define FLASH_CORDIC_ATAN64_BASE 15'h{FLASH_CORDIC_ATAN64_BASE:04X}\n")
-        f.write(f"  `define FLASH_TRIG_CONST_BASE    15'h{FLASH_TRIG_CONST_BASE:04X}\n")
-        f.write(f"  `define FLASH_CHEB_BASE          15'h{FLASH_CHEB_BASE:04X}\n\n")
-        f.write("  // FPU Constants Word Slot Map (32-bit words from FLASH_CONST_BASE)\n")
+        f.write("  // Flash Image 32-bit Word Base Offsets (8 KB total / 2048 words)\n")
+        f.write(f"  `define FLASH_DATA_RAM_BASE      13'h{DATA_RAM_BASE_WORD * 4:04X} // Words 0..1023 (4096 bytes)\n")
+        f.write(f"  `define FLASH_CODE_ROM_BASE      13'h{CODE_ROM_BASE_WORD * 4:04X} // Words 1024..2047 (4096 bytes)\n\n")
+        f.write("  // DATA_RAM Sub-table Word Offsets (EBR 0)\n")
+        f.write(f"  `define DATA_RAM_CONST_BASE      10'h{DATA_RAM_CNS_WORD:03X} // Words 256..319\n")
+        f.write(f"  `define DATA_RAM_TRIG_BASE       10'h{DATA_RAM_TRIG_WORD:03X} // Words 512..639\n")
+        f.write(f"  `define DATA_RAM_CHEB_BASE       10'h{DATA_RAM_CHEB_WORD:03X} // Words 640..767\n")
+        f.write(f"  `define DATA_RAM_SEEDS_BASE      10'h{DATA_RAM_SEEDS_WORD:03X} // Words 768..1023\n\n")
+        f.write("  // FPU Constants Word Slot Map (32-bit words from DATA_RAM_CONST_BASE)\n")
         for name, slot, _, _, _ in CONSTANTS_DEF:
             f.write(f"  `define CONST_SLOT_{name:<18} 6'd{slot}\n")
         f.write("\n")
-        f.write("  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from FLASH_CHEB_BASE)\n")
+        f.write("  // Chebyshev & Polynomial Coefficients Word Slot Map (32-bit words from DATA_RAM_CHEB_BASE)\n")
         for name, slot, _, _ in CHEB_DEF:
             f.write(f"  `define CHEB_SLOT_{name:<18} 6'd{slot}\n")
         f.write("\n")
@@ -462,7 +467,7 @@ def write_python_constants(py_path: str):
         f.write('"""\n\n')
         f.write("from enum import IntEnum\n\n\n")
         f.write("class FpuTables(IntEnum):\n")
-        f.write('    """Flash ROM Table Base Byte Addresses."""\n')
+        f.write('    """Flash ROM Image Base Byte Addresses."""\n')
         for name, base_addr, desc in TABLES_DEF:
             f.write(f"    {name} = 0x{base_addr:04X}  # {desc}\n")
         f.write("\n\n")
@@ -482,14 +487,14 @@ def write_python_constants(py_path: str):
         f.write("    SQRT = 4\n\n\n")
         f.write("class FpuCheb(IntEnum):\n")
         f.write('    """Chebyshev / Polynomial Coefficients Word Slot Map for EBR CHEB ROM.\n')
-        f.write("    Each slot represents a 32-bit word offset from CHEB table base (EBR 2/3 offset 0x080).\n")
+        f.write("    Each slot represents a 32-bit word offset from CHEB table base (0x280).\n")
         f.write('    """\n')
         for name, slot, _, desc in CHEB_DEF:
             f.write(f"    {name} = {slot}  # {desc}\n")
         f.write("\n\n")
         f.write("class FpuConst(IntEnum):\n")
         f.write('    """FPU Constants Word Slot Map for EBR Constants ROM.\n')
-        f.write("    Each slot represents a 32-bit word offset from CONST table base (EBR 2/3 offset 0x100).\n")
+        f.write("    Each slot represents a 32-bit word offset from CONST table base (0x100).\n")
         f.write('    """\n')
         for name, slot, _, _, desc in CONSTANTS_DEF:
             f.write(f"    {name} = {slot}  # {desc}\n")
@@ -497,11 +502,12 @@ def write_python_constants(py_path: str):
         f.write("\n")
 
 
-def write_verilog_hex(hex_path: str, flash_image: bytearray):
+def write_verilog_hex(hex_path: str, words: list[int]):
+    """Writes 32-bit words in big-endian hex format (one 8-digit hex word per line)."""
     os.makedirs(os.path.dirname(hex_path), exist_ok=True)
     with open(hex_path, "w") as f:
-        for byte in flash_image:
-            f.write(f"{byte:02X}\n")
+        for w in words:
+            f.write(f"{w:08X}\n")
 
 
 def main():
@@ -509,7 +515,8 @@ def main():
     os.makedirs("sim", exist_ok=True)
     os.makedirs(os.path.dirname(EMU_BIN_FILE), exist_ok=True)
 
-    image = generate_flash_image()
+    words = generate_flash_words()
+    image = struct.pack(f">{len(words)}I", *words)
 
     with open(BIN_FILE, "wb") as f:
         f.write(image)
@@ -517,13 +524,13 @@ def main():
     with open(EMU_BIN_FILE, "wb") as f:
         f.write(image)
 
-    write_verilog_hex(HEX_FILE, image)
+    write_verilog_hex(HEX_FILE, words)
     write_verilog_header(HEADER_FILE)
     write_python_constants(PY_CONST_MAP_FILE)
 
     print(f"[*] Generated Binary Image: {BIN_FILE} ({len(image)} bytes)")
     print(f"[*] Generated Emulator Image: {EMU_BIN_FILE} ({len(image)} bytes)")
-    print(f"[*] Generated Simulation Hex: {HEX_FILE}")
+    print(f"[*] Generated Simulation Hex: {HEX_FILE} ({len(words)} words)")
     print(f"[*] Generated Verilog Header: {HEADER_FILE}")
     print(f"[*] Generated Python Map: {PY_CONST_MAP_FILE}")
 
