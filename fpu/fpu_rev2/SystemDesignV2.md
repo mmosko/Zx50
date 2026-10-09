@@ -12,9 +12,9 @@ all 32bit unless said othewise
 - EA, EB (12-bit exponent registers)
 - SP (8 bit) stack pointer
 - OSP (5 bit) operation stack pointer for user BATCH mode (32-byte queue)
-- UPC (10 bit), microcode program counter
+- UPC (10 bit), microcode program counter (addresses 1,024 words x 32-bit in CODE_ROM)
 - STATUS (8 bit), status register [7: BSY, 6: D, 5: S, 4: C, 3: V, 2: U, 1: ERR, 0: Z]
-- RET: (10-bit), return address from CALL -- no nested calls
+- RET (10 bit), return address from CALL (stores 10-bit UPC+1) -- no nested calls
 - HOST_IN (32-bit), host input staging register (accumulates 4 bytes from Port 0x70 writes)
 - HOST_OUT (32-bit), host output staging register (stages 4 bytes for Port 0x70 reads)
 - CMD_REG (8-bit), command latch for Port 0x71 user opcodes
@@ -109,7 +109,7 @@ TBD how these integrate with the other BLKs. They will likely need their own han
 in one FPU cycle.
 
 - SP ADDER (SP+1, SP+2, SP-2, SP-1), always in 4-byte words
-- UPC ADDER (UPC + 1), always in 4-byte words
+- UPC ADDER (UPC + 1), 10-bit modulo-1024 microcode counter, increments 4-byte instruction words in CODE_ROM
 - HOST_IN Byte Packer: The Z80 writes to Port 0x70 one byte at a time. The byte packer accumulates 4 bytes into
   `HOST_IN`. When full (4 bytes), it signals the dispatcher, which routes `IMM <= HOST_IN` and executes `LDI FL, IMM`
   followed by `PUSH FL` to commit the word to the stack.
@@ -248,15 +248,15 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
 | PUSH src2               | 0b100_000 | 0/1   | TOS     | n/a    | src2   | `TOS <- src2`, sp <- sp + W + 1         | sets VF, ERR (on stack overflow)      |
 | POP dst                 | 0b100_001 | 0/1   | dst     | n/a    | TOS    | `dst <- TOS`, sp <- sp - (W+1)          | sets UF, ERR (on stack underflow)     |
-| LDC dst, tbl, addr      | 0b100_010 | 0/1   | dst     | tbl    | n/a    | `dst <- [TBL_ADDR] + [addr]`            | none (flags unaffected)               |
+| LDC dst, tbl, addr      | 0b100_010 | 0/1   | dst     | tbl    | n/a    | `dst <- DATA_RAM[TBL_BASE \| addr]`     | none (flags unaffected)               |
 | LDI dst, imm            | 0b100_011 | 0/1   | dst     | NONE   | IMM    | `dst <- imm`                            | none (flags unaffected)               |
 | LDI flag, val           | 0b100_011 | 0     | NONE    | NONE   | IMM    | `status[flag] <- imm & 1`               | sets/clears selected flag (0 or 1)    |
-| LD  dst, addr           | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- SCR_ADDR + [addr]`              | none (flags unaffected)               |
-| STO addr, src2          | 0b100_101 | 0/1   | NONE    | IMM    | src2   | `SCR_ADDR + [addr] <- src2`             | none (flags unaffected)               |
+| LD  dst, addr           | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- DATA_RAM[0x080 \| addr]`        | none (flags unaffected)               |
+| STO addr, src2          | 0b100_101 | 0/1   | NONE    | IMM    | src2   | `DATA_RAM[0x080 \| addr] <- src2`       | none (flags unaffected)               |
 | MOV dst, src2           | 0b100_110 | 0/1   | dst     | n/a    | src2   | `dst <- src2`                           | none (flags unaffected)               |
 | SWAP dst, src2          | 0b100_111 | 0/1   | dst     | n/a    | src2   | `F_ <- src2, src2 <- dst, dst <- F_`     | none (flags unaffected)               |
-| LDU dst, addr           | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- USER_ADDR + [addr]`             | none (flags unaffected)               |
-| STU addr, src2          | 0b101_001 | 0/1   | NONE    | IMM    | src2   | `USER_ADDR + [addr] <- src2`            | none (flags unaffected)               |
+| LDU dst, addr           | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- DATA_RAM[0x0C0 \| addr]`        | none (flags unaffected)               |
+| STU addr, src2          | 0b101_001 | 0/1   | NONE    | IMM    | src2   | `DATA_RAM[0x0C0 \| addr] <- src2`       | none (flags unaffected)               |
 | SSAV                    | 0b101_110 | 0     | NONE    | n/a    | n/a    | STATUS save                             | Stashes STATUS reg to shadow          |
 | SRES                    | 0b101_111 | 0     | NONE    | n/a    | n/a    | STATUS restore                          | Unstash STATUS from shadow            |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
@@ -279,38 +279,89 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 > MicroInstruction(op=MicroOp.HALT),
 > ```
 
+## Memory Architecture & SysMEM EBR Subsystem
+
+The MachXO2-2000 provides 8 physical 9-Kbit SysMEM EBR blocks. In Rev 2, these are organized symmetrically into two 4-block clusters ($1024 \times 32$-bit each):
+
+1. **`DATA_RAM` (EBR 0, 1, 2, 3):** Cascaded $1024 \text{ words} \times 32 \text{ bits}$ RAM (4,096 Bytes).
+   - Single 10-bit address bus `MEM_ADDR[9:0]` (`0x000`–`0x3FF`).
+   - Cleanly segregated at word boundary `0x100` into **1 KB RAM Space** (`0x000`–`0x0FF`) and **3 KB ROM Space** (`0x100`–`0x3FF`).
+2. **`CODE_ROM` (EBR 4, 5, 6, 7):** Cascaded $1024 \text{ words} \times 32 \text{ bits}$ ROM/RAM (4,096 Bytes).
+   - Sequenced directly by 10-bit `UPC[9:0]` (`0x000`–`0x3FF`) to fetch 32-bit micro-instructions (`INSTR[31:0]`).
+3. **PFU Distributed LUT-RAM (0 EBR blocks consumed):**
+   - 32-byte circular Operation Stack (`OSP[4:0]`) for user batch opcode queueing.
+
+### `DATA_RAM` Memory Map (`MEM_ADDR[9:0]`)
+
+| Word Range (Hex) | Word Range (Dec) | Size | Region | Allocation | Addressing Mechanism |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `0x000`–`0x07F` | 0..127 | 128 W (512 B) | **RAM** | Hardware Math Stack | `10'h000 \| SP[6:0]` |
+| `0x080`–`0x0BF` | 128..191 | 64 W (256 B) | **RAM** | Scratchpad RAM `SCR[0..63]` | `10'h080 \| imm[5:0]` |
+| `0x0C0`–`0x0CF` | 192..207 | 16 W (64 B) | **RAM** | User Word Storage `USR[0..15]` | `10'h0C0 \| imm[3:0]` |
+| `0x0D0`–`0x0FF` | 208..255 | 48 W (192 B) | **RAM** | Extra RAM Headroom | Working scratch storage |
+| `0x100`–`0x13F` | 256..319 | 64 W (256 B) | **ROM** | IEEE-754 Math Constants ($\pi, e, \ln 2$) | `10'h100 \| slot[5:0]` |
+| `0x140`–`0x1FF` | 320..511 | 192 W (768 B) | **ROM** | Extra ROM Headroom | Float64 / FIR / Poly headroom |
+| `0x200`–`0x27F` | 512..639 | 128 W (512 B) | **ROM** | Trig & CORDIC Angles | `10'h200 \| slot[6:0]` |
+| `0x280`–`0x2FF` | 640..767 | 128 W (512 B) | **ROM** | Chebyshev Polynomial Coeffs | `10'h280 \| slot[6:0]` |
+| `0x300`–`0x3FF` | 768..1023 | 256 W (1,024 B) | **ROM** | Interleaved RECIP / SQRT Seeds<br>• `[31:16]`: SQRT Seed<br>• `[15:0]`: RECIP Seed | `10'h300 \| slot[7:0]` |
+
+### Hardware Write-Protection
+
+Because all RAM space resides strictly within the first 256 words (`0x000`–`0x0FF`, where `MEM_ADDR[9:8] == 2'b00`), write protection for all ROM tables is implemented with a single 2-input gate:
+
+```verilog
+// Write enable is asserted ONLY when writing within RAM space (mem_addr[9:8] == 2'b00)
+assign data_ram_we = is_write & (mem_addr[9:8] == 2'b00);
+```
+
+Any unintended write to addresses $\ge \text{0x100}$ is automatically suppressed by hardware, eliminating any risk of microcode overwriting math constants or seed lookup tables.
+
 ### LDC Address Generator & Constant ROM Interface
 
-To eliminate arithmetic adders and avoid carry chain delays on the critical address path, `LDC` uses a **2-LUT prefix
-address generator**.
+To eliminate arithmetic adders and avoid carry-chain delays on the critical address path, table lookups (`LDC dst, tbl, addr`) utilize power-of-two base alignment in `DATA_RAM`.
 
-All table sizes and base addresses are power-of-2 aligned in physical EBR:
+The 3-bit table selector `tbl` (`SRC[2:0]`) specifies the mathematical table:
 
-- **EBR 4** (Single 512 $\times$ 16-bit ROM):
-    - `RECIP` (`0b000`): Words 0..255 (Base `0x000`, 256 entries $\implies$ 8-bit offset)
-    - `SQRT`  (`0b001`): Words 256..511 (Base `0x100`, 256 entries $\implies$ 8-bit offset)
-- **EBR 2 & 3** (Paired 512 $\times$ 32-bit ROM):
-    - `TRIG`  (`0b100`): Words 0..127 (Base `0x000`, 128 entries $\implies$ 7-bit offset)
-    - `CHEB`  (`0b101`): Words 128..255 (Base `0x080`, 128 entries $\implies$ 7-bit offset)
-    - `CONST` (`0b110`): Words 256..319+ (Base `0x100`, 128 entries $\implies$ 7-bit offset)
+| Table ID (`tbl`) | Constant Table | Base Address in `DATA_RAM` | Offset Mask | Output Datapath Width |
+|:----------------:|:---------------|:--------------------------:|:-----------:|:---------------------:|
+| `0` (`0b000`)    | `CONST`        | `10'h100` (Word 256)       | `6'h3F`     | 32-bit IEEE-754 Word  |
+| `1` (`0b001`)    | `TRIG`         | `10'h200` (Word 512)       | `7'h7F`     | 32-bit Angle / Constant |
+| `2` (`0b010`)    | `CHEB`         | `10'h280` (Word 640)       | `7'h7F`     | 32-bit Polynomial Coeff |
+| `3` (`0b011`)    | `RECIP`        | `10'h300` (Word 768)       | `8'hFF`     | Low 16-bit slice `[15:0]` zero-extended |
+| `4` (`0b100`)    | `SQRT`         | `10'h300` (Word 768)       | `8'hFF`     | High 16-bit slice `[31:16]` zero-extended |
 
-The 3-bit table selector `SRC[2:0]` encodes both the physical EBR bank and the base offset:
+#### 10-Bit Address Generation Logic (`MEM_ADDR[9:0]`):
 
-- `SRC[2]` selects between EBR 4 (`0`) and EBR 2/3 (`1`).
-- `SRC[1:0]` directly supplies the high address prefix for EBR 2/3 (`00` for TRIG, `01` for CHEB, `10` for CONST).
+Because every table base is aligned to a power-of-two offset (`0x100`, `0x200`, `0x280`, `0x300`), table address calculation is a pure bitwise OR:
 
-#### 9-Bit Address Logic (`ADDR[8:0]`):
+```verilog
+always_comb begin
+    case (tbl_sel)
+        3'd0:    ldc_addr = 10'h100 | {4'b0000, offset[5:0]}; // CONST: 64 words
+        3'd1:    ldc_addr = 10'h200 | {3'b000,  offset[6:0]}; // TRIG:  128 words
+        3'd2:    ldc_addr = 10'h280 | {3'b000,  offset[6:0]}; // CHEB:  128 words
+        3'd3:    ldc_addr = 10'h300 | {2'b00,   offset[7:0]}; // RECIP: 256 words
+        3'd4:    ldc_addr = 10'h300 | {2'b00,   offset[7:0]}; // SQRT:  256 words
+        default: ldc_addr = 10'h100 | {4'b0000, offset[5:0]};
+    endcase
+end
+```
 
-- `ADDR[8]   = SRC[2] ? SRC[1] : SRC[0];`
-- `ADDR[7]   = SRC[2] ? SRC[0] : OFFSET[7];`
-- `ADDR[6:0] = OFFSET[6:0];`
+#### Datapath Slicing Multiplexer:
 
-#### Chip Enables:
+The cascaded `DATA_RAM` outputs a single 32-bit word `data_ram_dout[31:0]` in 1 clock cycle. A lightweight multiplexer selects between full 32-bit words and zero-extended 16-bit seed slices:
 
-- `EBR4_CEN  = is_ldc && !SRC[2];`
-- `EBR23_CEN = is_ldc &&  SRC[2];`
+```verilog
+always_comb begin
+    case (tbl_sel)
+        3'd3:    ldc_result = {16'h0000, data_ram_dout[15:0]};   // RECIP: low 16-bit slice
+        3'd4:    ldc_result = {16'h0000, data_ram_dout[31:16]};  // SQRT:  high 16-bit slice
+        default: ldc_result = data_ram_dout[31:0];                // CONST, TRIG, CHEB: 32-bit
+    endcase
+end
+```
 
-Total FPGA hardware cost: **2 LUTs** for 9-bit address generation, 0 adders, 0 carry chains.
+Total FPGA hardware cost: **0 adders, 0 carry chains**, 0 wait states, and single-cycle deterministic execution for all mathematical tables.
 
 ---
 

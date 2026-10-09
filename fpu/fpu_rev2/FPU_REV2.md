@@ -143,81 +143,87 @@ Under the MachXO2 hardware architecture (Family Data Sheet Table 2.5):
 
 * A single EBR block supports a maximum data width of **18 bits** in ROM/Single-Port mode (`512 × 18`), or **9 bits** in
   True Dual-Port mode (`1,024 × 9`).
-* To provide native **32-bit single-cycle word access** for the datapath without multi-cycle serialization, **two EBR
-  blocks are paired in parallel** (`512 × 32` bits = 2,048 bytes per pair).
+* By cascading four EBR blocks (2 wide × 2 deep), the memory subsystem provides two completely symmetrical, native
+  **32-bit single-cycle word access** memories: **`DATA_RAM`** (EBR 0–3, $1024 \times 32$ bits = 4,096 bytes) and
+  **`CODE_ROM`** (EBR 4–7, $1024 \times 32$ bits = 4,096 bytes).
 * High-speed host opcode queuing (the 32-byte **Operation Stack**) is implemented directly in
   **Distributed LUT-RAM** using PFU slices (~12 LUT4s, 0 EBR blocks), indexed by the **Operation Stack Pointer (OSP)**,
   completely isolating host opcode writes from the primary memory blocks.
 * Z80 host data I/O on Port `0x70` uses dedicated 32-bit staging registers (**`HOST_IN`** on `HB_BUS` and **`HOST_OUT`**
   on `RES_BUS`), enabling standard Single-Port RAM mode for the stack and eliminating complex dual-port arbitration.
 
-### Physical SysMEM EBR Allocation Map (8 Blocks Total)
+### Physical SysMEM EBR Allocation Map (8 Blocks Total = 100% Utilized)
 
 ```text
-+---------------+-------------------+-----------------------------------------------+------------+
-| Physical EBR  | Config & Width    | Functional Allocation                         | Size       |
-+---------------+-------------------+-----------------------------------------------+------------+
-| EBR 0 & EBR 1 | Paired Single-Port| • Hardware Math Stack (128 words x 32-bit)    | 512 Bytes  |
-|               | (512 x 32-bit)    | • Scratchpad RAM SCR[0..63] (64 x 32-bit)     | 256 Bytes  |
-|               |                   | • User Word Storage (16 words x 32-bit)       | 64 Bytes   |
-|               |                   | • Reserved / Working Headroom (304 words)     | 1,216 Bytes|
-+---------------+-------------------+-----------------------------------------------+------------+
-| EBR 2 & EBR 3 | Paired ROM        | • Trigonometric & CORDIC Angles (128 x 32-bit)| 512 Bytes  |
-|               | (512 x 32-bit)    | • Chebyshev Polynomial Coeffs (128 x 32-bit)  | 512 Bytes  |
-|               |                   | • IEEE-754 Constants (pi, e, ln2: 64 x 32-bit)| 256 Bytes  |
-|               |                   | • Math Constants Headroom (192 words)         | 768 Bytes  |
-+---------------+-------------------+-----------------------------------------------+------------+
-| EBR 4         | Single ROM        | • Reciprocal / Division Seed LUT (256 x 16-bit)| 512 Bytes  |
-|               | (512 x 16-bit)    | • Square Root Seed LUT (256 x 16-bit)         | 512 Bytes  |
-+---------------+-------------------+-----------------------------------------------+------------+
-| EBR 5 & EBR 6 | Paired ROM        | • Runtime Microcode Execution Store           | 2,048 Bytes|
-|               | (512 x 32-bit)    |   (512 micro-instructions x 32-bit wide)      |            |
-+---------------+-------------------+-----------------------------------------------+------------+
-| EBR 7         | Unallocated       | • Free Headroom / Expansion Buffer            | 1,152 Bytes|
-|               | (1 Block Free)    |   (Available for FIR filter taps / vectors)   |            |
-+---------------+-------------------+-----------------------------------------------+------------+
-| Distributed   | PFU Distributed   | • Operation Stack (OSP[4:0])                  | 32 Bytes   |
-| LUT-RAM       | RAM (32 x 8-bit)  |   (Zero EBR blocks consumed)                  |            |
-+---------------+-------------------+-----------------------------------------------+------------+
-Total EBR Utilization:  7 of 8 blocks (87.5% used, 1 block / 12.5% free margin)
++------------------+-----------------------+-----------------------------------------------+------------+
+| Physical EBR     | Diamond Configuration | Functional Allocation                         | Size       |
++------------------+-----------------------+-----------------------------------------------+------------+
+| EBR 0, 1, 2, 3   | Cascaded Unified RAM  | DATA_RAM: Segregated RAM & ROM Space          | 4,096 B    |
+| (4 Blocks)       | (1024 x 32-bit)       | • Lower 1 KB: Stack, Scratchpad, User Storage | (1024 W)   |
+|                  |                       | • Upper 3 KB: Math Constants, Angles, Seeds   |            |
++------------------+-----------------------+-----------------------------------------------+------------+
+| EBR 4, 5, 6, 7   | Cascaded Unified ROM  | CODE_ROM: Microcode Execution Store           | 4,096 B    |
+| (4 Blocks)       | (1024 x 32-bit)       | • Unified UPC[9:0] execution (1024 words)     | (1024 W)   |
++------------------+-----------------------+-----------------------------------------------+------------+
+| Distributed      | PFU Distributed       | • Operation Stack (OSP[4:0])                  | 32 Bytes   |
+| LUT-RAM          | RAM (32 x 8-bit)      |   (Zero EBR blocks consumed)                  |            |
++------------------+-----------------------+-----------------------------------------------+------------+
+Total EBR Utilization: 8 of 8 blocks (100% utilized, perfectly balanced 4 + 4)
 ```
+
+### Segregated `DATA_RAM` Subsystem (EBR 0–3, 1024 Words × 32-Bit)
+
+The 10-bit address space (`MEM_ADDR[9:0]`, `0x000`–`0x3FF`) is cleanly partitioned at word boundary `0x100` (256 words):
+* **Lower 256 words (`0x000`–`0x0FF` / 1,024 Bytes):** **RAM Space** (`mem_addr[9:8] == 2'b00`)
+* **Upper 768 words (`0x100`–`0x3FF` / 3,072 Bytes):** **ROM Space** (`mem_addr[9:8] != 2'b00`)
+
+| Word Range (Hex) | Word Range (Dec) | Size (Words / Bytes) | Region | Content / Allocation | Addressing Mechanism |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `0x000`–`0x07F` | 0..127 | 128 words / 512 B | **RAM** | **Hardware Math Stack** | `0x000 \| SP[6:0]` |
+| `0x080`–`0x0BF` | 128..191 | 64 words / 256 B | **RAM** | **Scratchpad RAM `SCR[0..63]`** | `0x080 \| imm[5:0]` |
+| `0x0C0`–`0x0CF` | 192..207 | 16 words / 64 B | **RAM** | **User Word Storage `USR[0..15]`** | `0x0C0 \| imm[3:0]` |
+| `0x0D0`–`0x0FF` | 208..255 | 48 words / 192 B | **RAM** | **Working Headroom** (Dynamic storage) | Dynamic allocation |
+| `0x100`–`0x13F` | 256..319 | 64 words / 256 B | **ROM** | **IEEE-754 Math Constants** ($\pi, e, \ln 2$, etc.) | `0x100 \| slot[5:0]` |
+| `0x140`–`0x1FF` | 320..511 | 192 words / 768 B | **ROM** | **Math Headroom** (Float64 / FIR / Poly) | Reserved headroom |
+| `0x200`–`0x27F` | 512..639 | 128 words / 512 B | **ROM** | **Trigonometric & CORDIC Angles** | `0x200 \| slot[6:0]` |
+| `0x280`–`0x2FF` | 640..767 | 128 words / 512 B | **ROM** | **Chebyshev Polynomial Coefficients** | `0x280 \| slot[6:0]` |
+| `0x300`–`0x3FF` | 768..1023 | 256 words / 1,024 B | **ROM** | **Interleaved RECIP / SQRT Seed LUTs**<br>• High 16b `[31:16]`: SQRT Seeds<br>• Low 16b `[15:0]`: RECIP Seeds | `0x300 \| slot[7:0]` |
+
+### Hardware Write-Protection
+
+Because the RAM/ROM boundary falls on the power-of-two address `0x100` (bit 8 or 9 set), write protection is implemented with a single 2-input gate in Verilog:
+
+```verilog
+// Write enable is asserted ONLY when writing within RAM region 0x000..0x0FF (mem_addr[9:8] == 2'b00)
+assign data_ram_we = is_write & (mem_addr[9:8] == 2'b00);
+```
+
+Any unintended microcode write to addresses $\ge \text{0x100}$ is suppressed by hardware, guaranteeing that mathematical constants, CORDIC angles, and seed lookup tables cannot be overwritten or corrupted at runtime.
 
 ### Zero-Cost Addressing for ROM Lookup Tables (`LDC`)
 
-To eliminate arithmetic adders and carry-chain delay on the memory address path, the constant and seed ROM tables in EBR 2/3 and EBR 4 utilize a **2-LUT prefix address generator**:
+To eliminate arithmetic adders and carry-chain propagation delays on the memory address path, each table base aligns to a power-of-two boundary in `DATA_RAM`. Table lookups (`LDC dst, TABLE, slot`) execute via zero-cost bitwise OR addressing:
 
-* **EBR 4** (Single 512 $\times$ 16-bit ROM):
-  * `RECIP` (`0b000`): Words 0..255 (Base `0x000`, 8-bit offset `[7:0]`)
-  * `SQRT`  (`0b001`): Words 256..511 (Base `0x100`, 8-bit offset `[7:0]`)
-* **EBR 2 & EBR 3** (Paired 512 $\times$ 32-bit ROM):
-  * `TRIG`  (`0b100`): Words 0..127 (Base `0x000`, 7-bit offset `[6:0]`)
-  * `CHEB`  (`0b101`): Words 128..255 (Base `0x080`, 7-bit offset `[6:0]`)
-  * `CONST` (`0b110`): Words 256..319+ (Base `0x100`, 7-bit offset `[6:0]`)
+* **`CONST` (`TABLE = 0`):** `0x100 | (slot & 0x3F)` $\to$ full 32-bit constant.
+* **`TRIG`  (`TABLE = 1`):** `0x200 | (slot & 0x7F)` $\to$ full 32-bit angle.
+* **`CHEB`  (`TABLE = 2`):** `0x280 | (slot & 0x7F)` $\to$ full 32-bit polynomial coefficient.
+* **`RECIP` (`TABLE = 3`):** `0x300 | (slot & 0xFF)` $\to$ low 16-bit slice `[15:0]` zero-extended.
+* **`SQRT`  (`TABLE = 4`):** `0x300 | (slot & 0xFF)` $\to$ high 16-bit slice `[31:16]` zero-extended.
 
-**9-Bit Address Logic (`ADDR[8:0]`):**
-```verilog
-assign ebr_addr[8]   = tbl_src[2] ? tbl_src[1] : tbl_src[0];
-assign ebr_addr[7]   = tbl_src[2] ? tbl_src[0] : offset[7];
-assign ebr_addr[6:0] = offset[6:0];
-```
-
-**Chip Enables:**
-* `EBR4_CEN  = is_ldc && !tbl_src[2];`
-* `EBR23_CEN = is_ldc &&  tbl_src[2];`
-
-Total FPGA hardware cost: **2 LUTs** for 9-bit address generation, 0 adders, 0 carry chains.
+Total FPGA hardware cost: **0 adders, 0 carry chains**, single-cycle lookup with automatic hardware bit-slicing for seeds.
 
 ### User Memory Allocation (Intermediate Storage)
 
-A dedicated 64-byte block (`0x0300`–`0x033F`) in SysMEM EBR is reserved specifically for fast user-level variable and
+A dedicated 64-byte block (`0x0C0`–`0x0CF`) in `DATA_RAM` is reserved specifically for fast user-level variable and
 constant storage:
 
-* **Organization:** Configured as 16 words of 32 bits (or 8 words of 64 bits), addressed as index `0x0` through `0xF`.
+* **Organization:** Configured as 16 words of 32 bits (or 8 words of 64 bits), addressed as index `0x0` through `0xF`
+  via `STU` and `LDU` instructions.
 * **Purpose:** Allows the Z80 to stash and reload intermediate values directly between the Top of Stack ($TOS$) and
   internal FPGA memory using single-byte command writes (`CP [xxxx], TOS` and `CP TOS, [xxxx]`). This eliminates the
   significant I/O overhead of transferring operands back and forth across the 8-bit Z80 data bus (Port `0x70`) during
   complex multi-step evaluations (e.g., evaluating polynomials, holding loop invariants, or accumulating sums).
-* **Isolation:** Physically isolated from the microcode scratchpad and ALU registers (`0x0200`–`0x02FF`), guaranteeing
+* **Isolation:** Physically isolated from the microcode scratchpad (`0x080`–`0x0BF`) and stack (`0x000`–`0x07F`), guaranteeing
   that user storage words remain untouched and preserved across all arithmetic opcode executions.
 
 ### Operation Stack & Batch Execution Queue
@@ -234,14 +240,18 @@ A 32-byte circular buffer in Distributed LUT-RAM stores up to 32 queued opcodes:
       back-to-back at 80 MHz, resetting `OSP` to 0 upon completion. This enables the Z80 to stream an entire formula of
       opcodes via `OTIR` without slow status polling between individual instructions.
 
-### True Dual-Port Concurrency
+### Unified Microcode Execution Store (`CODE_ROM`, EBR 4–7)
 
-The dual-port architecture completely separates host I/O from math execution:
+The four cascaded EBR blocks assigned to `CODE_ROM` (EBR 4–7) form a unified $1024 \times 32$-bit microcode store:
 
-* **Port A (Host Interface):** Servicing Z80 I/O port `0x70` reads and writes. Pushes and pops write directly to or read
-  from `Stack[SP]`.
-* **Port B (Math Engine):** Servicing the internal micro-engine. The core reads operands (`TOS`, `NOS`), accesses
-  internal scratchpad memory, and writes results back to the stack without host bus arbitration conflicts.
+* **Sequencing:** Driven directly by `UPC[9:0]` (`0x000`–`0x3FF`), returning a 32-bit instruction word `INSTR[31:0]`
+  each clock cycle with zero external multiplexers or banking logic.
+* **Capacity:** 1,024 micro-instructions (doubled from the original 512-word limit). With ~548 words currently used by
+  core arithmetic and control routines, 476 words of headroom remain available for full 32-bit CORDIC trigonometrics and
+  prioritized 64-bit routines.
+* **Autonomous Boot-Loading:** On system reset, the FPGA autonomous SPI boot-loader loads the unified 8 KB flash image
+  in two sequential 1,024-word loops (Loop 1: Flash `0x0000..0x0FFF` $\to$ `DATA_RAM`; Loop 2: Flash `0x1000..0x1FFF` $\to$ `CODE_ROM`)
+  before releasing the host Z80 CPU from reset.
 
 ---
 
