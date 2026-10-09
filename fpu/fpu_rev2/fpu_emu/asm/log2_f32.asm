@@ -53,6 +53,11 @@
 
 USER_LOG2_F32:
     CALL POP_ONE_32                 ; AL <- X (TOS)
+    CALL LOG2_CORE                  ; AL <- log2(AL)
+    PUSH AL
+    HALT
+
+LOG2_CORE:
     MOV BH, AL                      ; BH <- input (preserves sign and value)
     UNPACK EA, AL                   ; EA <- exponent, AL <- mantissa, status.SIGN <- sign
     JZ ZERO, LOG2_DOMAIN_ERR        ; log2(0) or log2(-0) -> domain error
@@ -174,18 +179,15 @@ LOG2_NORMALIZE:
     MOV AL, AH                      ; AL <- Q9.23 mantissa magnitude
     LDI EA, 127                     ; EA <- reference exponent
     MOV AH, BH                      ; AH[31] <- result sign
-    CALL NORMALIZE_F32              ; Normalize into IEEE-754 float32 in AL
-    PUSH AL
-    HALT
+    JMP NORMALIZE_F32               ; Tail call into NORMALIZE_F32 -> returns via RET!
 
 LOG2_RET_ZERO:
     XOR AL, AL
-    PUSH AL
-    HALT
+    RET
 
 LOG2_RET_INPUT:
-    PUSH BH
-    HALT
+    MOV AL, BH
+    RET
 
 LOG2_DOMAIN_ERR:
     LDI ERR, 1

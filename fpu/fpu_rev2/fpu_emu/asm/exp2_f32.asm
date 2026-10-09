@@ -45,6 +45,11 @@
 
 USER_EXP2_F32:
     CALL POP_ONE_32                 ; AL <- X (TOS)
+    CALL EXP2_CORE                  ; AL <- 2^AL
+    PUSH AL
+    HALT
+
+EXP2_CORE:
     MOV BH, AL                      ; BH <- raw input (preserves sign and value)
     UNPACK EA, AL                   ; EA <- exponent, AL <- mantissa, status.SIGN <- sign
     JZ ZERO, EXP2_RET_ONE           ; 2^0 == 1.0
@@ -122,23 +127,20 @@ EXP2_POLY_LOOP:
     LSR AH, 8                       ; Align Q1.31 to bit 23
     MOV AL, AH                      ; AL <- mantissa for NORMALIZE_F32
     XOR AH, AH                      ; AH[31] = 0 (result sign is always positive)
-    CALL NORMALIZE_F32              ; Normalize mantissa, adjust EA, pack into AL
-EXP2_RET_AL:
-    PUSH AL
-    HALT
+    JMP NORMALIZE_F32               ; Tail call into NORMALIZE_F32 -> returns via RET!
 
 EXP2_RET_ONE:
     LDC AL, CONST, ONE_F32
-    JMP EXP2_RET_AL
+    RET
 
 EXP2_RET_ZERO:
     XOR AL, AL
-    JMP EXP2_RET_AL
+    RET
 
 EXP2_RET_INF:
     LDC AL, CONST, POS_INF_F32
-    JMP EXP2_RET_AL
+    RET
 
 EXP2_RET_INPUT:
-    PUSH BH
-    HALT
+    MOV AL, BH
+    RET

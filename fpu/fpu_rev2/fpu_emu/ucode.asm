@@ -19,6 +19,7 @@
 .include "asm/sqrt_f32.asm"
 .include "asm/log2_f32.asm"
 .include "asm/exp2_f32.asm"
+.include "asm/pow_f32.asm"
 .include "asm/trig_f32.asm"
 
 .include "asm/chs_f32.asm"
