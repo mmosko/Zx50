@@ -2,17 +2,8 @@
 
 from dataclasses import dataclass
 from fpu_emu.blocks.shifter.shifter_adder import ShifterAdder
+from fpu_emu.blocks.shifter.shifter_result import ShifterResult
 from fpu_emu.fpga_resource import fpga_resource
-
-
-@dataclass(frozen=True)
-class ShiftResult:
-    """Result of a barrel shift operation."""
-
-    res: int  # 32-bit or 64-bit shifted result
-    cf: bool  # Last bit shifted out (carry out)
-    zf: bool  # Zero flag
-    sf: bool  # Sign flag (MSB of result)
 
 
 @fpga_resource(
@@ -36,7 +27,7 @@ class BarrelShifter:
     MASK_64 = 0xFFFFFFFFFFFFFFFF
 
     @classmethod
-    def lsl_32(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShiftResult:
+    def lsl_32(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShifterResult:
         """32-bit Logical Shift Left."""
         val &= cls.MASK_32
         count &= 0x3F  # 6-bit shift count (0..63)
@@ -54,10 +45,10 @@ class BarrelShifter:
 
         zf = (res == 0)
         sf = bool(res & 0x80000000)
-        return ShiftResult(res=res, cf=cf, zf=zf, sf=sf)
+        return ShifterResult(res=res, cf=cf, zf=zf, sf=sf)
 
     @classmethod
-    def lsr_32(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShiftResult:
+    def lsr_32(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShifterResult:
         """32-bit Logical Shift Right."""
         val &= cls.MASK_32
         count &= 0x3F  # 6-bit shift count (0..63)
@@ -75,10 +66,10 @@ class BarrelShifter:
 
         zf = (res == 0)
         sf = False  # MSB is always 0 for 32-bit logical shift right
-        return ShiftResult(res=res, cf=cf, zf=zf, sf=sf)
+        return ShifterResult(res=res, cf=cf, zf=zf, sf=sf)
 
     @classmethod
-    def lsl_64(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShiftResult:
+    def lsl_64(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShifterResult:
         """64-bit Logical Shift Left."""
         val &= cls.MASK_64
         count &= 0x7F  # 7-bit shift count (0..127)
@@ -96,10 +87,10 @@ class BarrelShifter:
 
         zf = (res == 0)
         sf = bool(res & 0x8000000000000000)
-        return ShiftResult(res=res, cf=cf, zf=zf, sf=sf)
+        return ShifterResult(res=res, cf=cf, zf=zf, sf=sf)
 
     @classmethod
-    def lsr_64(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShiftResult:
+    def lsr_64(cls, val: int, count: int, sub_adder: ShifterAdder) -> ShifterResult:
         """64-bit Logical Shift Right."""
         val &= cls.MASK_64
         count &= 0x7F  # 7-bit shift count (0..127)
@@ -117,4 +108,4 @@ class BarrelShifter:
 
         zf = (res == 0)
         sf = False  # MSB is always 0 for logical shift right
-        return ShiftResult(res=res, cf=cf, zf=zf, sf=sf)
+        return ShifterResult(res=res, cf=cf, zf=zf, sf=sf)

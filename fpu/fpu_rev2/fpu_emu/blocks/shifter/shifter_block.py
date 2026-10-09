@@ -1,10 +1,10 @@
-from dataclasses import dataclass
 from typing import Callable
 
 from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
-from fpu_emu.blocks.shifter.barrel_shifter import BarrelShifter, ShiftResult
+from fpu_emu.blocks.shifter.barrel_shifter import BarrelShifter
 from fpu_emu.blocks.shifter.priority_encoder import PriorityEncoder32
 from fpu_emu.blocks.shifter.shifter_adder import ShifterAdder
+from fpu_emu.blocks.shifter.shifter_result import ShifterResult
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.memory import Memory
@@ -13,17 +13,6 @@ from fpu_emu.hardware.reg import Reg
 from fpu_emu.hardware.registers import HardwareBusError, StatusFlag
 from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
-
-
-@dataclass
-class ShifterResult:
-    """Result of a shifter block operation."""
-
-    res: int  # 32-bit integer result
-    cf: bool = False
-    zf: bool = False
-    sf: bool = False
-    vf: bool = False
 
 
 @fpga_resource(
@@ -41,8 +30,8 @@ class ShifterBlock(FunctionalBlock):
         assert isinstance(inputs.hb_mux, Mux)
         self._ha_mux: Mux = inputs.ha_mux
         self._hb_mux: Mux = inputs.hb_mux
-        self._sub_adder: ShifterAdder = ShifterAdder("shifter_sub_adder")
-        self._add_adder: ShifterAdder = ShifterAdder("shifter_add_adder")
+        self._sub_adder: ShifterAdder = ShifterAdder("shifter_sub_adder", clock)
+        self._add_adder: ShifterAdder = ShifterAdder("shifter_add_adder", clock)
 
     def execute(self):
         instr = MicroInstruction.from_register(self._inputs.instr)
@@ -166,7 +155,7 @@ class ShifterBlock(FunctionalBlock):
         else:
             self._shift_64(instr, BarrelShifter.lsr_64)
 
-    def _shift_32(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShiftResult]) -> None:
+    def _shift_32(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShifterResult]) -> None:
         assert instr.dst is not Reg.NONE, "Shift destination register must be specified"
         src = instr.src if instr.src is not Reg.NONE else Reg.C
         dst = instr.dst
@@ -199,7 +188,7 @@ class ShifterBlock(FunctionalBlock):
         self._outputs.exec_done.set(1)
         self._writeback()
 
-    def _shift_64(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShiftResult]) -> None:
+    def _shift_64(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShifterResult]) -> None:
         assert instr.dst is not Reg.NONE, "Shift destination register must be specified"
         assert instr.dst.is_lo_half(), f"64-bit shift destination must be low-half register, got {instr.dst}"
         src = instr.src if instr.src is not Reg.NONE else Reg.C

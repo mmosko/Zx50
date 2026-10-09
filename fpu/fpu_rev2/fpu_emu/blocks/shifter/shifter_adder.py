@@ -2,6 +2,7 @@
 
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
+from fpu_emu.hardware.clock import Clock
 from fpu_emu.hardware.readable import Readable
 
 
@@ -36,15 +37,19 @@ class ShifterAdder(Readable):
     MAX_VAL: int = (1 << WIDTH) - 1  # 127 (0x7F)
     MASK: int = MAX_VAL
 
-    def __init__(self, name: str = "shifter_adder") -> None:
+    def __init__(self, name: str, clock: Clock) -> None:
         self._name = name
         self._bus = Bus(name=name, size_in_bits=self.WIDTH)
         self._val: int = 0
+        self._clock: Clock = clock
+        self._last_tick: int = -1
 
     def add(self, a: int, b: int) -> int:
         """7-bit unsigned addition: (a + b) & 0x7F."""
         assert 0 <= a <= self.MAX_VAL, f"Operand a=0x{a:X} out of 7-bit range (0..{self.MAX_VAL})"
         assert 0 <= b <= self.MAX_VAL, f"Operand b=0x{b:X} out of 7-bit range (0..{self.MAX_VAL})"
+        assert self._last_tick != self._clock.cycles, "Multiple operations in same tick"
+        self._last_tick = self._clock.cycles
         self._val = (a + b) & self.MASK
         self._bus.set(self._val)
         return self._val
@@ -53,6 +58,8 @@ class ShifterAdder(Readable):
         """7-bit unsigned subtraction: (a - b) & 0x7F."""
         assert 0 <= a <= self.MAX_VAL, f"Operand a=0x{a:X} out of 7-bit range (0..{self.MAX_VAL})"
         assert 0 <= b <= self.MAX_VAL, f"Operand b=0x{b:X} out of 7-bit range (0..{self.MAX_VAL})"
+        assert self._last_tick != self._clock.cycles, "Multiple operations in same tick"
+        self._last_tick = self._clock.cycles
         self._val = (a - b) & self.MASK
         self._bus.set(self._val)
         return self._val
