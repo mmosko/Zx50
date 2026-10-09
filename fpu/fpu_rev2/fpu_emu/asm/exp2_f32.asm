@@ -127,7 +127,8 @@ EXP2_POLY_LOOP:
     LSR AH, 8                       ; Align Q1.31 to bit 23
     MOV AL, AH                      ; AL <- mantissa for NORMALIZE_F32
     XOR AH, AH                      ; AH[31] = 0 (result sign is always positive)
-    JMP NORMALIZE_F32               ; Tail call into NORMALIZE_F32 -> returns via RET!
+    CALL NORMALIZE_F32              ; Normalize mantissa, adjust EA, pack into AL
+    RET
 
 EXP2_RET_ONE:
     LDC AL, CONST, ONE_F32

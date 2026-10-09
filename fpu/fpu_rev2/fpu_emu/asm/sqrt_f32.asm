@@ -35,6 +35,13 @@
 
 USER_SQRT_F32:
     CALL POP_ONE_32                 ; AL <- X (TOS)
+    CALL SQRT_F32_CORE              ; AL <- sqrt(AL)
+    JNZ ERR, SQRT_F32_HALT          ; If domain error (ERR set), abort without pushing
+    PUSH AL                         ; Push result
+SQRT_F32_HALT:
+    HALT
+
+SQRT_F32_CORE:
     MOV BH, AL                      ; BH <- raw input (preserves sign and value)
     UNPACK EA, AL                   ; AL <- mantissa (bit 23 set), EA <- biased exponent
     JZ ZERO, SQRT_F32_RET_BH        ; If X == 0 (+0.0 or -0.0): return original input
@@ -86,11 +93,13 @@ SQRT_LOOP_NR:
     ADD AH, 0x40                    ; Half-ULP rounding bias
     LSR AH, 7                       ; Align mantissa: bit 23 implicit 1 is at bit 23
     PACK AH, EA                     ; Pack float32: mantissa AH, exponent EA, sign=0
-    MOV BH, AH                      ; BH <- packed result
+    MOV AL, AH                      ; AL <- packed result
+    RET
+
 SQRT_F32_RET_BH:
-    PUSH BH                         ; Push result
-    HALT
+    MOV AL, BH                      ; AL <- original input
+    RET
 
 SQRT_F32_DOMAIN_ERR:
     LDI ERR, 1
-    HALT
+    RET

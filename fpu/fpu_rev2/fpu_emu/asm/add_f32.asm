@@ -26,7 +26,11 @@
 ; ==============================================================================
 
 USER_ADD_F32:
-    CALL POP_TWO_32
+    CALL POP_TWO_32             ; AL <- A (NOS), BL <- B (TOS)
+    CALL ADD_F32_CORE           ; AL <- A + B
+    PUSH AL                     ; Push result
+    HALT
+
 ADD_F32_CORE:
     MOV FH, BL                  ; Scratch FH <- packed B (preserves sign and value)
     MOV AH, AL                  ; AH <- packed A (preserves sign of A in bit 31)
@@ -43,8 +47,7 @@ ADD_F32_SUB:
 ADD_F32_NORM:
     CALL NORMALIZE_F32          ; Normalize mantissa in AL with exponent in EA, sign in AH[31]
 ADD_F32_RETURN_A:
-    PUSH AL                     ; Push result (or original A if B == 0)
-    HALT
+    RET
 ADD_F32_RETURN_B:
-    PUSH FH                     ; Push original B (from scratch register FH)
-    HALT
+    MOV AL, FH                  ; AL <- original B
+    RET

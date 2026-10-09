@@ -54,7 +54,9 @@
 USER_LOG2_F32:
     CALL POP_ONE_32                 ; AL <- X (TOS)
     CALL LOG2_CORE                  ; AL <- log2(AL)
+    JNZ ERR, LOG2_HALT              ; If domain error (ERR set), abort without pushing
     PUSH AL
+LOG2_HALT:
     HALT
 
 LOG2_CORE:
@@ -179,7 +181,8 @@ LOG2_NORMALIZE:
     MOV AL, AH                      ; AL <- Q9.23 mantissa magnitude
     LDI EA, 127                     ; EA <- reference exponent
     MOV AH, BH                      ; AH[31] <- result sign
-    JMP NORMALIZE_F32               ; Tail call into NORMALIZE_F32 -> returns via RET!
+    CALL NORMALIZE_F32              ; Normalize into IEEE-754 float32 in AL
+    RET
 
 LOG2_RET_ZERO:
     XOR AL, AL
@@ -191,4 +194,4 @@ LOG2_RET_INPUT:
 
 LOG2_DOMAIN_ERR:
     LDI ERR, 1
-    HALT
+    RET

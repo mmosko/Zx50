@@ -28,6 +28,13 @@
 
 USER_DIV_F32:
     CALL POP_TWO_32             ; AL <- A (NOS), BL <- B (TOS)
+    CALL DIV_F32_CORE           ; AL <- A / B
+    JNZ ERR, DIV_F32_HALT       ; If divide-by-zero (ERR set), abort without pushing
+    PUSH AL                     ; Push result
+DIV_F32_HALT:
+    HALT
+
+DIV_F32_CORE:
     MOV BH, AL                  ; Stash A in BH
     XOR BH, BL                  ; BH[31] = s_A ^ s_B (result sign)
     UNPACK BL, EB               ; Unpack divisor B: EB <- exp_B, BL <- mant_B
@@ -52,8 +59,7 @@ DIV_LOOP:
     MOV AH, BH                  ; AH[31] <- result sign for NORMALIZE_F32
 DIV_F32_NORM:
     CALL NORMALIZE_F32          ; Normalize mantissa in AL, exponent in EA, sign in AH[31]
-    PUSH AL                     ; Push result
-    HALT
+    RET
 
 DIV_F32_ZERO:
     XOR AL, AL                  ; Return zero mantissa
@@ -63,4 +69,4 @@ DIV_F32_ZERO:
 DIV_F32_DIV_ZERO:
     XOR BL, BL                  ; BL <- 0
     DIVU AL, BL                 ; Force hardware divide-by-zero error (sets ERR flag)
-    HALT
+    RET

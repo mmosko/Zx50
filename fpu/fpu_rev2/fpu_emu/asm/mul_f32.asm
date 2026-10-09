@@ -42,7 +42,8 @@ MUL_F32_CORE:
     LSR AX, 23                  ; Align 48-bit product: mantissa into AL[24:0]
     MOV AH, BH                  ; AH[31] <- result sign for NORMALIZE_F32
 MUL_F32_NORM:
-    JMP NORMALIZE_F32           ; Tail call into NORMALIZE_F32 -> returns via RET!
+    CALL NORMALIZE_F32          ; Normalize mantissa in AL, exponent in EA, sign in AH[31]
+    RET
 MUL_F32_ZERO:
     XOR AL, AL                  ; Return zero mantissa
     MOV AH, BH                  ; Preserve computed sign

@@ -9,8 +9,11 @@
  ***************************************************************************************/
 
 module zx50_fpu_reg (
-    input  wire        mclk,
+    input  wire        fclk,
     input  wire        reset_n,
+
+    input wire [2:0]  ha_sel_bus,
+    input wire [4:0]  hb_sel_bus,
 
     input  wire [31:0] res_bus,
     output wire [31:0] ha_bus,
@@ -36,13 +39,13 @@ module zx50_fpu_reg (
 
     reg [7:0] sp_reg;
     reg [7:0] osp_reg;
-    reg [10:0] pc_reg;
+    reg [9:0] pc_reg;
 
-        always @(posedge mclk or negedge reset_n) begin
+        always @(posedge fclk or negedge reset_n) begin
         if (!reset_n) begin
             sp_reg  <= 8'h00;
             osp_reg <= 8'h00;
-            pc_reg  <= 11'h000;
+            pc_reg  <= 10'h000;
         end else begin
 
             
