@@ -207,7 +207,7 @@ def test_control_call_and_ret(fpga: FpgaModel):
 
     # AL should be: 0x10 + 0x20 (subroutine) + 0x05 (post-return) = 0x35
     assert fpga.reg_file.al.read_int() == 0x35
-    assert fpga.control_block._ret_set.read_int() == 0
+    assert fpga.control_block._csp.read_int() == 0
 
 
 def test_control_nop(fpga: FpgaModel):
@@ -244,8 +244,15 @@ def test_control_nested_call_asserts(fpga: FpgaModel):
     microcode = [
         MicroInstruction(op=MicroOp.CALL, imm=1),
         MicroInstruction(op=MicroOp.CALL, imm=2),
+        MicroInstruction(op=MicroOp.CALL, imm=3),
+        MicroInstruction(op=MicroOp.CALL, imm=4),
+        MicroInstruction(op=MicroOp.CALL, imm=5),
+        MicroInstruction(op=MicroOp.CALL, imm=6),
+        MicroInstruction(op=MicroOp.CALL, imm=7),
+        MicroInstruction(op=MicroOp.CALL, imm=8),
+        MicroInstruction(op=MicroOp.CALL, imm=9),
     ]
-    with pytest.raises(AssertionError, match="Nested microcode CALL is unsupported"):
+    with pytest.raises(AssertionError, match="Call stack out of range"):
         fpga.dispatcher._run(microcode)
 
 
@@ -254,7 +261,7 @@ def test_control_ret_without_call_asserts(fpga: FpgaModel):
     microcode = [
         MicroInstruction(op=MicroOp.RET),
     ]
-    with pytest.raises(AssertionError, match="Microcode RET without prior CALL"):
+    with pytest.raises(AssertionError, match="Call stack out of range"):
         fpga.dispatcher._run(microcode)
 
 

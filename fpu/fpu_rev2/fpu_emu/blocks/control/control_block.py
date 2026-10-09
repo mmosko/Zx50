@@ -5,6 +5,7 @@ from fpu_emu.blocks.functional_block import FunctionalBlock, BlockInputs
 from fpu_emu.fpga_resource import fpga_resource
 from fpu_emu.hardware.bus import Bus
 from fpu_emu.hardware.clock import Clock
+from fpu_emu.hardware.lut_mem import LutRam
 from fpu_emu.hardware.memory import Memory
 from fpu_emu.hardware.mux import Mux
 from fpu_emu.hardware.reg import Reg
@@ -35,9 +36,11 @@ class ControlBlock(FunctionalBlock):
         self._upc_bus = Bus(name="upc_bus", size_in_bits=4)
         self._none_bus.set(Reg.NONE.value)
         self._upc_bus.set(Reg.UPC.value)
-        self._ret_set = Register(name=Reg.RET_SET, size_in_bits=1, clock=clock)
-        self._ret_reg = Register(name=Reg.RET, size_in_bits=10, clock=clock)
-        self._ret_set.write(0)
+
+        # Distributed LUT memory, 8x 10 bits
+        self._call_stack = LutRam(name="call_stack", size=8, width=10, clock=clock)
+        self._csp = Register(name=Reg.RET_SET, size_in_bits=3, clock=clock)
+        self._csp.write(0)
 
         self._c_reg = c_reg
         self._count_adder = CountAdder(c_reg)
@@ -141,9 +144,11 @@ class ControlBlock(FunctionalBlock):
 
     def _call(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.CALL)
-        assert self._ret_set.read_int() == 0, "Nested microcode CALL is unsupported"
+        csp = self._csp.read_int()
+        next_csp = csp + 1
+
         # this is hard-wired to UPC register output
-        upc = self._inputs.ha_mux.read()
+        upc = self._inputs.ha_mux.read_int()
 
         # Absolute microcode jump address
         self._inputs.hb_mux.select(Reg.IMM.value)
@@ -151,21 +156,31 @@ class ControlBlock(FunctionalBlock):
         self._outputs.block_res.set(addr)
         self._outputs.block_res_sel.set(Reg.UPC.value)
         self._outputs.exec_done.set(1)
+
+        # Update the call stack
+        self._call_stack.write(csp, upc)
         self._clock.tick()
-        self._ret_set.write(1)
-        self._ret_reg.write(upc)
+
+        # Need a 3-bit adder or state machine to calculate next _csp
+        self._csp.write(next_csp)
+        # If the csp is 0, we wrapped around
+        assert self._csp.read_int() != 0, f"Call stack out of range: {csp}"
+
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
     def _ret(self, instr: MicroInstruction) -> None:
         assert (instr.op == MicroOp.RET)
-        assert self._ret_set.read_int() == 1, "Microcode RET without prior CALL"
+        # small adder or state machine for 3-bit CSP
+        csp = self._csp.read_int() - 1
+        assert 0 <= csp < self._call_stack.size, f"Call stack out of range: {csp}"
+
         # Absolute microcode address
-        addr = self._ret_reg.read_int()
+        addr = self._call_stack.read(csp)
         self._outputs.block_res.set(addr)
         self._outputs.block_res_sel.set(Reg.UPC.value)
         self._outputs.exec_done.set(1)
         self._clock.tick()
-        self._ret_set.write(0)
+        self._csp.write(csp)
         # N.B.: No call to _writeback, the UPC is handled by the upc_mux
 
     def _nop(self, instr: MicroInstruction) -> None:
@@ -184,5 +199,5 @@ class ControlBlock(FunctionalBlock):
         self._outputs.block_res.set(0x3FF)
         self._outputs.block_res_sel.set(Reg.UPC.value)
         self._outputs.exec_done.set(1)
-        self._ret_set.write(0)
+        self._csp.write(0)
         self._writeback()
