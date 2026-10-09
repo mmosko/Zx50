@@ -16,9 +16,9 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 @fpga_resource(
-    approach="Branch condition evaluator, jump routing, and loop control",
-    luts=40,
-    ffs=4,
+    approach="Branch condition evaluator, jump routing, loop control, and 8x10-bit LUT RAM call stack with 3-bit CSP adder/sequencer",
+    luts=55,
+    ffs=7,
     delay_ns=2.5,
     cycles=1,
     shared_unit="control_block",
