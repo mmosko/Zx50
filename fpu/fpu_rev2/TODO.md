@@ -7,31 +7,6 @@ Architecture Specifications: [SystemDesignV2.md](SystemDesignV2.md) & [SystemRef
 
 ## Active Tasks
 
-### Task 0: SysMEM EBR Reorganization & Memory Architecture (Unified 4+4 Layout)
-*Reference: [memory_reorg.md](memory_reorg.md)*
-- [ ] **Table Map & Encodings (`fpu_emu/rom/fpu_const_map.py`)**:
-  - [ ] Update `FpuTable` enum: `CONST = 0`, `TRIG = 1`, `CHEB = 2`, `RECIP = 3`, `SQRT = 4`.
-- [ ] **Flash Image & ROM Serialization (`tools/build_flash.py`)**:
-  - [ ] Generate unified 8 KB ($2048 \times 32$-bit) image in big-endian byte order:
-    - Words 0..1023 (First 4 KB): `DATA_RAM` (RAM at `0x000..0x0FF`, Constants at `0x100`, ROM headroom at `0x140`, Trig at `0x200`, Cheb at `0x280`, Mixed Seeds at `0x300`).
-    - Words 1024..2047 (Second 4 KB): `CODE_ROM` (Microcode instructions).
-  - [ ] Combine 16-bit seed tables at words 768..1023 (`0x300`): `(sqrt_seed[k] << 16) | recip_seed[k]`.
-  - [ ] Update output artifacts (`bin/fpu_flash.bin`, `fpu_emu/rom/fpu_flash.bin`, `sim/fpu_rom.hex`, `fpu_emu/rom/fpu_const_map.py`).
-- [ ] **ROM Buffer Loader (`fpu_emu/rom/ebr_loader.py`)**:
-  - [ ] Load 8 KB image; initialize unified `DATA_RAM` buffer (1,024 words) and `CODE_ROM` buffer (1,024 words).
-  - [ ] Remove standalone `ebr4` buffer.
-- [ ] **Memory Controller (`fpu_emu/blocks/memory/memory_block.py`)**:
-  - [ ] Define memory layout constants in segregated `DATA_RAM`: `MTH_BASE = 0x000`, `SCR_BASE = 0x080`, `USR_BASE = 0x0C0`, `RAM_HEADROOM = 0x0D0`, `CNS_BASE = 0x100`, `ROM_HEADROOM = 0x140`, `TRIG_BASE = 0x200`, `CHEB_BASE = 0x280`, `SEEDS_BASE = 0x300`.
-  - [ ] Update `_ldc_core()`: read from unified `DATA_RAM[TABLE_BASE + slot]`, slice `[15:0]` for `RECIP`, `[31:16]` for `SQRT`, or `[31:0]` for 32-bit tables.
-  - [ ] Update `STO` / `RCL` to use `USR_BASE = 0x0C0`.
-- [ ] **Microcode Store & Assembler (`fpu_emu/micro_code.py` & `fpu_asm/`)**:
-  - [ ] Update `fpu_emu/micro_code.py` limits to 1024 words and update `@fpga_resource` (4 EBR blocks for `CODE_ROM`, 4 EBR blocks for `DATA_RAM`).
-  - [ ] Update `fpu_asm/emitter.py` and `__main__.py` default padding to 1024 words. Update CLI tests.
-- [ ] **Documentation (`FPU_REV2.md`)**:
-  - [ ] Update SysMEM EBR allocation table (symmetric 4+4 layout) and unified addressing description.
-- [ ] **Verification**:
-  - [ ] Reassemble microcode (`python -m fpu_asm`).
-  - [ ] Verify 100% pass on test suite (`.venv/bin/pytest -q --no-cov`).
 
 ### Task 0.1: 32-Bit CORDIC Trigonometric Functions
 *Goal: Complete all 32-bit arithmetic and transcendental operations.*

@@ -1,5 +1,6 @@
 """Command Dispatcher and Micro-sequencer execution engine."""
 
+import logging
 from typing import List
 
 from fpu_emu.blocks.functional_block import FunctionalBlock
@@ -15,6 +16,8 @@ from fpu_emu.micro_instruction import MicroInstruction
 from fpu_emu.micro_opcodes import MicroOp
 from fpu_emu.user_opcodes import UserOpcode
 from fpu_emu.writeback_mux import WritebackMux
+
+logger = logging.getLogger(__name__)
 
 
 @fpga_resource(
@@ -177,12 +180,14 @@ class Dispatcher:
             while not self._halted:
                 # Read and decode instruction from reg.instr
                 instr = MicroInstruction.from_register(self._instr_reg)
+                logger.debug("UPC %03x: %s", (self._upc.read_int() - 1) & 0x3FF, instr)
                 block_num = (instr.op.value >> 3) & 0x07
                 self._writeback_mux.set_block(block_num)
 
                 # Execute current instruction
                 # This advances the clock for edge-triggered writeback (1 tick per instruction)
                 self._blocks[block_num].execute()
+                logger.debug("   STATUS=%02x", self._status.read_int())
 
                 # Reading the UPC mux happens after execute, as it might need the result of a JUMP address
                 if block_num == 3 and self._blocks[3].outputs.block_res_sel.read_int() == Reg.UPC.value:
