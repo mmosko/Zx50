@@ -364,30 +364,31 @@ class MemoryBlock(FunctionalBlock):
             self._writeback()
 
     def _ld(self, instr: MicroInstruction) -> None:
-        """Loads 32-bit or 64-bit from scratchpad RAM SCR[imm]."""
+        """Loads 32-bit or 64-bit from scratchpad RAM SCR[addr]."""
         assert instr.op == MicroOp.LD
         assert instr.dst is not Reg.NONE
+        assert instr.src1 is not Reg.NONE
 
         self._outputs.status_wr_sel.set(0)
         self._outputs.res_status.set(0)
 
-        self._ha_mux.select(Reg.IMM.value)
-        imm = self._ha_mux.read_int()
+        self._ha_mux.select(instr.src1.value)
+        addr = self._ha_mux.read_int()
 
         if instr.is_w32():
-            self._ld_core(dst=instr.dst.value, addr=imm)
+            self._ld_core(dst=instr.dst.value, addr=addr)
             self._outputs.exec_done.set(1)
             self._writeback()
         else:
             assert instr.dst.is_lo_half()
-            assert imm % 2 == 0, "64-bit LD must use even base"
+            assert addr % 2 == 0, "64-bit LD must use even base"
 
             # 1. Read LO word from addr
-            self._ld_core(dst=instr.dst.value, addr=imm)
+            self._ld_core(dst=instr.dst.value, addr=addr)
             self._writeback()
 
             # 2. Read HI word from addr + 1
-            self._ld_core(dst=instr.dst.value | 1, addr=imm | 1)
+            self._ld_core(dst=instr.dst.value | 1, addr=addr | 1)
             self._outputs.exec_done.set(1)
             self._writeback()
 
@@ -399,32 +400,33 @@ class MemoryBlock(FunctionalBlock):
         self._outputs.block_res_sel.set(dst)
 
     def _sto(self, instr: MicroInstruction) -> None:
-        """Stores 32-bit or 64-bit from register src into scratchpad RAM SCR[imm]."""
+        """Stores 32-bit or 64-bit from register src into scratchpad RAM SCR[addr]."""
         assert instr.op == MicroOp.STO
         assert instr.src is not Reg.NONE
+        assert instr.src1 is not Reg.NONE
 
         self._outputs.status_wr_sel.set(0)
         self._outputs.res_status.set(0)
         self._outputs.block_res.set(0)
         self._outputs.block_res_sel.set(Reg.NONE.value)
 
-        self._ha_mux.select(Reg.IMM.value)
-        imm = self._ha_mux.read_int()
+        self._ha_mux.select(instr.src1.value)
+        addr = self._ha_mux.read_int()
 
         if instr.is_w32():
-            self._sto_core(src=instr.src.value, addr=imm)
+            self._sto_core(src=instr.src.value, addr=addr)
             self._outputs.exec_done.set(1)
             self._writeback()
         else:
             assert instr.src.is_lo_half()
-            assert imm % 2 == 0, "64-bit STO must use even base"
+            assert addr % 2 == 0, "64-bit STO must use even base"
 
             # 1. Write LO word to addr
-            self._sto_core(src=instr.src.value, addr=imm)
+            self._sto_core(src=instr.src.value, addr=addr)
             self._writeback()
 
             # 2. Write HI word to addr + 1
-            self._sto_core(src=instr.src.value | 1, addr=imm | 1)
+            self._sto_core(src=instr.src.value | 1, addr=addr | 1)
             self._outputs.exec_done.set(1)
             self._writeback()
 
