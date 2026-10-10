@@ -175,7 +175,6 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b1100_0011` | `0xC3` | `CONV_U64_U32`| `( u64 -- u32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Truncates 64-bit uint to 32-bit uint ($V=1$ on overflow) |
 | `0b1100_0100` | `0xC4` | `CONV_U32_F32`| `( u32 -- f32 )` | $0$ | 4 B | ~5 | X | X | X | 0 | 0 | 0 | * | Unsigned 32-bit uint to IEEE single float |
 | `0b1100_0101` | `0xC5` | `CONV_U64_F64`| `( u64 -- f64 )` | $0$ | 8 B | ~6 | X | X | X | 0 | 0 | 0 | * | Unsigned 64-bit uint to IEEE double float |
-| `0b1100_0110` | `0xC6` | `CLEAR_STACK` | `( ... -- )` | $SP \leftarrow 0$ | 0 B | 1 | X | 1 | 0 | 0 | 0 | 0 | 0 | Clears $SP \leftarrow 0$, $OSP \leftarrow 0$, all error flags cleared |
 | `0b1100_1000` | `0xC8` | `CONV_I32_I64`| `( i32 -- i64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_1001` | `0xC9` | `CONV_F32_F64`| `( f32 -- f64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_1010` | `0xCA` | `CONV_I64_I32`| `( i64 -- i32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Truncation Overflow ($V=1$) |
@@ -187,6 +186,7 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b1101_xxxx` | `0xD0`–`0xDF` | `CP [x], TOS` | `( val -- )` | $-4$ / $-8$ | 4 / 8 B | 2 | X | - | - | - | - | * | * | Stack Underflow ($U=1, ERR=1$) |
 | `0b1110_xxxx` | `0xE0`–`0xEF` | `CP TOS, [x]` | `( -- val )` | $+4$ / $+8$ | 0 B | 2 | X | - | - | - | * | - | * | Stack Overflow ($V=1, ERR=1$ if $SP + \text{bytes} > 256$) |
 | `0b1111_0000` | `0xF0` | `ZERO_MEM` | `( -- )` | $0$ | 0 B | 17 | X | - | - | - | - | - | - | Clears all 16 user memory storage slots to zero |
+| `0b1111_0001` | `0xF1` | `CLEAR_STACK` | `( ... -- )` | $SP \leftarrow 0$ | 0 B | 1 | X | 1 | 0 | 0 | 0 | 0 | 0 | Clears $SP \leftarrow 0$, $OSP \leftarrow 0$, all error flags cleared |
 | `0b1111_1010` | `0xFA` | `EXEC_BATCH` | `( ... -- ... )` | Varies | Varies | Burst | X | * | * | * | * | * | * | Executes queued command stack; holds `BUSY=1` throughout |
 | `0b1111_1011` | `0xFB` | `SET_BATCH` | `( -- )` | $0$ | 0 B | 1 | 0 | - | - | - | - | - | - | Sets Batch Queuing Mode (`IMMEDIATE = 0`) |
 | `0b1111_1100` | `0xFC` | `SET_IMMEDIATE`| `( -- )` | $0$ | 0 B | 1 | 0 | - | - | - | - | - | - | Sets Immediate Execution Mode (`IMMEDIATE = 1`) |
@@ -596,7 +596,7 @@ MANAGEMENT COMMANDS (RESET, MODES, BATCH EXECUTION)
 | **`SET_IMMEDIATE`**   | `0xFC` | `0b1111_1100` | Executes each opcode upon arrival (Default) |
 | **`SET_BATCH`**       | `0xFB` | `0b1111_1011` | Queues opcodes into Command Stack at `0x0340` |
 | **`EXEC_BATCH`**      | `0xFA` | `0b1111_1010` | Executes queued batch back-to-back at 80 MHz; holds `BUSY=1` throughout |
-| **`CLEAR_STACK`**     | `0xC6` | `0b1100_0110` | Resets $SP \leftarrow 0$ and $OSP \leftarrow 0$, clears error flags |
+| **`CLEAR_STACK`**     | `0xF1` | `0b1111_0001` | Resets $SP \leftarrow 0$ and $OSP \leftarrow 0$, clears error flags |
 
 #### Status Flags & Side Effects
 * `RESET` and `CLEAR_STACK` force `STATUS` flags to `0b0000_0001` (`ZERO = 1`, all error flags cleared).
