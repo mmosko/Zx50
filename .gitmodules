@@ -1,0 +1,3 @@
+[submodule "fpu/zx50_fpu"]
+	path = fpu/zx50_fpu
+	url = git@github.com:mmosko/Zx50_FPU.git

@@ -1,9 +1,0 @@
-syn/*
-!syn/*.svf
-!syn/*.fit
-!syn/.git*
-.coverage
-.coveragerc
-.ruff_cache
-.pytest_cache
-!*.txt
