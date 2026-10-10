@@ -2,65 +2,92 @@
 
 ## 1. Overview and Architecture
 
-The Zx50 FPU microcode assembler (`fasm`) compiles human-readable micro-assembly files (`.fasm`) into binary (`.bin`) and hex (`.hex`) images for the on-chip Embedded Block RAM (EBR) of the Lattice MachXO3 / MachXO2 FPGA.
+The Zx50 FPU microcode assembler (`fasm`) compiles human-readable micro-assembly files (`.fasm`) into binary (`.bin`)
+and hex (`.hex`) images for the on-chip Embedded Block RAM (EBR) of the Lattice MachXO3 / MachXO2 FPGA.
 
 The assembler's primary responsibilities are:
-1. **Contiguous ROM Layout**: Assembles all user opcode implementations and shared routines into a single continuous 512-word (expandable to 1024-word) microcode address space.
-2. **Label Resolution**: Converts symbolic labels (forward and backward references) into absolute 10-bit microcode word addresses.
+
+1. **Contiguous ROM Layout**: Assembles all user opcode implementations and shared routines into a single continuous
+   512-word (expandable to 1024-word) microcode address space.
+2. **Label Resolution**: Converts symbolic labels (forward and backward references) into absolute 10-bit microcode word
+   addresses.
 3. **UserOpcode to Microcode Lookup Table**:
-   - Detects special opcode entry labels of the form `User_<Name>` (e.g. `User_Abs`, `User_AddF32`).
-   - Opcode numbers are decoupled from microcode and defined in an external opcode definition table (e.g. `user_opcodes.def`).
-   - The assembler merges the opcode definitions and resolved label addresses to generate an opcode dispatch table (`0xZZ -> 0xYYY`) loaded into a dedicated EBR (e.g. EBR 7) or ROM block.
-   - Exports all symbols into a `.sym` symbol file with a dedicated section for the opcode lookup table.
-4. **Subroutine Reusability (`CALL` / `RET`)**: Resolves absolute call and return addresses so shared microcode sequences (e.g., exponent alignment, mantissa normalization, rounding, exception trapping) are shared across multiple high-level user opcodes.
-5. **Hardware Simplification**: Strictly transforms high-level programmer syntax into fixed-format, deterministic machine words so that Verilog decode logic requires zero multiplexers, zero branch squashing logic, and zero runtime instruction rewriting.
-6. **Maintainable Implementation**: Prioritizes code maintainability, clean architecture, and low cyclomatic complexity over raw assembly speed. Uses a structured Python parser/lexer (e.g., Lark or PLY) for the grammar.
+    - Detects special opcode entry labels of the form `User_<Name>` (e.g. `User_Abs`, `User_AddF32`).
+    - Opcode numbers are decoupled from microcode and defined in an external opcode definition table (e.g.
+      `user_opcodes.def`).
+    - The assembler merges the opcode definitions and resolved label addresses to generate an opcode dispatch table
+      (`0xZZ -> 0xYYY`) loaded into a dedicated EBR (e.g. EBR 7) or ROM block.
+    - Exports all symbols into a `.sym` symbol file with a dedicated section for the opcode lookup table.
+4. **Subroutine Reusability (`CALL` / `RET`)**: Resolves absolute call and return addresses so shared microcode
+   sequences (e.g., exponent alignment, mantissa normalization, rounding, exception trapping) are shared across multiple
+   high-level user opcodes.
+5. **Hardware Simplification**: Strictly transforms high-level programmer syntax into fixed-format, deterministic
+   machine words so that Verilog decode logic requires zero multiplexers, zero branch squashing logic, and zero runtime
+   instruction rewriting.
+6. **Maintainable Implementation**: Prioritizes code maintainability, clean architecture, and low cyclomatic complexity
+   over raw assembly speed. Uses a structured Python parser/lexer (e.g., Lark or PLY) for the grammar.
 
 ---
 
 ## 2. Core Architectural Principles for Hardware Simplification
 
 ### 2.1 Always-Ternary Machine Word
-In the physical FPGA implementation, `HA_MUX` is an 8-to-1 multiplexer that supplies the primary A-operand (`HA_BUS`) to the ALU, subtracter, comparator, and exponent units.
+
+In the physical FPGA implementation, `HA_MUX` is an 8-to-1 multiplexer that supplies the primary A-operand (`HA_BUS`) to
+the ALU, subtracter, comparator, and exponent units.
 
 To minimize logic cell (LUT) count and keep decode-stage propagation delays strictly zero:
-- **No hardware conditionality on `HA_MUX` select**: The 3 select lines of `HA_MUX` are hardwired directly to bits `[13:11]` of the instruction word (`SRC1`).
-- **Assembler synthesizes ternary words**: Regardless of whether the assembly source uses unary, binary, or ternary syntax, the assembler always populates the `SRC1` field in the emitted machine word:
-  - **Ternary syntax**:
-    - `SUB DL, AL, BL` $\rightarrow$ `DST = DL (0b1000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
-    - `EXP_SUB C, EA, EB` $\rightarrow$ `DST = C (0b0101)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
-  - **Binary syntax (Destination is accumulator/source 1)**:
-    - `ADD AL, BL` $\rightarrow$ `DST = AL (0b0000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
-    - `CMP EA, EB` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
-    - `EXP_ADD EA, IMM=1` $\rightarrow$ `DST = EA (0b0010)`, `SRC1 = EA (0b010)`, `SRC2 = IMM (0b0100)`
-  - **Unary / Stack / Non-ALU syntax**:
-    - `POP BL` $\rightarrow$ `DST = BL (0b0110)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
-    - `NOP` / `HALT` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
+
+- **No hardware conditionality on `HA_MUX` select**: The 3 select lines of `HA_MUX` are hardwired directly to bits
+  `[13:11]` of the instruction word (`SRC1`).
+- **Assembler synthesizes ternary words**: Regardless of whether the assembly source uses unary, binary, or ternary
+  syntax, the assembler always populates the `SRC1` field in the emitted machine word:
+    - **Ternary syntax**:
+        - `SUB DL, AL, BL` $\rightarrow$ `DST = DL (0b1000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
+        - `EXP_SUB C, EA, EB` $\rightarrow$ `DST = C (0b0101)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
+    - **Binary syntax (Destination is accumulator/source 1)**:
+        - `ADD AL, BL` $\rightarrow$ `DST = AL (0b0000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
+        - `CMP EA, EB` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
+        - `EXP_ADD EA, IMM=1` $\rightarrow$ `DST = EA (0b0010)`, `SRC1 = EA (0b010)`, `SRC2 = IMM (0b0100)`
+    - **Unary / Stack / Non-ALU syntax**:
+        - `POP BL` $\rightarrow$ `DST = BL (0b0110)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
+        - `NOP` / `HALT` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
 
 By delegating operand replication to the assembler, the Verilog data path executes:
+
 ```verilog
 assign ha_mux_sel = instr_reg[13:11]; // Pure wire, 0 LUTs, 0 gate delays
 ```
 
 ### 2.2 Branch Delay Slots and Assembler NOP Insertion
+
 The micro-sequencer runs a 2-stage pipelined fetch/execute cycle:
+
 - **T0 (Fetch)**: The instruction at `UPC` is fetched from EBR, while `UpcAdder` calculates `UPC + 1` in parallel.
 - **T1 (Execute)**: The fetched instruction executes in `instr_reg`.
 
-When a branch instruction (`JMP`, `JZ`, `JNZ`, `DJNZ`, `CALL`, `RET`) is taken, the target address is written into `UPC` on the writeback clock edge, but the instruction at `UPC + 1` has already been fetched into the pipeline.
+When a branch instruction (`JMP`, `JZ`, `JNZ`, `DJNZ`, `CALL`, `RET`) is taken, the target address is written into `UPC`
+on the writeback clock edge, but the instruction at `UPC + 1` has already been fetched into the pipeline.
 
 To avoid adding pipeline flush multiplexers or synchronous clear logic into the Verilog fast-path:
-- **Hardware is pure feed-forward**: The FPGA does not squash instructions or stall the pipeline. The instruction slot immediately following any taken jump always executes.
+
+- **Hardware is pure feed-forward**: The FPGA does not squash instructions or stall the pipeline. The instruction slot
+  immediately following any taken jump always executes.
 - **Assembler-Managed Delay Slots**:
-  1. **Default Mode (Automatic NOP Insertion)**: The assembler automatically inserts a single `NOP` cycle immediately following any control-flow instruction (`JMP`, `JZ`, `JNZ`, `DJNZ`, `CALL`, `RET`) and adjusts all branch targets and labels accordingly.
-  2. **Optimized Mode (Delay-Slot Scheduling)**: When possible, the assembler moves a preceding independent micro-instruction into the slot following the branch, eliminating the 1-cycle branch penalty entirely.
-  3. **Explicit Mode**: Advanced microcode may explicitly specify an instruction in the delay slot using a `.delay` attribute or annotation.
+    1. **Default Mode (Automatic NOP Insertion)**: The assembler automatically inserts a single `NOP` cycle immediately
+       following any control-flow instruction (`JMP`, `JZ`, `JNZ`, `DJNZ`, `CALL`, `RET`) and adjusts all branch targets
+       and labels accordingly.
+    2. **Optimized Mode (Delay-Slot Scheduling)**: When possible, the assembler moves a preceding independent
+       micro-instruction into the slot following the branch, eliminating the 1-cycle branch penalty entirely.
+    3. **Explicit Mode**: Advanced microcode may explicitly specify an instruction in the delay slot using a `.delay`
+       attribute or annotation.
 
 ---
 
 ## 3. Machine Instruction Word Format (32 Bits)
 
-The assembler produces 32-bit machine words divided between the 21-bit control/instruction register (`reg_file.instr`) and the 10-bit immediate register (`reg_file.imm`), with 1 reserved bit.
+The assembler produces 32-bit machine words divided between the 21-bit control/instruction register (`reg_file.instr`)
+and the 10-bit immediate register (`reg_file.imm`), with 1 reserved bit.
 
 ```text
  31        26 25  24     21 20    17 16        14 13     10 9                         0
@@ -73,19 +100,20 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 
 ### 3.1 Field Definitions
 
-| Field | Bits | Width | Description |
-|:---|:---|:---|:---|
-| **OPCODE** | `[31:26]` | 6 | Micro-operation opcode (Block ID `[2:0]` + Operation ID `[2:0]`). |
-| **W** | `[25]` | 1 | Word width select: `0 = 32-bit (W32)`, `1 = 64-bit (W64)`. |
-| **DST** | `[24:21]` | 4 | Destination writeback register (`0b0000` to `0b1111`). |
-| **SRC2** | `[20:17]` | 4 | Secondary source register selecting from `HB_MUX` (12 inputs). |
-| **FLAG_COND**| `[16:14]` | 3 | Status flag condition code for `JZ` / `JNZ` branches. |
-| **SRC1** | `[13:10]` | 4 | Primary source register (`0b0000`–`0b0111` for `HA_MUX`, `0b1111` for `NONE`). |
-| **IMM** | `[9:0]` | 10 | Unsigned immediate constant or 10-bit jump/call address (0–1023). |
+| Field         | Bits      | Width | Description                                                                    |
+|:--------------|:----------|:------|:-------------------------------------------------------------------------------|
+| **OPCODE**    | `[31:26]` | 6     | Micro-operation opcode (Block ID `[2:0]` + Operation ID `[2:0]`).              |
+| **W**         | `[25]`    | 1     | Word width select: `0 = 32-bit (W32)`, `1 = 64-bit (W64)`.                     |
+| **DST**       | `[24:21]` | 4     | Destination writeback register (`0b0000` to `0b1111`).                         |
+| **SRC2**      | `[20:17]` | 4     | Secondary source register selecting from `HB_MUX` (12 inputs).                 |
+| **FLAG_COND** | `[16:14]` | 3     | Status flag condition code for `JZ` / `JNZ` branches.                          |
+| **SRC1**      | `[13:10]` | 4     | Primary source register (`0b0000`–`0b0111` for `HA_MUX`, `0b1111` for `NONE`). |
+| **IMM**       | `[9:0]`   | 10    | Unsigned immediate constant or 10-bit jump/call address (0–1023).              |
 
 ### 3.2 Register Field Mapping
 
 #### `SRC1` Select (4 bits `[13:10]`, `HA_MUX` uses bits `[2:0]`)
+
 ```text
 0000: AL      0010: EA      0100: IMM     0110: BL
 0001: AH      0011: EB      0101: C       0111: BH
@@ -93,6 +121,7 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 ```
 
 #### `SRC2` Select (`HB_MUX` — 4 bits `[20:17]`)
+
 ```text
 0000: AL      0011: EB      0110: BL      1001: DH
 0001: AH      0100: IMM     0111: BH      1010: FL
@@ -101,6 +130,7 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 ```
 
 #### `DST` Select (Writeback Register — 4 bits `[24:21]`)
+
 ```text
 0000: AL      0100: IMM     1000: DL      1100: (reserved)
 0001: AH      0101: C       1001: DH      1101: (reserved)
@@ -109,6 +139,7 @@ The assembler produces 32-bit machine words divided between the 21-bit control/i
 ```
 
 #### `FLAG_COND` Condition Select (3 bits `[16:14]`)
+
 ```text
 000: ZERO         (ZF == 1 for JZ, ZF == 0 for JNZ)
 001: ERR          (EF == 1)
@@ -144,73 +175,84 @@ The microcode address space is packed contiguously with user opcode handlers and
 
 ### 4.2 UserOpcode to Microcode Lookup Table (`EBR 7`)
 
-Instead of hardcoding numeric opcode values into the assembler or microcode source files, the numerical mapping is decoupled and configured via an external table:
+Instead of hardcoding numeric opcode values into the assembler or microcode source files, the numerical mapping is
+decoupled and configured via an external table:
 
 - **EBR 7 Dispatch Memory**: 256 entries $\times$ 10 bits.
 - **Dispatch Flow**:
-  1. The host CPU or bus controller writes a `UserOpcode` (e.g. `0x10` for `ADD_F32`) to the FPU command port.
-  2. The opcode directly indexes **EBR 7**: `addr = UserOpcode`.
-  3. EBR 7 outputs the 10-bit target microcode address: `target_upc = EBR7[UserOpcode]`.
-  4. Hardware loads `UPC <= target_upc` in a single clock cycle, starting microcode execution immediately.
+    1. The host CPU or bus controller writes a `UserOpcode` (e.g. `0x10` for `ADD_F32`) to the FPU command port.
+    2. The opcode directly indexes **EBR 7**: `addr = UserOpcode`.
+    3. EBR 7 outputs the 10-bit target microcode address: `target_upc = EBR7[UserOpcode]`.
+    4. Hardware loads `UPC <= target_upc` in a single clock cycle, starting microcode execution immediately.
 
 #### Symbolic Label Convention: `User_<Name>`
+
 Microcode labels entry points using purely symbolic names:
+
 ```fasm
 User_AddF32:
     POP     BL
     ...
 ```
+
 - `User_`: Prefix identifying the label as a user opcode entry point.
 - `<Name>`: Human-readable symbolic name (e.g. `AddF32`, `SubF32`, `Abs`).
 
 #### Opcode Definition Table (`user_opcodes.def`)
+
 Numerical opcode assignments are defined in an external mapping table passed to the assembler:
+
 ```ini
 ; user_opcodes.def
 ; Symbolic Name     Opcode
-User_Abs          = 0x01
-User_Chs          = 0x02
-User_AddF32       = 0x10
-User_SubF32       = 0x11
+User_Abs = 0x01
+User_Chs = 0x02
+User_AddF32 = 0x10
+User_SubF32 = 0x11
 ```
-- **Clean Separation of Concerns**: Opcode numbers can be renumbered or reorganized without modifying a single line of microcode assembly.
+
+- **Clean Separation of Concerns**: Opcode numbers can be renumbered or reorganized without modifying a single line of
+  microcode assembly.
 - **Validation**:
-  - The assembler checks that every entry in `user_opcodes.def` maps to an existing `User_<Name>` label in microcode.
-  - Any unused table entries in EBR 7 are initialized to point to a common `User_Trap` routine.
-  - Unmapped `User_<Name>` labels in microcode trigger an assembler warning or error.
+    - The assembler checks that every entry in `user_opcodes.def` maps to an existing `User_<Name>` label in microcode.
+    - Any unused table entries in EBR 7 are initialized to point to a common `User_Trap` routine.
+    - Unmapped `User_<Name>` labels in microcode trigger an assembler warning or error.
 
 ### 4.3 Subroutine Mechanism (`CALL` / `RET`)
-- **Hardware Support**: ControlBlock includes a 1-deep microcode return register (`reg_file.ret`) and a validity latch (`reg_file.ret_set`).
+
+- **Hardware Support**: ControlBlock includes a 1-deep microcode return register (`reg_file.ret`) and a validity latch
+  (`reg_file.ret_set`).
 - **Nesting**: 1 level of subroutine call is supported (no nested calls inside a subroutine).
 - **Execution Cost**:
-  - `CALL target` (1 cycle) + `NOP` / delay slot (1 cycle)
-  - `RET` (1 cycle) + `NOP` / delay slot (1 cycle)
-  - Net call overhead: 4 cycles total, saving dozens of duplicate EBR words across floating-point arithmetic opcodes.
+    - `CALL target` (1 cycle) + `NOP` / delay slot (1 cycle)
+    - `RET` (1 cycle) + `NOP` / delay slot (1 cycle)
+    - Net call overhead: 4 cycles total, saving dozens of duplicate EBR words across floating-point arithmetic opcodes.
 
 ---
 
 ## 5. Assembly Language Syntax (`fasm`)
 
 ### 5.1 General Rules
+
 - **Line Structure**: Each line follows the grammar rule:
   ```text
   line: [label] [statement] [comment] NEWLINE
   ```
 - **Case-Insensitive**: Opcodes and registers are case-insensitive (`add al, bl` == `ADD AL, BL`).
-- **Comments**: A semicolon (`;`) denotes a code comment. It may start anywhere on a line and all remaining text to the NEWLINE is a comment.
+- **Comments**: A semicolon (`;`) denotes a code comment. It may start anywhere on a line and all remaining text to the
+  NEWLINE is a comment.
 - **Labels**: Defined with a trailing colon (e.g. `L_ALIGN:` or `.normalize:`).
 
 ### 5.2 Directives
 
-| Directive | Description |
-|:---|:---|
-| `.include <path>` | Includes another assembly file. Supports quoted (`"..."`, `'...'`) or unquoted paths, resolved relative to the including file. |
-| `.entry <UserOpcode>` | Binds the following block or routine to a specific UserOpcode in the dispatch table. |
-| `.subroutine <name>` | Declares a callable shared subroutine. Validates that no nested `CALL` occurs within it. |
-| `.org <address>` | Sets the current microcode assembly address counter. |
-| `.align <n>` | Pads microcode with `NOP`s until the address is a multiple of `n`. |
-| `.global <label>` | Exports a label across multiple source modules. |
-
+| Directive             | Description                                                                                                                    |
+|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------|
+| `.include <path>`     | Includes another assembly file. Supports quoted (`"..."`, `'...'`) or unquoted paths, resolved relative to the including file. |
+| `.entry <UserOpcode>` | Binds the following block or routine to a specific UserOpcode in the dispatch table.                                           |
+| `.subroutine <name>`  | Declares a callable shared subroutine. Validates that no nested `CALL` occurs within it.                                       |
+| `.org <address>`      | Sets the current microcode assembly address counter.                                                                           |
+| `.align <n>`          | Pads microcode with `NOP`s until the address is a multiple of `n`.                                                             |
+| `.global <label>`     | Exports a label across multiple source modules.                                                                                |
 
 Note that the microcode program counter (UPC) is measured in 32-bit words, which is the fixed instruction length.
 So `.org 0x000` means word 0, or `.org 100` means word (instruction) 100.
@@ -333,13 +375,15 @@ User_AddF32:
     RET
 ```
 
-*Note: The assembler automatically inserts the required `NOP` delay slots following `JMP`, `JZ`, `JNZ`, `CALL`, and `RET` instructions.*
+*Note: The assembler automatically inserts the required `NOP` delay slots following `JMP`, `JZ`, `JNZ`, `CALL`, and
+`RET` instructions.*
 
 ---
 
 ## 7. Assembler Parser and Lexer Architecture
 
-To keep cyclomatic complexity low and the codebase highly maintainable, the assembler avoids ad-hoc regular expression string splitting. Instead, it uses a structured Python lexer/parser architecture (e.g. using `lark` or `ply`):
+To keep cyclomatic complexity low and the codebase highly maintainable, the assembler avoids ad-hoc regular expression
+string splitting. Instead, it uses a structured Python lexer/parser architecture (e.g. using `lark` or `ply`):
 
 ### 7.1 Multi-Pass Pipeline
 
@@ -374,6 +418,7 @@ Source (.fasm) + Opcode Table (.def)
 ## 8. Assembler CLI, Outputs, and Symbol File Format
 
 ### 8.1 CLI Invocation
+
 ```bash
 python -m fpu_asm -i microcode.fasm -o fpu_rom.bin -s fpu_rom.sym
 python -m fpu_asm -i microcode.fasm -o fpu_rom.py -s fpu_rom.sym
@@ -381,6 +426,7 @@ python -m fpu_asm -i microcode.fasm -o fpu_rom.hex --pad 512
 ```
 
 CLI options:
+
 - `-i`, `--input`: Path to input microcode assembly file (.fasm or .asm).
 - `-o`, `--output`: Path to output file (.bin, .hex, or .py).
 - `-s`, `--sym`: Path to output symbol table report (.sym).
@@ -390,6 +436,7 @@ CLI options:
 - `--format`: Output format (`auto`, `bin`, `hex`, or `py`).
 
 ### 8.2 Generated Artifacts
+
 1. **`fpu_rom.bin`**: Raw binary file (4 bytes per word, little-endian).
 2. **`fpu_rom.hex`**: Verilog `$readmemh` ASCII hexadecimal file (one 8-digit hex word per line).
 3. **`fpu_rom.py`**: Python module exporting `fpu_ucode: List[MicroInstruction]` and `fpu_symbols: Dict[str, int]`:
@@ -408,7 +455,9 @@ CLI options:
 4. **`fpu_rom.sym`**: Symbol table report separating `[USER_SYMBOLS]` and `[OTHER_SYMBOLS]`.
 
 ### 8.3 Symbol File (`.sym`) Format
-The `.sym` file groups all `User_*` symbols together in `[USER_SYMBOLS]` and other labels in `[OTHER_SYMBOLS]`, sorted within each section:
+
+The `.sym` file groups all `User_*` symbols together in `[USER_SYMBOLS]` and other labels in `[OTHER_SYMBOLS]`, sorted
+within each section:
 
 ```ini
 [USER_SYMBOLS]

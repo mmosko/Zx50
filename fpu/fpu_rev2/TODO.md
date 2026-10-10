@@ -25,21 +25,23 @@ Programmer's Guide: [ProgrammersGuide.md](ProgrammersGuide.md)
 
 To reclaim microcode capacity for 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F64`, `SQRT_F64`, and 64-bit CORDIC), the following architectural and microcode improvements are prioritized:
 
-### 1. Expose `ASR` & `ASL` in `MicroOp` & Add Range Constants to `CONST` ROM (Zero FPGA Logic Cost)
+### 1. [COMPLETED] Expose `ASR` & `ASL` in `MicroOp` & Optimize CORDIC (Zero FPGA Logic Cost)
 - [x] **Implement `ASL` (`0b110_010`) and `ASR` (`0b110_011`) in Block 6 (Shifter) & `MicroOp`**:
   - Implemented 32-bit and 64-bit barrel shifting routines (`asl_32`, `asr_32`, `asl_64`, `asr_64`), opcode dispatch, status flags (`V` on ASL, `S` preservation on ASR), assembler grammar, unit tests, and system documentation.
   - In `trig_f32.asm`, arithmetic shifting of $Y$ in CORDIC now replaces 11 instructions of manual bitwise sign extension and branching using `ASR FH, BL, C` (saving **10 instructions** in 32-bit CORDIC and 240 execution clock cycles per trig evaluation).
-- [ ] **Populate Range Reduction Constants in `CONST` ROM**:
+
+### 2. [COMPLETED] Algorithmic Trigonometric Deduplication: Unify Cosine and Sine (~50 Words Saved)
+- [x] **Unify Cosine and Sine Reconstruction**:
+  - In `trig_f32.asm`, mapped quadrant $q_{cos} = (q + 1) \pmod 4$ and cleared input sign mask so cosine shares 100% of `RECONSTRUCT_SIN`.
+  - Deleted entire `RECONSTRUCT_COS` routine and simplified `FCHS`/negation sequences across `RECONSTRUCT_SIN` and `RECONSTRUCT_TAN`.
+  - Saved **47 instructions** with zero hardware changes (total 57 instructions saved in `trig_f32.asm` combined with ASR).
+
+### 3. [NEXT] Populate Range Reduction Constants in `CONST` ROM (~8 Words Saved)
+- [ ] **Add Cody-Waite Constants to `CONST` ROM**:
   - Add $C_1 = 102943$ and $C_2 = 11601$ into unused slots of `CONST` ROM.
   - Eliminates multi-instruction synthesis loops (`LDI`, `LSL`, `LDI`, `ADD`), saving **8 instructions**.
 
-### 2. Algorithmic Trigonometric Deduplication (~50 Words Saved)
-- [ ] **Unify Cosine and Sine Reconstruction**:
-  - In `trig_f32.asm`, `RECONSTRUCT_COS` duplicates ~60 instructions of quadrant checking and sign reconstruction from `RECONSTRUCT_SIN`.
-  - Because $\cos(\theta) = \sin(\theta + \pi/2)$, mapping quadrant $q_{cos} = (q + 1) \pmod 4$ before reconstruction allows cosine to share 100% of the sine reconstruction logic.
-  - Saves **~50 instructions** with zero hardware changes.
-
-### 3. Indirect Addressing & Dispatcher Nibble Parameter (~95 Words Saved)
+### 4. Indirect Addressing & Dispatcher Nibble Parameter (~95 Words Saved)
 - [ ] **Add Indirect Memory Addressing (`LD dst, [reg]`, `STO [reg], src`)**:
   - Add multiplexing in the Memory block so `MEM_ADDR` can be driven by `HB_MUX[5:0]` (masked to RAM space `0x000..0x0FF`) in addition to instruction immediates.
   - Estimated FPGA cost: ~12–16 LUT4s.
@@ -53,7 +55,7 @@ To reclaim microcode capacity for 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F6
     ```
   - Saves **~95 instructions** in `cp_mem.asm`, freeing major ROM headroom.
 
-### 4. Widen `HA_MUX` to Full 4-Bit Symmetry (~20–30 Words Saved)
+### 5. Widen `HA_MUX` to Full 4-Bit Symmetry (~20–30 Words Saved)
 - [ ] **Expand `HA_MUX` from 3 Bits to 4 Bits**:
   - Currently `HA_MUX` is restricted to `{AL, AH, BL, BH, EA, EB, C, IMM}`. Registers `DL, DH, FL, FH` cannot be used as `src1` (the left operand of `ADD`, `SUB`, `CMP`, `AND`, `OR`, `XOR`).
   - Expanding `HA_MUX` to 16 inputs makes `HA_BUS` fully symmetric with `HB_BUS` and eliminates redundant register shuffling (`MOV AL, FL; ADD AL, BL; MOV FL, AL`).

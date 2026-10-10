@@ -200,13 +200,25 @@ CORDIC_STAGE_NEXT:
     ; Opcode Reconstruction & Normalization
     ; --------------------------------------------------------------------------
     LD AL, 1                    ; Load Opcode ID from SCR[1]
-    CMP AL, 0
-    JZ ZERO, RECONSTRUCT_SIN
+    CMP AL, 2
+    JZ ZERO, RECONSTRUCT_TAN
     CMP AL, 1
-    JZ ZERO, RECONSTRUCT_COS
-    JMP RECONSTRUCT_TAN
+    JNZ ZERO, RECONSTRUCT_SIN   ; If Opcode == 0 (SIN): jump directly to RECONSTRUCT_SIN
 
-    ; --- Sine Reconstruction ---
+    ; Opcode == 1 (COS): cos(theta) = sin(|theta| + pi/2)
+    ; 1. Clear original theta sign so theta < 0 does not invert cosine:
+    XOR AL, AL
+    STO 3, AL                   ; SCR[3] <- 0
+    ; 2. Shift quadrant: q_cos = (q + 1) & 3
+    LD AL, 2                    ; Load quadrant q from SCR[2]
+    ADD AL, 1
+    AND AL, 3
+    STO 2, AL                   ; SCR[2] <- (q + 1) & 3
+
+    ; Fall through into unified Sine / Cosine reconstruction!
+    ; --------------------------------------------------------------------------
+    ; Sine / Cosine Reconstruction
+    ; --------------------------------------------------------------------------
 RECONSTRUCT_SIN:
     ; q = 0: +Y, q = 1: +X, q = 2: -Y, q = 3: -X
     LD AL, 2                    ; Load quadrant q from SCR[2]
@@ -218,9 +230,8 @@ RECONSTRUCT_SIN:
     JZ ZERO, SIN_Q2
     ; q == 3: res = -X
     MOV AL, FL                  ; AL <- X (always positive)
-    LDI BL, 1
-    LSL BL, 31
-    MOV AH, BL                  ; AH <- 0x80000000 (negative)
+    LDI AH, 1
+    LSL AH, 31                  ; AH <- 0x80000000 (negative)
     JMP SIN_FINISH_SIGN
 
 SIN_Q0:
@@ -238,78 +249,24 @@ SIN_Q1:
 SIN_Q2:
     ; res = -Y
     MOV AL, BL                  ; AL <- Y (signed)
-    LDI BL, 1
-    LSL BL, 31
-    MOV AH, BL                  ; AH <- 0x80000000 (negative)
+    LDI AH, 1
+    LSL AH, 31                  ; AH <- 0x80000000 (negative)
 
 SIN_HANDLE_Y_SIGN:
     ; Y is in AL (signed 32-bit int), AH[31] holds target sign
     OR AL, AL
     JZ SIGN, SIN_Y_IS_POS       ; If bit 31 is 0 (AL >= 0, SIGN=0)
     ; AL is negative (< 0): AL <- -AL (two's complement absolute value)
-    XOR BL, BL
-    SUB BL, AL
-    MOV AL, BL                  ; AL <- -AL
-    ; Flip sign bit AH[31]:
-    LDI BL, 1
-    LSL BL, 31
-    XOR AH, BL                  ; Flip sign
+    NOT AL
+    ADD AL, 1                   ; AL <- -AL
+    FCHS AH                     ; Flip sign bit AH[31]
 SIN_Y_IS_POS:
     ; AL is now positive magnitude, AH[31] is the correct sign!
 
 SIN_FINISH_SIGN:
     ; Combine with original theta sign: sin(-theta) = -sin(theta)
     LD BL, 3                    ; Load original sign mask from SCR[3]
-    XOR AH, BL                  ; Invert sign if theta was negative
-    JMP TRIG_PACK_FLOAT
-
-    ; --- Cosine Reconstruction ---
-RECONSTRUCT_COS:
-    ; q = 0: +X, q = 1: -Y, q = 2: -X, q = 3: +Y
-    LD AL, 2                    ; Load quadrant q from SCR[2]
-    CMP AL, 0
-    JZ ZERO, COS_Q0
-    CMP AL, 1
-    JZ ZERO, COS_Q1
-    CMP AL, 2
-    JZ ZERO, COS_Q2
-    ; q == 3: res = +Y
-    MOV AL, BL                  ; AL <- Y (signed)
-    XOR AH, AH                  ; Target sign = 0 (positive)
-    JMP COS_HANDLE_Y_SIGN
-
-COS_Q0:
-    ; res = +X
-    MOV AL, FL                  ; AL <- +X
-    XOR AH, AH                  ; Sign = 0 (positive)
-    JMP TRIG_PACK_FLOAT
-
-COS_Q1:
-    ; res = -Y
-    MOV AL, BL                  ; AL <- Y (signed)
-    LDI BL, 1
-    LSL BL, 31
-    MOV AH, BL                  ; Target sign = 0x80000000 (negative)
-    JMP COS_HANDLE_Y_SIGN
-
-COS_Q2:
-    ; res = -X
-    MOV AL, FL                  ; AL <- +X
-    LDI BL, 1
-    LSL BL, 31
-    MOV AH, BL                  ; Sign = 0x80000000 (negative)
-    JMP TRIG_PACK_FLOAT
-
-COS_HANDLE_Y_SIGN:
-    OR AL, AL
-    JZ SIGN, COS_Y_IS_POS       ; If bit 31 is 0 (AL >= 0): already positive magnitude
-    XOR BL, BL
-    SUB BL, AL
-    MOV AL, BL                  ; AL <- -AL (positive magnitude)
-    LDI BL, 1
-    LSL BL, 31
-    XOR AH, BL                  ; Flip sign bit AH[31]
-COS_Y_IS_POS:
+    XOR AH, BL                  ; Invert sign if theta was negative (SCR[3] == 0 for COS)
     JMP TRIG_PACK_FLOAT
 
     ; --- Tangent Reconstruction ---
@@ -319,12 +276,10 @@ RECONSTRUCT_TAN:
     OR BL, BL                   ; Test sign of Y
     JZ SIGN, TAN_Y_IS_POS       ; If Y >= 0: keep sign as 0
     ; Y is negative: BL <- -BL, AH <- 0x80000000
-    XOR AL, AL
-    SUB AL, BL
-    MOV BL, AL                  ; BL <- |Y|
-    LDI AL, 1
-    LSL AL, 31
-    MOV AH, AL                  ; AH <- 0x80000000
+    NOT BL
+    ADD BL, 1                   ; BL <- |Y|
+    LDI AH, 1
+    LSL AH, 31                  ; AH <- 0x80000000
 TAN_Y_IS_POS:
 
     ; 2. Determine numerator (AL) and denominator (BL) based on quadrant q:
@@ -336,9 +291,7 @@ TAN_Y_IS_POS:
     ; Odd quadrant (q = 1, 3):
     MOV AL, FL                  ; AL <- Numerator X
     ; BL is already Denominator |Y|
-    LDI BH, 1
-    LSL BH, 31
-    XOR AH, BH                  ; Flip sign
+    FCHS AH                     ; Flip sign
     JMP TAN_FINISH_SIGN
 
 TAN_EVEN_Q:
