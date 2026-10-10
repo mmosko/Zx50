@@ -8,8 +8,8 @@ Programmer's Guide: [ProgrammersGuide.md](ProgrammersGuide.md)
 
 ## Current Status & Capacity
 
-- **Test Suite Status:** 100% pass rate (**922 / 922 tests passing**).
-- **Microcode Capacity:** **816 / 1,024 words used** (208 instruction words of headroom remaining).
+- **Test Suite Status:** 100% pass rate (**923 / 923 tests passing**).
+- **Microcode Capacity:** **736 / 1,024 words used** (288 instruction words of headroom remaining).
 - **Hardware Call Stack:** 16-deep $\times$ 10-bit return-address stack in distributed LUT RAM (`RAM16X1S`) with 4-bit `CSP` pointer fully implemented and verified.
 - **Completed 32-Bit Math Operations:**
   - Standard arithmetic: `ADD_I32`, `SUB_I32`, `MUL_I32`, `DIV_I32`, `ADD_F32`, `SUB_F32`, `MUL_F32`, `DIV_F32`.
@@ -36,24 +36,21 @@ To reclaim microcode capacity for 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F6
   - Deleted entire `RECONSTRUCT_COS` routine and simplified `FCHS`/negation sequences across `RECONSTRUCT_SIN` and `RECONSTRUCT_TAN`.
   - Saved **47 instructions** with zero hardware changes (total 57 instructions saved in `trig_f32.asm` combined with ASR).
 
-### 3. Populate Range Reduction Constants in `CONST` ROM (~8 Words Saved)
-- [ ] **Add Cody-Waite Constants to `CONST` ROM**:
-  - Add $C_1 = 102943$ and $C_2 = 11601$ into unused slots of `CONST` ROM.
-  - Eliminates multi-instruction synthesis loops (`LDI`, `LSL`, `LDI`, `ADD`), saving **8 instructions**.
-
-### 4. Indirect Addressing & Dispatcher Nibble Parameter (~95 Words Saved)
+### 3. [COMPLETED] Indirect Addressing & Dispatcher Nibble Parameter (80 Words Saved)
 - [x] **Add Indirect Memory Addressing (`LD dst, [src1]`, `STO [src1], src2`)**:
   - Leverages existing `HA_MUX` (`src1`) to drive scratchpad RAM address instead of hardcoding `Reg.IMM`.
   - Updated architecture specs (`SystemDesignV2.md`, `SystemReference.md`), assembler syntax & instruction emitter, and memory block emulator & unit tests.
-- [ ] **Latch Opcode Low Nibble (`opcode & 0x0F`) into Register `C` during Dispatch**:
-  - Currently, `cp_mem.asm` maintains 16 separate `CP_MEMx_TOS` handlers (48 instructions), 16 separate `CP_TOS_MEMx` handlers (48 instructions), and an unrolled `ZERO_MEM` routine (16 instructions) because slot numbers are hardcoded immediates.
-  - With indirect addressing and dispatcher parameter latching, all 32 routines collapse into two 3-instruction subroutines and a 4-instruction loop:
-    ```asm
-    CP_MEM_TOS: CALL POP_ONE_32; STO [C], AL; HALT
-    CP_TOS_MEM: LD AL, [C]; PUSH AL; HALT
-    ZERO_MEM:   LDI C, 16; XOR AL, AL; ZERO_LOOP: STO [C-1], AL; DJNZ ZERO_LOOP; HALT
-    ```
-  - Saves **~95 instructions** in `cp_mem.asm`, freeing major ROM headroom.
+- [x] **Latch Opcode Low Nibble (`opcode & 0x0F`) into Register `C` during Dispatch & Collapse `cp_mem.asm`**:
+  - Dispatcher writes `user_opcode & 0x0F` to register `C` before executing microcode.
+  - Collapsed 16 `CP_MEMx_TOS` handlers into 3 instructions (`CALL POP_ONE_32; STO [C], AL; HALT`).
+  - Collapsed 16 `CP_TOS_MEMx` handlers into 3 instructions (`LD FL, [C]; PUSH FL; HALT`).
+  - Replaced unrolled `ZERO_MEM` with 6-instruction `DJNZ` loop.
+  - Saved **80 microcode instructions** (reducing total words from 816 to 736).
+
+### 4. Populate Range Reduction Constants in `CONST` ROM (~8 Words Saved)
+- [ ] **Add Cody-Waite Constants to `CONST` ROM**:
+  - Add $C_1 = 102943$ and $C_2 = 11601$ into unused slots of `CONST` ROM.
+  - Eliminates multi-instruction synthesis loops (`LDI`, `LSL`, `LDI`, `ADD`), saving **8 instructions**.
 
 ### 5. Widen `HA_MUX` to Full 4-Bit Symmetry (~20–30 Words Saved)
 - [ ] **Expand `HA_MUX` from 3 Bits to 4 Bits**:
