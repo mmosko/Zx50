@@ -20,9 +20,9 @@ from fpu_emu.writeback_mux import WritebackMux
 
 
 @fpga_resource(
-    approach="Datapath operand multiplexers (HA_MUX 6:1 32b, HB_MUX 12:1 32b, UPC_MUX 2:1 11b)",
-    luts=299,
-    delay_ns=2.8,
+    approach="Datapath operand multiplexers (HA_MUX 14:1 32b, HB_MUX 14:1 32b, UPC_MUX 2:1 11b)",
+    luts=360,
+    delay_ns=3.0,
     cycles=1,
     shared_unit="datapath_muxes",
 )
@@ -30,39 +30,32 @@ class DatapathMuxes:
     """Encloses top-level datapath routing multiplexers (HA_MUX, HB_MUX)."""
 
     def __init__(self, reg_file: Registers):
-        self.ha_mux = Mux(name="ha", inputs=[
-            reg_file.al,
-            reg_file.ah,
-            BusPad(reg_file.ea, 32, signed=True),
-            BusPad(reg_file.eb, 32, signed=True),
-            BusPad(reg_file.imm, 32),
-            BusPad(reg_file.c, 32),
-            reg_file.bl,
-            reg_file.bh,
-        ])
-
-        self.hb_mux = Mux(name="hb", inputs=[
-            reg_file.al,
-            reg_file.ah,
-            BusPad(reg_file.ea, 32, signed=True),
-            BusPad(reg_file.eb, 32, signed=True),
-            BusPad(reg_file.imm, 32),
-            BusPad(reg_file.c, 32),
-            reg_file.bl,
-            reg_file.bh,
-            reg_file.dl,
-            reg_file.dh,
-            reg_file.fl,
-            reg_file.fh,
-        ])
+        inputs = [
+            reg_file.al,                              # 0b0000 (0): AL
+            reg_file.ah,                              # 0b0001 (1): AH
+            reg_file.bl,                              # 0b0010 (2): BL
+            reg_file.bh,                              # 0b0011 (3): BH
+            reg_file.cl,                              # 0b0100 (4): CL
+            reg_file.ch,                              # 0b0101 (5): CH
+            reg_file.dl,                              # 0b0110 (6): DL
+            reg_file.dh,                              # 0b0111 (7): DH
+            reg_file.fl,                              # 0b1000 (8): FL
+            reg_file.fh,                              # 0b1001 (9): FH
+            BusPad(reg_file.ea, 32, signed=True),     # 0b1010 (10): EA
+            BusPad(reg_file.eb, 32, signed=True),     # 0b1011 (11): EB
+            BusPad(reg_file.c, 32),                   # 0b1100 (12): C
+            BusPad(reg_file.imm, 32),                 # 0b1101 (13): IMM
+        ]
+        self.ha_mux = Mux(name="ha", inputs=list(inputs))
+        self.hb_mux = Mux(name="hb", inputs=list(inputs))
 
 
 from fpu_emu.rom.ebr_loader import load_ebr_rom_buffers
 
 
 @fpga_resource(
-    approach="HA_SEL_MUX (8:1 3b) and HB_SEL_MUX (8:1 4b) functional block select multiplexers and control registers",
-    luts=28,
+    approach="HA_SEL_MUX (8:1 4b) and HB_SEL_MUX (8:1 4b) functional block select multiplexers and control registers",
+    luts=32,
     ffs=8,
     delay_ns=1.8,
     cycles=1,
@@ -221,6 +214,8 @@ class FpgaModel:
             Reg.AH.value: self.reg_file.ah,
             Reg.BL.value: self.reg_file.bl,
             Reg.BH.value: self.reg_file.bh,
+            Reg.CL.value: self.reg_file.cl,
+            Reg.CH.value: self.reg_file.ch,
             Reg.DL.value: self.reg_file.dl,
             Reg.DH.value: self.reg_file.dh,
             Reg.FL.value: self.reg_file.fl,
@@ -232,9 +227,9 @@ class FpgaModel:
             self.reg_file.ea.write(res[:2])
         elif dst == Reg.EB.value:
             self.reg_file.eb.write(res[:2])
-        elif dst == Reg.C:
+        elif dst == Reg.C.value:
             self.reg_file.c.write(res[:1])
-        elif dst in (Reg.NONE, Reg.STATUS, Reg.UPC):
+        elif dst in (Reg.NONE.value, Reg.STATUS.value, Reg.UPC.value):
             pass
         else:
             raise HardwareBusError(f"Unsupported dst register {dst}")

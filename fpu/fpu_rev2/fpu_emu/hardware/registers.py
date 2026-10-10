@@ -48,9 +48,9 @@ class UpcOverflowError(HardwareBusError):
 
 
 @fpga_resource(
-    approach="MachXO2 PFU Slice Flip-Flops for 17 Hardware Registers",
+    approach="MachXO2 PFU Slice Flip-Flops for 19 Hardware Registers",
     luts=0,
-    ffs=350,
+    ffs=414,
     delay_ns=1.5,
     cycles=1,
     shared_unit="register_file",
@@ -64,6 +64,8 @@ class Registers:
         self.ah = Register(name=Reg.AH, size_in_bits=32, clock=clock)
         self.bl = Register(name=Reg.BL, size_in_bits=32, clock=clock)
         self.bh = Register(name=Reg.BH, size_in_bits=32, clock=clock)
+        self.cl = Register(name=Reg.CL, size_in_bits=32, clock=clock)
+        self.ch = Register(name=Reg.CH, size_in_bits=32, clock=clock)
         self.dl = Register(name=Reg.DL, size_in_bits=32, clock=clock)
         self.dh = Register(name=Reg.DH, size_in_bits=32, clock=clock)
         self.fl = Register(name=Reg.FL, size_in_bits=32, clock=clock)

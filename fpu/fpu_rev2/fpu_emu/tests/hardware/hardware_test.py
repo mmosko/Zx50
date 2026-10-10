@@ -122,6 +122,8 @@ def test_registers_file():
     clock = Clock()
     regs = Registers(clock=clock)
     assert regs.al.size_in_bits == 32
+    assert regs.cl.size_in_bits == 32
+    assert regs.ch.size_in_bits == 32
     assert regs.ea.size_in_bits == 12
     assert regs.c.size_in_bits == 6
     assert regs.status.size_in_bits == 8
@@ -174,3 +176,65 @@ def test_rom(tmp_path: Path):
 
     with pytest.raises(IndexError):
         rom.load_byte(4)
+
+
+def test_datapath_muxes():
+    from fpu_emu.fpga_model import DatapathMuxes
+
+    clock = Clock()
+    regs = Registers(clock=clock)
+    muxes = DatapathMuxes(regs)
+
+    # Verify both muxes have 14 inputs (0..13)
+    assert len(muxes.ha_mux._inputs) == 14
+    assert len(muxes.hb_mux._inputs) == 14
+
+    # Write distinct values into registers
+    regs.al.write(0x11111111)
+    regs.ah.write(0x22222222)
+    regs.bl.write(0x33333333)
+    regs.bh.write(0x44444444)
+    regs.cl.write(0x55555555)
+    regs.ch.write(0x66666666)
+    regs.dl.write(0x77777777)
+    regs.dh.write(0x88888888)
+    regs.fl.write(0x99999999)
+    regs.fh.write(0xAAAAAAAA)
+    regs.ea.write(0x123)
+    regs.eb.write(0x456)
+    regs.c.write(0x1F)
+    regs.imm.write(0x2AA)
+
+    expected = {
+        Reg.AL.value: 0x11111111,
+        Reg.AH.value: 0x22222222,
+        Reg.BL.value: 0x33333333,
+        Reg.BH.value: 0x44444444,
+        Reg.CL.value: 0x55555555,
+        Reg.CH.value: 0x66666666,
+        Reg.DL.value: 0x77777777,
+        Reg.DH.value: 0x88888888,
+        Reg.FL.value: 0x99999999,
+        Reg.FH.value: 0xAAAAAAAA,
+        Reg.EA.value: 0x123,
+        Reg.EB.value: 0x456,
+        Reg.C.value: 0x1F,
+        Reg.IMM.value: 0x2AA,
+    }
+
+    for sel, exp_val in expected.items():
+        muxes.ha_mux.select(sel)
+        assert muxes.ha_mux.read_int() == exp_val, f"HA_MUX failed for sel={sel}"
+        muxes.hb_mux.select(sel)
+        assert muxes.hb_mux.read_int() == exp_val, f"HB_MUX failed for sel={sel}"
+
+    # UPC and NONE are not inputs to HA or HB MUX, selecting them must raise AssertionError
+    with pytest.raises(AssertionError):
+        muxes.ha_mux.select(Reg.UPC.value)
+    with pytest.raises(AssertionError):
+        muxes.ha_mux.select(Reg.NONE.value)
+    with pytest.raises(AssertionError):
+        muxes.hb_mux.select(Reg.UPC.value)
+    with pytest.raises(AssertionError):
+        muxes.hb_mux.select(Reg.NONE.value)
+
