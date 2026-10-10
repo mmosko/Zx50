@@ -42,7 +42,7 @@ To reclaim microcode capacity for 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F6
 ## Remaining Functional Roadmap
 
 ### 1. 64-Bit Arithmetic & Transcendental Routines
-- [ ] Implement `DIV_I64` (64-bit non-restoring integer division).
+- [x] Implement `DIV_I64` (64-bit integer division with overflow and zero check).
 - [ ] Implement `MUL_F64` (64-bit IEEE-754 double-precision multiplication using cascaded Booth multiplier).
 - [ ] Implement `DIV_F64` (64-bit IEEE-754 double-precision division).
 - [ ] Implement `SQRT_F64` (64-bit IEEE-754 double-precision square root).
