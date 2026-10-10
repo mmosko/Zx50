@@ -3,18 +3,22 @@
 
 .include "asm/add_f32.asm"
 .include "asm/add_i32.asm"
+.include "asm/add_u32.asm"
 .include "asm/add_i64.asm"
 
 .include "asm/sub_f32.asm"
 .include "asm/sub_i32.asm"
+.include "asm/sub_u32.asm"
 .include "asm/sub_i64.asm"
 
 .include "asm/mul_f32.asm"
 .include "asm/mul_i32.asm"
+.include "asm/mul_u32.asm"
 .include "asm/mul_i64.asm"
 
 .include "asm/div_f32.asm"
 .include "asm/div_i32.asm"
+.include "asm/div_u32.asm"
 .include "asm/div_i64.asm"
 
 .include "asm/sqrt_f32.asm"

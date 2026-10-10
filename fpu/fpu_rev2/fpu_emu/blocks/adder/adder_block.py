@@ -15,7 +15,7 @@ from fpu_emu.micro_opcodes import MicroOp
 
 
 @fpga_resource(
-    approach="Adder controller, 32/64-bit sequencer, exponent bounds comparators, and IEEE-754 pack/unpack logic",
+    approach="Adder controller, 32/64-bit sequencer, exponent bounds comparators, IEEE-754 pack/unpack, and multiplier/divider interface",
     luts=75,
     ffs=14,
     delay_ns=2.6,
