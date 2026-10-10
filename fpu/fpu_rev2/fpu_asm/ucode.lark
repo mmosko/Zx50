@@ -72,7 +72,7 @@ LOGIC_UNARY_OP: "FABS"i | "FCHS"i | "NOT"i
 
 // Block 6: Shifter / LZC Block
 inst_shift: SHIFT_OP [WIDTH_SUFFIX] reg ["," reg_or_imm]
-SHIFT_OP: "LSL"i | "LSR"i | "LZC"i
+SHIFT_OP: "LSL"i | "LSR"i | "ASL"i | "ASR"i | "LZC"i
 
 // Block 4 & 5: Stack, Memory & Status Blocks
 inst_stack: "PUSH"i [WIDTH_SUFFIX] reg_or_imm -> inst_push

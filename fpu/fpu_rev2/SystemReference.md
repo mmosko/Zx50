@@ -1246,6 +1246,122 @@ After execution of LSR AL:
 
 ```
 ================================================================================
+ASL dst[, src1] / ASL AX[, src1] — ARITHMETIC SHIFT LEFT
+================================================================================
+```
+
+#### Status Flags Affected
+
+```text
+  BSY    D     S     C     V     U    ERR    Z
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  -  |  X  |  X  |  X  |  -  |  -  |  X  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+
+* **`Z`**: Set to 1 if shifted result is zero; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of shifted result is 1; reset to 0 otherwise.
+* **`C`**: Set to the last bit shifted out; reset to 0 if shift count is 0.
+* **`V`**: Set to 1 if the sign bit changed at any point during the shift; reset to 0 otherwise.
+* **`U`, `ERR`, `D`**: Unaffected.
+
+#### Register Transfer & Datapath Flow
+
+```text
+count = src1[5:0] if src1 provided else C[5:0]
+if W == 0:
+    STATUS.C   <- (count > 0) ? AL [32 - count] : STATUS.C
+    STATUS.V   <- sign bit changed during shift
+    dst [31:0] <- dst [31:0] << count
+    UPC        <- UPC + 1
+else:
+    STATUS.C  <- (count > 0) ? AH [64 - count - 32] : STATUS.C
+    STATUS.V  <- sign bit changed during shift
+    AX [63:0] <- AX [63:0] << count
+    UPC       <- UPC + 1
+```
+
+#### Instruction Word Format
+
+`OPCODE = 110010`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src1` (or `C`), `HB_MUX = dst`.
+
+#### Description
+
+Performs arithmetic shift left by the specified count using the barrel shifter. Zeros are shifted into the least
+significant bit positions. The carry flag captures the last bit shifted out. Overflow (`V`) is set if the sign bit of
+the operand changed at any point during the shift, indicating arithmetic overflow for signed numbers.
+
+#### Concrete Numeric Example
+
+```text
+Suppose AL = 0x40000000 (+1,073,741,824), C = 1 (count = 1).
+After execution of ASL AL:
+  AL <- 0x80000000 (-2,147,483,648)
+  Sign bit changed from 0 to 1: sets OVERFLOW (V) to 1
+  Bit 31 of result = 1: sets SIGN (S) to 1
+  Non-zero result: sets ZERO (Z) to 0
+```
+
+---
+
+```
+================================================================================
+ASR dst[, src1] / ASR AX[, src1] — ARITHMETIC SHIFT RIGHT
+================================================================================
+```
+
+#### Status Flags Affected
+
+```text
+  BSY    D     S     C     V     U    ERR    Z
++-----+-----+-----+-----+-----+-----+-----+-----+
+|  -  |  -  |  X  |  X  |  -  |  -  |  -  |  X  |
++-----+-----+-----+-----+-----+-----+-----+-----+
+```
+
+* **`Z`**: Set to 1 if shifted result is zero; reset to 0 otherwise.
+* **`S`**: Set to 1 if MSB of shifted result is 1 (preserves sign bit); reset to 0 otherwise.
+* **`C`**: Set to the last bit shifted out (LSB of operand); reset to 0 if shift count is 0.
+* **`V`, `U`, `ERR`, `D`**: Unaffected.
+
+#### Register Transfer & Datapath Flow
+
+```text
+count = src1[5:0] if src1 provided else C[5:0]
+if W == 0:
+    STATUS.C   <- (count > 0) ? AL [count - 1] : STATUS.C
+    dst [31:0] <- dst [31:0] >>> count  (sign-extended into MSB)
+    UPC        <- UPC + 1
+else:
+    STATUS.C  <- (count > 0) ? AX [count - 1] : STATUS.C
+    AX [63:0] <- AX [63:0] >>> count
+    UPC       <- UPC + 1
+```
+
+#### Instruction Word Format
+
+`OPCODE = 110011`. `W = 0` (32-bit) or `W = 1` (64-bit). `RES_SEL = dst`, `HA_MUX = src1` (or `C`), `HB_MUX = dst`.
+
+#### Description
+
+Performs arithmetic shift right by the specified count using the barrel shifter, duplicating the sign bit into the most
+significant bit positions. The carry flag captures the last bit shifted out.
+
+#### Concrete Numeric Example
+
+```text
+Suppose AL = 0xFFFFFFF8 (-8), C = 1 (count = 1).
+After execution of ASR AL:
+  AL <- 0xFFFFFFFC (-4)
+  Bit 0 shifted out (0): clears CARRY (C) to 0
+  MSB is 1: sets SIGN (S) to 1
+  Non-zero result: sets ZERO (Z) to 0
+```
+
+---
+
+```
+================================================================================
 LZC dst, src2 / LZC AX, src2 — LEADING ZERO COUNT
 ================================================================================
 ```

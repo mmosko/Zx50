@@ -518,6 +518,103 @@ def test_lsr_64_zero_count(fpga: FpgaModel):
     assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
 
 
+def test_asl_32_no_overflow(fpga: FpgaModel):
+    """AL = 0x20000000, C = 1 -> AL = 0x40000000, VF = 0, SF = 0."""
+    fpga.reg_file.al.write(0x20000000)
+    fpga.reg_file.c.write(1)
+
+    instr = MicroInstruction(op=MicroOp.ASL, w=IW.W32, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 1
+    assert fpga.reg_file.al.read_int() == 0x40000000
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_asl_32_overflow(fpga: FpgaModel):
+    """AL = 0x40000000, C = 1 -> AL = 0x80000000, VF = 1, SF = 1."""
+    fpga.reg_file.al.write(0x40000000)
+    fpga.reg_file.c.write(1)
+
+    instr = MicroInstruction(op=MicroOp.ASL, w=IW.W32, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 1
+    assert fpga.reg_file.al.read_int() == 0x80000000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_asr_32_systemref_example(fpga: FpgaModel):
+    """SystemReference example: AL = 0xFFFFFFF8 (-8), C = 1 -> AL = 0xFFFFFFFC (-4), CF = 0, SF = 1."""
+    fpga.reg_file.al.write(0xFFFFFFF8)
+    fpga.reg_file.c.write(1)
+
+    instr = MicroInstruction(op=MicroOp.ASR, w=IW.W32, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 1
+    assert fpga.reg_file.al.read_int() == 0xFFFFFFFC
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_asr_32_bit0_out(fpga: FpgaModel):
+    """AL = 0xFFFFFFF9, C = 1 -> AL = 0xFFFFFFFC, CF = 1, SF = 1."""
+    fpga.reg_file.al.write(0xFFFFFFF9)
+    fpga.reg_file.c.write(1)
+
+    instr = MicroInstruction(op=MicroOp.ASR, w=IW.W32, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 1
+    assert fpga.reg_file.al.read_int() == 0xFFFFFFFC
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_asl_64_overflow(fpga: FpgaModel):
+    """AX = {AH=0x40000000, AL=0x00000000}, C = 1 -> AX = {AH=0x80000000, AL=0}, VF = 1, SF = 1."""
+    fpga.reg_file.ah.write(0x40000000)
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.c.write(1)
+
+    instr = MicroInstruction(op=MicroOp.ASL, w=IW.W64, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 3
+    assert fpga.reg_file.ah.read_int() == 0x80000000
+    assert fpga.reg_file.al.read_int() == 0x00000000
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.OVERFLOW)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_asr_64_sign_extension(fpga: FpgaModel):
+    """AX = {AH=0xFFFFFFFF, AL=0x00000000}, C = 32 -> AX = {AH=0xFFFFFFFF, AL=0xFFFFFFFF}, SF = 1."""
+    fpga.reg_file.ah.write(0xFFFFFFFF)
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.c.write(32)
+
+    instr = MicroInstruction(op=MicroOp.ASR, w=IW.W64, dst=Reg.AL)
+    elapsed = run_shifter(fpga, instr)
+
+    assert elapsed == 3
+    assert fpga.reg_file.ah.read_int() == 0xFFFFFFFF
+    assert fpga.reg_file.al.read_int() == 0xFFFFFFFF
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.CARRY)
+    assert fpga.reg_file.status.is_bit_set(StatusFlag.SIGN)
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
 def test_shifter_unsupported_op(fpga: FpgaModel):
     """Opcode outside shifter block raises HardwareBusError."""
     instr = MicroInstruction(op=MicroOp.NOP)

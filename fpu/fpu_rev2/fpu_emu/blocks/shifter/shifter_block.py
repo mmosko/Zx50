@@ -32,6 +32,7 @@ class ShifterBlock(FunctionalBlock):
         self._hb_mux: Mux = inputs.hb_mux
         self._sub_adder: ShifterAdder = ShifterAdder("shifter_sub_adder", clock)
         self._add_adder: ShifterAdder = ShifterAdder("shifter_add_adder", clock)
+        self._cmp_adder: ShifterAdder = ShifterAdder("shifter_cmp_adder", clock)
 
     def execute(self):
         instr = MicroInstruction.from_register(self._inputs.instr)
@@ -42,6 +43,10 @@ class ShifterBlock(FunctionalBlock):
                 self._lsl(instr)
             case MicroOp.LSR:
                 self._lsr(instr)
+            case MicroOp.ASL:
+                self._asl(instr)
+            case MicroOp.ASR:
+                self._asr(instr)
             case _:
                 raise HardwareBusError(f"Unsupported opcode: {instr.op}")
 
@@ -155,6 +160,20 @@ class ShifterBlock(FunctionalBlock):
         else:
             self._shift_64(instr, BarrelShifter.lsr_64)
 
+    def _asl(self, instr: MicroInstruction) -> None:
+        assert instr.op == MicroOp.ASL
+        if instr.is_w32():
+            self._shift_32(instr, lambda v, c, sub: BarrelShifter.asl_32(v, c, sub, self._cmp_adder))
+        else:
+            self._shift_64(instr, lambda v, c, sub: BarrelShifter.asl_64(v, c, sub, self._cmp_adder))
+
+    def _asr(self, instr: MicroInstruction) -> None:
+        assert instr.op == MicroOp.ASR
+        if instr.is_w32():
+            self._shift_32(instr, BarrelShifter.asr_32)
+        else:
+            self._shift_64(instr, BarrelShifter.asr_64)
+
     def _shift_32(self, instr: MicroInstruction, shift_fn: Callable[[int, int, ShifterAdder], ShifterResult]) -> None:
         assert instr.dst is not Reg.NONE, "Shift destination register must be specified"
         src = instr.src if instr.src is not Reg.NONE else Reg.C
@@ -180,6 +199,9 @@ class ShifterBlock(FunctionalBlock):
             | (int(shift_res.sf) << StatusFlag.SIGN.value)
             | (int(shift_res.cf) << StatusFlag.CARRY.value)
         )
+        if instr.op == MicroOp.ASL:
+            wr_mask |= (1 << StatusFlag.OVERFLOW.value)
+            status_val |= (int(shift_res.vf) << StatusFlag.OVERFLOW.value)
 
         self._outputs.block_res.set(shift_res.res)
         self._outputs.block_res_sel.set(dst.value)
@@ -196,7 +218,7 @@ class ShifterBlock(FunctionalBlock):
 
         # Cycle 1: Latch shift count from HA_MUX and low half from HB_MUX
         self._ha_mux.select(src.value)
-        count = self._inputs.ha_mux.read_int() & 0x3F
+        count = self._inputs.ha_mux.read_int() & 0x7F
 
         self._hb_mux.select(dst.value)
         val_lo = self._inputs.hb_mux.read_int() & 0xFFFFFFFF
@@ -230,6 +252,9 @@ class ShifterBlock(FunctionalBlock):
             | (int(shift_res.sf) << StatusFlag.SIGN.value)
             | (int(shift_res.cf) << StatusFlag.CARRY.value)
         )
+        if instr.op == MicroOp.ASL:
+            wr_mask |= (1 << StatusFlag.OVERFLOW.value)
+            status_val |= (int(shift_res.vf) << StatusFlag.OVERFLOW.value)
 
         self._outputs.block_res.set((shift_res.res >> 32) & 0xFFFFFFFF)
         self._outputs.block_res_sel.set(dst.value | 1)

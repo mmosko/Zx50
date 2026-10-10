@@ -180,7 +180,7 @@ BLK by the first three bits for the purpose of activating the AND walls.
 | Ctrl               | 0b011  | Branch, Call, Return, Trap, Halt                        |
 | Mem                | 0b100  | Stack PUSH/POP, Internal RAM load/store                 |
 | Mem (User)         | 0b101  | User storage load/store                                 |
-| Shifter            | 0b110  | LSL, LSR, LZC                                           |
+| Shifter            | 0b110  | LSL, LSR, ASL, ASR, LZC                                 |
 | Reserved           | 0b111  | Reserved for expansion                                  |
 
 A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[20:17]` (`src2`), `HB_BUS` MUX, and
@@ -267,6 +267,8 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
 | LSL dst\[, src1\]       | 0b110_000 | 0/1   | dst     | src1   | dst    | `dst <- dst << src1` (C implied)        | sets ZF, SF, CF                       |
 | LSR dst\[, src1\]       | 0b110_001 | 0/1   | dst     | src1   | dst    | `dst <- dst >> src1` (C implied)        | sets ZF, clears SF <- 0, sets CF      |
+| ASL dst\[, src1\]       | 0b110_010 | 0/1   | dst     | src1   | dst    | `dst <- dst << src1` (C implied)        | sets ZF, SF, CF, VF                   |
+| ASR dst\[, src1\]       | 0b110_011 | 0/1   | dst     | src1   | dst    | `dst <- dst >> src1` (sign-ext, C impl) | sets ZF, SF, CF                       |
 | LZC dst, src2           | 0b110_110 | 0/1   | dst     | n/a    | src2   | `dst <- leading zero count of src2`     | sets ZF (if src2 == 0)                |
 | -----                   | -----     | ----- | -----   | -----  | -----  | -----                                   | -----                                 |
 | PUSH src2               | 0b100_000 | 0/1   | TOS     | n/a    | src2   | `TOS <- src2`, sp <- sp + W + 1         | sets VF, ERR (on stack overflow)      |

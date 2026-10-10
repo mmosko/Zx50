@@ -15,7 +15,6 @@ module zx50_fpu_block #(
     input  wire        mclk,
     input  wire        zclk,
     input  wire        reset_n,
-    input  wire        clk_spd,     // 1=Fast (40MHz), 0=Slow (20MHz)
 
     // Z80 Backplane Host Bus
     input  wire [15:0] z80_a,

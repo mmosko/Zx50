@@ -38,13 +38,15 @@ module zx50_fpu (
     inout  wire        int_n,       // Active-LOW CPU Interrupt Request (0 = Assert INT, Z = Release)
 
     // --- Private Coprocessor Memory Bus (Decoupled from Backplane) ---
-    output wire [14:0] ca,          // 15-bit Private Address Bus (32KB active addressing)
-    inout  wire [7:0]  cd,          // 8-bit Private Data Bus (SRAM/Flash data)
 
-    // Local SRAM (IS61C256AL - U12) & Flash ROM (SST39SF040 - U13) Controls
+    // Local SRAM (IS61WV1288EE-10 - U12) 
+    output wire [16:0] ca,          // 128KB address range
+    inout  wire [7:0]  cd,          // 8-bit SRAM data bus
     output wire        m_ce_n,      // Private SRAM Chip Enable (~CE)
-    output wire        c_oe_n,      // Common private ~OE (SRAM/Flash Output Enable)
-    output wire        c_we_n,      // Common private ~WE (SRAM/Flash Write Enable)
+    output wire        m_oe_n,      // Common private ~OE (SRAM/Flash Output Enable)
+    output wire        m_we_n,      // Common private ~WE (SRAM/Flash Write Enable)
+
+    // Local Flash ROM (IS25LP128F - U13)
     output wire        f_ce_n       // Private Flash Chip Enable (~CE)
 );
 
@@ -70,14 +72,6 @@ module zx50_fpu (
     reg       host_sram_we_req;
     reg       host_sram_oe_req;
 
-    // Coprocessor Engine Memory Signals (from Dispatcher / Mgmt / ALU in mclk domain)
-    wire        eng_mem_we_req;
-    wire        eng_mem_oe_req;
-    wire        eng_sel_flash;
-    wire [14:0] eng_mem_addr;
-    wire [7:0]  eng_mem_wdata;
-    wire [7:0]  mem_rdata;
-
     // Dispatcher Submodule Handshake Nets
     wire       dispatch_done_ack;
     wire       dispatch_err;
@@ -97,27 +91,35 @@ module zx50_fpu (
     // 2. Submodule Instantiations
     // =========================================================================
     
+    // TODO: FCLK multiplier on MCLK (e.g. x4)
+    wire fclk <= mclk;
+
     // --- Private Memory Controller (SRAM U12 & Flash U13) ---
-    zx50_fpu_mem mem_ctrl (
-        .mclk(mclk),
-        .reset_n(reset_n),
-        .clk_spd(clk_spd),
-        .host_we_req(host_sram_we_req),
-        .host_oe_req(host_sram_oe_req),
-        .host_addr(host_sram_addr),
-        .host_wdata(host_sram_wdata),
-        .eng_we_req(eng_mem_we_req),
-        .eng_oe_req(eng_mem_oe_req),
-        .eng_sel_flash(eng_sel_flash),
-        .eng_addr(eng_mem_addr),
-        .eng_wdata(eng_mem_wdata),
-        .mem_rdata(mem_rdata),
-        .ca(ca),
-        .cd(cd),
-        .m_ce_n(m_ce_n),
-        .c_oe_n(c_oe_n),
-        .c_we_n(c_we_n),
-        .f_ce_n(f_ce_n)
+
+    zx50_fpu_code_block code_rom (
+        .fclk(fclk),
+        .addr(eng_mem_addr[9:0]),
+        .dout(mem_rdata)
+    );
+
+    zx50_fpu_data_block data_ram (
+        .fclk(fclk),
+        .addr(eng_mem_addr[9:0]),
+        .din(eng_mem_wdata),
+        .we(eng_mem_we_req),
+        .dout(mem_rdata)
+    );
+
+
+    // TODO: Instantiate the external SRAM and Flash memory
+    // External flash needs to be copied to EBR0 and EBR4 blocks and to external SRAM for Z80 boot
+
+    is61wv1288ee_10 sram (
+        .addr(ca),
+        .data(cd),
+        .ce_n(m_ce_n),
+        .oe_n(m_oe_n),
+        .we_n(m_we_n)
     );
 
     // --- Command Execution Dispatcher ---

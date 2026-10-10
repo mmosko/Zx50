@@ -142,3 +142,35 @@ def test_undefined_symbol_raises():
     assembler = Assembler()
     with pytest.raises(Exception):
         assembler.assemble(code)
+
+
+def test_shift_instructions_assemble():
+    code = """
+        ASL AL, C
+        ASL.64 AL, 1
+        ASR BL, C
+        ASR.64 AL, 32
+    """
+    assembler = Assembler()
+    prog = assembler.assemble(code)
+    prog_dict = dict(prog)
+
+    assert prog_dict[0].op == MicroOp.ASL
+    assert prog_dict[0].w == IW.W32
+    assert prog_dict[0].dst == Reg.AL
+    assert prog_dict[0].src == Reg.C
+
+    assert prog_dict[1].op == MicroOp.ASL
+    assert prog_dict[1].w == IW.W64
+    assert prog_dict[1].dst == Reg.AL
+    assert prog_dict[1].imm == 1
+
+    assert prog_dict[2].op == MicroOp.ASR
+    assert prog_dict[2].w == IW.W32
+    assert prog_dict[2].dst == Reg.BL
+    assert prog_dict[2].src == Reg.C
+
+    assert prog_dict[3].op == MicroOp.ASR
+    assert prog_dict[3].w == IW.W64
+    assert prog_dict[3].dst == Reg.AL
+    assert prog_dict[3].imm == 32

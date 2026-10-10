@@ -7,9 +7,9 @@ from fpu_emu.hardware.readable import Readable
 
 
 @fpga_resource(
-    approach="Dual dedicated 7-bit CCU2C carry-chain adder/subtractor units (subtractor + adder) with operand input MUXes",
-    luts=30,
-    slices_ccu2c=8,
+    approach="Triple dedicated 7-bit CCU2C carry-chain units (subtractor + adder + comparator/subtractor) with operand input MUXes",
+    luts=36,
+    slices_ccu2c=11,
     ffs=4,
     delay_ns=2.0,
     cycles=1,
@@ -18,19 +18,23 @@ from fpu_emu.hardware.readable import Readable
 class ShifterAdder(Readable):
     """Dedicated 7-bit carry-chain adder/subtractor for the ShifterBlock.
 
-    In the Zx50 FPU, ShifterBlock contains two dedicated 7-bit carry-chain adders
-    (4 CCU2C slices each, 8 slices total):
+    In the Zx50 FPU, ShifterBlock contains three dedicated 7-bit carry-chain units
+    (11 CCU2C slices total):
       1) Subtractor (sub_adder): computes (31 - bit_pos) for LZC, (32 - count) or
-         (64 - count) for LSL carry capture, and (count - 1) for LSR carry capture.
+         (64 - count) for LSL/ASL carry capture, and (count - 1) for LSR/ASR carry capture.
       2) Adder (add_adder): computes (32 + lo_zeros) for 64-bit LZC in parallel/cycle 2
          without single-adder resource conflicts or multi-cycle pipelining penalties.
+      3) Comparator/Subtractor (cmp_adder): computes (31 - count) or (63 - count) for
+         single-cycle ASL overflow detection in parallel with sub_adder.
 
-    NOTE: Because multiple operations (LZC, LSL, LSR) share the sub_adder, an input
-    multiplexer (4:1 7-bit MUX on input A, 4:1 7-bit MUX on input B) routes the operands:
-      - Input A MUX selects: 31 (LZC), 32 (LSL32), 64 (LSL64), or count (LSR)
-      - Input B MUX selects: bit_pos (LZC), count (LSL), or 1 (LSR)
+    NOTE: Because multiple operations share the adder/subtractor units, input
+    multiplexers route the operands:
+      - sub_adder Input A selects: 31 (LZC), 32 (LSL32/ASL32), 64 (LSL64/ASL64), or count (LSR/ASR)
+      - sub_adder Input B selects: bit_pos (LZC), count (LSL/ASL), or 1 (LSR/ASR)
+      - cmp_adder Input A selects: 31 (ASL32) or 63 (ASL64)
+      - cmp_adder Input B selects: count (ASL)
     The input multiplexers are not explicitly modeled as separate classes, but are accounted
-    for in the LUT (14 LUT4s) and FF (4 FFs) counts above.
+    for in the LUT (16 LUT4s) and FF (4 FFs) counts above.
     """
 
     WIDTH: int = 7
