@@ -64,8 +64,8 @@ The following table summarizes the complete microcode instruction set, organized
 | | `CMP` | `AX, BX` | 1 | 2 | `0x04` (`0b000_100`) | • | • | X | X | X | • | • | X | `AX - BX` (64-bit compare) |
 | | `DIV` | `dst, src2` | 0 | 32 | `0x0B` (`0b001_011`) | • | • | X | 0 | X | • | X | X | `dst <- dst / src2, DL <- rem` (ERR & V on div 0) |
 | | `DIV` | `AX, BX` | 1 | 64 | `0x0B` (`0b001_011`) | • | • | X | 0 | X | • | X | X | `AX <- AX / BX, DX <- rem` (64-bit) |
-| | `DIVU` | `dst, src2` | 0 | 32 | `0x0F` (`0b001_111`) | • | • | 0 | 0 | 0 | • | X | X | `dst <- dst / src2, DL <- rem` (unsigned, ERR on div 0) |
-| | `DIVU` | `AX, BX` | 1 | 64 | `0x0F` (`0b001_111`) | • | • | 0 | 0 | 0 | • | X | X | `AX <- AX / BX, DX <- rem` (64-bit) |
+| | `DIVU` | `dst, src2` | 0 | 32 | `0x0F` (`0b001_111`) | • | • | X | 0 | X | • | X | X | `dst <- dst / src2, DL <- rem` (unsigned, ERR & V on div 0) |
+| | `DIVU` | `AX, BX` | 1 | 64 | `0x0F` (`0b001_111`) | • | • | X | 0 | X | • | X | X | `AX <- AX / BX, DX <- rem` (64-bit) |
 | | `EXP_ADD` | `dst, src2` | 0 | 1 | `0x05` (`0b000_101`) | • | • | X | 0 | X | X | • | X | `dst <- dst + src2` (12-bit exp; V if > 1023, U if < -1022) |
 | | `EXP_ADD` | `dst, src1, src2` | 0 | 1 | `0x05` (`0b000_101`) | • | • | X | 0 | X | X | • | X | `dst <- src1 + src2` (12-bit exp) |
 | | `EXP_SUB` | `dst, src2` | 0 | 1 | `0x06` (`0b000_110`) | • | • | X | 0 | X | X | • | X | `dst <- dst - src2` (12-bit exp; V if > 1023, U if < -1022) |
@@ -73,9 +73,9 @@ The following table summarizes the complete microcode instruction set, organized
 | | `MUL` | `dst, src2` | 0 | 16 | `0x0A` (`0b001_010`) | • | • | X | 0 | X | • | • | X | `dst <- dst * src2` (signed Booth mul) |
 | | `MUL` | `dst, src1, src2` | 0 | 16 | `0x0A` (`0b001_010`) | • | • | X | 0 | X | • | • | X | `dst <- src1 * src2` |
 | | `MUL` | `AX, BX` | 1 | 64 | `0x0A` (`0b001_010`) | • | • | X | 0 | X | • | • | X | `AX <- AX * BX` (64-bit) |
-| | `MULU` | `dst, src2` | 0 | 16 | `0x0E` (`0b001_110`) | • | • | 0 | 0 | 0 | • | • | X | `{AH, AL} <- dst * src2` (unsigned Booth mul) |
-| | `MULU` | `dst, src1, src2` | 0 | 16 | `0x0E` (`0b001_110`) | • | • | 0 | 0 | 0 | • | • | X | `{AH, AL} <- src1 * src2` |
-| | `MULU` | `AX, BX` | 1 | 64 | `0x0E` (`0b001_110`) | • | • | 0 | 0 | 0 | • | • | X | `{DX, AX} <- AX * BX` (64-bit unsigned) |
+| | `MULU` | `dst, src2` | 0 | 16 | `0x0E` (`0b001_110`) | • | • | X | 0 | X | • | • | X | `{AH, AL} <- dst * src2` (unsigned Booth mul, V if AH != 0) |
+| | `MULU` | `dst, src1, src2` | 0 | 16 | `0x0E` (`0b001_110`) | • | • | X | 0 | X | • | • | X | `{AH, AL} <- src1 * src2` |
+| | `MULU` | `AX, BX` | 1 | 64 | `0x0E` (`0b001_110`) | • | • | X | 0 | X | • | • | X | `{DX, AX} <- AX * BX` (64-bit unsigned, V if DX != 0) |
 | | `PACK` | `dst, src1` | 0 | 1 | `0x08` (`0b001_000`) | • | • | X | • | X | X | • | X | `dst <- pack(sign, src1=exp, dst=mantissa)` (IEEE float) |
 | | `PACK` | `AX, src1` | 1 | 2 | `0x08` (`0b001_000`) | • | • | X | • | X | X | • | X | `AX <- pack(sign, src1=exp, AX=mantissa)` (IEEE double) |
 | | `SBB` | `dst, src2` | 0 | 1 | `0x03` (`0b000_011`) | • | • | X | X | X | • | • | X | `dst <- dst - src2 - C` |

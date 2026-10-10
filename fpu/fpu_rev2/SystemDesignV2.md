@@ -152,6 +152,15 @@ return-address call stack:
     - `EXP2_CORE`: Computes $2^{\text{AL}}$, returns float result in `AL`.
     - `NORMALIZE_F32`: Normalizes mantissa in `AL` with exponent in `EA` and sign in `AH[31]`, returning packed IEEE-754
       float in `AL`.
+    - **Integer Arithmetic Cores:**
+        - `ADD_I32` / `ADD_U32`: Shared 32-bit addition entry points ($AL \leftarrow AL + BL$).
+        - `SUB_I32` / `SUB_U32`: Shared 32-bit subtraction entry points ($AL \leftarrow AL - BL$).
+        - `ADD_I64` / `ADD_U64`: Shared 64-bit addition entry points ($AX \leftarrow AX + BX$).
+        - `SUB_I64` / `SUB_U64`: Shared 64-bit subtraction entry points ($AX \leftarrow AX - BX$).
+        - `MUL_I32` / `MUL_U32`: Signed (`MUL`) and unsigned (`MULU`) Booth multiplication cores.
+        - `DIV_I32` / `DIV_U32`: Signed (`DIV`) and unsigned (`DIVU`) non-restoring divider cores.
+        - `MUL_I64` / `MUL_U64`: Signed and unsigned 64-bit multiplication.
+        - `DIV_I64` / `DIV_U64`: Signed and unsigned 64-bit division.
 
 ## Timing
 

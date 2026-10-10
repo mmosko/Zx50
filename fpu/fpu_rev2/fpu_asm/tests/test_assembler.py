@@ -300,3 +300,64 @@ def test_cl_ch_cx_instructions():
     assert prog_dict[6].src == Reg.CL
 
 
+def test_stacked_labels():
+    code = """
+        .org 0x010
+    FOO:
+    BAR:
+    USER_ADD_I32:
+    USER_ADD_U32:
+        ADD AL, BL
+        HALT
+    """
+    asm = Assembler()
+    prog = asm.assemble(code)
+    prog_dict = dict(prog)
+
+    assert asm.symbols["FOO"] == 0x010
+    assert asm.symbols["BAR"] == 0x010
+    assert asm.symbols["USER_ADD_I32"] == 0x010
+    assert asm.symbols["USER_ADD_U32"] == 0x010
+
+    assert 0x010 in prog_dict
+    assert prog_dict[0x010].op == MicroOp.ADD
+    assert 0x011 in prog_dict
+    assert prog_dict[0x011].op == MicroOp.HALT
+
+
+def test_mulu_divu_assembly():
+    code = """
+        MULU AL, BL
+        MULU AX, BX
+        DIVU AL, BL
+        DIVU AX, BX
+    """
+    asm = Assembler()
+    prog = asm.assemble(code)
+    prog_dict = dict(prog)
+
+    # MULU AL, BL
+    assert prog_dict[0].op == MicroOp.MULU
+    assert prog_dict[0].w == IW.W32
+    assert prog_dict[0].dst == Reg.AL
+    assert prog_dict[0].src == Reg.BL
+
+    # MULU AX, BX
+    assert prog_dict[1].op == MicroOp.MULU
+    assert prog_dict[1].w == IW.W64
+    assert prog_dict[1].dst == Reg.AL
+    assert prog_dict[1].src == Reg.BL
+
+    # DIVU AL, BL
+    assert prog_dict[2].op == MicroOp.DIVU
+    assert prog_dict[2].w == IW.W32
+    assert prog_dict[2].dst == Reg.AL
+    assert prog_dict[2].src == Reg.BL
+
+    # DIVU AX, BX
+    assert prog_dict[3].op == MicroOp.DIVU
+    assert prog_dict[3].w == IW.W64
+    assert prog_dict[3].dst == Reg.AL
+    assert prog_dict[3].src == Reg.BL
+
+
