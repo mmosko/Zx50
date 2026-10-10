@@ -48,15 +48,13 @@ module zx50_fpu (
 
     // Local Flash ROM (IS25LP128F - U13)
     output wire        f_ce_n       // Private Flash Chip Enable (~CE)
+    // TODO: wire up QSPI flash
 );
 
     // =========================================================================
     // 1. Internal Registers & Signals
     // =========================================================================
-    reg [7:0] sp;           // 8-bit Hardware Stack Pointer (Targets SRAM addresses 0x0000 - 0x00FF)
-    reg [7:0] opcode_reg;   // Latches command written to Port 0x71 for execution FSM
-    reg [7:0] status_reg;   // Status Register [BUSY, ZERO, SIGN, CARRY, OVF, UNF, ERR, 0]
-    reg       exec_req;     // Level request signal to dispatcher
+
     
     // Open-Drain Driver Controls (1 = Drive 0, 0 = High-Z)
     reg       c_wait_req;   // Controls wait_n driver
@@ -66,18 +64,6 @@ module zx50_fpu (
     reg       io_wr_busy;   // Locks write handling while ~WR & ~IORQ remain LOW
     reg       io_rd_busy;   // Locks read auto-decrement while ~RD & ~IORQ remain LOW
 
-    // Host-Initiated SRAM Requests (Port 0x70 PUSH/POP in zclk domain)
-    reg [7:0] host_sram_wdata;
-    reg [7:0] host_sram_addr;
-    reg       host_sram_we_req;
-    reg       host_sram_oe_req;
-
-    // Dispatcher Submodule Handshake Nets
-    wire       dispatch_done_ack;
-    wire       dispatch_err;
-    wire [4:0] dispatch_flags;
-    wire [7:0] dispatch_new_sp;
-    wire       dispatch_sp_write;
 
     // CDC Synchronizer: Synchronize done_ack from MCLK domain into ZCLK domain
     reg [1:0] ack_sync;
@@ -87,15 +73,28 @@ module zx50_fpu (
     end
     wire dispatch_done_sync = ack_sync[1];
 
+
+    wire [7:0] sp;
+    wire [7:0] status_bus
+
+    // =========================================================================
+    // Clock Generation: MCLK x4 PLL -> FCLK
+    // =========================================================================
+    wire fclk;
+    wire fpu_reset_n; // Use this gated reset for all FPU core registers & modules
+
+    fpu_clock clk_gen (
+        .mclk        (mclk),
+        .reset_n     (reset_n),
+        .fclk        (fclk),
+        .pll_lock    (),            // Unused or routed to status_reg
+        .fpu_reset_n (fpu_reset_n)
+    );
+
     // =========================================================================
     // 2. Submodule Instantiations
     // =========================================================================
     
-    // TODO: FCLK multiplier on MCLK (e.g. x4)
-    wire fclk <= mclk;
-
-    // --- Private Memory Controller (SRAM U12 & Flash U13) ---
-
     zx50_fpu_code_block code_rom (
         .fclk(fclk),
         .addr(eng_mem_addr[9:0]),
@@ -110,16 +109,35 @@ module zx50_fpu (
         .dout(mem_rdata)
     );
 
+    fpu_reg regfile (
+        .fclk(fclk),
+        .reset_n(fpu_reset_n),
+        .instr_in(instr_in),
+        .instr_we(instr_we),
+        .instr_out(instr_out),
+        .imm_out(imm_out),
+        .ha_sel_bus(ha_sel_bus),
+        .ha_bus(ha_bus),
+        .hb_sel_bus(hb_sel_bus),
+        .hb_bus(hb_bus),
+        .res_bus(res_bus),
+        .res_sel_bus(res_sel_bus),
+        .we(we),
+        .sp(sp),
+        .sp_in(sp_in),
+        .sp_we(sp_we),
+        .pc(pc),
+        .pc_in(pc_in),
+        .pc_we(pc_we)
+    );
 
-    // TODO: Instantiate the external SRAM and Flash memory
-    // External flash needs to be copied to EBR0 and EBR4 blocks and to external SRAM for Z80 boot
-
-    is61wv1288ee_10 sram (
-        .addr(ca),
-        .data(cd),
-        .ce_n(m_ce_n),
-        .oe_n(m_oe_n),
-        .we_n(m_we_n)
+    fpu_status_reg status_reg (
+        .fclk(fclk),
+        .fpu_reset_n(fpu_reset_n),
+        .status_in(status_flags),
+        .write_mask(status_wr_sel),
+        .we(status_we),
+        .status_out(status_bus)
     );
 
     // --- Command Execution Dispatcher ---
@@ -140,109 +158,23 @@ module zx50_fpu (
         .disp_sram_addr(eng_mem_addr[7:0])
     );
 
-    // Default engine memory routing (SRAM selected, upper address bits zeroed)
-    assign eng_sel_flash = 1'b0;
-    assign eng_mem_addr[14:8] = 7'b0000000;
-
-    // =========================================================================
-    // 3. Host Z80 Bus Decoding Logic
-    // =========================================================================
-    wire is_io_write = (!z80_iorq_n && !z80_wr_n && z80_m1_n);
-    wire is_io_read  = (!z80_iorq_n && !z80_rd_n && z80_m1_n);
-
-    wire port_70_sel = (z80_a[7:0] == 8'h70); // Port 0x70: Data Stack (PUSH/POP)
-    wire port_71_sel = (z80_a[7:0] == 8'h71); // Port 0x71: Command Exec / Status Register
-
-    // =========================================================================
-    // 4. Host Z80 Interface State Machine (ZCLK Domain)
-    // =========================================================================
-    always @(posedge zclk or negedge reset_n) begin
-        if (!reset_n) begin
-            sp               <= 8'h00;
-            opcode_reg       <= 8'h00;
-            status_reg       <= 8'h00;
-            exec_req         <= 1'b0;
-            c_wait_req       <= 1'b0;
-            c_int_req        <= 1'b0;
-            host_sram_we_req <= 1'b0;
-            host_sram_oe_req <= 1'b0;
-            host_sram_wdata  <= 8'h00;
-            host_sram_addr   <= 8'h00;
-            io_wr_busy       <= 1'b0;
-            io_rd_busy       <= 1'b0;
-        end else begin
-
-            // -----------------------------------------------------------------
-            // Command Execution Completion Handshake (Level Acknowledge)
-            // -----------------------------------------------------------------
-            if (dispatch_done_sync && exec_req) begin
-                status_reg[7]   <= 1'b0;            // Clear BUSY flag
-                status_reg[1]   <= dispatch_err;    // Set/Clear ERR flag
-                status_reg[6:2] <= dispatch_flags;  // Update math status flags
-                if (dispatch_sp_write) begin
-                    sp          <= dispatch_new_sp; // Commit updated SP from management engine
-                end
-                c_wait_req      <= 1'b0;            // Release wait_n line
-                exec_req        <= 1'b0;            // Clear request level
-            end
-
-            // -----------------------------------------------------------------
-            // HOST I/O WRITE OPERATIONS (~WR Active Low)
-            // -----------------------------------------------------------------
-            if (is_io_write) begin
-                if (!io_wr_busy) begin
-                    io_wr_busy <= 1'b1;
-
-                    if (port_70_sel) begin
-                        host_sram_wdata  <= z80_d;
-                        host_sram_addr   <= sp;
-                        host_sram_we_req <= 1'b1;
-                        sp               <= sp + 1'b1;
-                    end else if (port_71_sel) begin
-                        opcode_reg    <= z80_d;
-                        status_reg[7] <= 1'b1; // BUSY = 1
-                        status_reg[1] <= 1'b0; // ERR = 0
-                        exec_req      <= 1'b1; // Raise CDC request level
-                        c_wait_req    <= 1'b1; // Pull wait_n LOW
-                    end
-                end else begin
-                    host_sram_we_req <= 1'b0;
-                end
-            end else begin
-                io_wr_busy       <= 1'b0;
-                host_sram_we_req <= 1'b0;
-            end
-
-            // -----------------------------------------------------------------
-            // HOST I/O READ OPERATIONS (~RD Active Low)
-            // -----------------------------------------------------------------
-            if (is_io_read && port_70_sel) begin
-                host_sram_oe_req <= 1'b1;
-                if (!io_rd_busy) begin
-                    io_rd_busy     <= 1'b1;
-                    host_sram_addr <= sp - 1'b1; // Lock target TOS address for entire read cycle
-                    sp             <= sp - 1'b1; // Auto-decrement SP
-                end
-            end else begin
-                io_rd_busy       <= 1'b0;
-                host_sram_oe_req <= 1'b0;
-            end
-        end
-    end
-
-    // =========================================================================
-    // 5. Output Drivers & Tri-State Control Logic
-    // =========================================================================
-    
-    // --- Host Z80 Data Bus Driving ---
-    wire z80_drive_status = is_io_read && port_71_sel;
-    wire z80_drive_sram   = is_io_read && port_70_sel;
-
-    assign z80_d  = z80_drive_status ? status_reg :
-                    (z80_drive_sram   ? mem_rdata  : 8'hzz);
-
-    // --- Shared Open-Drain Handshake Outputs ---
-    assign wait_n = c_wait_req ? 1'b0 : 1'bz;
-    assign int_n  = c_int_req  ? 1'b0 : 1'bz;
+    fpu_host host (
+        .fclk(fclk),
+        .fpu_reset_n(fpu_reset_n),
+        .z80_a(z80_a[7:0]),
+        .z80_d(z80_d),
+        .z80_iorq_n(z80_iorq_n),
+        .z80_rd_n(z80_rd_n),
+        .z80_wr_n(z80_wr_n),
+        .z80_m1_n(z80_m1_n),
+        .wait_n(wait_n),
+        .int_n(int_n),
+        .host_in(host_in),
+        .host_out(host_out),
+        .opcode_out(opcode_out),
+        .exec_start(exec_start),
+        .dispatch_done(dispatch_done),
+        .status_in(status_bus)
+    );
 
 endmodule

@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_fpu_block
+ * MODULE: zx50_fpu_card
  * DESCRIPTION:
  * Top-level wrapper for the isolated math coprocessor cluster.
- * Connects CPLD (U11), private SRAM (U12), and private Flash ROM (U13).
+ * Connects FPGA (U11), private SRAM (U12), and private Flash ROM (U13).
  * Accepts optional hex file paths for SRAM and Flash pre-loading in simulation.
  ***************************************************************************************/
 
-module zx50_fpu_block #(
+module zx50_fpu_card #(
     parameter RAM_INIT_FILE = "",
     parameter ROM_INIT_FILE = ""
 )(
@@ -35,15 +35,17 @@ module zx50_fpu_block #(
     wire [14:0] ca;        // Private Address Bus (32KB active)
     wire [7:0]  cd;        // Private Data Bus
     
-    // Private Memory Controls
-    wire        c_oe_n, c_we_n; // Common OE/WE
+    // SRAM control
+    wire        m_oe_n, m_we_n; // Common OE/WE
     wire        m_ce_n;         // SRAM Chip Enable
-    wire        f_ce_n;         // Flash Chip Enable
+
+    // Flash control (IS25LP080D-JNLE-TR)
+    // TODO
 
     // ==========================================
-    // U11: ATF1508AS CPLD Core Controller
+    // U11: MachXO2-2000 FPGA
     // ==========================================
-    zx50_fpu cpld (
+    zx50_fpu zx50_fpu (
         .mclk(mclk), 
         .zclk(zclk),
         .reset_n(reset_n),
@@ -60,39 +62,32 @@ module zx50_fpu_block #(
         .wait_n(wait_n), 
         .int_n(int_n),
 
-        // Private Memory Connections
+        // Private 128KB SRAM Connections
         .ca(ca),
         .cd(cd),
         .m_ce_n(m_ce_n),
-        .c_oe_n(c_oe_n),
-        .c_we_n(c_we_n),
-        .f_ce_n(f_ce_n)
+        .m_oe_n(m_oe_n),
+        .m_we_n(m_we_n),
     );
 
     // ==========================================
-    // U12: IS61C256AL 32KB Active Private SRAM
+    // U12: IS61WV1288EE-10 128KB Active Private SRAM
     // ==========================================
-    is61c256al_12 #(
+ 
+
+    is61wv1288ee_10 #(
         .MEM_INIT_FILE(RAM_INIT_FILE)
     ) fpu_sram (
         .addr(ca),
         .data(cd),
-        .ce_n(m_ce_n),
-        .oe_n(c_oe_n),
-        .we_n(c_we_n)
+        .me_n(m_ce_n),
+        .oe_n(m_oe_n),
+        .we_n(m_we_n)
     );  
 
     // ==========================================
-    // U13: SST39SF040 32KB Active Private Flash ROM
+    // U13: IS25LP080D-JNLE-TR QSPI Flash ROM (32MB)
     // ==========================================
-    sst39sf040 #(
-        .MEM_INIT_FILE(ROM_INIT_FILE)
-    ) fpu_flash (
-        .addr({4'b0000, ca}), // Upper address pins A15-A18 tied to GND
-        .data(cd),
-        .ce_n(f_ce_n),
-        .oe_n(c_oe_n),
-        .we_n(c_we_n)
-    );
+    // TODO
 
 endmodule

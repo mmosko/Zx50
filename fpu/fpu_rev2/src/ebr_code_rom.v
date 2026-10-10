@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
-* MODULE: zx50_fpu_code_rom
+* MODULE: ebr_code_rom
 * DESCRIPTION:
 * Microcode Execution Store for Zx50 FPU Rev 2.
 * Maps to 4 cascaded MachXO2 EBR blocks (EBR 4, 5, 6, 7) in 1024 x 32-bit configuration.
@@ -9,7 +9,7 @@
 * Sequenced directly by the 10-bit Program Counter (UPC[9:0]).
 ***************************************************************************************/
 
-module zx50_fpu_code_rom #(
+module ebr_code_rom #(
     parameter INIT_FILE = "fpu_code_rom.hex"
 )(
     input  wire        fclk,

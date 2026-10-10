@@ -28,7 +28,7 @@ To reclaim microcode capacity for 64-bit routines (`DIV_I64`, `MUL_F64`, `DIV_F6
 ### 1. Expose `ASR` & `ASL` in `MicroOp` & Add Range Constants to `CONST` ROM (Zero FPGA Logic Cost)
 - [x] **Implement `ASL` (`0b110_010`) and `ASR` (`0b110_011`) in Block 6 (Shifter) & `MicroOp`**:
   - Implemented 32-bit and 64-bit barrel shifting routines (`asl_32`, `asr_32`, `asl_64`, `asr_64`), opcode dispatch, status flags (`V` on ASL, `S` preservation on ASR), assembler grammar, unit tests, and system documentation.
-  - In `trig_f32.asm`, arithmetic shifting of $Y$ in CORDIC can now replace 11 instructions of manual bitwise sign extension and branching using `ASR FH, BL, C` (saving **10 instructions** in 32-bit CORDIC and **15 instructions** in 64-bit CORDIC).
+  - In `trig_f32.asm`, arithmetic shifting of $Y$ in CORDIC now replaces 11 instructions of manual bitwise sign extension and branching using `ASR FH, BL, C` (saving **10 instructions** in 32-bit CORDIC and 240 execution clock cycles per trig evaluation).
 - [ ] **Populate Range Reduction Constants in `CONST` ROM**:
   - Add $C_1 = 102943$ and $C_2 = 11601$ into unused slots of `CONST` ROM.
   - Eliminates multi-instruction synthesis loops (`LDI`, `LSL`, `LDI`, `ADD`), saving **8 instructions**.

@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
-* MODULE: zx50_fpu_reg
+* MODULE: fpu_reg
 * DESCRIPTION:
 * Register file and operand multiplexers for zx50_fpu Rev 2.
 *
@@ -16,7 +16,7 @@
     the result of a jump/branch instruction.
 ***************************************************************************************/
 
-module zx50_fpu_reg (
+module fpu_reg (
     input  wire        fclk,
     input  wire        reset_n,
 

@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
-* MODULE: zx50_fpu_data_ram
+* MODULE: ebr_data_ram
 * DESCRIPTION:
 * System Data RAM and Table ROM for Zx50 FPU Rev 2.
 * Maps to 4 cascaded MachXO2 EBR blocks (EBR 0, 1, 2, 3) in 1024 x 32-bit configuration.
@@ -11,7 +11,7 @@
 * - 0x100 - 0x3FF (768 words / 3 KB): Read-Only Constants, Trig, Chebyshev, Seed LUTs
 ***************************************************************************************/
 
-module zx50_fpu_data_ram #(
+module ebr_data_ram #(
     parameter INIT_FILE = "fpu_data_ram.hex"
 )(
     input  wire        fclk,

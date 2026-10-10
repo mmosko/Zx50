@@ -4,7 +4,7 @@
  * MODULE: init_tb
  * DESCRIPTION:
  * Testbench to verify post-reset initialization of the Zx50 FPU Subsystem (card0).
- * Validates internal CPLD registers, private memory deselect lines, open-drain 
+ * Validates internal FPGA registers, private memory deselect lines, open-drain 
  * handshake lines, and initial address bus states following a Z80 boot sequence.
  ***************************************************************************************/
 

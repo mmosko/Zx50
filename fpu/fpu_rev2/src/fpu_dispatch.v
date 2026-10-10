@@ -1,25 +1,25 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_fpu_dispatch
- * FILE: src/zx50_fpu_dispatch.v
+ * MODULE: fpu_dispatch
+ * FILE: src/fpu_dispatch.v
  * DESCRIPTION:
- * Command Execution Dispatcher for the Zx50 FPU Coprocessor (CPLD Rev C1).
+ * Command Execution Dispatcher for the Zx50 FPU Coprocessor.
  *
  * ARCHITECTURAL SPECIFICATION:
  * - Decodes full opcode matrix: Format [7:4] and Operation [3:0].
- * - Delegates Format 0xF management opcodes to zx50_fpu_mgmt.
+ * - Delegates Format 0xF management opcodes to fpu_mgmt.
  * - Implements 4-phase level handshaking (exec_req / done_ack) with 2-stage synchronizers
  *   to guarantee safe Clock Domain Crossing (CDC) between ZCLK and MCLK domains.
  * - Routes submodule private SRAM write/read requests up to the top-level SRAM controller.
  ***************************************************************************************/
 
-module zx50_fpu_dispatch (
+module fpu_dispatch (
     input  wire       mclk,              // High-Speed Coprocessor Clock (20MHz / 40MHz)
     input  wire       reset_n,           // Global System Reset (Active LOW)
     input  wire       exec_req,          // Level request signal from ZCLK domain
     input  wire [7:0] opcode,            // Latched command opcode from Port 0x71
-    input  wire [7:0] sp_in,             // Current Stack Pointer value from zx50_fpu
+    input  wire [7:0] sp_in,             // Current Stack Pointer value from fpu_mgmt
 
     output reg        done_ack,          // Level acknowledge signal to ZCLK domain
     output reg        err_flag,          // Set to 1 if opcode is invalid or unsupported

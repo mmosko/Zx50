@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 
 /***************************************************************************************
- * MODULE: zx50_fpu_mgmt
- * FILE: src/zx50_fpu_mgmt.v
+ * MODULE: fpu_mgmt
+ * FILE: src/fpu_mgmt.v
  * DESCRIPTION:
  * Stack Pointer and Hardware Management Engine for the Zx50 FPU Coprocessor.
  *
@@ -14,7 +14,7 @@
  ***************************************************************************************/
 
 module zx50_fpu_mgmt (
-    input  wire       mclk,              // High-Speed Coprocessor Clock (20MHz / 40MHz)
+    input  wire       fclk,              // FPU Clock
     input  wire       reset_n,           // Global System Reset (Active LOW)
     input  wire       start_p,           // 1-tick trigger pulse from dispatcher FSM
     input  wire [7:0] opcode,            // Management opcode written to Port 0x71

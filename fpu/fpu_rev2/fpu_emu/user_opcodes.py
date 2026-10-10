@@ -129,8 +129,12 @@ class UserOpcode(Enum):
     CP_TOS_MEM15 = 0xEF
 
     ZERO_MEM = 0xF0
+    CLEAR_STACK = 0xF1
 
-    CLEAR_STACK = 0xC6
+    # PUSH_STACK is issued from the fpu_host to the dispatcher to 
+    # indicate that 4 bytes are ready to write to the stack
+    PUSH_STACK = 0xF2
+    
     EXEC_BATCH = 0xFA
     SET_BATCH = 0xFB
     SET_IMMEDIATE = 0xFC
