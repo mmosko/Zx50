@@ -156,23 +156,12 @@ TRIG_START_CORDIC:
 
 CORDIC_STAGE_LOOP:
     ; Compute X_shift = X >> C in DH (X is always positive)
-    MOV AL, FL
-    LSR AL, C
-    MOV DH, AL                  ; DH <- X_shift
+    MOV DH, FL
+    LSR DH, C                   ; DH <- X_shift
 
     ; Compute Y_shift = Y >> C with sign extension in FH
-    MOV AL, BL
-    LSR AL, C
-    OR BL, BL                   ; Test sign of Y
-    JZ SIGN, CORDIC_Y_SHIFT_DONE ; If Y >= 0 (SIGN=0): no sign extension needed
-    ; Sign extension for negative Y (SIGN=1):
-    XOR AH, AH
-    NOT AH                      ; AH <- 0xFFFFFFFF
-    LSR AH, C
-    NOT AH
-    OR AL, AH                   ; Sign extend AL
-CORDIC_Y_SHIFT_DONE:
-    MOV FH, AL                  ; FH <- Y_shift
+    MOV FH, BL
+    ASR FH, C                   ; FH <- Y_shift (arithmetic shift right preserves sign)
 
     ; Load elementary angle theta_C from TRIG ROM
     LDC AH, TRIG, C
