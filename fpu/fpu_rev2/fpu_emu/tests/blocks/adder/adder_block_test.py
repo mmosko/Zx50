@@ -432,6 +432,37 @@ def test_adder_block_mul_default_dst(fpga: FpgaModel):
     assert fpga.reg_file.ah.read_int() == 0
 
 
+def test_adder_block_mulu_three_operand(fpga: FpgaModel):
+    # MULU AL, CL, BL -> {AH, AL} = CL * BL
+    fpga.reg_file.cl.write(100)
+    fpga.reg_file.bl.write(25)
+    fpga.reg_file.al.write(0)
+
+    instr = MicroInstruction(op=MicroOp.MULU, w=IW.W32, dst=Reg.AL, src1=Reg.CL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 2500
+    assert fpga.reg_file.ah.read_int() == 0
+    # Source CL should remain unchanged
+    assert fpga.reg_file.cl.read_int() == 100
+
+
+def test_adder_block_divu_three_operand(fpga: FpgaModel):
+    # DIVU AL, CH, BL -> AL = CH / BL (quotient), DL = CH % BL (remainder)
+    fpga.reg_file.ch.write(27)
+    fpga.reg_file.bl.write(5)
+
+    instr = MicroInstruction(op=MicroOp.DIVU, w=IW.W32, dst=Reg.AL, src1=Reg.CH, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.al.read_int() == 5
+    assert fpga.reg_file.dl.read_int() == 2
+    assert fpga.reg_file.ch.read_int() == 27
+
+
+
 def test_adder_block_mul_invalid_dst(fpga: FpgaModel):
     # Only AL is valid destination for MUL on HA_MUX
     from fpu_emu.hardware.registers import HardwareBusError

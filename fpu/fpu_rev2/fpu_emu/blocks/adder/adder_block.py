@@ -513,7 +513,8 @@ class AdderBlock(FunctionalBlock):
         dst_hi = Reg.AH
 
         # Step 1: Combinatorial latch of inputs from HA_MUX and HB_MUX
-        self._ha_mux.select(dst.value)
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else dst
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         ha_val = self._inputs.ha_mux.read()
         hb_val = self._inputs.hb_mux.read()
@@ -553,7 +554,8 @@ class AdderBlock(FunctionalBlock):
         rem_reg = Reg.DL
 
         # Step 1: Combinatorial latch of inputs from HA_MUX and HB_MUX
-        self._ha_mux.select(dst.value)
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else dst
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         ha_val = self._inputs.ha_mux.read()
         hb_val = self._inputs.hb_mux.read()
