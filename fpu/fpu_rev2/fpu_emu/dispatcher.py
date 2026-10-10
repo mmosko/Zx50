@@ -47,7 +47,8 @@ class Dispatcher:
                  memory: Memory,
                  clock: Clock,
                  writeback_mux: WritebackMux,
-                 upc_mux: Mux):
+                 upc_mux: Mux,
+                 c_reg: Register):
         self._blocks = blocks
         self._memory = memory
         self._clock = clock
@@ -63,6 +64,7 @@ class Dispatcher:
         self._blocking_mode: bool = True
         self._zero = bytes(0)
         self._writeback_mux = writeback_mux
+        self._c_reg = c_reg
 
     @property
     def upc(self) -> int:
@@ -136,6 +138,10 @@ class Dispatcher:
             # be writing and reading micro instructions.
             start_addr = MicroCode.get_address(user_opcode)
             ucode = MicroCode.get(user_opcode)
+
+            # The lower nibble of the UserOpcode is often a count
+            self._c_reg.write(user_opcode.value & 0x0F)
+
             self._upc.write(start_addr)
             self._run(ucode)
         finally:

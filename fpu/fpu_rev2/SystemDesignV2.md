@@ -8,7 +8,7 @@ all 32bit unless said othewise
 - (BH, BL) = BX
 - (DH, DL) = DX
 - (FH, FL) = FX
-- C (8 bit counter)
+- C (8 bit counter / opcode parameter register; automatically latched with UserOpcode[3:0] on dispatch)
 - EA, EB (12-bit exponent registers)
 - SP (8 bit) stack pointer
 - OSP (5 bit) operation stack pointer for user BATCH mode (32-byte queue)
@@ -116,7 +116,9 @@ in one FPU cycle.
 - HOST_OUT Byte Serializer: When the Z80 reads from Port 0x70, the dispatcher executes `POP FL` to stage a 32-bit word
   into `HOST_OUT`, which delivers bytes 0..3 sequentially across Port 0x70 reads.
 - CMD_REG: Latches the 8-bit user opcode written to Port 0x71 to trigger microcode dispatch or enqueue into the batch
-  queue.
+  queue. Upon dispatching an opcode to initiate microcode execution, the dispatcher automatically latches the lower
+  nibble (`CMD_REG[3:0]`) into register `C` (`C[3:0] <= CMD_REG[3:0]`, `C[7:4] <= 0`), passing indexed parameters
+  (such as scratchpad slot numbers 0..15, shift distances, or loop bounds) directly into microcode.
 - DEC_C (C-1), decrement the counter
 - CALL_STACK & CSP: 16-entry × 10-bit LUT RAM with 4-bit Call Stack Pointer (`CSP[3:0]`). On `CALL addr`, pushes `UPC + 1`
   to `CALL_STACK[CSP]`, increments `CSP`, and branches to `addr`. On `RET`, decrements `CSP` and restores `UPC` from

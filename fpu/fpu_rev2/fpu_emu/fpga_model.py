@@ -197,6 +197,7 @@ class FpgaModel:
             imm_reg=self.reg_file.imm,
             memory=self.memory,
             writeback_mux=self.writeback_mux,
+            c_reg = self.reg_file.c
         )
 
     def _writeback(self):

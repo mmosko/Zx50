@@ -15,7 +15,7 @@ The physical registers are 32-bits each (unless stated otherwise):
 - FL and FH (Staging / Working registers)
 - EA (12-bit exponent register)
 - EB (12-bit exponent register)
-- C (8-bit loop / shift counter)
+- C (8-bit loop / shift counter, opcode parameter register: automatically latched with user opcode lower nibble `opcode & 0x0F` upon dispatch)
 - SP (8-bit hardware math stack pointer)
 - OSP (5-bit batch operation stack pointer)
 - UPC (10-bit microcode program counter, addressing 1,024 words in CODE_ROM)

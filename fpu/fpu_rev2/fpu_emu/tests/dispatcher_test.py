@@ -119,3 +119,17 @@ def test_dispatcher_control_commands_and_stack(fpga: FpgaModel):
     assert fpga.reg_file.osp.read_int() == 0
 
 
+def test_dispatcher_latches_opcode_low_nibble_into_c(fpga: FpgaModel):
+    """Dispatcher latches UserOpcode low nibble into register C before execution."""
+    from fpu_emu.tests.test_helpers import f32_to_bits, user_push32
+
+    # Push a value onto the stack for CP_MEMx_TOS
+    user_push32(fpga, f32_to_bits(123.45))
+    fpga.dispatcher.execute(UserOpcode.CP_MEM5_TOS)
+    assert fpga.reg_file.c.read_int() == 0x05
+
+    user_push32(fpga, f32_to_bits(678.90))
+    fpga.dispatcher.execute(UserOpcode.CP_MEM13_TOS)
+    assert fpga.reg_file.c.read_int() == 0x0D
+
+
