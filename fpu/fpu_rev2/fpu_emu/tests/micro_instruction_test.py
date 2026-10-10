@@ -128,14 +128,14 @@ def test_micro_instruction_ldc_dynamic_reg_round_trip():
 
 
 def test_micro_instruction_to_bytes_little_endian():
-    # ADD AL, BL (W=0, DST=AL(0), SRC=BL(6), SRC1=NONE(15), IMM=0)
-    # Word: (0 << 26) | (0 << 25) | (0 << 21) | (6 << 17) | (0 << 14) | (15 << 10) | 0
-    #     = 0x000C0000 | 0x00003C00 = 0x000C3C00
-    # Little-endian stores lowest byte at address 0: [0x00, 0x3C, 0x0C, 0x00]
+    # ADD AL, BL (W=0, DST=AL(0), SRC=BL(2), SRC1=NONE(15), IMM=0)
+    # Word: (0 << 26) | (0 << 25) | (0 << 21) | (2 << 17) | (0 << 14) | (15 << 10) | 0
+    #     = 0x00040000 | 0x00003C00 = 0x00043C00
+    # Little-endian stores lowest byte at address 0: [0x00, 0x3C, 0x04, 0x00]
     inst = MicroInstruction(op=MicroOp.ADD, w=IW.W32, dst=Reg.AL, src=Reg.BL)
     raw = inst.to_bytes()
     assert len(raw) == 4
-    assert raw == bytes([0x00, 0x3C, 0x0C, 0x00])
+    assert raw == bytes([0x00, 0x3C, 0x04, 0x00])
 
 
 def test_micro_instruction_to_bytes_bit_fields():
@@ -164,13 +164,13 @@ def test_micro_instruction_to_bytes_three_operand_and_w64():
     # SUB.64 DL, AL, BL
     # OPCODE = SUB (2 = 0b000010) -> 2 << 26 = 0x08000000
     # W = 1 -> 1 << 25 = 0x02000000
-    # DST = DL (8) -> 8 << 21 = 0x01000000
-    # SRC2 = BL (6) -> 6 << 17 = 0x000C0000
+    # DST = DL (6) -> 6 << 21 = 0x00C00000
+    # SRC2 = BL (2) -> 2 << 17 = 0x00040000
     # FLAG = 0 -> 0
-    # SRC1 = AL (0) -> 0 << 11 = 0
+    # SRC1 = AL (0) -> 0 << 10 = 0
     # IMM = 0
-    # Expected word: 0x0B0C0000
-    # In little-endian: [0x00, 0x00, 0x0C, 0x0B]
+    # Expected word: 0x0AC40000
+    # In little-endian: [0x00, 0x00, 0xC4, 0x0A]
     inst = MicroInstruction(
         op=MicroOp.SUB,
         w=IW.W64,
@@ -178,8 +178,8 @@ def test_micro_instruction_to_bytes_three_operand_and_w64():
         src1=Reg.AL,
         src=Reg.BL,
     )
-    assert inst.to_int() == 0x0B0C0000
-    assert inst.to_bytes() == bytes([0x00, 0x00, 0x0C, 0x0B])
+    assert inst.to_int() == 0x0AC40000
+    assert inst.to_bytes() == bytes([0x00, 0x00, 0xC4, 0x0A])
 
 
 def test_micro_instruction_round_trip_bytes():

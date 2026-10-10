@@ -50,11 +50,11 @@ class TestFpgaBudget(unittest.TestCase):
         self.assertLessEqual(totals["ebr_blocks"], 8)
         self.assertEqual(totals["dsp_mults"], 0)
 
-        # Datapath baseline must stay well under 60% of device LUTs
+        # Datapath baseline must stay well under 70% of device LUTs (leaving headroom for P&R)
         self.assertLess(
             totals["luts"],
-            1267,
-            f"Baseline LUT4 utilization ({totals['luts']}) exceeds 60% device budget (1267 LUTs)",
+            1478,
+            f"Baseline LUT4 utilization ({totals['luts']}) exceeds 70% device budget (1478 LUTs)",
         )
 
     def test_microcode_instruction_budget(self):

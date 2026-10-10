@@ -21,7 +21,7 @@ from fpu_emu.writeback_mux import WritebackMux
 
 @fpga_resource(
     approach="Datapath operand multiplexers (HA_MUX 14:1 32b, HB_MUX 14:1 32b, UPC_MUX 2:1 11b)",
-    luts=360,
+    luts=459,
     delay_ns=3.0,
     cycles=1,
     shared_unit="datapath_muxes",

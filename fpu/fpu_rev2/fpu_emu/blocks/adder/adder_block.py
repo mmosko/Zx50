@@ -123,29 +123,34 @@ class AdderBlock(FunctionalBlock):
         self._writeback()
 
     def _add_64(self, instr: MicroInstruction, cin: int, sub: bool) -> None:
-        """ADD AX, src: 64-bit addition with carry (2 cycles)."""
+        """ADD dst, src: 64-bit addition with carry (2 cycles)."""
         assert (instr.src is not Reg.NONE)
         self._validate_src64(instr.src)
 
-        # Low word (AL)
-        self._ha_mux.select(Reg.AL.value)
+        dst = instr.dst if instr.dst is not Reg.NONE else Reg.AL
+        src1 = instr.src1 if instr.src1 is not Reg.NONE else dst
+        self._validate_src64(src1)
+        self._validate_src64(dst)
+
+        # Low word
+        self._ha_mux.select(src1.value)
         self._inputs.hb_mux.select(instr.src.value)
         low_result = self._combinatorial_add(cin=cin, sub=sub)
 
-        # Writeback AL (status write disabled for intermediate low word)
+        # Writeback low word (status write disabled for intermediate low word)
         self._outputs.status_wr_sel.set(0)
         self._outputs.block_res.set(low_result.res)
-        self._outputs.block_res_sel.set(Reg.AL.value)
+        self._outputs.block_res_sel.set(dst.value)
         self._writeback()
 
-        # Upper word (AH) with carry from lower word
+        # Upper word with carry from lower word
         cin_high = 1 if low_result.cf else 0
-        self._ha_mux.select(Reg.AH.value)
+        self._ha_mux.select(src1.value | 0b0001)
         src_h = instr.src.value | 0b0001
         self._inputs.hb_mux.select(src_h)
         high_result = self._combinatorial_add(cin=cin_high, sub=sub)
 
-        # Writeback AH and commit final status flags (ZF is 1 only if both halves are zero)
+        # Writeback high word and commit final status flags (ZF is 1 only if both halves are zero)
         final_result = AdderResult(
             res=high_result.res,
             cf=high_result.cf,
@@ -155,14 +160,14 @@ class AdderBlock(FunctionalBlock):
         )
         self._wb_flags(final_result)
         self._outputs.block_res.set(high_result.res)
-        self._outputs.block_res_sel.set(Reg.AH.value)
+        self._outputs.block_res_sel.set(dst.value | 0b0001)
         self._outputs.exec_done.set(1)
         self._writeback()
 
     @staticmethod
     def _validate_src64(src: Reg):
         # must be the low word of a 64-bit pair
-        assert(src in [Reg.AL, Reg.BL, Reg.DL, Reg.FL])
+        assert src.is_lo_half()
 
     def _cmp32(self, instr: MicroInstruction):
         """CMP dst, src: 32-bit compare dst - src without modifying dst (1 cycle)."""

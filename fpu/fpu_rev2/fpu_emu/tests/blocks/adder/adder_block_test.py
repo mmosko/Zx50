@@ -805,4 +805,42 @@ def test_adder_block_unpack_pack_roundtrip(fpga: FpgaModel):
     assert fpga.reg_file.al.read_int() == original
 
 
+def test_adder_block_add_64_cx_general(fpga: FpgaModel):
+    # CX = 0x00000001_FFFFFFFF, DX = 0x00000002_00000001
+    # ADD CX, DX -> CX = 0x00000004_00000000
+    fpga.reg_file.cl.write(0xFFFFFFFF)
+    fpga.reg_file.ch.write(0x00000001)
+    fpga.reg_file.dl.write(0x00000001)
+    fpga.reg_file.dh.write(0x00000002)
+
+    instr = MicroInstruction(op=MicroOp.ADD, w=IW.W64, dst=Reg.CL, src=Reg.DL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.cl.read_int() == 0x00000000
+    assert fpga.reg_file.ch.read_int() == 0x00000004
+    assert not fpga.reg_file.status.is_bit_set(StatusFlag.ZERO)
+
+
+def test_adder_block_sub_64_three_operand_with_cx(fpga: FpgaModel):
+    # SUB CX, AX, BX: CX = AX - BX
+    # AX = 0x00000005_00000000, BX = 0x00000002_00000001
+    # CX should be: 0x00000002_FFFFFFFF
+    fpga.reg_file.al.write(0x00000000)
+    fpga.reg_file.ah.write(0x00000005)
+    fpga.reg_file.bl.write(0x00000001)
+    fpga.reg_file.bh.write(0x00000002)
+
+    instr = MicroInstruction(op=MicroOp.SUB, w=IW.W64, dst=Reg.CL, src1=Reg.AL, src=Reg.BL)
+    instr.to_register(fpga.reg_file.instr, fpga.reg_file.imm)
+    fpga.adder.execute()
+
+    assert fpga.reg_file.cl.read_int() == 0xFFFFFFFF
+    assert fpga.reg_file.ch.read_int() == 0x00000002
+    # Ensure source registers were unmodified
+    assert fpga.reg_file.al.read_int() == 0x00000000
+    assert fpga.reg_file.ah.read_int() == 0x00000005
+
+
+
 

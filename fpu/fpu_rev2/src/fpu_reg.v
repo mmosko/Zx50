@@ -5,15 +5,11 @@
 * DESCRIPTION:
 * Register file and operand multiplexers for zx50_fpu Rev 2.
 *
-* - Latches 32-bit micro-instructions (instr_in) when instr_we is asserted:
-*     * instr_reg [21:0] <= instr_in[31:10] (Control, Opcodes, Mux Selects)
-*     * imm_reg   [9:0]  <= instr_in[9:0]   (Immediate / Address Field)
-* - Multiplexes HA_BUS (Operand A) and HB_BUS (Operand B).
+* - Latches 32-bit micro-instructions (instr_in) when instr_we is asserted.
+* - Multiplexes HA_BUS (Operand A) and HB_BUS (Operand B) using a factored
+*   2-stage MUX architecture to minimize MachXO2 LUT usage.
 * - Handles synchronous writeback from RES_BUS to destination registers.
-* - the SP and PC have dedicated inputs and write enables.
-* - The SP is updated by the memory module PUSH and POP instructions.
-* - The PC is updated by the sequencer as part of the instruction fetch cycle or as
-    the result of a jump/branch instruction.
+* - Dedicated inputs and write enables for SP and PC registers.
 ***************************************************************************************/
 
 module fpu_reg (
@@ -28,11 +24,11 @@ module fpu_reg (
     output wire [21:0] instr_out,
     output wire [9:0]  imm_out,
 
-    // The HA mux selects one of {AL, AH, EA, EB, IMM, C, BL, BH}
-    input  wire [2:0]  ha_sel_bus,
+    // The HA mux selects one of {AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, IMM}
+    input  wire [3:0]  ha_sel_bus,
     output reg  [31:0] ha_bus,
 
-    // The HB mux selects one of {AL, AH, EA, EB, IMM, C, BL, BH, DL, DH, FL, FH}
+    // The HB mux selects one of {AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, IMM}
     input  wire [3:0]  hb_sel_bus,
     output reg  [31:0] hb_bus,
 
@@ -50,10 +46,10 @@ module fpu_reg (
     input  wire [7:0]  sp_in,
     input  wire        sp_we,
 
-    // Program counter output
+    // Program counter output, input, and write enable
     output wire [9:0]  pc,
-    input wire [9:0] pc_in,
-    input wire pc_we
+    input  wire [9:0]  pc_in,
+    input  wire        pc_we
 );
 
     // -------------------------------------------------------------------------
@@ -65,6 +61,8 @@ module fpu_reg (
     reg [31:0] ah_reg;
     reg [31:0] bl_reg;
     reg [31:0] bh_reg;
+    reg [31:0] cl_reg;
+    reg [31:0] ch_reg;
     reg [31:0] dl_reg;
     reg [31:0] dh_reg;
     reg [31:0] fl_reg;
@@ -83,8 +81,8 @@ module fpu_reg (
     reg [9:0]  pc_reg;
 
     // Instruction Pipeline Registers
-    reg [21:0] instr_reg; // INSTR[21:0] <= instr_in[31:10]
-    reg [9:0]  imm_reg;   // IMM[9:0]   <= instr_in[9:0]
+    reg [21:0] instr_reg;
+    reg [9:0]  imm_reg;
 
     // Continuous assignment outputs
     assign sp        = sp_reg;
@@ -93,41 +91,65 @@ module fpu_reg (
     assign imm_out   = imm_reg;
 
     // -------------------------------------------------------------------------
-    // HA_BUS Multiplexer (Primary Operand A - 8 Inputs)
+    // Factored Operand Bus Multiplexer Function
     // -------------------------------------------------------------------------
-    always @(*) begin
-        case (ha_sel_bus)
-            3'b000: ha_bus = al_reg;
-            3'b001: ha_bus = ah_reg;
-            3'b010: ha_bus = {20'h00000, ea_reg};  // Zero-extend 12-bit EA
-            3'b011: ha_bus = {20'h00000, eb_reg};  // Zero-extend 12-bit EB
-            3'b100: ha_bus = {22'h000000, imm_reg};// Zero-extend 10-bit IMM
-            3'b101: ha_bus = {24'h000000, c_reg};  // Zero-extend 8-bit C
-            3'b110: ha_bus = bl_reg;
-            3'b111: ha_bus = bh_reg;
-            default: ha_bus = 32'h0000_0000;
-        endcase
-    end
+    function [31:0] mux_operand_bus;
+        input [3:0]  sel;
+        input [31:0] al, ah, bl, bh, cl, ch, dl, dh, fl, fh;
+        input [11:0] ea, eb;
+        input [7:0]  c;
+        input [9:0]  imm;
+        
+        reg [31:0] gpr_val;
+        reg [11:0] narrow_val;
+        reg        is_narrow;
+        begin
+            // 1. 10-to-1 MUX for 32-bit General Purpose Registers (codes 0x0..0x9)
+            case (sel)
+                4'b0000: gpr_val = al;
+                4'b0001: gpr_val = ah;
+                4'b0010: gpr_val = bl;
+                4'b0011: gpr_val = bh;
+                4'b0100: gpr_val = cl;
+                4'b0101: gpr_val = ch;
+                4'b0110: gpr_val = dl;
+                4'b0111: gpr_val = dh;
+                4'b1000: gpr_val = fl;
+                4'b1001: gpr_val = fh;
+                default: gpr_val = 32'h0000_0000;
+            endcase
+
+            // 2. 4-to-1 MUX for sub-12-bit registers (codes 0xA..0xD)
+            case (sel[1:0])
+                2'b00: narrow_val = {4'h0, c};           // 4'b1100 (C)
+                2'b01: narrow_val = {2'b00, imm};        // 4'b1101 (IMM)
+                2'b10: narrow_val = ea;                  // 4'b1010 (EA)
+                2'b11: narrow_val = eb;                  // 4'b1011 (EB)
+            endcase
+
+            // 3. Detect narrow register selection: sel >= 10 (4'b1010 through 4'b1111)
+            is_narrow = sel[3] && (sel[2] || sel[1]);
+
+            // 4. Combine: Bits [31:12] are forced to zero when reading narrow registers
+            mux_operand_bus[31:12] = is_narrow ? 20'h00000   : gpr_val[31:12];
+            mux_operand_bus[11:0]  = is_narrow ? narrow_val  : gpr_val[11:0];
+        end
+    endfunction
 
     // -------------------------------------------------------------------------
-    // HB_BUS Multiplexer (Secondary Operand B - 12 Inputs)
+    // Combinational Bus Assignments
     // -------------------------------------------------------------------------
     always @(*) begin
-        case (hb_sel_bus)
-            4'b0000: hb_bus = al_reg;
-            4'b0001: hb_bus = ah_reg;
-            4'b0010: hb_bus = {20'h00000, ea_reg};
-            4'b0011: hb_bus = {20'h00000, eb_reg};
-            4'b0100: hb_bus = {22'h000000, imm_reg}; // Zero-extend 10-bit IMM
-            4'b0101: hb_bus = {24'h000000, c_reg};
-            4'b0110: hb_bus = bl_reg;
-            4'b0111: hb_bus = bh_reg;
-            4'b1000: hb_bus = dl_reg;
-            4'b1001: hb_bus = dh_reg;
-            4'b1010: hb_bus = fl_reg;
-            4'b1011: hb_bus = fh_reg;
-            default: hb_bus = 32'h0000_0000;
-        endcase
+        ha_bus = mux_operand_bus(
+            ha_sel_bus, 
+            al_reg, ah_reg, bl_reg, bh_reg, cl_reg, ch_reg, dl_reg, dh_reg, fl_reg, fh_reg, 
+            ea_reg, eb_reg, c_reg, imm_reg
+        );
+        hb_bus = mux_operand_bus(
+            hb_sel_bus, 
+            al_reg, ah_reg, bl_reg, bh_reg, cl_reg, ch_reg, dl_reg, dh_reg, fl_reg, fh_reg, 
+            ea_reg, eb_reg, c_reg, imm_reg
+        );
     end
 
     // -------------------------------------------------------------------------
@@ -139,6 +161,8 @@ module fpu_reg (
             ah_reg    <= 32'h0000_0000;
             bl_reg    <= 32'h0000_0000;
             bh_reg    <= 32'h0000_0000;
+            cl_reg    <= 32'h0000_0000;
+            ch_reg    <= 32'h0000_0000;
             dl_reg    <= 32'h0000_0000;
             dh_reg    <= 32'h0000_0000;
             fl_reg    <= 32'h0000_0000;
@@ -163,7 +187,7 @@ module fpu_reg (
                 sp_reg <= sp_in;
             end
 
-            // Hardware PC  Update
+            // Hardware Program Counter Update
             if (pc_we) begin
                 pc_reg <= pc_in;
             end
@@ -173,15 +197,17 @@ module fpu_reg (
                 case (res_sel_bus)
                     4'b0000: al_reg <= res_bus;
                     4'b0001: ah_reg <= res_bus;
-                    4'b0010: ea_reg <= res_bus[11:0];
-                    4'b0011: eb_reg <= res_bus[11:0];
-                    4'b0101: c_reg  <= res_bus[7:0];
-                    4'b0110: bl_reg <= res_bus;
-                    4'b0111: bh_reg <= res_bus;
-                    4'b1000: dl_reg <= res_bus;
-                    4'b1001: dh_reg <= res_bus;
-                    4'b1010: fl_reg <= res_bus;
-                    4'b1011: fh_reg <= res_bus;
+                    4'b0010: bl_reg <= res_bus;
+                    4'b0011: bh_reg <= res_bus;
+                    4'b0100: cl_reg <= res_bus;
+                    4'b0101: ch_reg <= res_bus;
+                    4'b0110: dl_reg <= res_bus;
+                    4'b0111: dh_reg <= res_bus;
+                    4'b1000: fl_reg <= res_bus;
+                    4'b1001: fh_reg <= res_bus;
+                    4'b1010: ea_reg <= res_bus[11:0];
+                    4'b1011: eb_reg <= res_bus[11:0];
+                    4'b1100: c_reg  <= res_bus[7:0];
                     default: ; // 4'b1111 (NONE) or reserved: no write
                 endcase
             end
