@@ -247,3 +247,56 @@ def test_ld_and_sto_instructions_assemble():
     assert prog_dict[7].src1 == Reg.BL
     assert prog_dict[7].imm == 0
 
+
+def test_cl_ch_cx_instructions():
+    code = """
+        MOV CL, AL
+        MOV CH, AH
+        ADD CX, DX
+        ADD CL, CH
+        SUB.64 CX, AX, BX
+        POP CX
+        PUSH CX
+    """
+    asm = Assembler()
+    prog = asm.assemble(code)
+    prog_dict = {addr: inst for addr, inst in prog}
+
+    # MOV CL, AL
+    assert prog_dict[0].dst == Reg.CL
+    assert prog_dict[0].src == Reg.AL
+
+    # MOV CH, AH
+    assert prog_dict[1].dst == Reg.CH
+    assert prog_dict[1].src == Reg.AH
+
+    # ADD CX, DX
+    assert prog_dict[2].op == MicroOp.ADD
+    assert prog_dict[2].w == IW.W64
+    assert prog_dict[2].dst == Reg.CL
+    assert prog_dict[2].src == Reg.DL
+
+    # ADD CL, CH
+    assert prog_dict[3].op == MicroOp.ADD
+    assert prog_dict[3].w == IW.W32
+    assert prog_dict[3].dst == Reg.CL
+    assert prog_dict[3].src == Reg.CH
+
+    # SUB.64 CX, AX, BX
+    assert prog_dict[4].op == MicroOp.SUB
+    assert prog_dict[4].w == IW.W64
+    assert prog_dict[4].dst == Reg.CL
+    assert prog_dict[4].src1 == Reg.AL
+    assert prog_dict[4].src == Reg.BL
+
+    # POP CX
+    assert prog_dict[5].op == MicroOp.POP
+    assert prog_dict[5].w == IW.W64
+    assert prog_dict[5].dst == Reg.CL
+
+    # PUSH CX
+    assert prog_dict[6].op == MicroOp.PUSH
+    assert prog_dict[6].w == IW.W64
+    assert prog_dict[6].src == Reg.CL
+
+

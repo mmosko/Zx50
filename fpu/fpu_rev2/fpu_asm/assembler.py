@@ -242,6 +242,8 @@ class Pass2Encoder(Transformer):
             return Reg.AL, True
         if reg == Reg.BX:
             return Reg.BL, True
+        if reg == Reg.CX:
+            return Reg.CL, True
         if reg == Reg.DX:
             return Reg.DL, True
         if reg == Reg.FX:

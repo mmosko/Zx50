@@ -120,8 +120,8 @@ FLAG: "DIFF_SIGN"i | "DF"i | "D"i
 
 WIDTH_SUFFIX: ".64" | ".32"
 
-REG_32: "AL"i | "AH"i | "EA"i | "EB"i | "IMM"i | "C"i | "BL"i | "BH"i | "DL"i | "DH"i | "FL"i | "FH"i | "NONE"i | "UPC"i | "SP"i | "OSP"i | "STATUS"i
-REG_64: "AX"i | "BX"i | "DX"i | "FX"i
+REG_32: "AL"i | "AH"i | "BL"i | "BH"i | "CL"i | "CH"i | "DL"i | "DH"i | "FL"i | "FH"i | "EA"i | "EB"i | "C"i | "IMM"i | "NONE"i | "UPC"i | "SP"i | "OSP"i | "STATUS"i
+REG_64: "AX"i | "BX"i | "CX"i | "DX"i | "FX"i
 reg: REG_32 | REG_64
 reg_or_imm: reg | imm_operand
 

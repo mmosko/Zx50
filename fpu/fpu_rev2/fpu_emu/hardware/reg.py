@@ -10,26 +10,25 @@ class Reg(IntEnum):
     function can then read the low register and then read the high register with an "OR 0b0001".
     """
 
-    # 32-bit General & Math Registers
-    AL = 0b0000
-    AH = 0b0001
-    EA = 2
-    EB = 3
-    IMM = 4
-    C = 5
-
-    BL = 0b0110
-    BH = 0b0111
-    DL = 0b1000
-    DH = 0b1001
-    FL = 0b1010
-    FH = 0b1011
-
-    # Used as a flag to writeback that there is no writeback result register
-    NONE = 0b1111
+    # 32-bit General & Math Registers (4-bit encoding 0..15)
+    AL = 0b0000   # 0
+    AH = 0b0001   # 1
+    BL = 0b0010   # 2
+    BH = 0b0011   # 3
+    CL = 0b0100   # 4
+    CH = 0b0101   # 5
+    DL = 0b0110   # 6
+    DH = 0b0111   # 7
+    FL = 0b1000   # 8
+    FH = 0b1001   # 9
+    EA = 0b1010   # 10
+    EB = 0b1011   # 11
+    C = 0b1100    # 12
+    IMM = 0b1101  # 13
+    UPC = 0b1110  # 14
+    NONE = 0b1111 # 15
 
     # Control, Status, and Pointers
-    UPC = 14
     STATUS = 16
     SP = 17
     OSP = 18
@@ -50,9 +49,10 @@ class Reg(IntEnum):
     # only by the assembler
     AX = 30
     BX = 31
-    DX = 32
-    FX = 33
+    CX = 32
+    DX = 33
+    FX = 34
 
     def is_lo_half(self) -> bool:
-        return self in [Reg.AL, Reg.BL, Reg.DL, Reg.FL]
+        return self in [Reg.AL, Reg.BL, Reg.CL, Reg.DL, Reg.FL]
 

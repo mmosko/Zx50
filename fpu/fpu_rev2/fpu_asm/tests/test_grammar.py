@@ -47,6 +47,8 @@ def test_arithmetic_instructions(parser: Lark) -> None:
         "ADD AL, 10\n",
         "ADD.64 AL, BL\n",
         "ADD AX, BX\n",
+        "ADD CX, DX\n",
+        "ADD CL, CH\n",
         "SUB.64 DL, AL, BL\n",
     ]
     for line in lines:

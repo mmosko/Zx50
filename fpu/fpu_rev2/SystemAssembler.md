@@ -38,25 +38,25 @@ the ALU, subtracter, comparator, and exponent units.
 
 To minimize logic cell (LUT) count and keep decode-stage propagation delays strictly zero:
 
-- **No hardware conditionality on `HA_MUX` select**: The 3 select lines of `HA_MUX` are hardwired directly to bits
-  `[13:11]` of the instruction word (`SRC1`).
+- **No hardware conditionality on `HA_MUX` select**: The 4 select lines of `HA_MUX` are hardwired directly to bits
+  `[13:10]` of the instruction word (`SRC1`).
 - **Assembler synthesizes ternary words**: Regardless of whether the assembly source uses unary, binary, or ternary
   syntax, the assembler always populates the `SRC1` field in the emitted machine word:
     - **Ternary syntax**:
-        - `SUB DL, AL, BL` $\rightarrow$ `DST = DL (0b1000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
-        - `EXP_SUB C, EA, EB` $\rightarrow$ `DST = C (0b0101)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
+        - `SUB DL, AL, BL` $\rightarrow$ `DST = DL (0b0110)`, `SRC1 = AL (0b0000)`, `SRC2 = BL (0b0010)`
+        - `EXP_SUB C, EA, EB` $\rightarrow$ `DST = C (0b1100)`, `SRC1 = EA (0b1010)`, `SRC2 = EB (0b1011)`
     - **Binary syntax (Destination is accumulator/source 1)**:
-        - `ADD AL, BL` $\rightarrow$ `DST = AL (0b0000)`, `SRC1 = AL (0b000)`, `SRC2 = BL (0b0110)`
-        - `CMP EA, EB` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = EA (0b010)`, `SRC2 = EB (0b0011)`
-        - `EXP_ADD EA, IMM=1` $\rightarrow$ `DST = EA (0b0010)`, `SRC1 = EA (0b010)`, `SRC2 = IMM (0b0100)`
+        - `ADD AL, BL` $\rightarrow$ `DST = AL (0b0000)`, `SRC1 = AL (0b0000)`, `SRC2 = BL (0b0010)`
+        - `CMP EA, EB` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = EA (0b1010)`, `SRC2 = EB (0b1011)`
+        - `EXP_ADD EA, IMM=1` $\rightarrow$ `DST = EA (0b1010)`, `SRC1 = EA (0b1010)`, `SRC2 = IMM (0b1101)`
     - **Unary / Stack / Non-ALU syntax**:
-        - `POP BL` $\rightarrow$ `DST = BL (0b0110)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
-        - `NOP` / `HALT` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = AL (0b000)`, `SRC2 = NONE (0b1111)`
+        - `POP BL` $\rightarrow$ `DST = BL (0b0010)`, `SRC1 = AL (0b0000)`, `SRC2 = NONE (0b1111)`
+        - `NOP` / `HALT` $\rightarrow$ `DST = NONE (0b1111)`, `SRC1 = AL (0b0000)`, `SRC2 = NONE (0b1111)`
 
 By delegating operand replication to the assembler, the Verilog data path executes:
 
 ```verilog
-assign ha_mux_sel = instr_reg[13:11]; // Pure wire, 0 LUTs, 0 gate delays
+assign ha_mux_sel = instr_reg[13:10]; // Pure wire, 0 LUTs, 0 gate delays
 ```
 
 ### 2.2 Branch Delay Slots and Assembler NOP Insertion
@@ -105,38 +105,23 @@ and the 10-bit immediate register (`reg_file.imm`), with 1 reserved bit.
 | **OPCODE**    | `[31:26]` | 6     | Micro-operation opcode (Block ID `[2:0]` + Operation ID `[2:0]`).              |
 | **W**         | `[25]`    | 1     | Word width select: `0 = 32-bit (W32)`, `1 = 64-bit (W64)`.                     |
 | **DST**       | `[24:21]` | 4     | Destination writeback register (`0b0000` to `0b1111`).                         |
-| **SRC2**      | `[20:17]` | 4     | Secondary source register selecting from `HB_MUX` (12 inputs).                 |
+| **SRC2**      | `[20:17]` | 4     | Secondary source register selecting from `HB_MUX` (16 inputs).                 |
 | **FLAG_COND** | `[16:14]` | 3     | Status flag condition code for `JZ` / `JNZ` branches.                          |
-| **SRC1**      | `[13:10]` | 4     | Primary source register (`0b0000`–`0b0111` for `HA_MUX`, `0b1111` for `NONE`). |
+| **SRC1**      | `[13:10]` | 4     | Primary source register selecting from `HA_MUX` (16 inputs, `0b1111` for `NONE`). |
 | **IMM**       | `[9:0]`   | 10    | Unsigned immediate constant or 10-bit jump/call address (0–1023).              |
 
 ### 3.2 Register Field Mapping
 
-#### `SRC1` Select (4 bits `[13:10]`, `HA_MUX` uses bits `[2:0]`)
+#### Unified Register Encodings (`SRC1`, `SRC2`, `DST`)
 
 ```text
-0000: AL      0010: EA      0100: IMM     0110: BL
-0001: AH      0011: EB      0101: C       0111: BH
-1111: NONE (No HA operand read / default)
+0000: AL        0100: CL        1000: FL        1100: C
+0001: AH        0101: CH        1001: FH        1101: IMM
+0010: BL        0110: DL        1010: EA        1110: UPC
+0011: BH        0111: DH        1011: EB        1111: NONE (No read / No writeback)
 ```
 
-#### `SRC2` Select (`HB_MUX` — 4 bits `[20:17]`)
-
-```text
-0000: AL      0011: EB      0110: BL      1001: DH
-0001: AH      0100: IMM     0111: BH      1010: FL
-0010: EA      0101: C       1000: DL      1011: FH
-1111: NONE (No HB operand read)
-```
-
-#### `DST` Select (Writeback Register — 4 bits `[24:21]`)
-
-```text
-0000: AL      0100: IMM     1000: DL      1100: (reserved)
-0001: AH      0101: C       1001: DH      1101: (reserved)
-0010: EA      0110: BL      1010: FL      1110: UPC
-0011: EB      0111: BH      1011: FH      1111: NONE (No writeback)
-```
+In 64-bit operations (`W = 1`), pseudo-registers `AX`, `BX`, `CX`, `DX`, `FX` pass their even low-register index (`AL=0`, `BL=2`, `CL=4`, `DL=6`, `FL=8`).
 
 #### `FLAG_COND` Condition Select (3 bits `[16:14]`)
 

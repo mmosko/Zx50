@@ -9,10 +9,11 @@ Instructions are of these forms:
 
 The physical registers are 32-bits each (unless stated otherwise):
 
-- AL and AH (Accumulator / Working registers)
-- BL and BH (Operand / Working registers)
-- DL and DH (Multiplier / Divider registers)
-- FL and FH (Staging / Working registers)
+- AL and AH (Accumulator / Working registers, 64-bit pair AX)
+- BL and BH (Operand / Working registers, 64-bit pair BX)
+- CL and CH (General / Working registers, 64-bit pair CX)
+- DL and DH (Multiplier / Divider registers, 64-bit pair DX)
+- FL and FH (Staging / Working registers, 64-bit pair FX)
 - EA (12-bit exponent register)
 - EB (12-bit exponent register)
 - C (8-bit loop / shift counter, opcode parameter register: automatically latched with user opcode lower nibble `opcode & 0x0F` upon dispatch)
@@ -22,19 +23,19 @@ The physical registers are 32-bits each (unless stated otherwise):
 - CALL_STACK (16 words x 10 bit, return address stack in distributed LUT RAM with 4-bit CSP pointer)
 - STATUS (8-bit status flags register)
 
-In the assembly, pseudo-registers AX, BX, DX, and FX denote 64-bit operations, e.g `ADD AX, BX`.
+In the assembly, pseudo-registers AX, BX, CX, DX, and FX denote 64-bit operations, e.g `ADD AX, BX`.
 
 The operation arguments may be any of these.  We use `IMM` to mean the immediate value in an
 instruction, which we treat like its own register (it actually -- the machine word is broken into
 the instruction register and the immediate register).
 
 - the destination (`dst`) can be any of: 
-  - AL, AH, BL, BH, DL, DH, FL, FH, EA, EB, or C. 
-- The `src1` corresponds to the `HA_MUX`, which is an 8-input mux
-  - AL, AH, BL, BH, EA, EB, C, IMM
+  - AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, or C. 
+- The `src1` corresponds to the `HA_MUX`, which is a 16-input mux:
+  - AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, IMM
   - When used with `LDC`, `src1` uses the mnemonic for a source constant table.  See `LDC` below.
-- The `src2` argument corresponds to the `HB_MUX`:
-  - AL, AH, BL, BH, DL, DH, FL, FH, EA, EB, C, or IMM.
+- The `src2` argument corresponds to the `HB_MUX`, which is a 16-input mux:
+  - AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, or IMM.
 
 The normal convention is an instruction like `ADD AL, BL` will have `dst=AL`, `src2=BL`, with an implied
 `src1=AL`, but see the specific instruction documentation.
@@ -1753,8 +1754,8 @@ else:
 #### Instruction Word Format
 
 `OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`. `HB_MUX = NONE`.
-- **Immediate Direct (`LD dst, addr`)**: `HA_MUX = IMM (0b111)`, `imm[9:0] = addr` (`0..63`).
-- **Indirect Register (`LD dst, [src1]`)**: `HA_MUX = src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`), `imm[9:0] = 0`.
+- **Immediate Direct (`LD dst, addr`)**: `HA_MUX = IMM (0b1101)`, `imm[9:0] = addr` (`0..63`).
+- **Indirect Register (`LD dst, [src1]`)**: `HA_MUX = src1` (`AL..FH`, `EA`, `EB`, or `C`), `imm[9:0] = 0`.
 
 #### Description
 
@@ -1762,7 +1763,7 @@ Loads 32 or 64 bits from the internal scratchpad memory (mapped to `DATA_RAM` ba
 
 Addressing can be specified in two forms:
 1. **Direct Immediate Addressing (`LD dst, addr`)**: The address is specified directly as an immediate literal `addr` in `0..63`.
-2. **Indirect Register Addressing (`LD dst, [src1]`)**: The address is sourced from register `src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
+2. **Indirect Register Addressing (`LD dst, [src1]`)**: The address is sourced from register `src1` (`AL..FH`, `EA`, `EB`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
 
 For 64-bit operations (`W = 1`), the effective address must be an even base address (`addr_val % 2 == 0`, bit 0 is 0); `dst_L` is loaded from `addr_val` and `dst_H` from `addr_val | 1`.
 
@@ -1821,8 +1822,8 @@ else:
 #### Instruction Word Format
 
 `OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`. `HB_MUX = src2`.
-- **Immediate Direct (`STO addr, src2`)**: `HA_MUX = IMM (0b111)`, `imm[9:0] = addr` (`0..63`).
-- **Indirect Register (`STO [src1], src2`)**: `HA_MUX = src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`), `imm[9:0] = 0`.
+- **Immediate Direct (`STO addr, src2`)**: `HA_MUX = IMM (0b1101)`, `imm[9:0] = addr` (`0..63`).
+- **Indirect Register (`STO [src1], src2`)**: `HA_MUX = src1` (`AL..FH`, `EA`, `EB`, or `C`), `imm[9:0] = 0`.
 
 #### Description
 
@@ -1830,7 +1831,7 @@ Stores 32 or 64 bits from register `src2` into internal scratchpad memory (mappe
 
 Addressing can be specified in two forms:
 1. **Direct Immediate Addressing (`STO addr, src2`)**: The scratchpad target address is specified directly as an immediate literal `addr` in `0..63`.
-2. **Indirect Register Addressing (`STO [src1], src2`)**: The scratchpad target address is sourced from register `src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
+2. **Indirect Register Addressing (`STO [src1], src2`)**: The scratchpad target address is sourced from register `src1` (`AL..FH`, `EA`, `EB`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
 
 For 64-bit operations (`W = 1`), the effective address must be an even base address (`addr_val % 2 == 0`, bit 0 is 0); `src2_L` is stored into `addr_val` and `src2_H` into `addr_val | 1`.
 

@@ -6,6 +6,7 @@ all 32bit unless said othewise
 
 - (AH, AL) = AX
 - (BH, BL) = BX
+- (CH, CL) = CX
 - (DH, DL) = DX
 - (FH, FL) = FX
 - C (8 bit counter / opcode parameter register; automatically latched with UserOpcode[3:0] on dispatch)
@@ -28,8 +29,8 @@ instructions). We denote these as BLK_1, BLK_2, ..., BLK_k. We need to minimize 
 
 There is an HA_BUS and HB_BUS (32-bit). Each is fed by a multiplexer.
 
-HA_BUS <- MUX {AL, AH, EA, EB, C, IMM, BL, BH}
-HB_BUS <= MUX {AL, AH, EA, EB, C, IMM, BL, BH, DL, DH, FL, FH}
+HA_BUS <= MUX {AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, IMM}
+HB_BUS <= MUX {AL, AH, BL, BH, CL, CH, DL, DH, FL, FH, EA, EB, C, IMM}
 INSTR_BUS <= the 32-bit instruction from the dispatcher.
 IMM <= MUX { INSTR[9:0], HOST_IN }
 
@@ -185,33 +186,32 @@ BLK by the first three bits for the purpose of activating the AND walls.
 | Shifter            | 0b110  | LSL, LSR, ASL, ASR, LZC                                 |
 | Reserved           | 0b111  | Reserved for expansion                                  |
 
-A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[20:17]` (`src2`), `HB_BUS` MUX, and
-`BLK_RES_SEL` write-back routing.
+A unified 4-bit register encoding is used across `INSTR[24:21]` (`dst`), `INSTR[20:17]` (`src2`), `INSTR[13:10]` (`src1`),
+`HA_BUS` MUX, `HB_BUS` MUX, and `BLK_RES_SEL` write-back routing.
 
-To save FPGA logic and routing resources, the `HA_BUS` multiplexer physically supports only the first 6 sources
-(`0b0000`–`0b0101`), so its physical multiplexer only inspects the lower 3 bits (`[2:0]`). `HB_BUS` and `BLK_RES_SEL`
-write-back routing decode the full 4 bits.
+Both `HA_BUS` and `HB_BUS` multiplexers are fully symmetric 16-input multiplexers decoding the full 4-bit register code (`[3:0]`).
+This eliminates register shuffling constraints and allows any general-purpose register to serve as `src1`, `src2`, or `dst`.
 
-Note that HA_BUS (`src1`) is 4 bits in the machine word to allow encoding `NONE` for `src1`.  
+Note that `src1` in the machine word uses `0b1111` (`NONE`) when an operation uses the default destination as `src1` or has no left operand.
 
-| 4-Bit Code | Register / Source | HA_BUS (Physical 3-Bit) | HB_BUS (Full 4-Bit) | RES_SEL Target (on EXEC_WB) |
-|:----------:|:-----------------:|:-----------------------:|:-------------------:|:---------------------------:|
-|  `0b0000`  |        AL         |      Yes (`0b000`)      |   Yes (`0b0000`)    |      AL (or AX if W=1)      |
-|  `0b0001`  |        AH         |      Yes (`0b001`)      |   Yes (`0b0001`)    |             AH              |
-|  `0b0010`  |        EA         |      Yes (`0b010`)      |   Yes (`0b0010`)    |         EA (12-bit)         |
-|  `0b0011`  |        EB         |      Yes (`0b011`)      |   Yes (`0b0011`)    |         EB (12-bit)         |
-|  `0b0100`  |        IMM        |      Yes (`0b100`)      |   Yes (`0b0100`)    |     — (No write / CMP)      |
-|  `0b0101`  |         C         |      Yes (`0b101`)      |   Yes (`0b0101`)    |          C (8-bit)          |
-|  `0b0110`  |        BL         |      Yes (`0b110`)      |   Yes (`0b0110`)    |      BL (or BX if W=1)      |
-|  `0b0111`  |        BH         |      Yes (`0b111`)      |   Yes (`0b0111`)    |             BH              |
-|  `0b1000`  |        DL         |            —            |   Yes (`0b1000`)    |      DL (or DX if W=1)      |
-|  `0b1001`  |        DH         |            —            |   Yes (`0b1001`)    |             DH              |
-|  `0b1010`  |        FL         |            —            |   Yes (`0b1010`)    |      FL (or FX if W=1)      |
-|  `0b1011`  |        FH         |            —            |   Yes (`0b1011`)    |             FH              |
-|  `0b1100`  |        TOS        |            —            |          —          |     Hardware Stack Push     |
-|  `0b1101`  |        UPC        |            —            |          —          |     UPC (Branch/Return)     |
-|  `0b1110`  |     HOST_OUT      |            —            |          —          |    Port 0x70 Staging Reg    |
-|  `0b1111`  |       NONE        |            —            |          —          | Discard result (CMP, TEST)  |
+| 4-Bit Code | Register / Source | HA_BUS (Full 4-Bit) | HB_BUS (Full 4-Bit) | RES_SEL Target (on EXEC_WB) | Description / Role |
+|:----------:|:-----------------:|:-------------------:|:-------------------:|:---------------------------:|:-------------------|
+|  `0b0000`  |        AL         |   Yes (`0b0000`)    |   Yes (`0b0000`)    |      AL (or AX if W=1)      | General / Accumulator Low |
+|  `0b0001`  |        AH         |   Yes (`0b0001`)    |   Yes (`0b0001`)    |             AH              | General / Accumulator High |
+|  `0b0010`  |        BL         |   Yes (`0b0010`)    |   Yes (`0b0010`)    |      BL (or BX if W=1)      | General Operand B Low |
+|  `0b0011`  |        BH         |   Yes (`0b0011`)    |   Yes (`0b0011`)    |             BH              | General Operand B High |
+|  `0b0100`  |        CL         |   Yes (`0b0100`)    |   Yes (`0b0100`)    |      CL (or CX if W=1)      | General Register C Low |
+|  `0b0101`  |        CH         |   Yes (`0b0101`)    |   Yes (`0b0101`)    |             CH              | General Register C High |
+|  `0b0110`  |        DL         |   Yes (`0b0110`)    |   Yes (`0b0110`)    |      DL (or DX if W=1)      | General Scratch D Low |
+|  `0b0111`  |        DH         |   Yes (`0b0111`)    |   Yes (`0b0111`)    |             DH              | General Scratch D High |
+|  `0b1000`  |        FL         |   Yes (`0b1000`)    |   Yes (`0b1000`)    |      FL (or FX if W=1)      | General Scratch F Low |
+|  `0b1001`  |        FH         |   Yes (`0b1001`)    |   Yes (`0b1001`)    |             FH              | General Scratch F High |
+|  `0b1010`  |        EA         |   Yes (`0b1010`)    |   Yes (`0b1010`)    |         EA (12-bit)         | Exponent Register A (Float unpack/pack) |
+|  `0b1011`  |        EB         |   Yes (`0b1011`)    |   Yes (`0b1011`)    |         EB (12-bit)         | Exponent Register B (Float unpack/pack) |
+|  `0b1100`  |         C         |   Yes (`0b1100`)    |   Yes (`0b1100`)    |          C (8-bit)          | Dedicated Loop / Shift Counter (`DJNZ`) |
+|  `0b1101`  |        IMM        |   Yes (`0b1101`)    |   Yes (`0b1101`)    |     — (No write / CMP)      | Instruction Immediate Constant |
+|  `0b1110`  |        UPC        |          —          |          —          |     UPC (Branch/Return)     | Microprogram Counter Writeback Target |
+|  `0b1111`  |       NONE        |          —          |          —          | Discard result (CMP, TEST)  | No register read / No writeback |
 
 - For BINARY functions, the instruction decoder routes operands to `HA_MUX` and `HB_MUX`.
 - For UNARY functions, a single bus is used as the source; it may vary by instruction.
