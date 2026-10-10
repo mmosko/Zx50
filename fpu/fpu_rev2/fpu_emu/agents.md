@@ -24,11 +24,18 @@ The microcode is compiled with this, to emit Python code for easy integration in
    python3 -m fpu_asm -i fpu_emu/ucode.asm -o fpu_emu/ucode.py --no-pad
 ```
 
+Directive: Microcode Architecture Single Source of Truth: Always treat SystemReference.md (and specifically Section 1's
+Summary Table) as the authoritative specification for all microcode assembly: instruction mnemonics, valid operand
+combinations, cycle timings, and flag side-effects. Do not inspect the emulator Python/Verilog source code to determine
+how an instruction behaves. If an unresolvable discrepancy or ambiguity occurs during execution or testing, raise it
+immediately so SystemReference.md can be corrected. The documentation must always remain completely self-contained.
+
 ### Code Checking Protocol
 
 Execute the following verification steps in order. If any step fails, resolve the issue and restart from Step 1.
 
 - **Ban Dynamic getattr:** Run `bash tools/check_no_getattr.sh` (Ensures zero usage of `getattr()` in production code).
+
 1. **Format & Lint:** Run `ruff check --fix .` and `ruff format .` (Fix all errors and eliminate warnings).
 2. **Type Check:** Run `pyright` (Ensure zero type errors).
 3. **Tests & Coverage:** Run `pytest --xdoctest --cov=src --cov-fail-under=90` (Executes unit tests, verifies docstring

@@ -86,26 +86,38 @@ Wait_Fpu_Ready:
 All data operands on the stack are stored in standard **Little-Endian** byte order (least significant byte pushed first and at lowest memory address, most significant byte pushed last).
 
 ```text
-32-Bit Types (i32, f32):  4 Bytes -> [Byte 0 (LSB)]  [Byte 1]  [Byte 2]  [Byte 3 (MSB)]
-64-Bit Types (i64, f64):  8 Bytes -> [Byte 0 (LSB)]  ...                 [Byte 7 (MSB)]
+32-Bit Types (i32, u32, f32):  4 Bytes -> [Byte 0 (LSB)]  [Byte 1]  [Byte 2]  [Byte 3 (MSB)]
+64-Bit Types (i64, u64, f64):  8 Bytes -> [Byte 0 (LSB)]  ...                 [Byte 7 (MSB)]
 ```
 
 ### 3.1 32-Bit Signed Integer (`i32`)
 * Standard 2's complement 32-bit signed integer.
 * Value range: $-2,147,483,648$ to $+2,147,483,647$ (`0x80000000` to `0x7FFFFFFF`).
+* Overflow sets `OVERFLOW = 1` ($V$ flag).
 
-### 3.2 32-Bit Single-Precision Float (`f32`)
+### 3.2 32-Bit Unsigned Integer (`u32`)
+* Standard 32-bit unsigned integer.
+* Value range: $0$ to $4,294,967,295$ (`0x00000000` to `0xFFFFFFFF`).
+* Unsigned carry out on addition or borrow on subtraction sets `CARRY = 1` ($C$ flag). Multiplication overflow ($> 2^{32}-1$) sets `CARRY = 1`.
+
+### 3.3 32-Bit Single-Precision Float (`f32`)
 * IEEE-754 Single-Precision format:
   * 1 sign bit ($S$, bit 31).
   * 8 exponent bits ($E$, bits 30:23, bias = 127).
   * 23 fraction/mantissa bits ($M$, bits 22:0, implicit leading 1).
 * Dynamic range: $\approx \pm 1.18 \times 10^{-38}$ to $\pm 3.40 \times 10^{38}$.
 
-### 3.3 64-Bit Signed Integer (`i64`)
+### 3.4 64-Bit Signed Integer (`i64`)
 * Standard 2's complement 64-bit signed integer.
-* Value range: $-2^{63}$ to $+2^{63}-1$.
+* Value range: $-2^{63}$ to $+2^{63}-1$ (`0x8000000000000000` to `0x7FFFFFFFFFFFFFFF`).
+* Overflow sets `OVERFLOW = 1` ($V$ flag).
 
-### 3.4 64-Bit Double-Precision Float (`f64`)
+### 3.5 64-Bit Unsigned Integer (`u64`)
+* Standard 64-bit unsigned integer.
+* Value range: $0$ to $18,446,744,073,709,551,615$ (`0x0000000000000000` to `0xFFFFFFFFFFFFFFFF`).
+* Unsigned carry out on addition or borrow on subtraction sets `CARRY = 1` ($C$ flag). Multiplication overflow ($> 2^{64}-1$) sets `CARRY = 1`.
+
+### 3.6 64-Bit Double-Precision Float (`f64`)
 * IEEE-754 Double-Precision format:
   * 1 sign bit ($S$, bit 63).
   * 11 exponent bits ($E$, bits 62:52, bias = 1023).
@@ -124,8 +136,10 @@ Opcodes written to Port `0x71` are single-byte commands (`0x00`–`0xFF`). For a
 |:---:|:---:|---|:---:|:---:|:---:|:---:|
 | `_i32` | `0b000` | 32-bit Signed Integer | 4 Bytes | 4 Bytes | 8 Bytes | 4 Bytes |
 | `_f32` | `0b001` | 32-bit IEEE Single Float | 4 Bytes | 4 Bytes | 8 Bytes | 4 Bytes |
-| `_i64` | `0b010` | 64-bit Signed Integer | 8 Bytes | 8 Bytes | 16 Bytes | 8 Bytes |
-| `_f64` | `0b011` | 64-bit IEEE Double Float | 8 Bytes | 8 Bytes | 16 Bytes | 8 Bytes |
+| `_u32` | `0b010` | 32-bit Unsigned Integer | 4 Bytes | 4 Bytes | 8 Bytes | 4 Bytes |
+| `_i64` | `0b011` | 64-bit Signed Integer | 8 Bytes | 8 Bytes | 16 Bytes | 8 Bytes |
+| `_f64` | `0b100` | 64-bit IEEE Double Float | 8 Bytes | 8 Bytes | 16 Bytes | 8 Bytes |
+| `_u64` | `0b101` | 64-bit Unsigned Integer | 8 Bytes | 8 Bytes | 16 Bytes | 8 Bytes |
 
 ---
 
@@ -139,10 +153,10 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 
 | Opcode | Hex Range | Mnemonic | Forth Stack Effect | $\Delta SP$ | Required Depth | Cycles (@80MHz) | BSY | Z | S | C | V | U | ERR | Primary Error / Side Effects |
 |---|:---:|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| `0b0000_0fff` | `0x00`–`0x03` | `ADD_fff` | `( a b -- sum )` | $-4$ / $-8$ | 8 / 16 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$) |
-| `0b0000_1fff` | `0x08`–`0x0B` | `SUB_fff` | `( a b -- diff )` | $-4$ / $-8$ | 8 / 16 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Borrow ($C=1$) |
-| `0b0001_0fff` | `0x10`–`0x13` | `MUL_fff` | `( a b -- prod )` | $-4$ / $-8$ | 8 / 16 B | 16–32 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Float Underflow ($U=1$) |
-| `0b0001_1fff` | `0x18`–`0x1B` | `DIV_fff` | `( a b -- quot )` | $-4$ / $-8$ | 8 / 16 B | 16–32 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Div-by-Zero ($ERR=1, V=1$), Float Underflow ($U=1$) |
+| `0b0000_0fff` | `0x00`–`0x05` | `ADD_fff` | `( a b -- sum )` | $-4$ / $-8$ | 8 / 16 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Unsigned Carry ($C=1$) |
+| `0b0000_1fff` | `0x08`–`0x0D` | `SUB_fff` | `( a b -- diff )` | $-4$ / $-8$ | 8 / 16 B | 1–2 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Borrow ($C=1$) |
+| `0b0001_0fff` | `0x10`–`0x15` | `MUL_fff` | `( a b -- prod )` | $-4$ / $-8$ | 8 / 16 B | 16–64 | X | X | X | X | X | * | * | Stack Underflow ($U=1, ERR=1$), Int/Float Overflow ($V=1$), Unsigned Overflow ($C=1$) |
+| `0b0001_1fff` | `0x18`–`0x1D` | `DIV_fff` | `( a b -- quot )` | $-4$ / $-8$ | 8 / 16 B | 18–64 | X | X | X | 0 | X | * | * | Stack Underflow ($U=1, ERR=1$), Div-by-Zero ($ERR=1, V=1$), Float Underflow ($U=1$) |
 | `0b0010_00x1` | `0x21`, `0x23` | `SQRT_F32/F64`| `( x -- root )` | $0$ | 4 / 8 B | 16–32 | X | X | 0 | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Negative Operand ($ERR=1$) |
 | `0b0010_10x1` | `0x29`, `0x2B` | `POW_F32/F64` | `( base exp -- res )` | $-4$ / $-8$ | 8 / 16 B | ~120 | X | X | X | 0 | X | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Exponent Overflow/Underflow |
 | `0b0011_00x1` | `0x31`, `0x33` | `LOG2_F32/F64`| `( x -- log2_x )`| $0$ | 4 / 8 B | ~60 | X | X | X | 0 | 0 | * | * | Float-only. Stack Underflow ($U=1, ERR=1$), Non-positive Operand $x \le 0$ ($ERR=1$) |
@@ -159,6 +173,8 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 | `0b1100_0001` | `0xC1` | `DUP8` | `( a -- a a )` | $+8$ | 8 B | 3 | X | - | - | - | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_0010` | `0xC2` | `CONV_U32_U64`| `( u32 -- u64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Zero-extends 32-bit uint to 64-bit uint |
 | `0b1100_0011` | `0xC3` | `CONV_U64_U32`| `( u64 -- u32 )` | $-4$ | 8 B | 2 | X | X | X | 0 | X | * | * | Truncates 64-bit uint to 32-bit uint ($V=1$ on overflow) |
+| `0b1100_0100` | `0xC4` | `CONV_U32_F32`| `( u32 -- f32 )` | $0$ | 4 B | ~5 | X | X | X | 0 | 0 | 0 | * | Unsigned 32-bit uint to IEEE single float |
+| `0b1100_0101` | `0xC5` | `CONV_U64_F64`| `( u64 -- f64 )` | $0$ | 8 B | ~6 | X | X | X | 0 | 0 | 0 | * | Unsigned 64-bit uint to IEEE double float |
 | `0b1100_0110` | `0xC6` | `CLEAR_STACK` | `( ... -- )` | $SP \leftarrow 0$ | 0 B | 1 | X | 1 | 0 | 0 | 0 | 0 | 0 | Clears $SP \leftarrow 0$, $OSP \leftarrow 0$, all error flags cleared |
 | `0b1100_1000` | `0xC8` | `CONV_I32_I64`| `( i32 -- i64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
 | `0b1100_1001` | `0xC9` | `CONV_F32_F64`| `( f32 -- f64 )` | $+4$ | 4 B | 2 | X | X | X | 0 | * | * | * | Stack Underflow ($U=1, ERR=1$), Stack Overflow ($V=1, ERR=1$) |
@@ -184,7 +200,7 @@ The table below summarizes all user opcodes. Stack effect follows standard Forth
 
 ```
 ================================================================================
-ADD_fff — ADDITION (i32, f32, i64, f64)
+ADD_fff — ADDITION (i32, f32, u32, i64, f64, u64)
 ================================================================================
 ```
 
@@ -193,8 +209,10 @@ ADD_fff — ADDITION (i32, f32, i64, f64)
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **`ADD_I32`** | `0x00` | `0b0000_0000` | 32-bit Signed Int   | 4 Bytes | 8 Bytes  | $-4$ Bytes | 1 Cycle (12.5 ns) |
 | **`ADD_F32`** | `0x01` | `0b0000_0001` | 32-bit IEEE Float   | 4 Bytes | 8 Bytes  | $-4$ Bytes | ~12 Cycles (150 ns)|
-| **`ADD_I64`** | `0x02` | `0b0000_0010` | 64-bit Signed Int   | 8 Bytes | 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
-| **`ADD_F64`** | `0x03` | `0b0000_0011` | 64-bit IEEE Double  | 8 Bytes | 16 Bytes | $-8$ Bytes | ~20 Cycles (250 ns)|
+| **`ADD_U32`** | `0x02` | `0b0000_0010` | 32-bit Unsigned Int | 4 Bytes | 8 Bytes  | $-4$ Bytes | 1 Cycle (12.5 ns) |
+| **`ADD_I64`** | `0x03` | `0b0000_0011` | 64-bit Signed Int   | 8 Bytes | 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
+| **`ADD_F64`** | `0x04` | `0b0000_0100` | 64-bit IEEE Double  | 8 Bytes | 16 Bytes | $-8$ Bytes | ~20 Cycles (250 ns)|
+| **`ADD_U64`** | `0x05` | `0b0000_0101` | 64-bit Unsigned Int | 8 Bytes | 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
 
 #### Forth Stack Diagram
 ```text
@@ -214,10 +232,11 @@ After:  [ ... | (a + b)           ]  <-- SP (shrinks by 1 operand)
 * **`Z`**: Set to 1 if result is zero (`0` or `+0.0` / `-0.0`); cleared to 0 otherwise.
 * **`S`**: Set to 1 if result is negative (MSB = 1); cleared to 0 otherwise.
 * **`C`**:
-  * In `ADD_I32` / `ADD_I64`: Set to 1 if unsigned carry occurred out of MSB; cleared to 0 otherwise.
+  * In `ADD_I32` / `ADD_I64` and `ADD_U32` / `ADD_U64`: Set to 1 if unsigned carry occurred out of MSB; cleared to 0 otherwise.
   * In `ADD_F32` / `ADD_F64`: Cleared to 0.
 * **`V`**:
   * In `ADD_I32` / `ADD_I64`: Set to 1 if signed two's-complement overflow occurred (e.g. positive + positive = negative).
+  * In `ADD_U32` / `ADD_U64`: Cleared to 0 (unsigned overflow is reported via `CARRY = 1`).
   * In `ADD_F32` / `ADD_F64`: Set to 1 if floating-point exponent overflow occurred ($E > +127$ or $E > +1023$), returning signed $\pm \infty$.
 * **`U` (Side Effect / Exception):**
   * In `ADD_F32` / `ADD_F64`: Set to 1 if floating-point exponent underflow occurred.
@@ -255,7 +274,7 @@ After:  [ ... | (a + b)           ]  <-- SP (shrinks by 1 operand)
 
 ```
 ================================================================================
-SUB_fff — SUBTRACTION (i32, f32, i64, f64)
+SUB_fff — SUBTRACTION (i32, f32, u32, i64, f64, u64)
 ================================================================================
 ```
 
@@ -264,8 +283,10 @@ SUB_fff — SUBTRACTION (i32, f32, i64, f64)
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **`SUB_I32`** | `0x08` | `0b0000_1000` | 32-bit Signed Int  | 8 Bytes  | $-4$ Bytes | 1 Cycle (12.5 ns) |
 | **`SUB_F32`** | `0x09` | `0b0000_1001` | 32-bit IEEE Float  | 8 Bytes  | $-4$ Bytes | ~12 Cycles (150 ns)|
-| **`SUB_I64`** | `0x0A` | `0b0000_1010` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
-| **`SUB_F64`** | `0x0B` | `0b0000_1011` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~20 Cycles (250 ns)|
+| **`SUB_U32`** | `0x0A` | `0b0000_1010` | 32-bit Unsigned Int| 8 Bytes  | $-4$ Bytes | 1 Cycle (12.5 ns) |
+| **`SUB_I64`** | `0x0B` | `0b0000_1011` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
+| **`SUB_F64`** | `0x0C` | `0b0000_1100` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~20 Cycles (250 ns)|
+| **`SUB_U64`** | `0x0D` | `0b0000_1101` | 64-bit Unsigned Int| 16 Bytes | $-8$ Bytes | 2 Cycles (25 ns)  |
 
 #### Forth Stack Diagram
 ```text
@@ -280,15 +301,15 @@ Evaluates: Difference = NOS - TOS  (First pushed operand minus second pushed ope
 |  X  |  X  |  X  |  X  |  X  |  *  |  *  |
 +-----+-----+-----+-----+-----+-----+-----+
 ```
-* **`C`**: In integer modes, set to 1 if an unsigned borrow occurred ($NOS < TOS$); cleared to 0 otherwise.
-* **`V`**: Set to 1 on signed two's-complement overflow or float exponent overflow.
+* **`C`**: In integer modes (`SUB_I*`, `SUB_U*`), set to 1 if an unsigned borrow occurred ($NOS < TOS$); cleared to 0 otherwise.
+* **`V`**: In signed integer modes (`SUB_I32`, `SUB_I64`), set to 1 on signed two's-complement overflow. In unsigned modes (`SUB_U32`, `SUB_U64`), cleared to 0. In float modes, set on exponent overflow.
 * **`U`, `ERR`**: Set to 1 if Stack Underflow occurred ($SP < \text{Depth}$).
 
 ---
 
 ```
 ================================================================================
-MUL_fff — MULTIPLICATION (i32, f32, i64, f64)
+MUL_fff — MULTIPLICATION (i32, f32, u32, i64, f64, u64)
 ================================================================================
 ```
 
@@ -297,8 +318,10 @@ MUL_fff — MULTIPLICATION (i32, f32, i64, f64)
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **`MUL_I32`** | `0x10` | `0b0001_0000` | 32-bit Signed Int  | 8 Bytes  | $-4$ Bytes | 16 Cycles (200 ns)|
 | **`MUL_F32`** | `0x11` | `0b0001_0001` | 32-bit IEEE Float  | 8 Bytes  | $-4$ Bytes | ~18 Cycles (225 ns)|
-| **`MUL_I64`** | `0x12` | `0b0001_0010` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 32 Cycles (400 ns)|
-| **`MUL_F64`** | `0x13` | `0b0001_0011` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~30 Cycles (375 ns)|
+| **`MUL_U32`** | `0x12` | `0b0001_0010` | 32-bit Unsigned Int| 8 Bytes  | $-4$ Bytes | 16 Cycles (200 ns)|
+| **`MUL_I64`** | `0x13` | `0b0001_0011` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 64 Cycles (800 ns)|
+| **`MUL_F64`** | `0x14` | `0b0001_0100` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~30 Cycles (375 ns)|
+| **`MUL_U64`** | `0x15` | `0b0001_0101` | 64-bit Unsigned Int| 16 Bytes | $-8$ Bytes | 64 Cycles (800 ns)|
 
 #### Forth Stack Diagram
 ```text
@@ -307,23 +330,24 @@ Evaluates: Product = NOS * TOS
 ```
 
 #### Status Flags & Side Effects
-* **`V`**: In integer modes, set to 1 if the high word(s) of the product contain significant non-sign bits (truncated integer overflow). In float modes, set on exponent overflow.
+* **`C`**: In unsigned integer modes (`MUL_U32`, `MUL_U64`), set to 1 if the high word(s) of the product are non-zero (i.e. product $> 2^{32}-1$ or $> 2^{64}-1$). Cleared to 0 in signed and float modes.
+* **`V`**: In signed integer modes (`MUL_I32`, `MUL_I64`), set to 1 if the high word(s) of the product contain significant non-sign bits (truncated integer overflow). In unsigned modes, cleared to 0. In float modes, set on exponent overflow.
 * **`U`**: In float modes, set on exponent underflow.
 * **Stack Underflow:** Asserts `U = 1` and `ERR = 1` if $SP < 8$ (32-bit) or $SP < 16$ (64-bit).
 
 #### Result Widths & Widening Multiplication
 * **Stack-Neutral Result Widths:** In keeping with Forth and RPN stack invariants, integer multiplication produces a result of the same width as its operands:
-  - `MUL_I32`: $32 \times 32 \to 32\text{-bit}$ product + `VF` (overflow asserted if true product exceeds 32 bits signed).
-  - `MUL_I64`: $64 \times 64 \to 64\text{-bit}$ product + `VF` (overflow asserted if true product exceeds 64 bits signed).
+  - `MUL_I32` / `MUL_U32`: $32 \times 32 \to 32\text{-bit}$ product. `VF=1` on signed overflow (`MUL_I32`); `CF=1` on unsigned overflow (`MUL_U32`).
+  - `MUL_I64` / `MUL_U64`: $64 \times 64 \to 64\text{-bit}$ product. `VF=1` on signed overflow (`MUL_I64`); `CF=1` on unsigned overflow (`MUL_U64`).
 * **Widening Multiplication ($32 \times 32 \to 64$):** If a full 64-bit product of two 32-bit values is desired without risk of truncation, convert the operands to 64-bit prior to multiplying:
   - **Signed widening multiply:** Convert operands via `CONV_I32_I64` and execute `MUL_I64`.
-  - **Unsigned widening multiply:** Convert operands via `CONV_U32_U64` and execute `MUL_I64`.
+  - **Unsigned widening multiply:** Convert operands via `CONV_U32_U64` and execute `MUL_U64` (or `MUL_I64`).
 
 ---
 
 ```
 ================================================================================
-DIV_fff — DIVISION (i32, f32, i64, f64)
+DIV_fff — DIVISION (i32, f32, u32, i64, f64, u64)
 ================================================================================
 ```
 
@@ -332,8 +356,10 @@ DIV_fff — DIVISION (i32, f32, i64, f64)
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **`DIV_I32`** | `0x18` | `0b0001_1000` | 32-bit Signed Int  | 8 Bytes  | $-4$ Bytes | 18 Cycles (225 ns)|
 | **`DIV_F32`** | `0x19` | `0b0001_1001` | 32-bit IEEE Float  | 8 Bytes  | $-4$ Bytes | ~24 Cycles (300 ns)|
-| **`DIV_I64`** | `0x1A` | `0b0001_1010` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 34 Cycles (425 ns)|
-| **`DIV_F64`** | `0x1B` | `0b0001_1011` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~38 Cycles (475 ns)|
+| **`DIV_U32`** | `0x1A` | `0b0001_1010` | 32-bit Unsigned Int| 8 Bytes  | $-4$ Bytes | 18 Cycles (225 ns)|
+| **`DIV_I64`** | `0x1B` | `0b0001_1011` | 64-bit Signed Int  | 16 Bytes | $-8$ Bytes | 66 Cycles (825 ns)|
+| **`DIV_F64`** | `0x1C` | `0b0001_1100` | 64-bit IEEE Double | 16 Bytes | $-8$ Bytes | ~38 Cycles (475 ns)|
+| **`DIV_U64`** | `0x1D` | `0b0001_1101` | 64-bit Unsigned Int| 16 Bytes | $-8$ Bytes | 66 Cycles (825 ns)|
 
 #### Forth Stack Diagram
 ```text
@@ -348,10 +374,12 @@ Evaluates: Quotient = NOS / TOS  (First pushed operand divided by second pushed 
 |  X  |  X  |  X  |  0  |  X  |  *  |  *  |
 +-----+-----+-----+-----+-----+-----+-----+
 ```
+* **Unsigned Division (`DIV_U32`, `DIV_U64`):** Operates on non-negative binary values ($0$ to $2^N-1$). Never treats bit 31 or bit 63 as a negative sign bit.
 * **Division by Zero ($TOS == 0$):**
   * Hardware immediately detects divisor = 0.
   * Sets **`ERR = 1`** and **`OVERFLOW = 1`**.
-  * In integer mode: pushes `0x7FFFFFFF` (or `0x80000000` based on sign).
+  * In signed integer mode: pushes `0x7FFFFFFF` or `0x80000000` based on sign.
+  * In unsigned integer mode: pushes maximum unsigned value `0xFFFFFFFF` (`DIV_U32`) or `0xFFFFFFFFFFFFFFFF` (`DIV_U64`).
   * In float mode: pushes signed $\pm \infty$ (`0x7F800000` / `0xFF800000`).
 * **Stack Underflow:** Asserts `U = 1` and `ERR = 1` if $SP < \text{Depth}$.
 
@@ -477,6 +505,8 @@ CONV_xxx_yyy — DATA TYPE CONVERSIONS
 |---|:---:|:---:|---|:---:|:---:|---|
 | **`CONV_U32_U64`** | `0xC2` | `0b1100_0010` | Zero-extends 32-bit uint to 64-bit uint | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
 | **`CONV_U64_U32`** | `0xC3` | `0b1100_0011` | Truncates 64-bit uint to 32-bit uint    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{32}-1$ |
+| **`CONV_U32_F32`** | `0xC4` | `0b1100_0100` | Converts unsigned 32-bit uint to single | 4 Bytes | $0$ Bytes  | Normalizes via LZC; no sign bit |
+| **`CONV_U64_F64`** | `0xC5` | `0b1100_0101` | Converts unsigned 64-bit uint to double | 8 Bytes | $0$ Bytes  | Normalizes via LZC64; no sign bit |
 | **`CONV_I32_I64`** | `0xC8` | `0b1100_1000` | Sign-extends 32-bit int to 64-bit int | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
 | **`CONV_F32_F64`** | `0xC9` | `0b1100_1001` | Expands IEEE single to double float   | 4 Bytes | $+4$ Bytes | Checks Stack Overflow ($V=1, ERR=1$) |
 | **`CONV_I64_I32`** | `0xCA` | `0b1100_1010` | Truncates 64-bit int to 32-bit int    | 8 Bytes | $-4$ Bytes | Sets `OVERFLOW = 1` if value $> 2^{31}-1$ or $< -2^{31}$ |
@@ -891,3 +921,179 @@ Eval_Quadratic_f32:
     INIR
     RET
 ```
+
+---
+
+## 7. Type Conversion Idioms & Use Cases
+
+All conversion operations in the Zx50 FPU operate as **in-place transformations on the Top of Stack (TOS)**. Depending on whether the conversion widens or narrows the data representation, the internal stack pointer $SP$ automatically adjusts:
+* **Widening conversions** (`CONV_I32_I64`, `CONV_U32_U64`, `CONV_F32_F64`): Replace a 4-byte value with an 8-byte value (net $+4$ bytes on stack). Hardware verifies stack headroom ($V=1, ERR=1$ on stack overflow).
+* **Narrowing conversions** (`CONV_I64_I32`, `CONV_U64_U32`, `CONV_F64_F32`): Replace an 8-byte value with a 4-byte value (net $-4$ bytes on stack). Hardware detects truncation and exponent overflow ($V=1$).
+* **Same-size conversions** (`CONV_I32_F32`, `CONV_U32_F32`, `CONV_F32_I32`, `CONV_I64_F64`, `CONV_U64_F64`, `CONV_F64_I64`): Transform format in-place with zero net stack depth change.
+
+The following idioms demonstrate common host integration patterns using concise Z80 assembly pseudocode (where `OTIR 0x70, <val>` streams multi-byte operands to the stack port and `OUT 0x71, <op>` triggers FPU execution).
+
+---
+
+### 7.1 Widening 32-Bit Multiplication to 64-Bit Result (`i32 -> i64`)
+
+**Problem:** Multiply two signed 32-bit integers $A$ and $B$ where the product could exceed 32 bits, requiring an exact 64-bit integer product without overflow.
+
+**Stack Flow:**
+```text
+( empty )
+OTIR 0x70, A_i32         --> [ A: i32 ]
+OUT  0x71, CONV_I32_I64  --> [ A: i64 ]          ; Sign-extended to 64 bits (+4 bytes)
+OTIR 0x70, B_i32         --> [ A: i64, B: i32 ]
+OUT  0x71, CONV_I32_I64  --> [ A: i64, B: i64 ]  ; Sign-extended to 64 bits (+4 bytes)
+OUT  0x71, MUL_I64       --> [ A * B: i64 ]      ; 64-bit signed product
+INIR 0x70, result_i64    --> ( empty )           ; Pop 8 bytes into host buffer
+```
+
+**Z80 Pseudocode:**
+```text
+; Compute 64-bit signed product: result_i64 = A_i32 * B_i32
+OTIR 0x70, A_i32          ; Push 32-bit operand A (4 bytes)
+OUT  0x71, CONV_I32_I64   ; Widen TOS from i32 to i64 (0xC8)
+OTIR 0x70, B_i32          ; Push 32-bit operand B (4 bytes)
+OUT  0x71, CONV_I32_I64   ; Widen TOS from i32 to i64 (0xC8)
+OUT  0x71, MUL_I64        ; Multiply two 64-bit integers (0x13)
+INIR 0x70, result_i64     ; Pop 8-byte product
+```
+
+---
+
+### 7.2 64-Bit Accumulator Downcasting with Overflow Trapping (`i64 -> i32`)
+
+**Problem:** Maintain a high-precision 64-bit accumulator during multi-term operations or dot products to prevent intermediate overflow, then downcast the final result to 32 bits for Z80 storage while detecting if the result exceeded the 32-bit signed range $[-2^{31}, 2^{31}-1]$.
+
+**Stack Flow:**
+```text
+; Stack contains accumulated 64-bit sum:
+[ sum: i64 ]
+OUT  0x71, CONV_I64_I32  --> [ sum: i32 ]        ; Truncates to lower 32 bits (-4 bytes)
+                                                 ; Sets OVERFLOW (V=1) if upper 32 bits
+                                                 ; are not a valid sign-extension
+```
+
+**Z80 Pseudocode:**
+```text
+; Downcast 64-bit accumulator to 32-bit with hardware overflow check
+OUT  0x71, CONV_I64_I32   ; Downcast TOS from i64 to i32 (0xCA)
+IN   A, (0x71)            ; Read STATUS register
+BIT  3, A                 ; Test OVERFLOW flag (V)
+JR   NZ, Overflow_Handler ; Branch if accumulator exceeded 32-bit range
+INIR 0x70, result_i32     ; Pop 4-byte integer result
+```
+
+---
+
+### 7.3 Sensor Readings / Integer Inputs to Floating-Point Math (`i32 -> f32`)
+
+**Problem:** The Z80 reads a raw 16-bit or 32-bit integer reading from an ADC, timer, or encoder port, then scales and offsets it using floating-point physics equations ($y = \text{gain} \cdot x + \text{offset}$).
+
+**Stack Flow:**
+```text
+( empty )
+OTIR 0x70, raw_adc_i32   --> [ raw_adc: i32 ]
+OUT  0x71, CONV_I32_F32  --> [ raw_adc: f32 ]    ; Converted in-place (net 0 bytes)
+OTIR 0x70, gain_f32      --> [ raw_adc: f32, gain: f32 ]
+OUT  0x71, MUL_F32       --> [ raw_adc * gain: f32 ]
+OTIR 0x70, offset_f32    --> [ product: f32, offset: f32 ]
+OUT  0x71, ADD_F32       --> [ calibrated_val: f32 ]
+INIR 0x70, pressure_f32  --> ( empty )           ; Pop 4-byte float result
+```
+
+**Z80 Pseudocode:**
+```text
+; Compute: pressure = (raw_adc * gain) + offset
+OTIR 0x70, raw_adc_i32    ; Push 32-bit integer ADC sample (4 bytes)
+OUT  0x71, CONV_I32_F32   ; Convert raw count to IEEE single float (0xCC)
+OTIR 0x70, gain_f32       ; Push 32-bit float calibration gain (4 bytes)
+OUT  0x71, MUL_F32        ; Multiply floats (0x11)
+OTIR 0x70, offset_f32     ; Push 32-bit float offset (4 bytes)
+OUT  0x71, ADD_F32        ; Add offset (0x01)
+INIR 0x70, pressure_f32   ; Pop 4-byte calibrated float
+```
+
+---
+
+### 7.4 Integer Transcendentals via Float Cores (`i32 -> f32 -> SQRT -> i32`)
+
+**Problem:** Transcendental and root operations (`SQRT`, `LOG2`, `POW`, `SIN`, `COS`, `TAN`) operate strictly on floating-point data (`F32` / `F64`). To calculate an integer root like $\lfloor\sqrt{N}\rfloor$, the argument is converted to float, processed by the hardware CORDIC/root engine, and truncated back to an integer.
+
+**Stack Flow:**
+```text
+( empty )
+OTIR 0x70, N_i32         --> [ N: i32 ]
+OUT  0x71, CONV_I32_F32  --> [ N: f32 ]          ; Convert to single float
+OUT  0x71, SQRT_F32      --> [ sqrt(N): f32 ]    ; Compute square root
+OUT  0x71, CONV_F32_I32  --> [ floor(sqrt(N)): i32 ] ; Truncate toward zero
+INIR 0x70, root_i32      --> ( empty )           ; Pop 4-byte integer result
+```
+
+**Z80 Pseudocode:**
+```text
+; Compute integer square root: root_i32 = int(sqrt(N_i32))
+OTIR 0x70, N_i32          ; Push 32-bit integer N (4 bytes)
+OUT  0x71, CONV_I32_F32   ; Convert integer to float (0xCC)
+OUT  0x71, SQRT_F32       ; Hardware single-precision square root (0x21)
+OUT  0x71, CONV_F32_I32   ; Truncate float back to signed integer (0xCD)
+INIR 0x70, root_i32       ; Pop 4-byte integer square root
+```
+
+---
+
+### 7.5 Float Projections to Integer Screen Coordinates (`f32 -> i32`)
+
+**Problem:** Calculate a 2D/3D graphical projection or trigonometric coordinate ($x = x_{\text{center}} + R \cdot \cos\theta$) in float, then truncate to an integer pixel coordinate with automatic out-of-bounds / clipping detection.
+
+**Stack Flow:**
+```text
+; [TOS holds computed float coordinate x_f32]
+OUT  0x71, CONV_F32_I32  --> [ x: i32 ]          ; Truncate to signed 32-bit int
+                                                 ; Sets OVERFLOW (V=1) if |val| >= 2^31
+```
+
+**Z80 Pseudocode:**
+```text
+; Convert float screen position to integer pixel index
+OUT  0x71, CONV_F32_I32   ; Truncate float TOS to integer (0xCD)
+IN   A, (0x71)            ; Read STATUS register
+BIT  3, A                 ; Test OVERFLOW flag (V)
+JR   NZ, Clip_Offscreen   ; If out-of-range, clip or discard polygon
+INIR 0x70, pixel_x_i32    ; Pop 32-bit integer screen coordinate
+```
+
+---
+
+### 7.6 Mixed-Precision Optimization to Save Z80 Bus Bandwidth (`f32 -> f64`)
+
+**Problem:** Transferring 64-bit double-precision operands across the 8-bit Z80 bus requires 8 I/O cycles per operand ($8 \times 11 = 88$ Z80 clock cycles). Pushing single-precision operands takes only 4 cycles ($44$ clock cycles). When accumulating hundreds of input samples, the Z80 pushes 32-bit floats over the bus, expands them to 64 bits on-chip in 2 cycles, and maintains a 64-bit double-precision accumulator to prevent rounding drift.
+
+**Stack Flow:**
+```text
+; Loop over input samples:
+OTIR 0x70, sample_f32    --> [ acc: f64, sample: f32 ] ; Only 4 bytes sent over Z80 bus!
+OUT  0x71, CONV_F32_F64  --> [ acc: f64, sample: f64 ] ; Widen on-chip to 64-bit double
+OUT  0x71, ADD_F64       --> [ acc + sample: f64 ]     ; Accumulate in 64-bit double
+...
+; When complete, downcast to 32-bit float for fast readout:
+OUT  0x71, CONV_F64_F32  --> [ final_sum: f32 ]
+INIR 0x70, final_sum_f32 --> ( empty )                 ; Only 4 bytes read over Z80 bus!
+```
+
+**Z80 Pseudocode:**
+```text
+; --- High-Precision Accumulation Loop (50% faster I/O) ---
+Accum_Loop:
+    OTIR 0x70, (HL)       ; Push 4-byte single-precision sample from buffer
+    OUT  0x71, CONV_F32_F64 ; Instantly expand to 64-bit double on-chip (0xC9)
+    OUT  0x71, ADD_F64    ; Accumulate into running 64-bit double sum (0x04)
+    DJNZ Accum_Loop
+
+; Downcast accumulator to 32-bit float for fast host readout
+OUT  0x71, CONV_F64_F32   ; Downcast 64-bit double to single float (0xCB)
+INIR 0x70, result_f32     ; Read 4 bytes over bus
+```
+

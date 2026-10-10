@@ -4,23 +4,31 @@ from enum import Enum
 class UserOpcode(Enum):
     ADD_I32 = 0x00
     ADD_F32 = 0x01
-    ADD_I64 = 0x02
-    ADD_F64 = 0x03
+    ADD_U32 = 0x02
+    ADD_I64 = 0x03
+    ADD_F64 = 0x04
+    ADD_U64 = 0x05
 
     SUB_I32 = 0x08
     SUB_F32 = 0x09
-    SUB_I64 = 0x0A
-    SUB_F64 = 0x0B
+    SUB_U32 = 0x0A
+    SUB_I64 = 0x0B
+    SUB_F64 = 0x0C
+    SUB_U64 = 0x0D
 
     MUL_I32 = 0x10
     MUL_F32 = 0x11
-    MUL_I64 = 0x12
-    MUL_F64 = 0x13
+    MUL_U32 = 0x12
+    MUL_I64 = 0x13
+    MUL_F64 = 0x14
+    MUL_U64 = 0x15
 
     DIV_I32 = 0x18
     DIV_F32 = 0x19
-    DIV_I64 = 0x1A
-    DIV_F64 = 0x1B
+    DIV_U32 = 0x1A
+    DIV_I64 = 0x1B
+    DIV_F64 = 0x1C
+    DIV_U64 = 0x1D
 
     # Floating-Point Square Root (Pure F32/F64)
     SQRT_F32 = 0x21
@@ -83,6 +91,8 @@ class UserOpcode(Enum):
     # Type Conversions
     CONV_U32_U64 = 0xC2
     CONV_U64_U32 = 0xC3
+    CONV_U32_F32 = 0xC4
+    CONV_U64_F64 = 0xC5
     CONV_I32_I64 = 0xC8
     CONV_F32_F64 = 0xC9
     CONV_I64_I32 = 0xCA
