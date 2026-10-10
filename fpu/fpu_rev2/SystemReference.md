@@ -1720,7 +1720,7 @@ LDI ZERO, 0
 
 ```
 ================================================================================
-LD dst, addr — LOAD FROM SCRATCHPAD MEMORY
+LD dst, addr / LD dst, [src1] — LOAD FROM SCRATCHPAD MEMORY
 ================================================================================
 ```
 
@@ -1738,32 +1738,48 @@ LD dst, addr — LOAD FROM SCRATCHPAD MEMORY
 #### Register Transfer & Datapath Flow
 
 ```text
+addr_val = (HA_MUX == IMM) ? addr [5:0] : src1 [5:0]
+
 if W == 0:
-    dst [31:0] <- SCRATCHPAD [addr [5:0]]
+    dst [31:0] <- SCRATCHPAD [addr_val]
     UPC        <- UPC + 1
 else:
-    // 64-bit load requires an even base memory address (addr % 2 == 0)
-    dst_L      <- SCRATCHPAD [addr [5:0]]
-    dst_H      <- SCRATCHPAD [(addr [5:0]) | 1]
+    // 64-bit load requires an even base memory address (addr_val % 2 == 0)
+    dst_L      <- SCRATCHPAD [addr_val]
+    dst_H      <- SCRATCHPAD [addr_val | 1]
     UPC        <- UPC + 1
 ```
 
 #### Instruction Word Format
 
-`OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`, `HA_MUX = IMM`,
-`HB_MUX = NONE`.
+`OPCODE = 100100`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = dst`. `HB_MUX = NONE`.
+- **Immediate Direct (`LD dst, addr`)**: `HA_MUX = IMM (0b111)`, `imm[9:0] = addr` (`0..63`).
+- **Indirect Register (`LD dst, [src1]`)**: `HA_MUX = src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`), `imm[9:0] = 0`.
 
 #### Description
 
-Loads 32 or 64 bits from the internal scratchpad memory (mapped to `DATA_RAM` base `0x080`, words 128..191, `SCR[0..63]`) into `dst`. For
-64-bit operations (`W = 1`), `addr` must be an even base address (`addr % 2 == 0`, bit 0 is 0); `dst_L` is loaded from
-`addr` and `dst_H` from `addr | 1`.
+Loads 32 or 64 bits from the internal scratchpad memory (mapped to `DATA_RAM` base `0x080`, words 128..191, `SCR[0..63]`) into `dst`.
+
+Addressing can be specified in two forms:
+1. **Direct Immediate Addressing (`LD dst, addr`)**: The address is specified directly as an immediate literal `addr` in `0..63`.
+2. **Indirect Register Addressing (`LD dst, [src1]`)**: The address is sourced from register `src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
+
+For 64-bit operations (`W = 1`), the effective address must be an even base address (`addr_val % 2 == 0`, bit 0 is 0); `dst_L` is loaded from `addr_val` and `dst_H` from `addr_val | 1`.
 
 #### Concrete Numeric Example
 
+**Direct Immediate Addressing:**
 ```text
 Suppose SCRATCHPAD[0x04] = 0xCAFEBABE.
 After execution of LD AL, 0x04:
+  AL <- 0xCAFEBABE
+  Flags are unaffected.
+```
+
+**Indirect Register Addressing:**
+```text
+Suppose C = 0x04 and SCRATCHPAD[0x04] = 0xCAFEBABE.
+After execution of LD AL, [C]:
   AL <- 0xCAFEBABE
   Flags are unaffected.
 ```
@@ -1772,7 +1788,7 @@ After execution of LD AL, 0x04:
 
 ```
 ================================================================================
-STO addr, src2 — STORE TO SCRATCHPAD MEMORY
+STO addr, src2 / STO [src1], src2 — STORE TO SCRATCHPAD MEMORY
 ================================================================================
 ```
 
@@ -1790,34 +1806,51 @@ STO addr, src2 — STORE TO SCRATCHPAD MEMORY
 #### Register Transfer & Datapath Flow
 
 ```text
+addr_val = (HA_MUX == IMM) ? addr [5:0] : src1 [5:0]
+
 if W == 0:
-    SCRATCHPAD [addr [5:0]] <- src2 [31:0]
-    UPC                     <- UPC + 1
+    SCRATCHPAD [addr_val]     <- src2 [31:0]
+    UPC                       <- UPC + 1
 else:
-    // 64-bit store requires an even base memory address (addr % 2 == 0)
-    SCRATCHPAD [addr [5:0]]       <- src2_L [31:0]
-    SCRATCHPAD [(addr [5:0]) | 1] <- src2_H [31:0]
-    UPC                           <- UPC + 1
+    // 64-bit store requires an even base memory address (addr_val % 2 == 0)
+    SCRATCHPAD [addr_val]     <- src2_L [31:0]
+    SCRATCHPAD [addr_val | 1] <- src2_H [31:0]
+    UPC                       <- UPC + 1
 ```
 
 #### Instruction Word Format
 
-`OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`, `HA_MUX = IMM`,
-`HB_MUX = src2`.
+`OPCODE = 100101`. `W = 0` (32-bit, 1 cycle) or `W = 1` (64-bit, 2 cycles). `RES_SEL = NONE (0b1111)`. `HB_MUX = src2`.
+- **Immediate Direct (`STO addr, src2`)**: `HA_MUX = IMM (0b111)`, `imm[9:0] = addr` (`0..63`).
+- **Indirect Register (`STO [src1], src2`)**: `HA_MUX = src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`), `imm[9:0] = 0`.
 
 #### Description
 
-Stores 32 or 64 bits from register `src2` into internal scratchpad memory (mapped to `DATA_RAM` base `0x080`, words 128..191, `SCR[0..63]`) at `addr`. Does not write to any
-general-purpose register (`RES_SEL = NONE`). For 64-bit operations (`W = 1`), `addr` must be an even base address
-(`addr % 2 == 0`, bit 0 is 0); `src2_L` is stored into `addr` and `src2_H` into `addr | 1`.
+Stores 32 or 64 bits from register `src2` into internal scratchpad memory (mapped to `DATA_RAM` base `0x080`, words 128..191, `SCR[0..63]`). Does not write to any general-purpose register (`RES_SEL = NONE`).
+
+Addressing can be specified in two forms:
+1. **Direct Immediate Addressing (`STO addr, src2`)**: The scratchpad target address is specified directly as an immediate literal `addr` in `0..63`.
+2. **Indirect Register Addressing (`STO [src1], src2`)**: The scratchpad target address is sourced from register `src1` (`AL`, `AH`, `EA`, `EB`, `BL`, `BH`, or `C`) via `HA_MUX`, with bits `[5:0]` selecting the scratchpad slot.
+
+For 64-bit operations (`W = 1`), the effective address must be an even base address (`addr_val % 2 == 0`, bit 0 is 0); `src2_L` is stored into `addr_val` and `src2_H` into `addr_val | 1`.
 
 #### Concrete Numeric Example
 
+**Direct Immediate Addressing:**
 ```text
 Suppose AL = 0xDEADBEEF.
 After execution of STO 0x08, AL:
   SCRATCHPAD[0x08] <- 0xDEADBEEF
   Flags are unaffected.
+```
+
+**Indirect Register Addressing:**
+```text
+Suppose C = 0x08 and AL = 0xDEADBEEF.
+After execution of STO [C], AL:
+  SCRATCHPAD[0x08] <- 0xDEADBEEF
+  Flags are unaffected.
+```
 ```
 
 ---

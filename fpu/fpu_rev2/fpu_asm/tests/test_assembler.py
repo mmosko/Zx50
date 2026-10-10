@@ -174,3 +174,76 @@ def test_shift_instructions_assemble():
     assert prog_dict[3].w == IW.W64
     assert prog_dict[3].dst == Reg.AL
     assert prog_dict[3].imm == 32
+
+
+def test_ld_and_sto_instructions_assemble():
+    code = """
+        LD AL, 12
+        LD AL, [C]
+        LD.64 AX, 8
+        LD.64 AX, [BL]
+        STO 12, AL
+        STO [C], AL
+        STO.64 8, AX
+        STO.64 [BL], AX
+    """
+    assembler = Assembler()
+    prog = assembler.assemble(code)
+    prog_dict = dict(prog)
+
+    # LD AL, 12
+    assert prog_dict[0].op == MicroOp.LD
+    assert prog_dict[0].w == IW.W32
+    assert prog_dict[0].dst == Reg.AL
+    assert prog_dict[0].src1 == Reg.IMM
+    assert prog_dict[0].imm == 12
+
+    # LD AL, [C]
+    assert prog_dict[1].op == MicroOp.LD
+    assert prog_dict[1].w == IW.W32
+    assert prog_dict[1].dst == Reg.AL
+    assert prog_dict[1].src1 == Reg.C
+    assert prog_dict[1].imm == 0
+
+    # LD.64 AX, 8
+    assert prog_dict[2].op == MicroOp.LD
+    assert prog_dict[2].w == IW.W64
+    assert prog_dict[2].dst == Reg.AL
+    assert prog_dict[2].src1 == Reg.IMM
+    assert prog_dict[2].imm == 8
+
+    # LD.64 AX, [BL]
+    assert prog_dict[3].op == MicroOp.LD
+    assert prog_dict[3].w == IW.W64
+    assert prog_dict[3].dst == Reg.AL
+    assert prog_dict[3].src1 == Reg.BL
+    assert prog_dict[3].imm == 0
+
+    # STO 12, AL
+    assert prog_dict[4].op == MicroOp.STO
+    assert prog_dict[4].w == IW.W32
+    assert prog_dict[4].src == Reg.AL
+    assert prog_dict[4].src1 == Reg.IMM
+    assert prog_dict[4].imm == 12
+
+    # STO [C], AL
+    assert prog_dict[5].op == MicroOp.STO
+    assert prog_dict[5].w == IW.W32
+    assert prog_dict[5].src == Reg.AL
+    assert prog_dict[5].src1 == Reg.C
+    assert prog_dict[5].imm == 0
+
+    # STO.64 8, AX
+    assert prog_dict[6].op == MicroOp.STO
+    assert prog_dict[6].w == IW.W64
+    assert prog_dict[6].src == Reg.AL
+    assert prog_dict[6].src1 == Reg.IMM
+    assert prog_dict[6].imm == 8
+
+    # STO.64 [BL], AX
+    assert prog_dict[7].op == MicroOp.STO
+    assert prog_dict[7].w == IW.W64
+    assert prog_dict[7].src == Reg.AL
+    assert prog_dict[7].src1 == Reg.BL
+    assert prog_dict[7].imm == 0
+

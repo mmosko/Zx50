@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from lark import Lark, Visitor, Transformer, Token, Tree
@@ -53,6 +54,12 @@ TABLE_MAP = {
     "CHEB": FpuTable.CHEB,
     "CONST": FpuTable.CONST,
 }
+
+
+@dataclass(frozen=True)
+class IndirectReg:
+    """Represents a register used for indirect memory addressing, e.g. [C]."""
+    reg: Reg
 
 
 class Pass1SymbolCollector(Visitor):
@@ -166,6 +173,12 @@ class Pass2Encoder(Transformer):
 
     def imm_operand(self, children):
         return children[-1]
+
+    def reg_indirect(self, children):
+        return IndirectReg(children[0])
+
+    def mem_addr(self, children):
+        return children[0]
 
     def table_ref(self, children):
         return children[0]
@@ -485,9 +498,14 @@ class Pass2Encoder(Transformer):
                 forced_w64 = True
             idx += 1
         dst, is_64_dst = self._normalize_reg(children[idx])
-        addr = int(children[idx + 1])
+        addr_item = children[idx + 1]
         w = IW.W64 if (forced_w64 or is_64_dst) else IW.W32
-        return MicroInstruction(op=MicroOp.LD, w=w, dst=dst, imm=addr)
+        if isinstance(addr_item, IndirectReg):
+            src1, _ = self._normalize_reg(addr_item.reg)
+            return MicroInstruction(op=MicroOp.LD, w=w, dst=dst, src1=src1, imm=0)
+        else:
+            addr = int(addr_item)
+            return MicroInstruction(op=MicroOp.LD, w=w, dst=dst, src1=Reg.IMM, imm=addr)
 
     def inst_sto(self, children):
         idx = 0
@@ -496,16 +514,29 @@ class Pass2Encoder(Transformer):
             if children[idx] == ".64":
                 forced_w64 = True
             idx += 1
-        addr = int(children[idx])
+        addr_item = children[idx]
         src2, imm, is_64_s2 = self._parse_reg_or_imm(children[idx + 1])
         w = IW.W64 if (forced_w64 or is_64_s2) else IW.W32
-        return MicroInstruction(
-            op=MicroOp.STO,
-            w=w,
-            dst=Reg.NONE,
-            src=src2,
-            imm=addr if imm == 0 else imm,
-        )
+        if isinstance(addr_item, IndirectReg):
+            src1, _ = self._normalize_reg(addr_item.reg)
+            return MicroInstruction(
+                op=MicroOp.STO,
+                w=w,
+                dst=Reg.NONE,
+                src=src2,
+                src1=src1,
+                imm=imm,
+            )
+        else:
+            addr = int(addr_item)
+            return MicroInstruction(
+                op=MicroOp.STO,
+                w=w,
+                dst=Reg.NONE,
+                src=src2,
+                src1=Reg.IMM,
+                imm=addr if imm == 0 else imm,
+            )
 
     def inst_ldu(self, children):
         idx = 0

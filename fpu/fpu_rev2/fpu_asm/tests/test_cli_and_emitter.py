@@ -218,3 +218,25 @@ def test_cli_main_syntax_error(tmp_path: Path, capsys):
     captured = capsys.readouterr()
     assert "Assembly Error:" in captured.err
     assert "bad.fasm:1:" in captured.err
+
+
+def test_emit_python_indirect_ld_sto():
+    insts = [
+        MicroInstruction(op=MicroOp.LD, dst=Reg.AL, src1=Reg.C),
+        MicroInstruction(op=MicroOp.LD, dst=Reg.AL, src1=Reg.IMM, imm=10),
+        MicroInstruction(op=MicroOp.STO, src=Reg.BL, src1=Reg.C),
+        MicroInstruction(op=MicroOp.STO, src=Reg.BL, src1=Reg.IMM, imm=20),
+    ]
+    py_str = emit_python(insts)
+    namespace = {}
+    exec(py_str, namespace)
+    assert len(namespace["fpu_ucode"]) == 4
+    assert namespace["fpu_ucode"][0].op == MicroOp.LD
+    assert namespace["fpu_ucode"][0].src1 == Reg.C
+    assert namespace["fpu_ucode"][1].src1 == Reg.IMM
+    assert namespace["fpu_ucode"][1].imm == 10
+    assert namespace["fpu_ucode"][2].op == MicroOp.STO
+    assert namespace["fpu_ucode"][2].src1 == Reg.C
+    assert namespace["fpu_ucode"][3].src1 == Reg.IMM
+    assert namespace["fpu_ucode"][3].imm == 20
+

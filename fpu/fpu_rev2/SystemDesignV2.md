@@ -276,8 +276,10 @@ The EA registers are left-filled with 0 to use a 32-bit ALU block, or they may b
 | LDC dst, tbl, addr      | 0b100_010 | 0/1   | dst     | tbl    | n/a    | `dst <- DATA_RAM[TBL_BASE \| addr]`     | none (flags unaffected)               |
 | LDI dst, imm            | 0b100_011 | 0/1   | dst     | NONE   | IMM    | `dst <- imm`                            | none (flags unaffected)               |
 | LDI flag, val           | 0b100_011 | 0     | NONE    | NONE   | IMM    | `status[flag] <- imm & 1`               | sets/clears selected flag (0 or 1)    |
-| LD  dst, addr           | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- DATA_RAM[0x080 \| addr]`        | none (flags unaffected)               |
-| STO addr, src2          | 0b100_101 | 0/1   | NONE    | IMM    | src2   | `DATA_RAM[0x080 \| addr] <- src2`       | none (flags unaffected)               |
+| LD  dst, addr           | 0b100_100 | 0/1   | dst     | IMM    | n/a    | `dst <- DATA_RAM[0x080 \| (addr & 0x3F)]` | none (flags unaffected)             |
+| LD  dst, [src1]         | 0b100_100 | 0/1   | dst     | src1   | n/a    | `dst <- DATA_RAM[0x080 \| (src1 & 0x3F)]` | none (flags unaffected)             |
+| STO addr, src2          | 0b100_101 | 0/1   | NONE    | IMM    | src2   | `DATA_RAM[0x080 \| (addr & 0x3F)] <- src2` | none (flags unaffected)            |
+| STO [src1], src2        | 0b100_101 | 0/1   | NONE    | src1   | src2   | `DATA_RAM[0x080 \| (src1 & 0x3F)] <- src2` | none (flags unaffected)            |
 | MOV dst, src2           | 0b100_110 | 0/1   | dst     | n/a    | src2   | `dst <- src2`                           | none (flags unaffected)               |
 | SWAP dst, src2          | 0b100_111 | 0/1   | dst     | n/a    | src2   | `F_ <- src2, src2 <- dst, dst <- F_`     | none (flags unaffected)               |
 | LDU dst, addr           | 0b101_000 | 0/1   | dst     | IMM    | n/a    | `dst <- DATA_RAM[0x0C0 \| addr]`        | none (flags unaffected)               |
@@ -321,7 +323,7 @@ The MachXO2-2000 provides 8 physical 9-Kbit SysMEM EBR blocks. In Rev 2, these a
 | Word Range (Hex) | Word Range (Dec) | Size | Region | Allocation | Addressing Mechanism |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `0x000`–`0x07F` | 0..127 | 128 W (512 B) | **RAM** | Hardware Math Stack | `10'h000 \| SP[6:0]` |
-| `0x080`–`0x0BF` | 128..191 | 64 W (256 B) | **RAM** | Scratchpad RAM `SCR[0..63]` | `10'h080 \| imm[5:0]` |
+| `0x080`–`0x0BF` | 128..191 | 64 W (256 B) | **RAM** | Scratchpad RAM `SCR[0..63]` | `10'h080 \| HA_MUX[5:0]` (`imm[5:0]` or `src1[5:0]`) |
 | `0x0C0`–`0x0CF` | 192..207 | 16 W (64 B) | **RAM** | User Word Storage `USR[0..15]` | `10'h0C0 \| imm[3:0]` |
 | `0x0D0`–`0x0FF` | 208..255 | 48 W (192 B) | **RAM** | Extra RAM Headroom | Working scratch storage |
 | `0x100`–`0x13F` | 256..319 | 64 W (256 B) | **ROM** | IEEE-754 Math Constants ($\pi, e, \ln 2$) | `10'h100 \| slot[5:0]` |

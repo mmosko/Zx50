@@ -81,6 +81,8 @@ def format_micro_instruction(inst: MicroInstruction) -> str:
     if (
         inst.imm != 0
         or inst.src == Reg.IMM
+        or inst.src1 == Reg.IMM
+        or (inst.op in (MicroOp.LD, MicroOp.STO) and inst.src1 in (Reg.NONE, Reg.IMM))
         or inst.op in (MicroOp.JMP, MicroOp.CALL, MicroOp.JZ, MicroOp.JNZ, MicroOp.LDC)
     ):
         parts.append(f"imm={inst.imm}")
