@@ -1,3 +1,6 @@
 [submodule "fpu/zx50_fpu"]
 	path = fpu/zx50_fpu
 	url = git@github.com:mmosko/Zx50_FPU.git
+[submodule "fpu/ieee754-test-suite"]
+	path = fpu/ieee754-test-suite
+	url = https://github.com/sergev/ieee754-test-suite
