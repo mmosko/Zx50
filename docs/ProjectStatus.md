@@ -11,7 +11,7 @@ The Zx50 project is a custom, multi-node Z80 distributed computing cluster featu
 Since the March 2026 checkpoint, major milestones have been achieved across hardware, firmware, and emulation:
 - **Physical Silicon Bring-Up**: The physical backplane (`RevD`), CPU (`RevB1`), clock mezzanine (`RevC`), memory card (`RevA1`), serial card (`RevB`), front panel (`RevB`), and bus probe (`RevB`) are operational in the chassis.
 - **Operating System Kernel**: The Z80 monitor has evolved into a self-hosting OS with interrupt-driven ring buffers, an XMODEM binary loader, Process Control Block (PCB) memory auditing, and a formal Page 0 syscall SDK.
-- **Microcoded FPU Architecture (`fpu_rev2`)**: Designed and fully verified a custom 32/64-bit IEEE-754 floating-point coprocessor emulator in Python with **486 unit/integration tests** and **98% code coverage**, complete with 3-operand instruction execution and an assembler specification (`SystemAssembler.md`).
+- **Microcoded FPU Architecture (`fpu/zx50_fpu`)**: Designed and fully verified a custom 32/64-bit IEEE-754 floating-point coprocessor emulator in Python (submodule `fpu/zx50_fpu`), complete with 3-operand instruction execution and an assembler specification (`SystemAssembler.md`).
 
 ---
 
@@ -52,7 +52,7 @@ The active hardware test chassis is populated as follows:
   - Formal jump table (`syscall.z80`) providing OS services (`Sys_PrintString`, `Sys_ReadChar`, `Sys_PrintChar`, `Sys_Yield`, etc.).
   - Standalone app development documentation (`DEVGUIDE.md`) with example binaries (`hello.z80`).
 
-### 3.2 FPU Math Coprocessor Subsystem (`fpu/fpu_rev2`)
+### 3.2 FPU Math Coprocessor Subsystem (`fpu/zx50_fpu`)
 - **Architecture**: Custom microcoded 32-bit / 64-bit coprocessor modeled for Lattice MachXO3 / MachXO2 FPGA implementation.
 - **Python Hardware Emulator (`fpu_emu`)**:
   - **486 passed tests** with **98% overall line coverage**.
@@ -115,7 +115,7 @@ The active hardware test chassis is populated as follows:
 ## 5. Next Steps & Active Development
 
 ### Phase 1: FPU Microcode Assembler (`fasm`)
-1. Implement the multi-pass microcode assembler in Python using a maintainable grammar parser (`lark` / `ply`) per [SystemAssembler.md](file:///Users/marc/Documents/z80/Zx50/fpu/fpu_rev2/SystemAssembler.md).
+1. Implement the multi-pass microcode assembler in Python using a maintainable grammar parser (`lark` / `ply`) per [SystemAssembler.md](file:///Users/marc/Documents/z80/Zx50/fpu/zx50_fpu/SystemAssembler.md).
 2. Support decoupled `user_opcodes.def` mapping to automatically generate the EBR 7 dispatch lookup table.
 3. Implement delay slot management (automatic `NOP` insertion after `JMP`, `JZ`, `JNZ`, `DJNZ`, `CALL`, `RET`).
 4. Emit `.hex`, `.bin`, `.sym`, and `.map` files, and test with the existing test suite and `fpu_emu`.
